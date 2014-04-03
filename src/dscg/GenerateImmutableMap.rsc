@@ -15,6 +15,10 @@ import IO;
 import List;
 
 str if_elseIf_else_containsKeyOrVal(prefix, i, n) {
+	if (n == 0) {
+		return "return false;";
+	}
+	
 	if (i == 1) {
 		return "if(<prefix>.equals(<prefix><i>)) { return true; }";
 	} else {
@@ -27,6 +31,10 @@ str if_elseIf_else_containsKeyOrVal(prefix, i, n) {
 }
 
 str if_elseIf_else_get(keyPrefix, valPrefix, i, n) {
+	if (n == 0) {
+		return "return null;";
+	}
+	
 	if (i == 1) {
 		return "if(<keyPrefix>.equals(<keyPrefix><i>)) { return <valPrefix><i>; }";
 	} else {
@@ -39,6 +47,9 @@ str if_elseIf_else_get(keyPrefix, valPrefix, i, n) {
 }
 
 str if_elseIf_else_put(keyPrefix, valPrefix, i, n) {
+	if (n == 0) {
+		return "return mapOf(<keyPrefix>, <valPrefix>);";
+	}
 
 	allKeyValArgs = str() { return "<for (j <- [1..n+1]) {><keyPrefix><j>, <valPrefix><j><if (j != n) {>, <}><}>"; } ;
 	replaceKeyValPairInArgs = str() { return "<for (j <- [1..n+1]) {><if (i == j) {><keyPrefix>, <valPrefix><} else {><keyPrefix><j>, <valPrefix><j><}><if (j != n) {>, <}><}>"; };
@@ -55,6 +66,9 @@ str if_elseIf_else_put(keyPrefix, valPrefix, i, n) {
 }
 
 str if_elseIf_else_remove(keyPrefix, valPrefix, i, n) {
+	if (n == 0) {
+		return "return this;";
+	}
 
 	indicesToKeep = [j | j <- [1..n+1], i != j];
 	
@@ -83,19 +97,24 @@ str checkForDuplicateKeys_predicate(n) {
 }
 
 void main() {
-	int n = 3;							
+	for (n <- [1..6]) {
+		println(generateClassString(n));
+	}	
+}
 	
-	classString = 
+str generateClassString(n) =  
 	"class Map<n>\<K, V\> extends AbstractSpecialisedImmutableMap\<K, V\> implements Cloneable {
 	'	<for (i <- [1..n+1]) {>
 	'	private final K key<i>;
 	'	private final V val<i>;
 	'	<}>	
 	'
-	'	Map<n>(K key1, V val1, K key2, V val2, K key3, V val3) {					
+	'	Map<n>(<for (i <- [1..n+1]) {>K key<i>, V val<i><if (i != n) {>, <}><}>) {					
+	'		<if (n > 1) {>
 	'		if (<checkForDuplicateKeys_predicate(n)>) {
 	'			throw new IllegalArgumentException(\"Duplicate keys are not allowed in specialised map.\");
 	'		}
+	'		<}>
 	'
 	'		<for (i <- [1..n+1]) {>
 	'		this.key<i> = key<i>;
@@ -128,9 +147,7 @@ void main() {
 
 	'	@Override
 	'	public Set\<Entry\<K, V\>\> entrySet() {
-	'		return AbstractSpecialisedImmutableJdkSet.\<Map.Entry\<K, V\>\> setOf(
-	'				<for (i <- [1..n+1]) {>
-	'				new Map1AndEntry\<\>(key<i>, val<i>)<if (i != n) {>, <}><}>);					
+	'		return AbstractSpecialisedImmutableJdkSet.\<Map.Entry\<K, V\>\> setOf(<for (i <- [1..n+1]) {>new Map1AndEntry\<\>(key<i>, val<i>)<if (i != n) {>, <}><}>);					
 	'	}
 
 	'	@Override
@@ -168,16 +185,21 @@ void main() {
 	
 	'	@Override
 	'	public int hashCode() {
+	'		<if (n > 0) {>
 	'		return (<for (i <- [1..n+1]) {>(Objects.hashCode(key<i>) ^ Objects.hashCode(val<i>))<if (i != n) {> + <}><}>);
+	'		<} else {>
+	'		return 0;
+	'		<}>
 	'	}		
 	
 	'	@Override
 	'	public String toString() {
+	'		<if (n > 0) {>	
 	'		return String.format(\"{<for (i <- [1..n+1]) {>%s=%s<if (i != n) {>, <}><}>}\", <for (i <- [1..n+1]) {>key<i>, val<i><if (i != n) {>, <}><}>);
+	'		<} else {>
+	'		return \"{}\";
+	'		<}>
 	'	}
 	
 	'}
 	";
-	
-	println(classString);							
-}
