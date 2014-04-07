@@ -29,60 +29,30 @@ str equalityComparator(x, y) = "<cmpName>.compare(<x>, <y>) == 0";
 //str(str, str) eq = equalityDefault;
 //str(str, str) eq = str(x, y) { return equalityComparator(x, y, "cmp"); };
 
-str if_elseIf_else_containsKey(i, n) 
-	= if_elseIf_else_containsKeyOrVal(keyName, i, n, equalityDefault);
-	
-str if_elseIf_else_containsVal(i, n) 
-	= if_elseIf_else_containsKeyOrVal(valName, i, n, equalityDefault);
-
-str if_elseIf_else_containsKeyEquivalent(i, n) 
-	= if_elseIf_else_containsKeyOrVal(keyName, i, n, equalityComparator);
-	
-str if_elseIf_else_containsValEquivalent(i, n) 
-	= if_elseIf_else_containsKeyOrVal(valName, i, n, equalityComparator);
-
 
 	
 
-str if_elseIf_else_containsKeyOrVal(prefix, i, 0, str(str, str) eq) 
-	= "return false;";
+str if_elseIf_else_containsKeyOrVal(0, str(str, str) eq, prefix) 
+	= "return false;"
+	;
 
-str if_elseIf_else_containsKeyOrVal(prefix, 1, n, str(str, str) eq) 
-	= "if(<eq("<prefix>", "<prefix><1>")>) { return true; }";
-
-str if_elseIf_else_containsKeyOrVal(prefix, i, n, str(str, str) eq) 
-	= "else if(<eq("<prefix>", "<prefix><i>")>) { return true; }" 
-		when i <= n;
-
-str if_elseIf_else_containsKeyOrVal(prefix, i, n, str(str, str) eq) 
-	= "else { return false; }" 
-		when i > n;
+str if_elseIf_else_containsKeyOrVal(n, str(str, str) eq, prefix) 
+	= intercalate(" else ", ["if(<eq("<prefix>", "<prefix><i>")>) { return true; }" | i <- [1..n+1]])
+	+ "else { return false; }"
+	;
+	
 
 
 
+str if_elseIf_else_get(0, str(str, str) eq) 
+	= "return null;"
+	;
+		
+str if_elseIf_else_get(int n, str(str, str) eq) 
+	= intercalate(" else ", ["if(<eq("<keyName>", "<keyName><i>")>) { return <valName><i>; }" | i <- [1..n+1]])
+	+ "else { return null; }"
+	;
 
-str if_elseIf_else_get(i, n) 
-	= if_elseIf_else_get(i, n, equalityDefault);
-
-str if_elseIf_else_getEquivalent(i, n) 
-	= if_elseIf_else_get(i, n, equalityComparator);
-
-
-
-
-str if_elseIf_else_get(i, 0, str(str, str) eq) 
-	= "return null;";
-
-str if_elseIf_else_get(1, n, str(str, str) eq) 
-	= "if(<eq("<keyName>", "<keyName><1>")>) { return <valName><1>; }";
-
-str if_elseIf_else_get(i, n, str(str, str) eq) 
-	= "else if(<eq("<keyName>", "<keyName><1>")>) { return <valName><i>; }" 
-		when i <= n;
-
-str if_elseIf_else_get(i, n, str(str, str) eq) 
-	= "else { return null; }" 
-		when i > n;
 
 
 
@@ -147,10 +117,11 @@ str checkForDuplicateKeys_predicate(n) {
  */
 str q(list[str] xs) = ( "" | "<if (it == "") {><x><} else {><it>\n<x><}>" | x <- xs);
 
+str q([h, *t]) = (h | it + "\n" + e | e <- t );
+
 void main() {
-	for (n <- [0..6]) {
-		println(generateClassString(n));
-	}	
+	classStrings = [ generateClassString(n) | n <- [0..6] ];
+	writeFile(|project://DSCG/src/dscg/GeneratedImmutableMap.java|, classStrings);
 }
 	
 str generateClassString(n) =  
@@ -175,32 +146,32 @@ str generateClassString(n) =
 
 	'	@Override
 	'	public boolean containsKey(Object <keyName>) {
-	'		<q([ if_elseIf_else_containsKey(i, n) | i <- [1..n+2] ]) /* n+2 to create else branch*/>	
+	'		<if_elseIf_else_containsKeyOrVal(n, equalityDefault, keyName)>	
 	'	}
 
 	'	@Override
 	'	public boolean containsKeyEquivalent(Object <keyName>, Comparator\<Object\> <cmpName>) {
-	'		<q([ if_elseIf_else_containsKeyEquivalent(i, n) | i <- [1..n+2] ]) /* n+2 to create else branch*/>	
+	'		<if_elseIf_else_containsKeyOrVal(n, equalityComparator, keyName)>	
 	'	}
 	
 	'	@Override
 	'	public boolean containsValue(Object <valName>) { 
-	'		<q([ if_elseIf_else_containsVal(i, n) | i <- [1..n+2] ]) /* n+2 to create else branch*/>
+	'		<if_elseIf_else_containsKeyOrVal(n, equalityDefault, valName)>
 	'	}
 	
 	'	@Override
 	'	public boolean containsValueEquivalent(Object <valName>, Comparator\<Object\> <cmpName>) {
-	'		<q([ if_elseIf_else_containsValEquivalent(i, n) | i <- [1..n+2] ]) /* n+2 to create else branch*/>
+	'		<if_elseIf_else_containsKeyOrVal(n, equalityComparator, valName)>
 	'	}
 		
 	'	@Override
 	'	public V get(Object <keyName>) {
-	'		<q([ if_elseIf_else_get(i, n) | i <- [1..n+2] ]) /* n+2 to create else branch*/>
+	'		<if_elseIf_else_get(n, equalityDefault)>
 	'	}
 	
 	'	@Override
 	'	public V getEquivalent(Object <keyName>, Comparator\<Object\> <cmpName>) {
-	'		<q([ if_elseIf_else_getEquivalent(i, n) | i <- [1..n+2] ]) /* n+2 to create else branch*/>
+	'		<if_elseIf_else_get(n, equalityComparator)>
 	'	}	
 
 	'	@Override
@@ -289,26 +260,6 @@ str generateClassString(n) =
 	'	}
 	
 	'	@Override
-	'	public ImmutableMap\<K, V\> __putAll(Map\<? extends K, ? extends V\> map) {
-	'		TransientMap\<K, V\> tmp = asTransient();
-	'		if (tmp.__putAll(map)) {
-	'			return tmp.freeze();
-	'		} else {
-	'			return this;
-	'		}
-	'	}
-
-	'	@Override
-	'	public ImmutableMap\<K, V\> __putAllEquivalent(Map\<? extends K, ? extends V\> map, Comparator\<Object\> <cmpName>) {
-	'		TransientMap\<K, V\> tmp = asTransient();
-	'		if (tmp.__putAllEquivalent(map, cmp)) {
-	'			return tmp.freeze();
-	'		} else {
-	'			return this;
-	'		}
-	'	}
-	
-	'	@Override
 	'	public Object clone() throws CloneNotSupportedException {
 	'		return super.clone();
 	'	}
@@ -342,4 +293,26 @@ str generateClassString(n) =
 	'	}
 	
 	'}
+	";
+	
+str not_used = "
+	'	@Override
+	'	public ImmutableMap\<K, V\> __putAll(Map\<? extends K, ? extends V\> map) {
+	'		TransientMap\<K, V\> tmp = asTransient();
+	'		if (tmp.__putAll(map)) {
+	'			return tmp.freeze();
+	'		} else {
+	'			return this;
+	'		}
+	'	}
+
+	'	@Override
+	'	public ImmutableMap\<K, V\> __putAllEquivalent(Map\<? extends K, ? extends V\> map, Comparator\<Object\> <cmpName>) {
+	'		TransientMap\<K, V\> tmp = asTransient();
+	'		if (tmp.__putAllEquivalent(map, cmp)) {
+	'			return tmp.freeze();
+	'		} else {
+	'			return this;
+	'		}
+	'	}
 	";
