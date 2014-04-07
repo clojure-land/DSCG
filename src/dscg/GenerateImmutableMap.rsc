@@ -148,7 +148,7 @@ str checkForDuplicateKeys_predicate(n) {
 str q(list[str] xs) = ( "" | "<if (it == "") {><x><} else {><it>\n<x><}>" | x <- xs);
 
 void main() {
-	for (n <- [0..1]) {
+	for (n <- [0..6]) {
 		println(generateClassString(n));
 	}	
 }
@@ -290,7 +290,12 @@ str generateClassString(n) =
 	
 	'	@Override
 	'	public ImmutableMap\<K, V\> __putAll(Map\<? extends K, ? extends V\> map) {
-	'		return flatten(this, map);
+	'		TransientMap\<K, V\> tmp = asTransient();
+	'		if (tmp.__putAll(map)) {
+	'			return tmp.freeze();
+	'		} else {
+	'			return this;
+	'		}
 	'	}
 
 	'	@Override
