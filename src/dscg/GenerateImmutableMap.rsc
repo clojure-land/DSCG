@@ -32,172 +32,123 @@ str equalityComparator(x, y) = "<cmpName>.compare(<x>, <y>) == 0";
 
 	
 
-str if_elseIf_else_containsKeyOrVal(0, str(str, str) eq, prefix) 
+str generate_bodyOf_containsKeyOrVal(0, str(str, str) eq, prefix) 
 	= "return false;"
 	;
 
-str if_elseIf_else_containsKeyOrVal(n, str(str, str) eq, prefix) 
+str generate_bodyOf_containsKeyOrVal(int n, str(str, str) eq, prefix) 
 	= intercalate(" else ", ["if(<eq("<prefix>", "<prefix><i>")>) { return true; }" | i <- [1..n+1]])
-	+ "else { return false; }"
+	+ " else { return false; }"
 	;
 	
 
 
 
-str if_elseIf_else_get(0, str(str, str) eq) 
+str generate_bodyOf_get(0, str(str, str) eq) 
 	= "return null;"
 	;
 		
-str if_elseIf_else_get(int n, str(str, str) eq) 
+str generate_bodyOf_get(int n, str(str, str) eq) 
 	= intercalate(" else ", ["if(<eq("<keyName>", "<keyName><i>")>) { return <valName><i>; }" | i <- [1..n+1]])
-	+ "else { return null; }"
+	+ " else { return null; }"
 	;
 
 
 
 
-str if_elseIf_else_put(i, n) = if_elseIf_else_put(i, n, equalityDefault);
-str if_elseIf_else_putEquivalent(i, n) = if_elseIf_else_put(i, n, equalityComparator);
+str generate_bodyOf_put(0, str(str, str) eq)
+	= "return mapOf(<keyName>, <valName>);"
+	;
 
-str if_elseIf_else_put(i, n, str(str, str) eq) {
-	if (n == 0) {
-		return "return mapOf(<keyName>, <valName>);";
-	}
+str generate_bodyOf_put(int n, str(str, str) eq)	
+	= intercalate(" else ", ["if(<eq("<keyName>", "<keyName><i>")>) { return mapOf(<keyValArgsReplaced(n, i)>); }" | i <- [1..n+1]])
+	+ " else { return mapOf(<keyValArgsUnmodified(n)>, <keyName>, <valName>); }"
+	;
 
-	allKeyValArgs = str() { return "<for (j <- [1..n+1]) {><keyName><j>, <valName><j><if (j != n) {>, <}><}>"; } ;
-	replaceKeyValPairInArgs = str() { return "<for (j <- [1..n+1]) {><if (i == j) {><keyName>, <valName><} else {><keyName><j>, <valName><j><}><if (j != n) {>, <}><}>"; };
 
-	if (i == 1) {
-		return "if(<eq("<keyName>", "<keyName><i>")>) { return mapOf(<replaceKeyValPairInArgs()>); }";
-	} else {
-		if (i <= n) {
-			return "else if(<eq("<keyName>", "<keyName><i>")>) { return mapOf(<replaceKeyValPairInArgs()>); }";
-		} else {
-			return "else { return mapOf(<allKeyValArgs()>, <keyName>, <valName>); }";		
-		}
-	}
-}
 
-str if_elseIf_else_remove(i, n) = if_elseIf_else_remove(i, n, equalityDefault);
-str if_elseIf_else_removeEquivalent(i, n) = if_elseIf_else_remove(i, n, equalityComparator);
 
-str if_elseIf_else_remove(i, n, str(str, str) eq) {
-	if (n == 0) {
-		return "return this;";
-	}
+str keyValArgsUnmodified(int n) 
+	= intercalate(", ", ["<keyName><i>, <valName><i>"  | i <- [1..n+1]])
+	;
 
-	indicesToKeep = [j | j <- [1..n+1], i != j];
+str keyValArgsReplaced(int n, int j) 
+	= intercalate(", ", ["<if (i == j) {><keyName>, <valName><} else {><keyName><i>, <valName><i><}>" | i <- [1..n+1]])
+	;
+
+str keyValArgsRemoved(int n, int j) 
+	= intercalate(", ", ["<keyName><i>, <valName><i>" | i <- [1..n+1], i != j])
+	;
+
+
+
+
+str generate_bodyOf_remove(0, str(str, str) eq)
+	= "return this;"
+	;
+
+str generate_bodyOf_remove(int n, str(str, str) eq) 
+	= intercalate(" else ", ["if(<eq("<keyName>", "<keyName><i>")>) { return mapOf(<keyValArgsRemoved(n, i)>); }" | i <- [1..n+1]])
+	+ " else { return this; }"
+	;
+
+
+
+
+str generate_bodyOf_entrySet(0)
+	= "return Collections.emptySet();"
+	;
+
+str generate_bodyOf_entrySet(1)
+	= "return Collections.singleton(entryOf(<keyName>1, <valName>1));"
+	;
+
+str generate_bodyOf_entrySet(int n) 
+	= "return AbstractSpecialisedImmutableJdkSet.\<Map.Entry\<K, V\>\> setOf(<for (i <- [1..n+1]) {>entryOf(<keyName><i>, <valName><i>)<if (i != n) {>, <}><}>);"
+	;
+
+
+
+
+str generate_bodyOf_keySet(0)
+	= "return Collections.emptySet();"
+	;
 	
-	args = str() { 
-		if (size(indicesToKeep) != 0) {			
-			return "<for (j <- indicesToKeep) {><keyName><j>, <valName><j><if (j != indicesToKeep[-1]) {>, <}><}>";
-		} else {
-			return "";
-		} 
-	};
+str generate_bodyOf_keySet(1)
+	= "return Collections.singleton(<keyName>1);"
+	;	
 
-	if (i == 1) {
-		return "if(<eq("<keyName>", "<keyName><i>")>) { return mapOf(<args()>); }";
-	} else {
-		if (i <= n) {
-			return "else if(<eq("<keyName>", "<keyName><i>")>) { return mapOf(<args()>); }";
-		} else {
-			return "else { return this; }";		
-		}
-	}
-}
+str generate_bodyOf_keySet(int n) 
+	= "return AbstractSpecialisedImmutableJdkSet.setOf(<for (i <- [1..n+1]) {><keyName><i><if (i != n) {>, <}><}>);"
+	;
 
-str checkForDuplicateKeys_predicate(n) {
-	combinations = [ <i,j> | i <- [1..n+1], j <- [i+1..n+1] ];	
-	return ( "" | "<if (it != "") {> <it> || <}> <keyName><i>.equals(key<j>)" | <i, j> <- combinations);
-}
 
-/*
- * Connect strings with newline.
- */
-str q(list[str] xs) = ( "" | "<if (it == "") {><x><} else {><it>\n<x><}>" | x <- xs);
 
-str q([h, *t]) = (h | it + "\n" + e | e <- t );
 
-void main() {
-	classStrings = [ generateClassString(n) | n <- [0..6] ];
-	writeFile(|project://DSCG/src/dscg/GeneratedImmutableMap.java|, classStrings);
-}
+str generate_bodyOf_values(0)
+	= "return Collections.emptySet();"
+	;
 	
-str generateClassString(n) =  
-	"class Map<n>\<K, V\> extends AbstractSpecialisedImmutableMap\<K, V\> implements Cloneable {
-	'	<for (i <- [1..n+1]) {>
-	'	private final K <keyName><i>;
-	'	private final V <valName><i>;
-	'	<}>	
-	'
-	'	Map<n>(<for (i <- [1..n+1]) {>K <keyName><i>, V <valName><i><if (i != n) {>, <}><}>) {					
-	'		<if (n > 1) {>
-	'		if (<checkForDuplicateKeys_predicate(n)>) {
-	'			throw new IllegalArgumentException(\"Duplicate keys are not allowed in specialised map.\");
-	'		}
-	'		<}>
-	'
-	'		<for (i <- [1..n+1]) {>
-	'		this.<keyName><i> = <keyName><i>;
-	'		this.<valName><i> = <valName><i>;
-	'		<}>
-	'	}
+str generate_bodyOf_values(1)
+	= "return Collections.singleton(<valName>1);"
+	;		
 
-	'	@Override
-	'	public boolean containsKey(Object <keyName>) {
-	'		<if_elseIf_else_containsKeyOrVal(n, equalityDefault, keyName)>	
-	'	}
+str generate_bodyOf_values(int n) = 
+	"// TODO: will fail if two values are equals; return listOf(...)
+	'return AbstractSpecialisedImmutableJdkSet.setOf(<for (i <- [1..n+1]) {><valName><i><if (i != n) {>, <}><}>);"
+	;
 
-	'	@Override
-	'	public boolean containsKeyEquivalent(Object <keyName>, Comparator\<Object\> <cmpName>) {
-	'		<if_elseIf_else_containsKeyOrVal(n, equalityComparator, keyName)>	
-	'	}
+
+
+
+str generate_bodyOf_keyIterator(0)
+	= "return EmptySupplierIterator.emptyIterator();"
+	;
 	
-	'	@Override
-	'	public boolean containsValue(Object <valName>) { 
-	'		<if_elseIf_else_containsKeyOrVal(n, equalityDefault, valName)>
-	'	}
-	
-	'	@Override
-	'	public boolean containsValueEquivalent(Object <valName>, Comparator\<Object\> <cmpName>) {
-	'		<if_elseIf_else_containsKeyOrVal(n, equalityComparator, valName)>
-	'	}
-		
-	'	@Override
-	'	public V get(Object <keyName>) {
-	'		<if_elseIf_else_get(n, equalityDefault)>
-	'	}
-	
-	'	@Override
-	'	public V getEquivalent(Object <keyName>, Comparator\<Object\> <cmpName>) {
-	'		<if_elseIf_else_get(n, equalityComparator)>
-	'	}	
+// TODO: str generate_bodyOf_keyIterator(1) = ???	
 
-	'	@Override
-	'	public int size() {
-	'		return <n>;
-	'	}
-
-	'	@Override
-	'	public Set\<Entry\<K, V\>\> entrySet() {
-	'		return AbstractSpecialisedImmutableJdkSet.\<Map.Entry\<K, V\>\> setOf(<for (i <- [1..n+1]) {>entryOf(<keyName><i>, <valName><i>)<if (i != n) {>, <}><}>);					
-	'	}
-
-	'	@Override
-	'	public Set\<K\> keySet() {
-	'		return AbstractSpecialisedImmutableJdkSet.setOf(<for (i <- [1..n+1]) {><keyName><i><if (i != n) {>, <}><}>);
-	'	}
-
-	'	@Override
-	'	public Collection\<V\> values() {
-	'		// TODO: will fail if two values are equals; return listOf(...)
-	'		return AbstractSpecialisedImmutableJdkSet.setOf(<for (i <- [1..n+1]) {><valName><i><if (i != n) {>, <}><}>);
-	'	}
-	
-	'	@Override
-	'	public SupplierIterator\<K, V\> keyIterator() {
-	'		return new SupplierIterator\<K, V\>() {
+str generate_bodyOf_keyIterator(int n) = 
+	"		return new SupplierIterator\<K, V\>() {
 	'			int cursor = 1;
 	'			boolean hasGet;
 	'			
@@ -237,37 +188,116 @@ str generateClassString(n) =
 	'				throw new UnsupportedOperationException();
 	'			}			
 	'		};
+	";
+
+
+
+
+str checkForDuplicateKeys(n) {
+	combinations = [ <i,j> | i <- [1..n+1], j <- [i+1..n+1] ];	
+	predicate = ( "" | "<if (it != "") {> <it> || <}> <keyName><i>.equals(key<j>)" | <i, j> <- combinations);
+	
+	return "<if (n > 1) {>if (<predicate>) { throw new IllegalArgumentException(\"Duplicate keys are not allowed in specialised map.\"); }\n\n<}>";
+}
+	
+
+/*
+ * Connect strings with newline.
+ * Old Version: str q(list[str] xs) = ( "" | "<if (it == "") {><x><} else {><it>\n<x><}>" | x <- xs);
+ */
+str q([h, *t]) = (h | it + "\n" + e | e <- t );
+
+
+void main() {
+	classStrings = [ generateClassString(n) | n <- [0..6] ];
+	writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedImmutableMap.java|, classStrings);
+}
+	
+str generateClassString(n) =  
+	"class Map<n>\<K, V\> extends AbstractSpecialisedImmutableMap\<K, V\> {
+	'	<for (i <- [1..n+1]) {>
+	'	private final K <keyName><i>;
+	'	private final V <valName><i>;
+	'	<}>	
+	'
+	'	Map<n>(<for (i <- [1..n+1]) {>final K <keyName><i>, final V <valName><i><if (i != n) {>, <}><}>) {					
+	'		<checkForDuplicateKeys(n)><intercalate("\n\n", ["this.<keyName><i> = <keyName><i>; this.<valName><i> = <valName><i>;" | i <- [1..n+1]])>
+	'	}
+
+	'	@Override
+	'	public boolean containsKey(Object <keyName>) {
+	'		<generate_bodyOf_containsKeyOrVal(n, equalityDefault, keyName)>	
+	'	}
+
+	'	@Override
+	'	public boolean containsKeyEquivalent(Object <keyName>, Comparator\<Object\> <cmpName>) {
+	'		<generate_bodyOf_containsKeyOrVal(n, equalityComparator, keyName)>	
+	'	}
+	
+	'	@Override
+	'	public boolean containsValue(Object <valName>) { 
+	'		<generate_bodyOf_containsKeyOrVal(n, equalityDefault, valName)>
+	'	}
+	
+	'	@Override
+	'	public boolean containsValueEquivalent(Object <valName>, Comparator\<Object\> <cmpName>) {
+	'		<generate_bodyOf_containsKeyOrVal(n, equalityComparator, valName)>
+	'	}
+		
+	'	@Override
+	'	public V get(Object <keyName>) {
+	'		<generate_bodyOf_get(n, equalityDefault)>
+	'	}
+	
+	'	@Override
+	'	public V getEquivalent(Object <keyName>, Comparator\<Object\> <cmpName>) {
+	'		<generate_bodyOf_get(n, equalityComparator)>
+	'	}	
+
+	'	@Override
+	'	public int size() {
+	'		return <n>;
+	'	}
+
+	'	@Override
+	'	public Set\<Entry\<K, V\>\> entrySet() {
+	'		<generate_bodyOf_entrySet(n)>
+	'	}
+
+	'	@Override
+	'	public Set\<K\> keySet() {
+	'		<generate_bodyOf_keySet(n)>
+	'	}
+
+	'	@Override
+	'	public Collection\<V\> values() {
+	'		<generate_bodyOf_values(n)>
+	'	}
+	
+	'	@Override
+	'	public SupplierIterator\<K, V\> keyIterator() {
+	'		<generate_bodyOf_keyIterator(n)>
 	'	}	
 
 	'	@Override
 	'	public ImmutableMap\<K, V\> __put(K <keyName>, V <valName>) {
-	'		<q([ if_elseIf_else_put(i, n) | i <- [1..n+2] ]) /* n+2 to create else branch*/>
+	'		<generate_bodyOf_put(n, equalityDefault)>
 	'	}
 	
 	'	@Override
 	'	public ImmutableMap\<K, V\> __putEquivalent(K <keyName>, V <valName>, Comparator\<Object\> <cmpName>) {
-	'		<q([ if_elseIf_else_putEquivalent(i, n) | i <- [1..n+2] ]) /* n+2 to create else branch*/>
+	'		<generate_bodyOf_put(n, equalityComparator)>
 	'	}	
 
 	'	@Override
 	'	public ImmutableMap\<K, V\> __remove(K <keyName>) {
-	'		<q([ if_elseIf_else_remove(i, n) | i <- [1..n+2] ]) /* n+2 to create else branch*/>	
+	'		<generate_bodyOf_remove(n, equalityDefault)>	
 	'	}
 
 	'	@Override
 	'	public ImmutableMap\<K, V\> __removeEquivalent(K <keyName>, Comparator\<Object\> <cmpName>) {
-	'		<q([ if_elseIf_else_removeEquivalent(i, n) | i <- [1..n+2] ]) /* n+2 to create else branch*/>
+	'		<generate_bodyOf_remove(n, equalityComparator)>
 	'	}
-	
-	'	@Override
-	'	public Object clone() throws CloneNotSupportedException {
-	'		return super.clone();
-	'	}
-	
-	'	@Override
-	'	public boolean isTransientSupported() {
-	'		return true;
-	'	}	
 	
 	'	@Override
 	'	public TransientMap\<K, V\> asTransient() {
@@ -276,20 +306,12 @@ str generateClassString(n) =
 	
 	'	@Override
 	'	public int hashCode() {
-	'		<if (n > 0) {>
-	'		return (<for (i <- [1..n+1]) {>(Objects.hashCode(<keyName><i>) ^ Objects.hashCode(<valName><i>))<if (i != n) {> + <}><}>);
-	'		<} else {>
-	'		return 0;
-	'		<}>
+	'		<if (n == 0) {>return 0;<} else {>return (<for (i <- [1..n+1]) {>(Objects.hashCode(<keyName><i>) ^ Objects.hashCode(<valName><i>))<if (i != n) {> + <}><}>);<}>
 	'	}		
 	
 	'	@Override
 	'	public String toString() {
-	'		<if (n > 0) {>	
-	'		return String.format(\"{<for (i <- [1..n+1]) {>%s=%s<if (i != n) {>, <}><}>}\", <for (i <- [1..n+1]) {><keyName><i>, <valName><i><if (i != n) {>, <}><}>);
-	'		<} else {>
-	'		return \"{}\";
-	'		<}>
+	'		<if (n == 0) {>return \"{}\";<} else {>return String.format(\"{<for (i <- [1..n+1]) {>%s=%s<if (i != n) {>, <}><}>}\", <for (i <- [1..n+1]) {><keyName><i>, <valName><i><if (i != n) {>, <}><}>);<}>
 	'	}
 	
 	'}
@@ -315,4 +337,14 @@ str not_used = "
 	'			return this;
 	'		}
 	'	}
+	
+	'	@Override
+	'	public Object clone() throws CloneNotSupportedException {
+	'		return super.clone();
+	'	}
+	
+	'	@Override
+	'	public boolean isTransientSupported() {
+	'		return true;
+	'	}	
 	";
