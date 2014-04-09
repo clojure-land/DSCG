@@ -14,6 +14,8 @@ module dscg::GenerateImmutableMap
 import IO;
 import List;
 
+import dscg::Common;
+
 /* 
  * Configuration 
  */
@@ -104,7 +106,7 @@ str generate_bodyOf_entrySet(1)
 	;
 
 str generate_bodyOf_entrySet(int n) 
-	= "return AbstractSpecialisedImmutableJdkSet.\<Map.Entry\<K, V\>\> setOf(<for (i <- [1..n+1]) {>entryOf(<keyName><i>, <valName><i>)<if (i != n) {>, <}><}>);"
+	= "return AbstractSpecialisedImmutableSet.\<Map.Entry\<K, V\>\> setOf(<for (i <- [1..n+1]) {>entryOf(<keyName><i>, <valName><i>)<if (i != n) {>, <}><}>);"
 	;
 
 
@@ -119,7 +121,7 @@ str generate_bodyOf_keySet(1)
 	;	
 
 str generate_bodyOf_keySet(int n) 
-	= "return AbstractSpecialisedImmutableJdkSet.setOf(<for (i <- [1..n+1]) {><keyName><i><if (i != n) {>, <}><}>);"
+	= "return AbstractSpecialisedImmutableSet.setOf(<for (i <- [1..n+1]) {><keyName><i><if (i != n) {>, <}><}>);"
 	;
 
 
@@ -135,7 +137,7 @@ str generate_bodyOf_values(1)
 
 str generate_bodyOf_values(int n) = 
 	"// TODO: will fail if two values are equals; return listOf(...)
-	'return AbstractSpecialisedImmutableJdkSet.setOf(<for (i <- [1..n+1]) {><valName><i><if (i != n) {>, <}><}>);"
+	'return AbstractSpecialisedImmutableSet.setOf(<for (i <- [1..n+1]) {><valName><i><if (i != n) {>, <}><}>);"
 	;
 
 
