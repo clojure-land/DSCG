@@ -19,9 +19,9 @@ import dscg::Common;
 /* 
  * Configuration 
  */
-str keyName = "key";
-str valName = "val";
-str cmpName = "cmp"; 
+public str keyName = "key";
+public str valName = "val";
+public str cmpName = "cmp"; 
 
 str equalityDefault(x, y) = "<x>.equals(<y>)";
 
