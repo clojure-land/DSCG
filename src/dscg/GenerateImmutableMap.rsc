@@ -23,9 +23,9 @@ public str keyName = "key";
 public str valName = "val";
 public str cmpName = "cmp"; 
 
-str equalityDefault(x, y) = "<x>.equals(<y>)";
+str equalityDefault(str x, str y) = "<x>.equals(<y>)";
 
-str equalityComparator(x, y) = "<cmpName>.compare(<x>, <y>) == 0";
+str equalityComparator(str x, str y) = "<cmpName>.compare(<x>, <y>) == 0";
 
 // TODO: open github issue
 //str(str, str) eq = equalityDefault;
