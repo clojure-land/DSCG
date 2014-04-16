@@ -17,6 +17,27 @@ import List;
 import dscg::Common;
 import dscg::GenerateImmutableMap;
 
+data Argument
+	= field(str \type, str name)
+	| getter(str \type, str name);
+
+/*
+ * Rewrite Rules
+ */
+Argument key(int i) = field("K", "<keyName><i>");
+Argument val(int i) = field("V", "<valName><i>");
+
+/*
+ * Functions
+ */
+str use(field(_, name)) = name;
+str use(getter(_, name)) = "<name>()";
+default str use(Argument a) { throw "You forgot <a>!"; }
+
+str dec(field(\type, name)) = "<\type> <name>";
+str dec(getter(\type, name)) = "<\type> <name>()";
+default str dec(Argument a) { throw "You forgot <a>!"; }
+
 /* 
  * Configuration 
  */
