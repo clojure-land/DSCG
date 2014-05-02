@@ -1,4 +1,4 @@
-/*******************************************************************************
+/**
  * Copyright (c) 2014 CWI
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -8,7 +8,7 @@
  * Contributors:
  *
  *   * Michael Steindorfer - Michael.Steindorfer@cwi.nl - CWI  
- *******************************************************************************/
+ */
 module dscg::GenerateTrieMap
 
 import IO;
@@ -18,14 +18,21 @@ import dscg::Common;
 import dscg::GenerateImmutableMap;
 
 data Argument
-	= field(str \type, str name)
+	= field (str \type, str name)
 	| getter(str \type, str name);
 
 /*
  * Rewrite Rules
  */
+Argument field (str name) = field ("???", name);
+Argument getter(str name) = getter("???", name);
+
+Argument keyPos(int i) = field("byte", "<keyPosName><i>");
 Argument key(int i) = field("K", "<keyName><i>");
 Argument val(int i) = field("V", "<valName><i>");
+
+Argument nodePos(int i) = field("byte", "<nodePosName><i>");
+Argument \node(int i) = field("CompactNode\<K, V\>", "<nodeName><i>");
 
 /*
  * Functions
@@ -33,10 +40,26 @@ Argument val(int i) = field("V", "<valName><i>");
 str use(field(_, name)) = name;
 str use(getter(_, name)) = "<name>()";
 default str use(Argument a) { throw "You forgot <a>!"; }
+/***/
+str use(list[Argument] xs) = intercalate(", ", mapper(xs, use));
 
 str dec(field(\type, name)) = "<\type> <name>";
 str dec(getter(\type, name)) = "<\type> <name>()";
 default str dec(Argument a) { throw "You forgot <a>!"; }
+/***/
+str dec(list[Argument] xs) = intercalate(", ", mapper(xs, dec));
+
+
+/*
+ * Convenience Functions
+ */
+
+str privateFinalFieldDec(Argument a) = "private final <dec(a)>;";
+
+str intercalateSemicolon(list[str] xs) = intercalate("; ", xs); 
+
+list[Argument] payloadTriple(int i) = [ keyPos(i), key(i), val(i) ];
+list[Argument] subnodePair(int i) = [ nodePos(i), \node(i) ];
 
 /* 
  * Configuration 
@@ -235,59 +258,32 @@ str argsInsertKeyValAt(int n, int m, 0, str newPos, str newKeyName, str newValNa
 		["<newPos>, <newKeyName>, <newValName>"] +
 		["<keyPosName><i>, <keyName><i>, <valName><i>" | i <- [1..m+1]] +
 		["<nodePosName><i>, <nodeName><i>" | i <- [1..n+1]]);
-			
-str argsReplacedKeyVal(int n, int m, int j, str newPos, str newKeyName, str newValName) 
-	= intercalate(", ", 
-		["<if (i == j) {><newPos>, <newKeyName>, <newValName><} else {><keyPosName><i>, <keyName><i>, <valName><i><}>" | i <- [1..m+1]] +
-		["<nodePosName><i>, <nodeName><i>" | i <- [1..n+1]]
-		)
-	;
 	
-str argsReplacedNode(int n, int m, int j, str newPos, str newNodeName) 
-	= intercalate(", ", 
-		["<keyPosName><i>, <keyName><i>, <valName><i>" | i <- [1..m+1]] +
-		["<if (i == j) {><newPos>, <newNodeName><} else {><nodePosName><i>, <nodeName><i><}>" | i <- [1..n+1]]
-		)
-	;
+// TODO: move to List.rsc?
+list[&T] replace(list[&T] xs, list[&T] old, list[&T] new) 
+	= before + new + after
+when [*before, *old, *after] := xs;
+	
+default list[&T] replace(list[&T] xs, list[&T] old, list[&T] new) = xs;	
+	
 
-str argsWithoutKeyVal(int n, int m, int j) 
-	= intercalate(", ", 
-		["<keyPosName><i>, <keyName><i>, <valName><i>" | i <- [1..m+1], i != j] +
-		["<nodePosName><i>, <nodeName><i>" | i <- [1..n+1]])
-	;
-	
-str argsWithoutNode(int n, int m, int j) 
-	= intercalate(", ", 
-		["<keyPosName><i>, <keyName><i>, <valName><i>" | i <- [1..m+1]] +
-		["<nodePosName><i>, <nodeName><i>" | i <- [1..n+1], i != j])
-	;	
-	
-str argsUnmodified(int n, int m) 
-	= intercalate(", ", 
-		["<keyPosName><i>, <keyName><i>, <valName><i>" | i <- [1..m+1]] +
-		["<nodePosName><i>, <nodeName><i>" | i <- [1..n+1]])
-	;
-	
-	
-	
-	
 str generate_bodyOf_updated(0, 0, str(str, str) eq) = 
 	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
 	'return Result.modified(<nodeOf(0, 1, "mask, <keyName>, <valName>")>);"
 	;
 
 str generate_bodyOf_updated(int n, int m, str(str, str) eq) {	
-	replaceValueByNode = str (int i, int j) { return
-		"<intercalate(", ", 
-			["<keyPosName><k>, <keyName><k>, <valName><k>" | k <- [1..m+1], k != i] +
-			["<if (l == j) {>mask, node, <}><nodePosName><l>, <nodeName><l>" | l <- [1..n+1]])>"; 
+	// TODO merge both functions
+	replaceValueByNode = str (int i, int j) {	
+		args = generateMembers(n, m) - payloadTriple(i);
+		args = replace(args, subnodePair(j), [field("mask"), field("node")] + subnodePair(j));
+		
+		return use(args);
 	};
 	
-	replaceValueByNodeAtEnd = str (int i) { return
-		"<intercalate(", ", 
-			["<keyPosName><k>, <keyName><k>, <valName><k>" | k <- [1..m+1], k != i] +
-			["<nodePosName><l>, <nodeName><l>" | l <- [1..n+1]] +
-			["mask, node"])>"; 
+	// TODO merge both functions
+	replaceValueByNodeAtEnd = str (int i) {
+		return use(generateMembers(n, m) - payloadTriple(i) + [field("mask"), field("node")]);
 	};	
 		
 	updated_clause_inline = str (int i) { return 
@@ -297,7 +293,7 @@ str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 		'			result = Result.unchanged(this);
 		'		} else {		
 		'			// update <keyName><i>, <valName><i>
-		'			result = Result.updated(<nodeOf(n, m, argsReplacedKeyVal(n, m, i, "<keyPosName><i>", "<keyName><i>", valName))>, <valName><i>);
+		'			result = Result.updated(<nodeOf(n, m, use(replace(generateMembers(n, m), [ val(i) ], [ field(valName) ])))>, <use(val(i))>);
 		'		}
 		'	} else {
 		'		// merge into node
@@ -316,8 +312,8 @@ str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 		'					mutator, key, keyHash, val, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
 		'
 		'	if (<nestedResult>.isModified()) {
-		'		final CompactNode\<K, V\> thisNew = <nodeOf(n, m, argsReplacedNode(n, m, i, "mask", "<nestedResult>.getNode()"))>;
-		'				
+		'		final CompactNode\<K, V\> thisNew = <nodeOf(n, m, use(replace(generateMembers(n, m), subnodePair(i), [field("mask"), field("<nestedResult>.getNode()")])))>;
+		'
 		'		if (<nestedResult>.hasReplacedValue()) {
 		'			result = Result.updated(thisNew, <nestedResult>.getReplacedValue());
 		'		} else {
@@ -329,6 +325,13 @@ str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 		'}
 		"; 
 	};
+
+	// final CompactNode\<K, V\> thisNew = <nodeOf(n, m, argsReplacedNode(n, m, i, "mask", "<nestedResult>.getNode()"))>;
+
+	
+	//replace(generateMembers(n, m), nodePair(i), [field("byte", "mask"), field("CompactNode\<K, V\>", "<nestedResult>.getNode()")
+	//	
+	//	= (list[Argument] ys := payloadTriple(j) && [*xs, *ys, *zs] := generateMembers(n, m)) ? xs + [ pos, \node ] + zs : generateMembers(n, m)
 	
 	return 
 	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
@@ -360,11 +363,11 @@ str generate_bodyOf_removed(int n, int m, str(str, str) eq) {
 		"if (mask == <keyPosName><i>) {
 		'	if (<eq("<keyName>", "<keyName><i>")>) {
 		'		// remove <keyName><i>, <valName><i>
-		'		result = Result.modified(<nodeOf(n, m-1, argsWithoutKeyVal(n, m, i))>);
+		'		result = Result.modified(<nodeOf(n, m-1, use(generateMembers(n, m) - payloadTriple(i)))>);
 		'	} else {
 		'		result = Result.unchanged(this);
 		'	}
-		'}"; 
+		'}";
 	};
 
 	removed_clause_node = str (int i) { return 
@@ -944,17 +947,18 @@ str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 	}
 
 	return Result.unchanged(this);";
+
+list[Argument] generateMembers(int n, int m) 
+	= [ *payloadTriple(i) | i <- [1..m+1]] 
+	+ [ *subnodePair(i)   | i <- [1..n+1]]
+	;
 	
-str generateSpecializedMixedNodeClassString(int n, int m) =
+str generateSpecializedMixedNodeClassString(int n, int m) {
+	members = generateMembers(n, m);
+
+	return
 	"private static final class Value<m>Index<n>Node\<K, V\> extends CompactNode\<K, V\> {
-	'	<for (i <- [1..m+1]) {>
-	'	private final byte <keyPosName><i>;
-	'	private final K <keyName><i>;
-	'	private final V <valName><i>;
-	'	<}><for (i <- [1..n+1]) {>
-	'	private final byte <nodePosName><i>;
-	'	private final CompactNode\<K, V\> <nodeName><i>;
-	'	<}>	
+	'	<mapper(members, privateFinalFieldDec)>
 		
 	'	Value<m>Index<n>Node(final AtomicReference\<Thread\> mutator<if ((n + m) > 0) {>, <}><intercalate(", ", 
 		["final byte <keyPosName><i>, final K <keyName><i>, final V <valName><i>" | i <- [1..m+1]] +
@@ -1111,13 +1115,13 @@ str generateSpecializedMixedNodeClassString(int n, int m) =
 
 	'	@Override
 	'	public String toString() {		
-	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s=%s" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <argsUnmodified(n, m)>);<}>
+	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s=%s" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use(members)>);<}>
 	'	}
 	
 	'}
 	"
 	;
-
+}
 
 str generate_bodyOf_sizePredicate(0, 0) = "SIZE_EMPTY";
 str generate_bodyOf_sizePredicate(0, 1) = "SIZE_ONE";	
