@@ -56,11 +56,6 @@ str dec(list[Argument] xs) = intercalate(", ", mapper(xs, dec));
 /*
  * Convenience Functions
  */
-
-str privateFinalFieldDec(Argument a) = "private final <dec(a)>;";
-
-// str intercalateSemicolon(list[str] xs) = intercalate("; ", xs); 
-
 list[Argument] payloadTriple(int i) = [ keyPos(i), key(i), val(i) ];
 list[Argument] subnodePair(int i) = [ nodePos(i), \node(i) ];
 
@@ -884,17 +879,30 @@ list[Argument] generateMembers(int n, int m)
 	
 str generateSpecializedMixedNodeClassString(int n, int m) {
 	members = generateMembers(n, m);
+	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
 
 	return
 	"private static final class Value<m>Index<n>Node\<K, V\> extends CompactNode\<K, V\> {
-	'	<mapper(members, privateFinalFieldDec)>
-		
-	'	Value<m>Index<n>Node(final AtomicReference\<Thread\> mutator<if ((n + m) > 0) {>, <}><intercalate(", ", 
-		["final byte <keyPosName><i>, final K <keyName><i>, final V <valName><i>" | i <- [1..m+1]] +
-		["final byte <nodePosName><i>, final CompactNode\<K, V\> <nodeName><i>" | i <- [1..n+1]])>) {					
-	'		<intercalate("\n\n", 
-				["this.<keyPosName><i> = <keyPosName><i>; this.<keyName><i> = <keyName><i>; this.<valName><i> = <valName><i>;" | i <- [1..m+1]] +
-				["this.<nodePosName><i> = <nodePosName><i>; this.<nodeName><i> = <nodeName><i>;" | i <- [1..n+1]])>
+	'	<intercalate("\n", mapper(members, str(Argument a) { 
+			str dec = "private final <dec(a)>;";
+			
+			if (field(_, /.*pos.*/) := a || getter(_, /.*pos.*/) := a) {
+				return "\n<dec>";
+			} else {
+				return dec;
+			} 
+		}))>
+				
+	'	Value<m>Index<n>Node(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
+	'		<intercalate("\n", mapper(members, str(Argument a) { 
+				str dec = "this.<use(a)> = <use(a)>;";
+				
+				if (field(_, /.*pos.*/) := a || getter(_, /.*pos.*/) := a) {
+					return "\n<dec>";
+				} else {
+					return dec;
+				} 
+			}))>
 	'		<if ((n + m) > 0) {>
 	'		<}>assert nodeInvariant();
 	'	}
