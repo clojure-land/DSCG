@@ -28,11 +28,14 @@ Argument field (str name) = field ("???", name);
 Argument getter(str name) = getter("???", name);
 
 Argument keyPos(int i) = field("byte", "<keyPosName><i>");
+Argument key()		= field("K", "<keyName>");
 Argument key(int i) = field("K", "<keyName><i>");
+Argument val()		= field("V", "<valName>");
 Argument val(int i) = field("V", "<valName><i>");
 
 Argument nodePos(int i) = field("byte", "<nodePosName><i>");
-Argument \node(int i) = field("CompactNode\<K, V\>", "<nodeName><i>");
+Argument \node()		= field("CompactNode\<K, V\>", "<nodeName>");
+Argument \node(int i) 	= field("CompactNode\<K, V\>", "<nodeName><i>");
 
 /*
  * Functions
@@ -56,7 +59,7 @@ str dec(list[Argument] xs) = intercalate(", ", mapper(xs, dec));
 
 str privateFinalFieldDec(Argument a) = "private final <dec(a)>;";
 
-str intercalateSemicolon(list[str] xs) = intercalate("; ", xs); 
+// str intercalateSemicolon(list[str] xs) = intercalate("; ", xs); 
 
 list[Argument] payloadTriple(int i) = [ keyPos(i), key(i), val(i) ];
 list[Argument] subnodePair(int i) = [ nodePos(i), \node(i) ];
@@ -81,8 +84,6 @@ void main() {
 		[ generateSpecializedMixedNodeClassString(n, m) | m <- [0..33], n <- [0..33], (n + m) <= 4 && !((n == 1) && (m == 0)) ];  
 	writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
 }
-
-str(str,str) getStuff() = equalityDefault;
 	
 str generateClassString(int n) =  
 	"class Map<n>\<K, V\> extends AbstractSpecialisedImmutableMap\<K, V\> {
@@ -187,85 +188,20 @@ str generateClassString(int n) =
 	
 	'}
 	";
-		
-// TODO check if used
-str posNodeArgsUnmodified(int n) 
-	= intercalate(", ", ["<nodePosName><i>, <nodeName><i>"  | i <- [1..n+1]])
-	;
-
-// TODO check if used
-str posNodeArgsReplaced(int n, int j, str newPos, str newName) 
-	= intercalate(", ", ["<if (i == j) {><newPos>, <newName><} else {><nodePosName><i>, <nodeName><i><}>" | i <- [1..n+1]])
-	;
-
-// TODO check if used
-str posNodeArgsInsertAt(int n, 0, str newPos, str newName) 
-	= "<newPos>, <newName>, " + posNodeArgsUnmodified(n)
-	;
-
-// TODO check if used	
-str posNodeArgsInsertAt(int n, int j, str newPos, str newName) 
-	= "<newPos>, <newName>, " + posNodeArgsUnmodified(n)
-		when j == n+1;
-
-str posNodeArgsInsertAt(int n, int j, str newPos, str newName) 
-	= intercalate(", ", ["<if (i == j) {><newPos>, <newName>, <}><nodePosName><i>, <nodeName><i>" | i <- [1..n+1]])
-	;	
-
-str posNodeArgsRemoved(int n, int j) 
-	= intercalate(", ", ["<nodePosName><i>, <nodeName><i>" | i <- [1..n+1], i != j])
-	;
-
-
-
-
-
-
-str posKeyValArgsUnmodified(int m) 
-	= intercalate(", ", ["<keyPosName><i>, <keyName><i>, <valName><i>"  | i <- [1..m+1]])
-	;
-
-str posNodeArgsUnmodified(int n) 
-	= intercalate(", ", ["<nodePosName><i>, <nodeName><i>"  | i <- [1..n+1]])
-	;
-
-//str argsInsertKeyValAt(int n, int m, 0, str newPos, str newKeyName, str newValName) 
-//	= "<newPos>, <newKeyName>, <newValName>, <posKeyValArgsUnmodified(m)>, <posNodeArgsUnmodified(n)>"
-//	;
-//	
-//str argsInsertKeyValAt(int n, int m, int j, str newPos, str newKeyName, str newValName) 
-//	= "<newPos>, <newName>, " + posNodeArgsUnmodified(n)
-//		when j == n+1;
-
-// TODO: improve
-default str argsInsertKeyValAt(int n, int m, int j, str newPos, str newKeyName, str newValName) 
-	= intercalate(", ", 
-		["<if (i == j) {><newPos>, <newKeyName>, <newValName>, <}><keyPosName><i>, <keyName><i>, <valName><i>" | i <- [1..m+1]] +
-		["<nodePosName><i>, <nodeName><i>" | i <- [1..n+1]])
-	;
-
-// TODO: improve	
-str argsInsertKeyValAt(int n, int m, int j, str newPos, str newKeyName, str newValName)
-	= intercalate(", ", 
-		["<keyPosName><i>, <keyName><i>, <valName><i>" | i <- [1..m+1]] +
-		["<newPos>, <newKeyName>, <newValName>"] +
-		["<nodePosName><i>, <nodeName><i>" | i <- [1..n+1]])
-		when j == m+1;
-		
-// TODO: improve	
-str argsInsertKeyValAt(int n, int m, 0, str newPos, str newKeyName, str newValName)
-	= intercalate(", ", 
-		["<newPos>, <newKeyName>, <newValName>"] +
-		["<keyPosName><i>, <keyName><i>, <valName><i>" | i <- [1..m+1]] +
-		["<nodePosName><i>, <nodeName><i>" | i <- [1..n+1]]);
-	
+			
 // TODO: move to List.rsc?
 list[&T] replace(list[&T] xs, list[&T] old, list[&T] new) 
 	= before + new + after
 when [*before, *old, *after] := xs;
 	
-default list[&T] replace(list[&T] xs, list[&T] old, list[&T] new) = xs;	
-	
+// default list[&T] replace(list[&T] xs, list[&T] old, list[&T] new) = xs;	
+
+// TODO: move to List.rsc?
+list[&T] insertBeforeOrDefaultAtEnd(list[&T] xs, list[&T] old, list[&T] new)
+	= before + new + old + after
+when [*before, *old, *after] := xs;	
+
+default list[&T] insertBeforeOrDefaultAtEnd(list[&T] xs, list[&T] old, list[&T] new) = xs + new;		
 
 str generate_bodyOf_updated(0, 0, str(str, str) eq) = 
 	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
@@ -325,13 +261,6 @@ str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 		'}
 		"; 
 	};
-
-	// final CompactNode\<K, V\> thisNew = <nodeOf(n, m, argsReplacedNode(n, m, i, "mask", "<nestedResult>.getNode()"))>;
-
-	
-	//replace(generateMembers(n, m), nodePair(i), [field("byte", "mask"), field("CompactNode\<K, V\>", "<nestedResult>.getNode()")
-	//	
-	//	= (list[Argument] ys := payloadTriple(j) && [*xs, *ys, *zs] := generateMembers(n, m)) ? xs + [ pos, \node ] + zs : generateMembers(n, m)
 	
 	return 
 	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
@@ -390,7 +319,7 @@ str generate_bodyOf_removed(int n, int m, str(str, str) eq) {
 					
 				case SIZE_MORE_THAN_ONE:
 					// update <nodeName><i>
-					result = Result.modified(<nodeOf(n, m, argsReplacedNode(n, m, i, "mask", "updatedNode"))>);
+					result = Result.modified(<nodeOf(n, m, use(replace(generateMembers(n, m), subnodePair(i), [field("mask"), field("updatedNode")])))>);
 					break;
 
 				default:
@@ -1149,11 +1078,11 @@ str generate_equalityComparisons(int n, int m, str(str, str) eq) =
 	
 
 str generate_bodyOf_inlineValue(int n, int m) =
-	"return <nodeOf(n, m+1, argsInsertKeyValAt(n, m, m+1, "mask", keyName, valName))>;"
+	"return <nodeOf(n, m+1, use(generateMembers(n, m) + [ field("mask"), key(), val() ]))>;"
 when m == 0;
-	
+
 default str generate_bodyOf_inlineValue(int n, int m) =
-	"<intercalate(" else ", [ "if (mask \< <keyPosName><i>) { return <nodeOf(n, m+1, argsInsertKeyValAt(n, m, i, "mask", keyName, valName))>; }" | i <- [1..m+1] ])> else {
-	'	return <nodeOf(n, m+1, argsInsertKeyValAt(n, m, m+1, "mask", keyName, valName))>;
+	"<intercalate(" else ", [ "if (mask \< <keyPosName><i>) { return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers(n, m), payloadTriple(i), [field("mask"), key(), val()])))>; }" | i <- [1..m+1] ])> else {
+	'	return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers(n, m), subnodePair(1), [ field("mask"), key(), val() ])))>;
 	'}"
 	;
