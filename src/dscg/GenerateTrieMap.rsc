@@ -40,8 +40,8 @@ Argument val()		= field("V", "<valName>");
 Argument val(int i) = field("V", "<valName><i>");
 
 Argument nodePos(int i) = field("byte", "<nodePosName><i>");
-Argument \node()		= field("CompactNode\<K, V\>", "<nodeName>");
-Argument \node(int i) 	= field("CompactNode\<K, V\>", "<nodeName><i>");
+Argument \node()		= field("<CompactNode>\<K, V\>", "<nodeName>");
+Argument \node(int i) 	= field("<CompactNode>\<K, V\>", "<nodeName><i>");
 
 /*
  * Functions
@@ -58,10 +58,23 @@ default str dec(Argument a) { throw "You forgot <a>!"; }
 /***/
 str dec(list[Argument] xs) = intercalate(", ", mapper(xs, dec));
 
+
+default str toString(\map()) = "Map";
+default str toString(\set()) = "Set";
+default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
+
 /*
  * Global State [TODO: remove me!]
  */
 DataStructure ds = \map();
+
+str nodeName = "node";
+str nodePosName = "npos";
+int nMax = 32;
+
+str nestedResult = "nestedResult";
+
+str keyPosName = "pos";
 
 /*
  * Convenience Functions [TODO: remove global state dependency!]
@@ -88,21 +101,15 @@ list[Argument] payloadTriple(str posName, str keyName, str valName) {
 	} else { 
 		return [ field("byte", posName), field("K", keyName) ];
 	}
-
-}
+} 
 
 list[Argument] subnodePair(int i) = [ nodePos(i), \node(i) ];
+
+str CompactNode = "Compact<toString(ds)>Node";
 
 /* 
  * Configuration 
  */
-str nodeName = "node";
-str nodePosName = "npos";
-int nMax = 32;
-
-str nestedResult = "nestedResult";
-
-str keyPosName = "pos";
 
 void main() {
 	//classStrings = [ generateClassString(n) | n <- [0..6] ];
@@ -265,7 +272,7 @@ str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 					'		}
 					'	} else {
 					'		// merge into node
-					'		final CompactNode\<K, V\> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <valName><i>, <keyName>, <keyName>Hash, <valName>, shift + BIT_PARTITION_SIZE);
+					'		final <CompactNode>\<K, V\> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <valName><i>, <keyName>, <keyName>Hash, <valName>, shift + BIT_PARTITION_SIZE);
 					'		
 					'		<if (n == 0) {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
 					'			result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);
@@ -280,7 +287,7 @@ str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 					'		result = Result.unchanged(this);
 					'	} else {
 					'		// merge into node
-					'		final CompactNode\<K, V\> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <keyName>, <keyName>Hash, shift + BIT_PARTITION_SIZE);
+					'		final <CompactNode>\<K, V\> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <keyName>, <keyName>Hash, shift + BIT_PARTITION_SIZE);
 					'		
 					'		<if (n == 0) {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
 					'			result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);
@@ -295,11 +302,11 @@ str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 			
 	updated_clause_node = str (int i) { return 
 		"if (mask == <nodePosName><i>) {
-		'	final Result\<K, V, ? extends CompactNode\<K, V\>\> <nestedResult> = <nodeName><i>.updated(
+		'	final Result\<K, V, ? extends <CompactNode>\<K, V\>\> <nestedResult> = <nodeName><i>.updated(
 		'					mutator, key, keyHash, val, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
 		'
 		'	if (<nestedResult>.isModified()) {
-		'		final CompactNode\<K, V\> thisNew = <nodeOf(n, m, use(replace(generateMembers(n, m), subnodePair(i), [field("mask"), field("<nestedResult>.getNode()")])))>;
+		'		final <CompactNode>\<K, V\> thisNew = <nodeOf(n, m, use(replace(generateMembers(n, m), subnodePair(i), [field("mask"), field("<nestedResult>.getNode()")])))>;
 		'
 		'		if (<nestedResult>.hasReplacedValue()) {
 		'			result = Result.updated(thisNew, <nestedResult>.getReplacedValue());
@@ -315,7 +322,7 @@ str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 	
 	return 
 	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
-	'final Result\<K, V, ? extends CompactNode\<K, V\>\> result;		
+	'final Result\<K, V, ? extends <CompactNode>\<K, V\>\> result;		
 	'		
 	'<intercalate(" else ", [ updated_clause_inline(i)| i <- [1..m+1]] + [ updated_clause_node(i)| i <- [1..n+1]])> else {
 	'	// no value
@@ -327,7 +334,7 @@ str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 
 
 str nodeOf(int n, int m, "")
-	= "CompactNode.\<K, V\> valNodeOf(mutator)"
+	= "<CompactNode>.\<K, V\> valNodeOf(mutator)"
 	;
 
 str nodeOf(int n, int m, str args)
@@ -352,11 +359,11 @@ str generate_bodyOf_removed(int n, int m, str(str, str) eq) {
 
 	removed_clause_node = str (int i) { return 
 		"if (mask == <nodePosName><i>) {
-		'	final Result\<K, V, ? extends CompactNode\<K, V\>\> <nestedResult> = <nodeName><i>.removed(
+		'	final Result\<K, V, ? extends <CompactNode>\<K, V\>\> <nestedResult> = <nodeName><i>.removed(
 		'					mutator, key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
 		'
 		'	if (<nestedResult>.isModified()) {
-				final CompactNode\<K, V\> updatedNode = <nestedResult>.getNode();
+				final <CompactNode>\<K, V\> updatedNode = <nestedResult>.getNode();
 
 				switch (updatedNode.sizePredicate()) {
 				<if (n == 1 && m == 0) {>case SIZE_EMPTY:
@@ -384,7 +391,7 @@ str generate_bodyOf_removed(int n, int m, str(str, str) eq) {
 	
 	return 
 	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
-	'final Result\<K, V, ? extends CompactNode\<K, V\>\> result;		
+	'final Result\<K, V, ? extends <CompactNode>\<K, V\>\> result;		
 	'		
 	'<intercalate(" else ", [ removed_clause_inline(i)| i <- [1..m+1]] + [ removed_clause_node(i)| i <- [1..n+1]])> else {
 	'	result = Result.unchanged(this);
@@ -418,37 +425,37 @@ str generate_bodyOf_findByKey(int n, int m, str(str, str) eq)
 	;	
 			
 str generateGenericNodeClassString(int n, int m) =
-	"private static final class Index<n>Node\<K, V\> extends CompactNode\<K, V\> {
+	"private static final class Index<n>Node\<K, V\> extends <CompactNode>\<K, V\> {
 	'	<for (i <- [1..n+1]) {>
 	'	private final byte <nodePosName><i>;
-	'	private final CompactNode\<K, V\> <nodeName><i>;
+	'	private final <CompactNode>\<K, V\> <nodeName><i>;
 	'	<}>	
 	
-	'	Index<n>Node(<for (i <- [1..n+1]) {>final byte <nodePosName><i>, final CompactNode\<K, V\> <nodeName><i><if (i != n) {>, <}><}>) {					
+	'	Index<n>Node(<for (i <- [1..n+1]) {>final byte <nodePosName><i>, final <CompactNode>\<K, V\> <nodeName><i><if (i != n) {>, <}><}>) {					
 	'		<intercalate("\n\n", ["this.<nodePosName><i> = <nodePosName><i>; this.<nodeName><i> = <nodeName><i>;" | i <- [1..n+1]])>
 	'	}
 	
 	'	@SuppressWarnings(\"unchecked\")	
 	'	@Override
-	'	Result\<K, V, ? extends CompactNode\<K, V\>\> updated(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, V <valName>, int shift) {
+	'	Result\<K, V, ? extends <CompactNode>\<K, V\>\> updated(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, V <valName>, int shift) {
 	'		<generate_bodyOf_GenericNode_updated(n, m, equalityDefault)>
 	'	}
 
 	'	@SuppressWarnings(\"unchecked\")	
 	'	@Override
-	'	Result\<K, V, ? extends CompactNode\<K, V\>\> updated(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, V <valName>, int shift, Comparator\<Object\> <cmpName>) {
+	'	Result\<K, V, ? extends <CompactNode>\<K, V\>\> updated(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, V <valName>, int shift, Comparator\<Object\> <cmpName>) {
 	'		<generate_bodyOf_GenericNode_updated(n, m, equalityComparator)>
 	'	}
 
 	'	@SuppressWarnings(\"unchecked\")	
 	'	@Override
-	'	Result\<K, V, ? extends CompactNode\<K, V\>\> removed(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, int shift) {
+	'	Result\<K, V, ? extends <CompactNode>\<K, V\>\> removed(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, int shift) {
 	'		<generate_bodyOf_GenericNode_removed(n, m, equalityDefault)>
 	'	}
 
 	'	@SuppressWarnings(\"unchecked\")	
 	'	@Override
-	'	Result\<K, V, ? extends CompactNode\<K, V\>\> removed(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, int shift, Comparator\<Object\> <cmpName>) {
+	'	Result\<K, V, ? extends <CompactNode>\<K, V\>\> removed(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, int shift, Comparator\<Object\> <cmpName>) {
 	'		<generate_bodyOf_GenericNode_removed(n, m, equalityComparator)>
 	'	}
 	
@@ -528,14 +535,14 @@ default str generate_bodyOf_getValue(int m) =
 	;
 		
 str generateCompactNodeString() = 
-	"private static abstract class CompactNode\<K, V\> extends AbstractNode\<K, V\> {
+	"private static abstract class <CompactNode>\<K, V\> extends AbstractNode\<K, V\> {
 
 		@SuppressWarnings(\"unchecked\")
 		static final AbstractNode EMPTY_INDEX_NODE = new IndexNode(0, new AbstractNode[0], 0);
 
 		@SuppressWarnings(\"unchecked\")
-		static \<K, V\> CompactNode\<K, V\> mergeNodes(CompactNode\<K, V\> node0, int hash0,
-						CompactNode\<K, V\> node1, int hash1, int shift) {
+		static \<K, V\> <CompactNode>\<K, V\> mergeNodes(<CompactNode>\<K, V\> node0, int hash0,
+						<CompactNode>\<K, V\> node1, int hash1, int shift) {
 			final int mask0 = (hash0 \>\>\> shift) & BIT_PARTITION_MASK;
 			final int mask1 = (hash1 \>\>\> shift) & BIT_PARTITION_MASK;
 
@@ -566,7 +573,7 @@ str generateCompactNodeString() =
 	;
 	
 str generateLeafNodeString() = 
-	"private static final class LeafNode\<K, V\> extends CompactNode\<K, V\> implements Map.Entry\<K, V\> {
+	"private static final class LeafNode\<K, V\> extends <CompactNode>\<K, V\> implements Map.Entry\<K, V\> {
 
 		private final K key;
 		private final V val;
@@ -786,7 +793,7 @@ str generate_bodyOf_GenericNode_updated(int n, int m, str(str, str) eq) =
 	'		}
 	'
 	'		// update mapping
-	'		final CompactNode\<K, V\> thisNew;
+	'		final <CompactNode>\<K, V\> thisNew;
 	'
 	'		if (isAllowedToEdit(this.mutator, mutator)) {
 	'			// no copying if already editable
@@ -795,33 +802,33 @@ str generate_bodyOf_GenericNode_updated(int n, int m, str(str, str) eq) =
 	'		} else {
 	'			final Object[] editableNodes = copyAndSet(this.nodes, valIndex + 1, val);
 	'
-	'			thisNew = CompactNode.\<K, V\> valNodeOf(mutator, bitmap, valmap, editableNodes, valueArity);
+	'			thisNew = <CompactNode>.\<K, V\> valNodeOf(mutator, bitmap, valmap, editableNodes, valueArity);
 	'		}
 	'
 	'		return Result.updated(thisNew, (V) currentVal);
 	'	} else {
-	'		final CompactNode\<K, V\> nodeNew = mergeNodes((K) nodes[valIndex], nodes[valIndex].hashCode(), (V) nodes[valIndex + 1], key, keyHash, val, shift + BIT_PARTITION_SIZE);
+	'		final <CompactNode>\<K, V\> nodeNew = mergeNodes((K) nodes[valIndex], nodes[valIndex].hashCode(), (V) nodes[valIndex + 1], key, keyHash, val, shift + BIT_PARTITION_SIZE);
 	'
 	'		final int offset = 2 * (valueArity - 1);
 	'		final int index = Integer.bitCount(((bitmap | bitpos) ^ (valmap & ~bitpos)) & (bitpos - 1));
 	'
 	'		final Object[] editableNodes = copyAndMoveToBackPair(this.nodes, valIndex, offset + index, nodeNew);
 	'
-	'		final CompactNode\<K, V\> thisNew = CompactNode.\<K, V\> valNodeOf(mutator, bitmap | bitpos, valmap & ~bitpos, editableNodes, (byte) (valueArity - 1));
+	'		final <CompactNode>\<K, V\> thisNew = <CompactNode>.\<K, V\> valNodeOf(mutator, bitmap | bitpos, valmap & ~bitpos, editableNodes, (byte) (valueArity - 1));
 	'
 	'		return Result.modified(thisNew);
 	'	}
 	'} else if ((bitmap & bitpos) != 0) { // node (not value)
 	'	final int bitIndex = bitIndex(bitpos);
-	'	final CompactNode\<K, V\> subNode = (CompactNode\<K, V\>) nodes[bitIndex];
+	'	final <CompactNode>\<K, V\> subNode = (<CompactNode>\<K, V\>) nodes[bitIndex];
 	'
-	'	final Result\<K, V, ? extends CompactNode\<K, V\>\> <nestedResult> = subNode.updated(mutator, key, keyHash, val, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+	'	final Result\<K, V, ? extends <CompactNode>\<K, V\>\> <nestedResult> = subNode.updated(mutator, key, keyHash, val, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
 	'
 	'	if (!<nestedResult>.isModified()) {
 	'		return Result.unchanged(this);
 	'	}
 	'
-	'	final CompactNode\<K, V\> thisNew;
+	'	final <CompactNode>\<K, V\> thisNew;
 	'
 	'	// modify current node (set replacement node)
 	'	if (isAllowedToEdit(this.mutator, mutator)) {
@@ -831,7 +838,7 @@ str generate_bodyOf_GenericNode_updated(int n, int m, str(str, str) eq) =
 	'	} else {
 	'		final Object[] editableNodes = copyAndSet(this.nodes, bitIndex, <nestedResult>.getNode());
 	'
-	'		thisNew = CompactNode.\<K, V\> valNodeOf(mutator, bitmap, valmap, editableNodes, valueArity);
+	'		thisNew = <CompactNode>.\<K, V\> valNodeOf(mutator, bitmap, valmap, editableNodes, valueArity);
 	'	}
 	'
 	'	if (<nestedResult>.hasReplacedValue()) {
@@ -843,7 +850,7 @@ str generate_bodyOf_GenericNode_updated(int n, int m, str(str, str) eq) =
 	'	// no value
 	'	final Object[] editableNodes = copyAndInsertPair(this.nodes, valIndex(bitpos), key, val);
 	'
-	'	final CompactNode\<K, V\> thisNew = CompactNode.\<K, V\> valNodeOf(mutator, bitmap | bitpos, valmap | bitpos, editableNodes, (byte) (valueArity + 1));
+	'	final <CompactNode>\<K, V\> thisNew = <CompactNode>.\<K, V\> valNodeOf(mutator, bitmap | bitpos, valmap | bitpos, editableNodes, (byte) (valueArity + 1));
 	'
 	'	return Result.modified(thisNew);
 	'}";
@@ -864,7 +871,7 @@ str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 		} else {
 			final Object[] editableNodes = copyAndRemovePair(this.nodes, valIndex);
 
-			final CompactNode\<K, V\> thisNew = CompactNode.\<K, V\> valNodeOf(mutator,
+			final <CompactNode>\<K, V\> thisNew = <CompactNode>.\<K, V\> valNodeOf(mutator,
 							this.bitmap & ~bitpos, this.valmap & ~bitpos, editableNodes,
 							(byte) (valueArity - 1));
 
@@ -872,15 +879,15 @@ str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 		}
 	} else if ((bitmap & bitpos) != 0) { // node (not value)
 		final int bitIndex = bitIndex(bitpos);
-		final CompactNode\<K, V\> subNode = (CompactNode\<K, V\>) nodes[bitIndex];
-		final Result\<K, V, ? extends CompactNode\<K, V\>\> <nestedResult> = subNode.removed(
+		final <CompactNode>\<K, V\> subNode = (<CompactNode>\<K, V\>) nodes[bitIndex];
+		final Result\<K, V, ? extends <CompactNode>\<K, V\>\> <nestedResult> = subNode.removed(
 						mutator, key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
 
 		if (!<nestedResult>.isModified()) {
 			return Result.unchanged(this);
 		}
 
-		final CompactNode\<K, V\> subNodeNew = <nestedResult>.getNode();
+		final <CompactNode>\<K, V\> subNodeNew = <nestedResult>.getNode();
 
 		switch (subNodeNew.sizePredicate()) {
 		case 0: {
@@ -890,7 +897,7 @@ str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 			} else {
 				final Object[] editableNodes = copyAndRemovePair(this.nodes, bitIndex);
 
-				final CompactNode\<K, V\> thisNew = CompactNode.\<K, V\> valNodeOf(mutator,
+				final <CompactNode>\<K, V\> thisNew = <CompactNode>.\<K, V\> valNodeOf(mutator,
 								bitmap & ~bitpos, valmap, editableNodes, valueArity);
 
 				return Result.modified(thisNew);
@@ -903,7 +910,7 @@ str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 			final Object[] editableNodes = copyAndMoveToFrontPair(this.nodes, bitIndex,
 							valIndexNew, subNodeNew.headKey(), subNodeNew.headVal());
 
-			final CompactNode\<K, V\> thisNew = CompactNode.\<K, V\> valNodeOf(mutator, bitmap,
+			final <CompactNode>\<K, V\> thisNew = <CompactNode>.\<K, V\> valNodeOf(mutator, bitmap,
 							valmap | bitpos, editableNodes, (byte) (valueArity + 1));
 
 			return Result.modified(thisNew);
@@ -917,7 +924,7 @@ str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 			} else {
 				final Object[] editableNodes = copyAndSet(this.nodes, bitIndex, subNodeNew);
 
-				final CompactNode\<K, V\> thisNew = CompactNode.\<K, V\> valNodeOf(mutator,
+				final <CompactNode>\<K, V\> thisNew = <CompactNode>.\<K, V\> valNodeOf(mutator,
 								bitmap, valmap, editableNodes, valueArity);
 
 				return Result.modified(thisNew);
@@ -937,8 +944,10 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	members = generateMembers(n, m);
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
 
+	className = "<toString(ds)><m>To<n>Node";
+
 	return
-	"private static final class Value<m>Index<n>Node\<K, V\> extends CompactNode\<K, V\> {
+	"private static final class <className>\<K, V\> extends Compact<toString(ds)>Node\<K, V\> {
 	'	<intercalate("\n", mapper(members, str(Argument a) { 
 			str dec = "private final <dec(a)>;";
 			
@@ -949,7 +958,7 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 			} 
 		}))>
 				
-	'	Value<m>Index<n>Node(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
+	'	<className>(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
 	'		<intercalate("\n", mapper(members, str(Argument a) { 
 				str dec = "this.<use(a)> = <use(a)>;";
 				
@@ -964,31 +973,31 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'	}
 
 	'	@Override
-	'	Result\<K, V, ? extends CompactNode\<K, V\>\> updated(AtomicReference\<Thread\> mutator, K key,
+	'	Result\<K, V, ? extends <CompactNode>\<K, V\>\> updated(AtomicReference\<Thread\> mutator, K key,
 	'					int keyHash, V val, int shift) {
 	'		<generate_bodyOf_updated(n, m, equalityDefault)>
 	'	}
 
 	'	@Override
-	'	Result\<K, V, ? extends CompactNode\<K, V\>\> updated(AtomicReference\<Thread\> mutator, K key,
+	'	Result\<K, V, ? extends <CompactNode>\<K, V\>\> updated(AtomicReference\<Thread\> mutator, K key,
 	'					int keyHash, V val, int shift, Comparator\<Object\> cmp) {
 	'		<generate_bodyOf_updated(n, m, equalityComparator)>
 	'	}
 
 	'	@Override
-	'	Result\<K, V, ? extends CompactNode\<K, V\>\> removed(AtomicReference\<Thread\> mutator, K key,
+	'	Result\<K, V, ? extends <CompactNode>\<K, V\>\> removed(AtomicReference\<Thread\> mutator, K key,
 	'					int keyHash, int shift) {
 	'		<generate_bodyOf_removed(n, m, equalityDefault)>
 	'	}
 
 	'	@Override
-	'	Result\<K, V, ? extends CompactNode\<K, V\>\> removed(AtomicReference\<Thread\> mutator, K key,
+	'	Result\<K, V, ? extends <CompactNode>\<K, V\>\> removed(AtomicReference\<Thread\> mutator, K key,
 	'					int keyHash, int shift, Comparator\<Object\> cmp) {
 	'		<generate_bodyOf_removed(n, m, equalityComparator)>
 	'	}
 
 	'	<if ((n + m) > 0) {>
-	'	private CompactNode\<K, V\> inlineValue(AtomicReference\<Thread\> mutator, <dec(payloadTriple("mask"))>) {
+	'	private <CompactNode>\<K, V\> inlineValue(AtomicReference\<Thread\> mutator, <dec(payloadTriple("mask"))>) {
 	'		<generate_bodyOf_inlineValue(n, m)>
 	'	}
 	'	<}>
@@ -1016,8 +1025,8 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	
 	'	@SuppressWarnings(\"unchecked\")
 	'	@Override
-	'	Iterator\<CompactNode\<K, V\>\> nodeIterator() {
-	'		return ArrayIterator.\<CompactNode\<K, V\>\> of(new CompactNode[] { <intercalate(", ", ["<nodeName><i>" | i <- [1..n+1]])> });
+	'	Iterator\<<CompactNode>\<K, V\>\> nodeIterator() {
+	'		return ArrayIterator.\<<CompactNode>\<K, V\>\> of(new <CompactNode>[] { <intercalate(", ", ["<nodeName><i>" | i <- [1..n+1]])> });
 	'	}
 
 	'	@Override
@@ -1050,10 +1059,12 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a key.\")<} else {>return key1<}>;
 	'	}
 
+	<if (ds == \map()) {>
 	'	@Override
 	'	V headVal() {
 	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a value.\")<} else {>return val1<}>;
 	'	}	
+	<}>
 	
 	'	@Override
 	'	AbstractNode\<K, V\> getNode(int index) {
@@ -1065,10 +1076,12 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'		<generate_bodyOf_getKey(m)>
 	'	}
 
+	<if (ds == \map()) {>
 	'	@Override
 	'	V getValue(int index) {
 	'		<generate_bodyOf_getValue(m)>
 	'	}
+	<}>
 	
 	'	@Override
 	'	byte sizePredicate() {
@@ -1080,7 +1093,7 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'		<if ((n + m) > 0) {>final int prime = 31;<}>int result = 1;<for (i <- [1..m+1]) {>
 	'		result = prime * result + <keyPosName><i>;
 	'		result = prime * result + <keyName><i>.hashCode();
-	'		result = prime * result + <valName><i>.hashCode();
+	'		<if (ds == \map()) {>result = prime * result + <valName><i>.hashCode();<}>
 	'		<}><for (i <- [1..n+1]) {>
 	'		result = prime * result + <nodePosName><i>;
 	'		result = prime * result + <nodeName><i>.hashCode();
@@ -1099,7 +1112,7 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'		if (getClass() != other.getClass()) {
 	'			return false;
 	'		}
-	'		<if ((n + m) > 0) {>Value<m>Index<n>Node\<?, ?\> that = (Value<m>Index<n>Node\<?, ?\>) other;
+	'		<if ((n + m) > 0) {><className>\<?, ?\> that = (<className>\<?, ?\>) other;
 	'
 	'		<generate_equalityComparisons(n, m, equalityDefault)><}>
 	'
@@ -1129,9 +1142,9 @@ str generate_equalityComparisons(int n, int m, str(str, str) eq) =
 	'if (!<eq("<keyName><i>", "that.<keyName><i>")>) {
 	'	return false;
 	'}
-	'if (!<eq("<valName><i>", "that.<valName><i>")>) {
+	'<if (ds == \map()) {>if (!<eq("<valName><i>", "that.<valName><i>")>) {
 	'	return false;
-	'}<}><for (i <- [1..n+1]) {>
+	'}<}><}><for (i <- [1..n+1]) {>
 	'if (<nodePosName><i> != that.<nodePosName><i>) {
 	'	return false;
 	'}
