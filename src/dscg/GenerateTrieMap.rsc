@@ -17,9 +17,15 @@ import List;
 import dscg::Common;
 import dscg::GenerateImmutableMap;
 
+data DataStructure
+	= \map()
+	| \set()
+	;
+
 data Argument
 	= field (str \type, str name)
-	| getter(str \type, str name);
+	| getter(str \type, str name)
+	;
 
 /*
  * Rewrite Rules
@@ -52,11 +58,39 @@ default str dec(Argument a) { throw "You forgot <a>!"; }
 /***/
 str dec(list[Argument] xs) = intercalate(", ", mapper(xs, dec));
 
+/*
+ * Global State [TODO: remove me!]
+ */
+DataStructure ds = \map();
 
 /*
- * Convenience Functions
+ * Convenience Functions [TODO: remove global state dependency!]
  */
-list[Argument] payloadTriple(int i) = [ keyPos(i), key(i), val(i) ];
+list[Argument] payloadTriple(int i) {
+	if (ds == \map()) {
+		return [ keyPos(i), key(i), val(i) ];
+	} else { 
+		return [ keyPos(i), key(i) ];
+	}
+}
+
+list[Argument] payloadTriple(str posName) {
+	if (ds == \map()) {
+		return [ field("byte", posName), key(), val() ];
+	} else { 
+		return [ field("byte", posName), key() ];
+	}
+}
+
+list[Argument] payloadTriple(str posName, str keyName, str valName) {
+	if (ds == \map()) {
+		return [ field("byte", posName), field("K", keyName), field("V", valName) ];
+	} else { 
+		return [ field("byte", posName), field("K", keyName) ];
+	}
+
+}
+
 list[Argument] subnodePair(int i) = [ nodePos(i), \node(i) ];
 
 /* 
@@ -217,26 +251,48 @@ str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 		return use(generateMembers(n, m) - payloadTriple(i) + [field("mask"), field("node")]);
 	};	
 		
-	updated_clause_inline = str (int i) { return 
-		"if (mask == <keyPosName><i>) {
-		'	if (<eq("<keyName>", "<keyName><i>")>) {
-		'		if (<eq("<valName>", "<valName><i>")>) {
-		'			result = Result.unchanged(this);
-		'		} else {		
-		'			// update <keyName><i>, <valName><i>
-		'			result = Result.updated(<nodeOf(n, m, use(replace(generateMembers(n, m), [ val(i) ], [ field(valName) ])))>, <use(val(i))>);
-		'		}
-		'	} else {
-		'		// merge into node
-		'		final CompactNode\<K, V\> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <valName><i>, <keyName>, <keyName>Hash, <valName>, shift + BIT_PARTITION_SIZE);
-		'		
-		'		<if (n == 0) {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
-		'			result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);
-		'		}<}>
-		'	}
-		'}"; 
+	updated_clause_inline = str (int i) { 
+		switch (ds) {		
+			case \map():
+				return 
+					"if (mask == <keyPosName><i>) {
+					'	if (<eq("<keyName>", "<keyName><i>")>) {
+					'		if (<eq("<valName>", "<valName><i>")>) {
+					'			result = Result.unchanged(this);
+					'		} else {		
+					'			// update <keyName><i>, <valName><i>
+					'			result = Result.updated(<nodeOf(n, m, use(replace(generateMembers(n, m), [ val(i) ], [ field(valName) ])))>, <use(val(i))>);
+					'		}
+					'	} else {
+					'		// merge into node
+					'		final CompactNode\<K, V\> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <valName><i>, <keyName>, <keyName>Hash, <valName>, shift + BIT_PARTITION_SIZE);
+					'		
+					'		<if (n == 0) {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
+					'			result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);
+					'		}<}>
+					'	}
+					'}"; 
+		
+			case \set():
+				return 
+					"if (mask == <keyPosName><i>) {
+					'	if (<eq("<keyName>", "<keyName><i>")>) {
+					'		result = Result.unchanged(this);
+					'	} else {
+					'		// merge into node
+					'		final CompactNode\<K, V\> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <keyName>, <keyName>Hash, shift + BIT_PARTITION_SIZE);
+					'		
+					'		<if (n == 0) {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
+					'			result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);
+					'		}<}>
+					'	}
+					'}"; 
+					
+			default:
+				throw "You forgot <ds>!";			
+		}
 	};
-	
+			
 	updated_clause_node = str (int i) { return 
 		"if (mask == <nodePosName><i>) {
 		'	final Result\<K, V, ? extends CompactNode\<K, V\>\> <nestedResult> = <nodeName><i>.updated(
@@ -263,7 +319,7 @@ str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 	'		
 	'<intercalate(" else ", [ updated_clause_inline(i)| i <- [1..m+1]] + [ updated_clause_node(i)| i <- [1..n+1]])> else {
 	'	// no value
-	'	result = Result.modified(inlineValue(mutator, mask, <keyName>, <valName>));
+	'	result = Result.modified(inlineValue(mutator, <use(payloadTriple("mask"))>));
 	'}
 	'		
 	'return result;";	
@@ -309,7 +365,7 @@ str generate_bodyOf_removed(int n, int m, str(str, str) eq) {
 					result = <nestedResult>;
 					break;< } else {> case SIZE_ONE:
 					// inline sub-node value
-					result = Result.modified(inlineValue(mutator, mask, updatedNode.headKey(), updatedNode.headVal()));
+					result = Result.modified(inlineValue(mutator, <use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()"))>));
 					break;<}>
 					
 				case SIZE_MORE_THAN_ONE:
@@ -932,7 +988,7 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'	}
 
 	'	<if ((n + m) > 0) {>
-	'	private CompactNode\<K, V\> inlineValue(AtomicReference\<Thread\> mutator, byte mask, K <keyName>, V <valName>) {
+	'	private CompactNode\<K, V\> inlineValue(AtomicReference\<Thread\> mutator, <dec(payloadTriple("mask"))>) {
 	'		<generate_bodyOf_inlineValue(n, m)>
 	'	}
 	'	<}>
@@ -1083,14 +1139,14 @@ str generate_equalityComparisons(int n, int m, str(str, str) eq) =
 	'	return false;
 	'}<}>"
 	;
-	
+	 
 
 str generate_bodyOf_inlineValue(int n, int m) =
-	"return <nodeOf(n, m+1, use(generateMembers(n, m) + [ field("mask"), key(), val() ]))>;"
+	"return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers(n, m), subnodePair(1), payloadTriple("mask"))))>;"
 when m == 0;
 
 default str generate_bodyOf_inlineValue(int n, int m) =
-	"<intercalate(" else ", [ "if (mask \< <keyPosName><i>) { return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers(n, m), payloadTriple(i), [field("mask"), key(), val()])))>; }" | i <- [1..m+1] ])> else {
-	'	return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers(n, m), subnodePair(1), [ field("mask"), key(), val() ])))>;
+	"<intercalate(" else ", [ "if (mask \< <keyPosName><i>) { return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers(n, m), payloadTriple(i), payloadTriple("mask"))))>; }" | i <- [1..m+1] ])> else {
+	'	return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers(n, m), subnodePair(1), payloadTriple("mask"))))>;
 	'}"
 	;
