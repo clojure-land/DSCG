@@ -66,7 +66,7 @@ default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 /*
  * Global State [TODO: remove me!]
  */
-DataStructure ds = \set();
+DataStructure ds = \map();
 
 str nodeName = "node";
 str nodePosName = "npos";
@@ -95,6 +95,14 @@ list[Argument] payloadTriple(str posName) {
 	}
 }
 
+list[Argument] payloadTriple(str posName, int i) {
+	if (ds == \map()) {
+		return [ field("byte", posName), key(i), val(i) ];
+	} else { 
+		return [ field("byte", posName), key(i) ];
+	}
+}
+
 list[Argument] payloadTriple(str posName, str keyName, str valName) {
 	if (ds == \map()) {
 		return [ field("byte", posName), field("K", keyName), field("V", valName) ];
@@ -107,19 +115,20 @@ list[Argument] subnodePair(int i) = [ nodePos(i), \node(i) ];
 
 str AbstractNode = "Abstract<toString(ds)>Node";
 str CompactNode = "Compact<toString(ds)>Node";
+
 str Generics = (ds == \map()) ? "\<K, V\>" : "\<K\>";
 str ResultGenerics = (ds == \map()) ? "\<K, V, ? extends <CompactNode><Generics>\>" : "\<K, Void, ? extends <CompactNode><Generics>\>";
+str KeyOrMapEntryGenerics = (ds == \map()) ? "\<java.util.Map.Entry<Generics>\>" : "\<K\>";
+str SupplierIteratorGenerics = (ds == \map()) ? "\<K, V\>" : "\<K, K\>";
+str QuestionMarkGenerics = (ds == \map()) ? "\<?, ?\>" : "\<?\>";
 
-/* 
- * Configuration 
- */
 
 void main() {
 	//classStrings = [ generateClassString(n) | n <- [0..6] ];
 	classStrings = 
 		//generateCompactNodeString() + 
 		//generateLeafNodeString() + 
-		//[ generateGenericNodeClassString(0, 0)] +		
+		[ generateGenericNodeClassString(0, 0)] +		
 		[ generateSpecializedMixedNodeClassString(n, m) | m <- [0..33], n <- [0..33], (n + m) <= 4 && !((n == 1) && (m == 0)) ];  
 	writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
 }
@@ -186,7 +195,7 @@ str generateClassString(int n) =
 	'	}
 	
 	'	@Override
-	'	public SupplierIterator<Generics> keyIterator() {
+	'	public SupplierIterator<SupplierIteratorGenerics> keyIterator() {
 	'		<generate_bodyOf_keyIterator(n)>
 	'	}	
 
@@ -244,7 +253,7 @@ default list[&T] insertBeforeOrDefaultAtEnd(list[&T] xs, list[&T] old, list[&T] 
 
 str generate_bodyOf_updated(0, 0, str(str, str) eq) = 
 	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
-	'return Result.modified(<nodeOf(0, 1, "mask, <keyName>, <valName>")>);"
+	'return Result.modified(<nodeOf(0, 1, "mask, <keyName><if (ds == \map()) {>, <valName><}>")>);"
 	;
 
 str generate_bodyOf_updated(int n, int m, str(str, str) eq) {	
@@ -303,24 +312,46 @@ str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 		}
 	};
 			
-	updated_clause_node = str (int i) { return 
-		"if (mask == <nodePosName><i>) {
-		'	final Result<ResultGenerics> <nestedResult> = <nodeName><i>.updated(
-		'					mutator, key, keyHash, val, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
-		'
-		'	if (<nestedResult>.isModified()) {
-		'		final <CompactNode><Generics> thisNew = <nodeOf(n, m, use(replace(generateMembers(n, m), subnodePair(i), [field("mask"), field("<nestedResult>.getNode()")])))>;
-		'
-		'		if (<nestedResult>.hasReplacedValue()) {
-		'			result = Result.updated(thisNew, <nestedResult>.getReplacedValue());
-		'		} else {
-		'			result = Result.modified(thisNew);
-		'		}
-		'	} else {
-		'		result = Result.unchanged(this);
-		'	}
-		'}
-		"; 
+	updated_clause_node = str (int i) { 
+		switch (ds) {		
+			case \map():
+				return 
+					"if (mask == <nodePosName><i>) {
+					'	final Result<ResultGenerics> <nestedResult> = <nodeName><i>.updated(
+					'					mutator, key, keyHash, val, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+					'
+					'	if (<nestedResult>.isModified()) {
+					'		final <CompactNode><Generics> thisNew = <nodeOf(n, m, use(replace(generateMembers(n, m), subnodePair(i), [field("mask"), field("<nestedResult>.getNode()")])))>;
+					'
+					'		if (<nestedResult>.hasReplacedValue()) {
+					'			result = Result.updated(thisNew, <nestedResult>.getReplacedValue());
+					'		} else {
+					'			result = Result.modified(thisNew);
+					'		}
+					'	} else {
+					'		result = Result.unchanged(this);
+					'	}
+					'}
+					"; 
+		
+			case \set():
+				return 
+					"if (mask == <nodePosName><i>) {
+					'	final Result<ResultGenerics> <nestedResult> = <nodeName><i>.updated(
+					'					mutator, key, keyHash, val, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+					'
+					'	if (<nestedResult>.isModified()) {
+					'		final <CompactNode><Generics> thisNew = <nodeOf(n, m, use(replace(generateMembers(n, m), subnodePair(i), [field("mask"), field("<nestedResult>.getNode()")])))>;
+					'		result = Result.modified(thisNew);
+					'	} else {
+					'		result = Result.unchanged(this);
+					'	}
+					'}
+					"; 
+					
+			default:
+				throw "You forgot <ds>!";			
+		}
 	};
 	
 	return 
@@ -348,7 +379,35 @@ str generate_bodyOf_removed(0, 0, str(str, str) eq)
 	= "return Result.unchanged(this);"
 	;
 
-str generate_bodyOf_removed(int n, int m, str(str, str) eq) {	
+str generate_bodyOf_removed(0, 2, str(str, str) eq) {
+	removed_clause_inline = str (int i) { return 
+		"if (mask == <keyPosName><i>) {
+		'	if (<eq("<keyName>", "<keyName><i>")>) {
+		'		/*
+		'		 * Create node with <if (ds == \map()) {>pair<} else {>element<}> <keyName><3 - i><if (ds == \map()) {>, <valName><3 - i><}>. This
+		'		 * node will a) either become the new root returned, or b)
+		'		 * unwrapped and inlined.
+		'		 */
+		'		final byte <keyPosName><3 - i>AtShiftZero = (shift == 0) ? <keyPosName><3 - i> : (byte) (keyHash & BIT_PARTITION_MASK);
+		'		result = Result.modified(<nodeOf(0, 1, use(payloadTriple("<keyPosName><3 - i>AtShiftZero", 3 - i)))>);
+		'	} else {
+		'		result = Result.unchanged(this);
+		'	}
+		'}";
+	};
+		
+	return 
+	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
+	'final Result<ResultGenerics> result;		
+	'		
+	'<intercalate(" else ", [ removed_clause_inline(i) | i <- [1..3]])> else {
+	'	result = Result.unchanged(this);
+	'}
+	'
+	'return result;";		
+}
+
+default str generate_bodyOf_removed(int n, int m, str(str, str) eq) {	
 	removed_clause_inline = str (int i) { return 
 		"if (mask == <keyPosName><i>) {
 		'	if (<eq("<keyName>", "<keyName><i>")>) {
@@ -375,7 +434,7 @@ str generate_bodyOf_removed(int n, int m, str(str, str) eq) {
 					result = <nestedResult>;
 					break;< } else {> case SIZE_ONE:
 					// inline sub-node value
-					result = Result.modified(inlineValue(mutator, <use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()"))>));
+					result = Result.modified(removeNode<i>AndInlineValue(mutator, <use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()"))>));
 					break;<}>
 					
 				case SIZE_MORE_THAN_ONE:
@@ -422,7 +481,7 @@ str generate_bodyOf_findByKey(0, 0, str(str, str) eq)
 str generate_bodyOf_findByKey(int n, int m, str(str, str) eq) 
 	= "final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);\n\n"	
 	+ intercalate(" else ", 
-		["if(mask == <keyPosName><i> && <eq("<keyName>", "<keyName><i>")>) { return Optional.of(entryOf(<keyName><i>, <valName><i>)); }" | i <- [1..m+1]] +
+		["if(mask == <keyPosName><i> && <eq("<keyName>", "<keyName><i>")>) { return Optional.of(<if (ds == \map()) {>entryOf(<keyName><i>, <valName><i>)<} else {><keyName><i><}>); }" | i <- [1..m+1]] +
 		["if(mask == <nodePosName><i>) { return <nodeName><i>.findByKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>); }" | i <- [1..n+1]])
 	+ " else { return Optional.empty(); }"
 	;	
@@ -476,13 +535,13 @@ str generateGenericNodeClassString(int n, int m) =
 
 	'	@SuppressWarnings(\"unchecked\")
 	'	@Override
-	'	Optional\<java.util.Map.Entry<Generics>\> findByKey(Object <keyName>, int <keyName>Hash, int shift) {
+	'	Optional<KeyOrMapEntryGenerics> findByKey(Object <keyName>, int <keyName>Hash, int shift) {
 	'		<generate_bodyOf_GenericNode_findByKey(n, m, equalityDefault)>
 	'	}
 
 	'	@SuppressWarnings(\"unchecked\")
 	'	@Override
-	'	Optional\<java.util.Map.Entry<Generics>\> findByKey(Object <keyName>, int <keyName>Hash, int shift, Comparator\<Object\> cmp) {
+	'	Optional<KeyOrMapEntryGenerics> findByKey(Object <keyName>, int <keyName>Hash, int shift, Comparator\<Object\> cmp) {
 	'		<generate_bodyOf_GenericNode_findByKey(n, m, equalityComparator)>
 	'	}
 
@@ -624,9 +683,9 @@ str generateLeafNodeString() =
 		}
 
 		@Override
-		Optional\<Map.Entry<Generics>\> findByKey(Object key, int hash, int shift, Comparator\<Object\> cmp) {
+		Optional<KeyOrMapEntryGenerics> findByKey(Object key, int hash, int shift, Comparator\<Object\> cmp) {
 			if (this.keyHash == hash && cmp.compare(this.key, key) == 0) {
-				return Optional.of((Map.Entry<Generics>) this);
+				return Optional.of((Map.Entry<Generics>) this); // TODO: not correct
 			} else {
 				return Optional.empty();
 			}
@@ -678,7 +737,7 @@ str generateLeafNodeString() =
 		}
 
 		@Override
-		SupplierIterator<Generics> payloadIterator() {
+		SupplierIterator<SupplierIteratorGenerics> payloadIterator() {
 			return ArrayKeyValueIterator.of(new Object[] { key, val }, 0, 2);
 		}
 
@@ -788,8 +847,7 @@ str generate_bodyOf_GenericNode_updated(int n, int m, str(str, str) eq) =
 	'	final Object currentKey = nodes[valIndex];
 	'
 	'	if (<eq("currentKey", keyName)>) {
-	'
-	'		final Object currentVal = nodes[valIndex + 1];
+	'		<if (ds == \set()) {>return Result.unchanged(this);<} else {>final Object currentVal = nodes[valIndex + 1];
 	'
 	'		if (<eq("currentVal", valName)>) {
 	'			return Result.unchanged(this);
@@ -805,19 +863,19 @@ str generate_bodyOf_GenericNode_updated(int n, int m, str(str, str) eq) =
 	'		} else {
 	'			final Object[] editableNodes = copyAndSet(this.nodes, valIndex + 1, val);
 	'
-	'			thisNew = <CompactNode>.<Generics> valNodeOf(mutator, bitmap, valmap, editableNodes, valueArity);
+	'			thisNew = <CompactNode>.<Generics> valNodeOf(mutator, bitmap, valmap, editableNodes, payloadArity);
 	'		}
 	'
-	'		return Result.updated(thisNew, (V) currentVal);
+	'		return Result.updated(thisNew, (V) currentVal);<}>
 	'	} else {
-	'		final <CompactNode><Generics> nodeNew = mergeNodes((K) nodes[valIndex], nodes[valIndex].hashCode(), (V) nodes[valIndex + 1], key, keyHash, val, shift + BIT_PARTITION_SIZE);
+	'		final <CompactNode><Generics> nodeNew = mergeNodes((K) nodes[valIndex], nodes[valIndex].hashCode(),<if (ds == \map()) {> (V) nodes[valIndex + 1],<}> key, keyHash,<if (ds == \map()) {> val,<}> shift + BIT_PARTITION_SIZE);
 	'
-	'		final int offset = 2 * (valueArity - 1);
+	'		final int offset = <if (ds == \map()) {>2 * <}>(payloadArity - 1);
 	'		final int index = Integer.bitCount(((bitmap | bitpos) ^ (valmap & ~bitpos)) & (bitpos - 1));
 	'
-	'		final Object[] editableNodes = copyAndMoveToBackPair(this.nodes, valIndex, offset + index, nodeNew);
+	'		final Object[] editableNodes = copyAndMoveToBack<if (ds == \map()) {>Pair<}>(this.nodes, valIndex, offset + index, nodeNew);
 	'
-	'		final <CompactNode><Generics> thisNew = <CompactNode>.<Generics> valNodeOf(mutator, bitmap | bitpos, valmap & ~bitpos, editableNodes, (byte) (valueArity - 1));
+	'		final <CompactNode><Generics> thisNew = <CompactNode>.<Generics> valNodeOf(mutator, bitmap | bitpos, valmap & ~bitpos, editableNodes, (byte) (payloadArity - 1));
 	'
 	'		return Result.modified(thisNew);
 	'	}
@@ -841,19 +899,21 @@ str generate_bodyOf_GenericNode_updated(int n, int m, str(str, str) eq) =
 	'	} else {
 	'		final Object[] editableNodes = copyAndSet(this.nodes, bitIndex, <nestedResult>.getNode());
 	'
-	'		thisNew = <CompactNode>.<Generics> valNodeOf(mutator, bitmap, valmap, editableNodes, valueArity);
+	'		thisNew = <CompactNode>.<Generics> valNodeOf(mutator, bitmap, valmap, editableNodes, payloadArity);
 	'	}
 	'
+		<if (ds == \map()) {>
 	'	if (<nestedResult>.hasReplacedValue()) {
 	'		return Result.updated(thisNew, <nestedResult>.getReplacedValue());
 	'	}
+		<}>
 	'
 	'	return Result.modified(thisNew);
 	'} else {
 	'	// no value
-	'	final Object[] editableNodes = copyAndInsertPair(this.nodes, valIndex(bitpos), key, val);
+	'	final Object[] editableNodes = copyAndInsert<if (ds == \map()) {>Pair<}>(this.nodes, valIndex(bitpos), key<if (ds == \map()) {>, val<}>);
 	'
-	'	final <CompactNode><Generics> thisNew = <CompactNode>.<Generics> valNodeOf(mutator, bitmap | bitpos, valmap | bitpos, editableNodes, (byte) (valueArity + 1));
+	'	final <CompactNode><Generics> thisNew = <CompactNode>.<Generics> valNodeOf(mutator, bitmap | bitpos, valmap | bitpos, editableNodes, (byte) (payloadArity + 1));
 	'
 	'	return Result.modified(thisNew);
 	'}";
@@ -866,19 +926,19 @@ str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 		final int valIndex = valIndex(bitpos);
 
 		if (<eq("nodes[valIndex]", keyName)>) {
+			if (this.arity() == 5) {
+				return Result.modified(removeInplaceValueAndConvertSpecializedNode(mask, bitpos));
+			} else {
+				final Object[] editableNodes = copyAndRemove<if (ds == \map()) {>Pair<}>(this.nodes, valIndex);
+	
+				final <CompactNode><Generics> thisNew = <CompactNode>.<Generics> valNodeOf(mutator,
+								this.bitmap & ~bitpos, this.valmap & ~bitpos, editableNodes,
+								(byte) (payloadArity - 1));
+	
+				return Result.modified(thisNew);
+			}
+		} else {		
 			return Result.unchanged(this);
-		}
-
-		if (this.arity() == 5) {
-			return Result.modified(removeInplaceValueAndConvertSpecializedNode(mask, bitpos));
-		} else {
-			final Object[] editableNodes = copyAndRemovePair(this.nodes, valIndex);
-
-			final <CompactNode><Generics> thisNew = <CompactNode>.<Generics> valNodeOf(mutator,
-							this.bitmap & ~bitpos, this.valmap & ~bitpos, editableNodes,
-							(byte) (valueArity - 1));
-
-			return Result.modified(thisNew);
 		}
 	} else if ((bitmap & bitpos) != 0) { // node (not value)
 		final int bitIndex = bitIndex(bitpos);
@@ -898,10 +958,10 @@ str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 			if (this.arity() == 5) {
 				return Result.modified(removeSubNodeAndConvertSpecializedNode(mask, bitpos));
 			} else {
-				final Object[] editableNodes = copyAndRemovePair(this.nodes, bitIndex);
+				final Object[] editableNodes = copyAndRemove<if (ds == \map()) {>Pair<}>(this.nodes, bitIndex);
 
 				final <CompactNode><Generics> thisNew = <CompactNode>.<Generics> valNodeOf(mutator,
-								bitmap & ~bitpos, valmap, editableNodes, valueArity);
+								bitmap & ~bitpos, valmap, editableNodes, payloadArity);
 
 				return Result.modified(thisNew);
 			}
@@ -910,11 +970,11 @@ str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 			// inline value (move to front)
 			final int valIndexNew = Integer.bitCount((valmap | bitpos) & (bitpos - 1));
 
-			final Object[] editableNodes = copyAndMoveToFrontPair(this.nodes, bitIndex,
-							valIndexNew, subNodeNew.headKey(), subNodeNew.headVal());
+			final Object[] editableNodes = copyAndMoveToFront<if (ds == \map()) {>Pair<}>(this.nodes, bitIndex,
+							valIndexNew, subNodeNew.headKey()<if (ds == \map()) {>, subNodeNew.headVal()<}>);
 
 			final <CompactNode><Generics> thisNew = <CompactNode>.<Generics> valNodeOf(mutator, bitmap,
-							valmap | bitpos, editableNodes, (byte) (valueArity + 1));
+							valmap | bitpos, editableNodes, (byte) (payloadArity + 1));
 
 			return Result.modified(thisNew);
 		}
@@ -928,7 +988,7 @@ str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 				final Object[] editableNodes = copyAndSet(this.nodes, bitIndex, subNodeNew);
 
 				final <CompactNode><Generics> thisNew = <CompactNode>.<Generics> valNodeOf(mutator,
-								bitmap, valmap, editableNodes, valueArity);
+								bitmap, valmap, editableNodes, payloadArity);
 
 				return Result.modified(thisNew);
 			}
@@ -941,6 +1001,14 @@ str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 list[Argument] generateMembers(int n, int m) 
 	= [ *payloadTriple(i) | i <- [1..m+1]] 
 	+ [ *subnodePair(i)   | i <- [1..n+1]]
+	;
+
+list[Argument] generatePayloadMembers(int m) 
+	= [ *payloadTriple(i) | i <- [1..m+1]] 
+	;
+
+list[Argument] generateSubnodeMembers(int n) 
+	= [ *subnodePair(i)   | i <- [1..n+1]]
 	;
 	
 str generateSpecializedMixedNodeClassString(int n, int m) {
@@ -977,13 +1045,13 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 
 	'	@Override
 	'	Result<ResultGenerics> updated(AtomicReference\<Thread\> mutator, K key,
-	'					int keyHash, V val, int shift) {
+	'					int keyHash, V<if (ds == \set()) {>oid<}> val, int shift) {
 	'		<generate_bodyOf_updated(n, m, equalityDefault)>
 	'	}
 
 	'	@Override
 	'	Result<ResultGenerics> updated(AtomicReference\<Thread\> mutator, K key,
-	'					int keyHash, V val, int shift, Comparator\<Object\> cmp) {
+	'					int keyHash, V<if (ds == \set()) {>oid<}> val, int shift, Comparator\<Object\> cmp) {
 	'		<generate_bodyOf_updated(n, m, equalityComparator)>
 	'	}
 
@@ -1004,6 +1072,12 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'		<generate_bodyOf_inlineValue(n, m)>
 	'	}
 	'	<}>
+	
+	'	<for (j <- [1..n+1]) {>
+	'	private <CompactNode><Generics> removeNode<j>AndInlineValue(AtomicReference\<Thread\> mutator, <dec(payloadTriple("mask"))>) {
+	'		<generate_bodyOf_removeNodeAndInlineValue(n, m, j)>
+	'	}
+	'	<}>
 
 	'	@Override
 	'	boolean containsKey(Object key, int keyHash, int shift) {
@@ -1016,12 +1090,12 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'	}
 
 	'	@Override
-	'	Optional\<java.util.Map.Entry<Generics>\> findByKey(Object key, int keyHash, int shift) {
+	'	Optional<KeyOrMapEntryGenerics> findByKey(Object key, int keyHash, int shift) {
 	'		<generate_bodyOf_findByKey(n, m, equalityDefault)>
 	'	}
 
 	'	@Override
-	'	Optional\<java.util.Map.Entry<Generics>\> findByKey(Object key, int keyHash, int shift,
+	'	Optional<KeyOrMapEntryGenerics> findByKey(Object key, int keyHash, int shift,
 	'					Comparator\<Object\> cmp) {
 	'		<generate_bodyOf_findByKey(n, m, equalityComparator)>
 	'	}
@@ -1029,7 +1103,7 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'	@SuppressWarnings(\"unchecked\")
 	'	@Override
 	'	Iterator\<<CompactNode><Generics>\> nodeIterator() {
-	'		return ArrayIterator.\<<CompactNode><Generics>\> of(new <CompactNode>[] { <intercalate(", ", ["<nodeName><i>" | i <- [1..n+1]])> });
+	'		<if (n > 0) {>return ArrayIterator.\<<CompactNode><Generics>\> of(new <CompactNode>[] { <intercalate(", ", ["<nodeName><i>" | i <- [1..n+1]])> });<} else {>return Collections.emptyIterator();<}>
 	'	}
 
 	'	@Override
@@ -1042,10 +1116,17 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'		return <n>;
 	'	}	
 
+	<if (ds == \map()) {>
 	'	@Override
-	'	SupplierIterator<Generics> payloadIterator() {
-	'		return ArrayKeyValueIterator.of(new Object[] { <keyValArgsUnmodified(m)> });
+	'	SupplierIterator<SupplierIteratorGenerics> payloadIterator() {
+	'		<if (m > 0) {>return ArrayKeyValueIterator.of(new Object[] { <intercalate(", ", ["<keyName><i>, <valName><i>"  | i <- [1..m+1]])> });<} else {>return EmptySupplierIterator.emptyIterator();<}>
 	'	}
+	<} else {>
+	'	@Override
+	'	SupplierIterator<SupplierIteratorGenerics> payloadIterator() {
+	'		<if (m > 0) {>return ArrayKeyValueIterator.of(new Object[] { <intercalate(", ", ["<keyName><i>, <keyName><i>"  | i <- [1..m+1]])> });<} else {>return EmptySupplierIterator.emptyIterator();<}>
+	'	}	
+	<}>
 
 	'	@Override
 	'	boolean hasPayload() {
@@ -1093,7 +1174,8 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 
 	'	@Override
 	'	public int hashCode() {
-	'		<if ((n + m) > 0) {>final int prime = 31;<}>int result = 1;<for (i <- [1..m+1]) {>
+	'		<if ((n + m) > 0) {>final int prime = 31;<}>int result = 1;
+	'		<for (i <- [1..m+1]) {>
 	'		result = prime * result + <keyPosName><i>;
 	'		result = prime * result + <keyName><i>.hashCode();
 	'		<if (ds == \map()) {>result = prime * result + <valName><i>.hashCode();<}>
@@ -1115,7 +1197,7 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'		if (getClass() != other.getClass()) {
 	'			return false;
 	'		}
-	'		<if ((n + m) > 0) {><className>\<?, ?\> that = (<className>\<?, ?\>) other;
+	'		<if ((n + m) > 0) {><className><QuestionMarkGenerics> that = (<className><QuestionMarkGenerics>) other;
 	'
 	'		<generate_equalityComparisons(n, m, equalityDefault)><}>
 	'
@@ -1124,7 +1206,7 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 
 	'	@Override
 	'	public String toString() {		
-	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s=%s" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use(members)>);<}>
+	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (ds == \map()) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use(members)>);<}>
 	'	}
 	
 	'}
@@ -1158,11 +1240,21 @@ str generate_equalityComparisons(int n, int m, str(str, str) eq) =
 	 
 
 str generate_bodyOf_inlineValue(int n, int m) =
-	"return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers(n, m), subnodePair(1), payloadTriple("mask"))))>;"
+	"return <nodeOf(n, m+1, use(payloadTriple("mask") + generateSubnodeMembers(n)))>;"
 when m == 0;
 
 default str generate_bodyOf_inlineValue(int n, int m) =
 	"<intercalate(" else ", [ "if (mask \< <keyPosName><i>) { return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers(n, m), payloadTriple(i), payloadTriple("mask"))))>; }" | i <- [1..m+1] ])> else {
-	'	return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers(n, m), subnodePair(1), payloadTriple("mask"))))>;
+	'	return <nodeOf(n, m+1, use(generatePayloadMembers(m) + payloadTriple("mask") + generateSubnodeMembers(n)))>;
+	'}"
+	;
+	
+str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
+	"return <nodeOf(n-1, m+1, use(payloadTriple("mask") + generateSubnodeMembers(n) - subnodePair(j)))>;"
+when m == 0;
+
+default str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
+	"<intercalate(" else ", [ "if (mask \< <keyPosName><i>) { return <nodeOf(n-1, m+1, use(insertBeforeOrDefaultAtEnd(generatePayloadMembers(m), payloadTriple(i), payloadTriple("mask")) + generateSubnodeMembers(n) - subnodePair(j)))>; }" | i <- [1..m+1] ])> else {
+	'	return <nodeOf(n-1, m+1, use(generatePayloadMembers(m) + payloadTriple("mask") + generateSubnodeMembers(n) - subnodePair(j)))>;
 	'}"
 	;
