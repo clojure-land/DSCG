@@ -466,13 +466,135 @@ str generate_bodyOf_containsKey(0, 0, str(str, str) eq)
 	= "return false;"
 	;
 
-str generate_bodyOf_containsKey(int n, int m, str(str, str) eq) 
+default str generate_bodyOf_containsKey(int n, int m, str(str, str) eq) 
 	= "final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);\n\n"	
 	+ intercalate(" else ", 
 		["if(mask == <keyPosName><i> && <eq("<keyName>", "<keyName><i>")>) { return true; }" | i <- [1..m+1]] +
 		["if(mask == <nodePosName><i>) { return <nodeName><i>.containsKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>); }" | i <- [1..n+1]])
 	+ " else { return false; }"
 	;
+
+
+
+
+
+str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq) =
+	"return false;"
+when left > right;	
+
+
+str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq) =
+	"/*<left>..<right>*/
+	'if (mask == <nodePosName><left>) {
+	'	return <nodeName><left>.containsKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);	
+	'} else {
+	'	return false;	
+	'}"
+when left == right;	
+
+str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq) =
+	"/*<left>..<right>*/
+	'if (mask == <nodePosName><left>) {
+	'	/*<left>..<left>*/
+	'	return <nodeName><left>.containsKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);	
+	'} else {
+	'	/*<right>..<right>*/
+	'	if (mask == <nodePosName><right>) {
+	'		return <nodeName><right>.containsKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);			
+	'	} else {
+	'		return false;
+	'	}	
+	'}"
+when left == right - 1;	
+	
+default str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq) { 	
+ 	int pivot = (left + right) / 2;
+ 	
+ 	//println("<left>, <pivot>, <right>");
+ 
+	return 
+	"/*<left>..<right>*/
+	'if (mask \<= <nodePosName><pivot>) {
+	'	/*<left>..<pivot>*/	
+	'	if (mask == <nodePosName><pivot>) {
+	'		/*<pivot>..<pivot>*/
+	'		return <nodeName><pivot>.containsKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);	
+	'	} else {
+	'		<generate_bodyOf_containsKey_binarySearchNode(left, pivot - 1, eq)>	
+	'	}
+	'} else {
+	'	<generate_bodyOf_containsKey_binarySearchNode(pivot + 1, right, eq)>
+	'}";	
+}
+
+
+
+
+
+
+
+str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq) =
+	"return false;"
+when left > right;	
+
+
+str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq) =
+	"/*<left>..<right>*/
+	'if (mask == <keyPosName><left> && <eq("<keyName>", "<keyName><left>")>) {
+	'	return true;	
+	'} else {
+	'	return false;	
+	'}"
+when left == right;	
+
+str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq) =
+	"/*<left>..<right>*/
+	'if (mask == <keyPosName><left> && <eq("<keyName>", "<keyName><left>")>) {
+	'	/*<left>..<left>*/
+	'	return true;	
+	'} else {
+	'	/*<right>..<right>*/
+	'	if (mask == <keyPosName><right> && <eq("<keyName>", "<keyName><right>")>) {
+	'		return true;			
+	'	} else {
+	'		return false;
+	'	}	
+	'}"
+when left == right - 1;	
+	
+default str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq) { 	
+ 	int pivot = (left + right) / 2;
+ 	
+ 	//println("<left>, <pivot>, <right>");
+ 
+	return 
+	"/*<left>..<right>*/
+	'if (mask \<= <keyPosName><pivot>) {
+	'	/*<left>..<pivot>*/	
+	'	if (mask == <keyPosName><pivot> && <eq("<keyName>", "<keyName><pivot>")>) {
+	'		/*<pivot>..<pivot>*/
+	'		return true;	
+	'	} else {
+	'		<generate_bodyOf_containsKey_binarySearchPayload(left, pivot - 1, eq)>	
+	'	}
+	'} else {
+	'	<generate_bodyOf_containsKey_binarySearchPayload(pivot + 1, right, eq)>
+	'}";	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	
 str generate_bodyOf_findByKey(0, 0, str(str, str) eq) 
 	= "return Optional.empty();"
