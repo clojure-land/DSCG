@@ -717,7 +717,20 @@ default str generate_bodyOf_getValue(int m) =
 	'				throw new IllegalStateException(\"Index out of range.\");
 	'			}"
 	;
-		
+	
+str generate_bodyOf_getKeyValueEntry(0)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+	;
+	
+default str generate_bodyOf_getKeyValueEntry(int m) = 	
+	"		switch(index) {
+	'			<for (i <- [1..m+1]) {>case <i-1>:
+	'				return entryOf(<keyName><i>, <valName><i>);
+	'			<}>default:
+	'				throw new IllegalStateException(\"Index out of range.\");
+	'			}"
+	;
+			
 str generateCompactNodeString() = 
 	"private static abstract class <CompactNode><Generics> extends <AbstractNode><Generics> {
 
@@ -1047,8 +1060,29 @@ str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 	if ((valmap & bitpos) != 0) { // inplace value
 		final int valIndex = valIndex(bitpos);
 
-		if (<eq("nodes[valIndex]", keyName)>) {
-			if (this.arity() == 5) {
+		if (<eq("nodes[valIndex]", keyName)>) {			
+			if (!USE_SPECIALIAZIONS && this.payloadArity() == 2 && this.nodeArity() == 0) {
+				/*
+				 * Create new node with remaining pair. The new node
+				 * will a) either become the new root returned, or b)
+				 * unwrapped and inlined during returning.
+				 */
+				final <CompactNode><Generics> thisNew;
+				final int newValmap = (shift == 0) ? this.valmap & ~bitpos
+								: 1 \<\< (keyHash & BIT_PARTITION_MASK);
+
+				if (valIndex == 0) {
+					thisNew = <CompactNode>.<Generics> valNodeOf(mutator, newValmap,
+									newValmap, new Object[] { nodes[2], nodes[3] },
+									(byte) (1));
+				} else {
+					thisNew = <CompactNode>.<Generics> valNodeOf(mutator, newValmap,
+									newValmap, new Object[] { nodes[0], nodes[1] },
+									(byte) (1));
+				}
+
+				return Result.modified(thisNew);
+			} else if (USE_SPECIALIAZIONS && this.arity() == 5) {
 				return Result.modified(removeInplaceValueAndConvertSpecializedNode(mask, bitpos));
 			} else {
 				final Object[] editableNodes = copyAndRemove<if (ds == \map()) {>Pair<}>(this.nodes, valIndex);
@@ -1076,10 +1110,13 @@ str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 
 		switch (subNodeNew.sizePredicate()) {
 		case 0: {
-			// remove node
-			if (this.arity() == 5) {
+			if (!USE_SPECIALIAZIONS && this.payloadArity() == 0 && this.nodeArity() == 1) {
+				// escalate (singleton or empty) result
+				return <nestedResult>;
+			} else if (USE_SPECIALIAZIONS && this.arity() == 5) {
 				return Result.modified(removeSubNodeAndConvertSpecializedNode(mask, bitpos));
 			} else {
+				// remove node
 				final Object[] editableNodes = copyAndRemove<if (ds == \map()) {>Pair<}>(this.nodes, bitIndex);
 
 				final <CompactNode><Generics> thisNew = <CompactNode>.<Generics> valNodeOf(mutator,
@@ -1089,16 +1126,21 @@ str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 			}
 		}
 		case 1: {
-			// inline value (move to front)
-			final int valIndexNew = Integer.bitCount((valmap | bitpos) & (bitpos - 1));
-
-			final Object[] editableNodes = copyAndMoveToFront<if (ds == \map()) {>Pair<}>(this.nodes, bitIndex,
-							valIndexNew, subNodeNew.headKey()<if (ds == \map()) {>, subNodeNew.headVal()<}>);
-
-			final <CompactNode><Generics> thisNew = <CompactNode>.<Generics> valNodeOf(mutator, bitmap,
-							valmap | bitpos, editableNodes, (byte) (payloadArity + 1));
-
-			return Result.modified(thisNew);
+			if (!USE_SPECIALIAZIONS && this.payloadArity() == 0 && this.nodeArity() == 1) {
+				// escalate (singleton or empty) result
+				return <nestedResult>;
+			} else {
+				// inline value (move to front)
+				final int valIndexNew = Integer.bitCount((valmap | bitpos) & (bitpos - 1));
+	
+				final Object[] editableNodes = copyAndMoveToFront<if (ds == \map()) {>Pair<}>(this.nodes, bitIndex,
+								valIndexNew, subNodeNew.headKey()<if (ds == \map()) {>, subNodeNew.headVal()<}>);
+	
+				final <CompactNode><Generics> thisNew = <CompactNode>.<Generics> valNodeOf(mutator, bitmap,
+								valmap | bitpos, editableNodes, (byte) (payloadArity + 1));
+	
+				return Result.modified(thisNew);
+			}
 		}
 		default: {
 			// modify current node (set replacement node)
@@ -1163,6 +1205,7 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 			}))>
 	'		<if ((n + m) > 0) {>
 	'		<}>assert nodeInvariant();
+	'		assert USE_SPECIALIAZIONS;
 	'	}
 
 	'	@Override
@@ -1288,6 +1331,13 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'		<generate_bodyOf_getValue(m)>
 	'	}
 	<}>
+	
+	<if (ds == \map()) {>
+	'	@Override
+	'	Map.Entry<Generics> getKeyValueEntry(int index) {
+	'		<generate_bodyOf_getKeyValueEntry(m)>
+	'	}
+	<}>	
 	
 	'	@Override
 	'	byte sizePredicate() {
