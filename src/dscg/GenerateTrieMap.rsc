@@ -68,6 +68,8 @@ default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
  */
 DataStructure ds = \map();
 
+bool sortedContent = false;
+
 str nodeName = "node";
 str nodePosName = "npos";
 int nMax = 32;
@@ -291,9 +293,13 @@ str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 					'		// merge into node
 					'		final <CompactNode><Generics> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <valName><i>, <keyName>, <keyName>Hash, <valName>, shift + BIT_PARTITION_SIZE);
 					'		
+					'		<if (sortedContent) {>					
 					'		<if (n == 0) {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
 					'			result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);
 					'		}<}>
+					'		<} else {>
+					'			result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);	
+					'		<}>
 					'	}
 					'}"; 
 		
@@ -365,7 +371,11 @@ str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 	'		
 	'<intercalate(" else ", [ updated_clause_inline(i)| i <- [1..m+1]] + [ updated_clause_node(i)| i <- [1..n+1]])> else {
 	'	// no value
+	'	<if (sortedContent) {>						
 	'	result = Result.modified(inlineValue(mutator, <use(payloadTriple("mask"))>));
+	'	<} else {>
+	'	result = Result.modified(<nodeOf(n, m+1, use(generatePayloadMembers(m) + payloadTriple("mask") + generateSubnodeMembers(n)))>);
+	'	<}>
 	'}
 	'		
 	'return result;";	
@@ -1197,16 +1207,48 @@ str generate_valNodeOf_factoryMethod(int n, int m) {
 		list[Argument] bitmapArgs = [ keyPos(i) | i <- [1..m+1]] + [ nodePos(j) | j <- [1..n+1]];
 		list[Argument] valmapArgs = [ keyPos(i) | i <- [1..m+1]];
 		
-		list[Argument] argsForArray = [ key(i), val(i) | i <- [1..m+1]] + [ \node(j) | j <- [1..n+1]];
-	
-		return
-		"static final <Generics> <CompactNode><Generics> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
-		'	final int bitmap = 0 <intercalate(" ", mapper(bitmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
-		'	final int valmap = 0 <intercalate(" ", mapper(valmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
-		'
-		'	return valNodeOf(mutator, bitmap, valmap, new Object[] { <use(argsForArray)> }, (byte) <m>);
-		'}
-		";
+		if (sortedContent) {	
+			list[Argument] argsForArray = [ key(i), val(i) | i <- [1..m+1]] + [ \node(j) | j <- [1..n+1]];
+		
+			return
+			"static final <Generics> <CompactNode><Generics> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
+			'	final int bitmap = 0 <intercalate(" ", mapper(bitmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
+			'	final int valmap = 0 <intercalate(" ", mapper(valmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
+			'
+			'	return valNodeOf(mutator, bitmap, valmap, new Object[] { <use(argsForArray)> }, (byte) <m>);
+			'}
+			";
+		} else {
+			return 
+			"static final <Generics> <CompactNode><Generics> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {
+			'	final int bitmap = 0 <intercalate(" ", mapper(bitmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
+			'	final int valmap = 0 <intercalate(" ", mapper(valmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
+			'	final Object[] content = new Object[<2*m + n>];
+			'
+			'	final java.util.SortedMap\<Byte, Map.Entry<Generics>\> sortedPayloadMasks = new java.util.TreeMap\<\>();
+			'	<for (i <- [1..m+1]) {>
+			'	sortedPayloadMasks.put(<use(keyPos(i))>, entryOf(<use(key(i))>, <use(val(i))>));
+			'	<}>
+			'	
+			'	final java.util.SortedMap\<Byte, <CompactNode><Generics>\> sortedSubnodeMasks = new java.util.TreeMap\<\>();
+			'	<for (i <- [1..n+1]) {>
+			'	sortedSubnodeMasks.put(<use(nodePos(i))>, <use(\node(i))>);
+			'	<}>
+			'
+			'	int index = 0;			
+			'	for (Map.Entry\<Byte, Map.Entry<Generics>\> entry : sortedPayloadMasks.entrySet()) {
+			'		content[index++] = entry.getValue().getKey();
+			'		content[index++] = entry.getValue().getValue();
+			'	}
+			'
+			'	for (Map.Entry\<Byte, CompactMapNode<Generics>\> entry : sortedSubnodeMasks.entrySet()) {
+			'		content[index++] = entry.getValue();
+			'	}			
+			'			
+			'	return valNodeOf(mutator, bitmap, valmap, content, (byte) <m>);			
+			'}
+			";
+		}
 	} else {
 		throw "Arguments out of bounds.";
 	}
