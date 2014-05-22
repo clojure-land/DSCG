@@ -71,6 +71,7 @@ DataStructure ds = \map();
 str nodeName = "node";
 str nodePosName = "npos";
 int nMax = 32;
+int nBound = 4;
 
 str nestedResult = "nestedResult";
 
@@ -129,8 +130,12 @@ void main() {
 		//generateCompactNodeString() + 
 		//generateLeafNodeString() + 
 		[ generateGenericNodeClassString(0, 0)] +		
-		[ generateSpecializedMixedNodeClassString(n, m) | m <- [0..33], n <- [0..33], (n + m) <= 4 && !((n == 1) && (m == 0)) ];  
+		[ generateSpecializedMixedNodeClassString(n, m) | m <- [0..33], n <- [0..33], (n + m) <= nBound && !((n == 1) && (m == 0)) ];  
 	writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
+	
+	factoryMethodsStrings =
+		[ generate_valNodeOf_factoryMethod(n, m) | m <- [0..33], n <- [0..33], (n + m) <= nBound + 1 && !((n == 1) && (m == 0)) && !((n == 0) && (m == 0))];
+	writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/GeneratedFactoryMethods.java|, factoryMethodsStrings);
 }
 	
 str generateClassString(int n) =  
@@ -1173,7 +1178,39 @@ list[Argument] generatePayloadMembers(int m)
 
 list[Argument] generateSubnodeMembers(int n) 
 	= [ *subnodePair(i)   | i <- [1..n+1]]
-	;
+	;	
+	
+str generate_valNodeOf_factoryMethod(int n, int m) {
+	// TODO: remove code duplication
+	members = generateMembers(n, m);
+	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
+
+	className = "<toString(ds)><m>To<n>Node";
+
+	if ((n + m) <= nBound) {		
+		return
+		"static final <Generics> <CompactNode><Generics> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
+		'	return new <className>\<\>(<intercalate(", ", mapper(constructorArgs, use))>);
+		'}
+		"; 
+	} else if ((n + m) == nBound + 1 && (n + m) < nMax) {
+		list[Argument] bitmapArgs = [ keyPos(i) | i <- [1..m+1]] + [ nodePos(j) | j <- [1..n+1]];
+		list[Argument] valmapArgs = [ keyPos(i) | i <- [1..m+1]];
+		
+		list[Argument] argsForArray = [ key(i), val(i) | i <- [1..m+1]] + [ \node(j) | j <- [1..n+1]];
+	
+		return
+		"static final <Generics> <CompactNode><Generics> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
+		'	final int bitmap = 0 <intercalate(" ", mapper(bitmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
+		'	final int valmap = 0 <intercalate(" ", mapper(valmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
+		'
+		'	return valNodeOf(mutator, bitmap, valmap, new Object[] { <use(argsForArray)> }, (byte) <m>);
+		'}
+		";
+	} else {
+		throw "Arguments out of bounds.";
+	}
+}		
 	
 str generateSpecializedMixedNodeClassString(int n, int m) {
 	members = generateMembers(n, m);
