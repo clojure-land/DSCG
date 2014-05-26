@@ -66,7 +66,7 @@ default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 /*
  * Global State [TODO: remove me!]
  */
-DataStructure ds = \map();
+DataStructure ds = \set();
 
 bool sortedContent = false;
 
@@ -489,7 +489,14 @@ default str generate_bodyOf_containsKey(int n, int m, str(str, str) eq)
 	+ " else { return false; }"
 	;
 
-
+/* binary search version */
+//default str generate_bodyOf_containsKey(int n, int m, str(str, str) eq)
+//	= 
+//	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);\n\n
+//	'<generate_bodyOf_containsKey_binarySearchPayload(1, m, eq)>
+//	'<generate_bodyOf_containsKey_binarySearchNode(1, n, eq)>
+//	"	
+//	;
 
 
 
@@ -549,7 +556,7 @@ default str generate_bodyOf_containsKey_binarySearchNode(int left, int right, st
 
 
 str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq) =
-	"return false;"
+	"//return false;"
 when left > right;	
 
 
@@ -557,8 +564,8 @@ str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str
 	"/*<left>..<right>*/
 	'if (mask == <keyPosName><left> && <eq("<keyName>", "<keyName><left>")>) {
 	'	return true;	
-	'} else {
-	'	return false;	
+	'//} else {
+	'//	return false;	
 	'}"
 when left == right;	
 
@@ -571,8 +578,8 @@ str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str
 	'	/*<right>..<right>*/
 	'	if (mask == <keyPosName><right> && <eq("<keyName>", "<keyName><right>")>) {
 	'		return true;			
-	'	} else {
-	'		return false;
+	'	//} else {
+	'	//	return false;
 	'	}	
 	'}"
 when left == right - 1;	
@@ -1208,7 +1215,14 @@ str generate_valNodeOf_factoryMethod(int n, int m) {
 		list[Argument] valmapArgs = [ keyPos(i) | i <- [1..m+1]];
 		
 		if (sortedContent) {	
-			list[Argument] argsForArray = [ key(i), val(i) | i <- [1..m+1]] + [ \node(j) | j <- [1..n+1]];
+	
+			list[Argument] argsForArray = [];
+	
+			if (ds == \map()) {
+				argsForArray = [ key(i), val(i) | i <- [1..m+1]] + [ \node(j) | j <- [1..n+1]];
+			} else { 
+				argsForArray = [ key(i) | i <- [1..m+1]] + [ \node(j) | j <- [1..n+1]];
+			}
 		
 			return
 			"static final <Generics> <CompactNode><Generics> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
