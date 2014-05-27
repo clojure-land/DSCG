@@ -66,7 +66,7 @@ default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 /*
  * Global State [TODO: remove me!]
  */
-DataStructure ds = \set();
+DataStructure ds = \map();
 
 bool sortedContent = false;
 
@@ -484,7 +484,7 @@ str generate_bodyOf_containsKey(0, 0, str(str, str) eq)
 default str generate_bodyOf_containsKey(int n, int m, str(str, str) eq) 
 	= "final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);\n\n"	
 	+ intercalate(" else ", 
-		["if(mask == <keyPosName><i> && <eq("<keyName>", "<keyName><i>")>) { return true; }" | i <- [1..m+1]] +
+		["if(mask == <keyPosName><i>) { return <eq("<keyName>", "<keyName><i>")>; }" | i <- [1..m+1]] +
 		["if(mask == <nodePosName><i>) { return <nodeName><i>.containsKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>); }" | i <- [1..n+1]])
 	+ " else { return false; }"
 	;
@@ -1196,7 +1196,41 @@ list[Argument] generatePayloadMembers(int m)
 list[Argument] generateSubnodeMembers(int n) 
 	= [ *subnodePair(i)   | i <- [1..n+1]]
 	;	
-	
+
+
+//str generate_valNodeOf_factoryMethod_special(int n, int m) {
+//	return 
+//	"static final <Generics> <CompactNode><Generics> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {
+//	'	final int bitmap = 0 <intercalate(" ", mapper(bitmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
+//	'	final int valmap = 0 <intercalate(" ", mapper(valmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
+//	'	final Object[] content = new Object[<2*m + n>];
+//	'
+//	'	final java.util.SortedMap\<Byte, Map.Entry<Generics>\> sortedPayloadMasks = new java.util.TreeMap\<\>();
+//	'	<for (i <- [1..m+1]) {>
+//	'	sortedPayloadMasks.put(<use(keyPos(i))>, entryOf(<use(key(i))>, <use(val(i))>));
+//	'	<}>
+//	'	
+//	'	final java.util.SortedMap\<Byte, <CompactNode><Generics>\> sortedSubnodeMasks = new java.util.TreeMap\<\>();
+//	'	<for (i <- [1..n+1]) {>
+//	'	sortedSubnodeMasks.put(<use(nodePos(i))>, <use(\node(i))>);
+//	'	<}>
+//	'
+//	'	int index = 0;			
+//	'	for (Map.Entry\<Byte, Map.Entry<Generics>\> entry : sortedPayloadMasks.entrySet()) {
+//	'		content[index++] = entry.getValue().getKey();
+//	'		content[index++] = entry.getValue().getValue();
+//	'	}
+//	'
+//	'	for (Map.Entry\<Byte, CompactMapNode<Generics>\> entry : sortedSubnodeMasks.entrySet()) {
+//	'		content[index++] = entry.getValue();
+//	'	}			
+//	'			
+//	'	return valNodeOf(mutator, bitmap, valmap, content, (byte) <m>);			
+//	'}
+//	";
+//}
+
+		
 str generate_valNodeOf_factoryMethod(int n, int m) {
 	// TODO: remove code duplication
 	members = generateMembers(n, m);
@@ -1211,19 +1245,21 @@ str generate_valNodeOf_factoryMethod(int n, int m) {
 		'}
 		"; 
 	} else if ((n + m) == nBound + 1 && (n + m) < nMax) {
+		list[Argument] keyPosArgs  =  [ keyPos(i) | i <- [1..m+1]];
+		list[Argument] nodePosArgs = [ nodePos(j) | j <- [1..n+1]];
+
 		list[Argument] bitmapArgs = [ keyPos(i) | i <- [1..m+1]] + [ nodePos(j) | j <- [1..n+1]];
 		list[Argument] valmapArgs = [ keyPos(i) | i <- [1..m+1]];
 		
-		if (sortedContent) {	
-	
-			list[Argument] argsForArray = [];
-	
-			if (ds == \map()) {
-				argsForArray = [ key(i), val(i) | i <- [1..m+1]] + [ \node(j) | j <- [1..n+1]];
-			} else { 
-				argsForArray = [ key(i) | i <- [1..m+1]] + [ \node(j) | j <- [1..n+1]];
-			}
+		list[Argument] argsForArray = [];
+
+		if (ds == \map()) {
+			argsForArray = [ key(i), val(i) | i <- [1..m+1]] + [ \node(j) | j <- [1..n+1]];
+		} else { 
+			argsForArray = [ key(i) | i <- [1..m+1]] + [ \node(j) | j <- [1..n+1]];
+		}
 		
+		if (sortedContent) {			
 			return
 			"static final <Generics> <CompactNode><Generics> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
 			'	final int bitmap = 0 <intercalate(" ", mapper(bitmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
@@ -1233,35 +1269,60 @@ str generate_valNodeOf_factoryMethod(int n, int m) {
 			'}
 			";
 		} else {
+			//return 
+			//"static final <Generics> <CompactNode><Generics> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {
+			//'	final int bitmap = 0 <intercalate(" ", mapper(bitmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
+			//'	final int valmap = 0 <intercalate(" ", mapper(valmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
+			//'	final Object[] content = new Object[<2*m + n>];
+			//'
+			//'	final java.util.SortedMap\<Byte, Map.Entry<Generics>\> sortedPayloadMasks = new java.util.TreeMap\<\>();
+			//'	<for (i <- [1..m+1]) {>
+			//'	sortedPayloadMasks.put(<use(keyPos(i))>, entryOf(<use(key(i))>, <use(val(i))>));
+			//'	<}>
+			//'	
+			//'	final java.util.SortedMap\<Byte, <CompactNode><Generics>\> sortedSubnodeMasks = new java.util.TreeMap\<\>();
+			//'	<for (i <- [1..n+1]) {>
+			//'	sortedSubnodeMasks.put(<use(nodePos(i))>, <use(\node(i))>);
+			//'	<}>
+			//'
+			//'	int index = 0;			
+			//'	for (Map.Entry\<Byte, Map.Entry<Generics>\> entry : sortedPayloadMasks.entrySet()) {
+			//'		content[index++] = entry.getValue().getKey();
+			//'		content[index++] = entry.getValue().getValue();
+			//'	}
+			//'
+			//'	for (Map.Entry\<Byte, CompactMapNode<Generics>\> entry : sortedSubnodeMasks.entrySet()) {
+			//'		content[index++] = entry.getValue();
+			//'	}			
+			//'			
+			//'	return valNodeOf(mutator, bitmap, valmap, content, (byte) <m>);			
+			//'}
+			//";
+					
 			return 
 			"static final <Generics> <CompactNode><Generics> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {
 			'	final int bitmap = 0 <intercalate(" ", mapper(bitmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
 			'	final int valmap = 0 <intercalate(" ", mapper(valmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
-			'	final Object[] content = new Object[<2*m + n>];
+			'	final Object[] content = new Object[] { <use(argsForArray)> } ;
 			'
-			'	final java.util.SortedMap\<Byte, Map.Entry<Generics>\> sortedPayloadMasks = new java.util.TreeMap\<\>();
-			'	<for (i <- [1..m+1]) {>
-			'	sortedPayloadMasks.put(<use(keyPos(i))>, entryOf(<use(key(i))>, <use(val(i))>));
+			'	<if (m > 1) {>
+			'	<if (ds == \map()) {>
+			'	// final BitonicSorterForArbitraryN_Pairs sorterPayload = new BitonicSorterForArbitraryN_Pairs();
+			'	BitonicSorterForArbitraryN_Pairs.sort(new int[] { <use(keyPosArgs)> }, content, 0);
+			'	<} else {>
+			'	// final BitonicSorterForArbitraryN_Single sorterPayload = new BitonicSorterForArbitraryN_Single();
+			'	BitonicSorterForArbitraryN_Single.sort(new int[] { <use(keyPosArgs)> }, content, 0);			
+			'	<}>
 			'	<}>
 			'	
-			'	final java.util.SortedMap\<Byte, <CompactNode><Generics>\> sortedSubnodeMasks = new java.util.TreeMap\<\>();
-			'	<for (i <- [1..n+1]) {>
-			'	sortedSubnodeMasks.put(<use(nodePos(i))>, <use(\node(i))>);
+			'	<if (n > 1) {>
+			'	// final BitonicSorterForArbitraryN_Single sorterSubnodes = new BitonicSorterForArbitraryN_Single();
+			'	BitonicSorterForArbitraryN_Single.sort(new int[] { <use(nodePosArgs)> }, content, <if (ds == \map()) {><2*m><}else{><m><}>);
 			'	<}>
 			'
-			'	int index = 0;			
-			'	for (Map.Entry\<Byte, Map.Entry<Generics>\> entry : sortedPayloadMasks.entrySet()) {
-			'		content[index++] = entry.getValue().getKey();
-			'		content[index++] = entry.getValue().getValue();
-			'	}
-			'
-			'	for (Map.Entry\<Byte, CompactMapNode<Generics>\> entry : sortedSubnodeMasks.entrySet()) {
-			'		content[index++] = entry.getValue();
-			'	}			
-			'			
-			'	return valNodeOf(mutator, bitmap, valmap, content, (byte) <m>);			
+			'	return valNodeOf(mutator, bitmap, valmap, content, (byte) <m>);		
 			'}
-			";
+			";			
 		}
 	} else {
 		throw "Arguments out of bounds.";
