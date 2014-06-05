@@ -69,6 +69,7 @@ default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 DataStructure ds = \map();
 
 bool sortedContent = false;
+bool onlyEqualityDefault = true;
 
 str nodeName = "node";
 str nodePosName = "npos";
@@ -262,8 +263,13 @@ str generate_bodyOf_updated(0, 0, str(str, str) eq) =
 	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
 	'return Result.modified(<nodeOf(0, 1, "mask, <keyName><if (ds == \map()) {>, <valName><}>")>);"
 	;
+	
+str generate_bodyOf_updated(_, _, str(str, str) eq)	
+	= "throw new UnsupportedOperationException();"
+when onlyEqualityDefault && !(eq == equalityDefault)
+	;	
 
-str generate_bodyOf_updated(int n, int m, str(str, str) eq) {	
+default str generate_bodyOf_updated(int n, int m, str(str, str) eq) {	
 	// TODO merge both functions
 	replaceValueByNode = str (int i, int j) {	
 		args = generateMembers(n, m) - payloadTriple(i);
@@ -393,6 +399,11 @@ str nodeOf(int n, int m, str args)
 str generate_bodyOf_removed(0, 0, str(str, str) eq)
 	= "return Result.unchanged(this);"
 	;
+	
+str generate_bodyOf_removed(_, _, str(str, str) eq)	
+	= "throw new UnsupportedOperationException();"
+when onlyEqualityDefault && !(eq == equalityDefault)
+	;	
 
 str generate_bodyOf_removed(0, 2, str(str, str) eq) {
 	removed_clause_inline = str (int i) { return 
@@ -449,7 +460,11 @@ default str generate_bodyOf_removed(int n, int m, str(str, str) eq) {
 					result = <nestedResult>;
 					break;< } else {> case SIZE_ONE:
 					// inline sub-node value
+					<if (sortedContent) {>
 					result = Result.modified(removeNode<i>AndInlineValue(mutator, <use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()"))>));
+					<} else {>
+					result = Result.modified(<nodeOf(n-1, m+1, use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()") + generateMembers(n, m) - subnodePair(i)))>);				
+					<}>
 					break;<}>
 					
 				case SIZE_MORE_THAN_ONE:
@@ -479,6 +494,11 @@ default str generate_bodyOf_removed(int n, int m, str(str, str) eq) {
 		
 str generate_bodyOf_containsKey(0, 0, str(str, str) eq) 
 	= "return false;"
+	;
+	
+str generate_bodyOf_containsKey(_, _, str(str, str) eq)	
+	= "throw new UnsupportedOperationException();"
+when onlyEqualityDefault && !(eq == equalityDefault)
 	;
 
 default str generate_bodyOf_containsKey(int n, int m, str(str, str) eq) 
@@ -622,7 +642,12 @@ str generate_bodyOf_findByKey(0, 0, str(str, str) eq)
 	= "return Optional.empty();"
 	;
 
-str generate_bodyOf_findByKey(int n, int m, str(str, str) eq) 
+str generate_bodyOf_findByKey(_, _, str(str, str) eq)	
+	= "throw new UnsupportedOperationException();"
+when onlyEqualityDefault && !(eq == equalityDefault)
+	;
+
+default str generate_bodyOf_findByKey(int n, int m, str(str, str) eq) 
 	= "final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);\n\n"	
 	+ intercalate(" else ", 
 		["if(mask == <keyPosName><i> && <eq("<keyName>", "<keyName><i>")>) { return Optional.of(<if (ds == \map()) {>entryOf(<keyName><i>, <valName><i>)<} else {><keyName><i><}>); }" | i <- [1..m+1]] +
@@ -951,8 +976,12 @@ str generateTrieMapClassString(int n) =
 	
 	
 	
+str generate_bodyOf_GenericNode_containsKey(_, _, str(str, str) eq)	
+	= "throw new UnsupportedOperationException();"
+when onlyEqualityDefault && !(eq == equalityDefault)
+	;	
 	
-str generate_bodyOf_GenericNode_containsKey(int n, int m, str(str, str) eq) = 
+default str generate_bodyOf_GenericNode_containsKey(int n, int m, str(str, str) eq) = 
 	"final int mask = (<keyName>Hash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 	'
@@ -965,9 +994,14 @@ str generate_bodyOf_GenericNode_containsKey(int n, int m, str(str, str) eq) =
 	'}
 	'
 	'return false;"
-	;
+	;	
 	
-str generate_bodyOf_GenericNode_findByKey(int n, int m, str(str, str) eq) = 
+str generate_bodyOf_GenericNode_findByKey(_, _, str(str, str) eq)	
+	= "throw new UnsupportedOperationException();"
+when onlyEqualityDefault && !(eq == equalityDefault)
+	;		
+	
+default str generate_bodyOf_GenericNode_findByKey(int n, int m, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 
@@ -994,7 +1028,12 @@ str generate_bodyOf_GenericNode_findByKey(int n, int m, str(str, str) eq) =
 	'return Optional.empty();"
 	;	
 	
-str generate_bodyOf_GenericNode_updated(int n, int m, str(str, str) eq) = 
+str generate_bodyOf_GenericNode_updated(_, _, str(str, str) eq)	
+	= "throw new UnsupportedOperationException();"
+when onlyEqualityDefault && !(eq == equalityDefault)
+	;	
+	
+default str generate_bodyOf_GenericNode_updated(int n, int m, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 	'
@@ -1075,7 +1114,12 @@ str generate_bodyOf_GenericNode_updated(int n, int m, str(str, str) eq) =
 	'	return Result.modified(thisNew);
 	'}";
 		
-str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
+str generate_bodyOf_GenericNode_removed(_, _, str(str, str) eq)	
+	= "throw new UnsupportedOperationException();"
+when onlyEqualityDefault && !(eq == equalityDefault)
+	;			
+		
+default str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) =
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	final int bitpos = (1 \<\< mask);
 
@@ -1386,17 +1430,21 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'		<generate_bodyOf_removed(n, m, equalityComparator)>
 	'	}
 
+	<if (sortedContent) {>
 	'	<if ((n + m) > 0) {>
 	'	private <CompactNode><Generics> inlineValue(AtomicReference\<Thread\> mutator, <dec(payloadTriple("mask"))>) {
 	'		<generate_bodyOf_inlineValue(n, m)>
 	'	}
 	'	<}>
+	<}>
 	
+	<if (sortedContent) {>
 	'	<for (j <- [1..n+1]) {>
 	'	private <CompactNode><Generics> removeNode<j>AndInlineValue(AtomicReference\<Thread\> mutator, <dec(payloadTriple("mask"))>) {
 	'		<generate_bodyOf_removeNodeAndInlineValue(n, m, j)>
 	'	}
 	'	<}>
+	<}>
 
 	'	@Override
 	'	boolean containsKey(Object key, int keyHash, int shift) {
@@ -1498,6 +1546,7 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'		return <generate_bodyOf_sizePredicate(n, m)>;
 	'	}
 
+	<if (sortedContent) {>
 	'	@Override
 	'	public int hashCode() {
 	'		<if ((n + m) > 0) {>final int prime = 31;<}>int result = 1;
@@ -1529,6 +1578,8 @@ str generateSpecializedMixedNodeClassString(int n, int m) {
 	'
 	'		return true;
 	'	}
+	<}>	
+	
 
 	'	@Override
 	'	public String toString() {		
