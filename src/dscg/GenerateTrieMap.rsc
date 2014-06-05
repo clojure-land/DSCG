@@ -68,8 +68,8 @@ default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
  */
 DataStructure ds = \map();
 
-bool sortedContent = false;
-bool onlyEqualityDefault = true;
+bool sortedContent = true;
+bool onlyEqualityDefault = false;
 
 str nodeName = "node";
 str nodePosName = "npos";
@@ -299,13 +299,9 @@ default str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 					'		// merge into node
 					'		final <CompactNode><Generics> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <valName><i>, <keyName>, <keyName>Hash, <valName>, shift + BIT_PARTITION_SIZE);
 					'		
-					'		<if (sortedContent) {>					
-					'		<if (n == 0) {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
+					'		<if (sortedContent) {><if (n == 0) {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
 					'			result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);
-					'		}<}>
-					'		<} else {>
-					'			result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);	
-					'		<}>
+					'		}<}><} else {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<}>
 					'	}
 					'}"; 
 		
@@ -377,11 +373,7 @@ default str generate_bodyOf_updated(int n, int m, str(str, str) eq) {
 	'		
 	'<intercalate(" else ", [ updated_clause_inline(i)| i <- [1..m+1]] + [ updated_clause_node(i)| i <- [1..n+1]])> else {
 	'	// no value
-	'	<if (sortedContent) {>						
-	'	result = Result.modified(inlineValue(mutator, <use(payloadTriple("mask"))>));
-	'	<} else {>
-	'	result = Result.modified(<nodeOf(n, m+1, use(generatePayloadMembers(m) + payloadTriple("mask") + generateSubnodeMembers(n)))>);
-	'	<}>
+	'	<if (sortedContent) {>result = Result.modified(inlineValue(mutator, <use(payloadTriple("mask"))>));<} else {>result = Result.modified(<nodeOf(n, m+1, use(generatePayloadMembers(m) + payloadTriple("mask") + generateSubnodeMembers(n)))>);<}>
 	'}
 	'		
 	'return result;";	
@@ -460,11 +452,7 @@ default str generate_bodyOf_removed(int n, int m, str(str, str) eq) {
 					result = <nestedResult>;
 					break;< } else {> case SIZE_ONE:
 					// inline sub-node value
-					<if (sortedContent) {>
-					result = Result.modified(removeNode<i>AndInlineValue(mutator, <use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()"))>));
-					<} else {>
-					result = Result.modified(<nodeOf(n-1, m+1, use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()") + generateMembers(n, m) - subnodePair(i)))>);				
-					<}>
+					<if (sortedContent) {>result = Result.modified(removeNode<i>AndInlineValue(mutator, <use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()"))>));<} else {>result = Result.modified(<nodeOf(n-1, m+1, use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()") + generateMembers(n, m) - subnodePair(i)))>);<}>
 					break;<}>
 					
 				case SIZE_MORE_THAN_ONE:
