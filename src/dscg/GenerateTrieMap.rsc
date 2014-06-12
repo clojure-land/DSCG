@@ -822,13 +822,48 @@ default str generate_bodyOf_copyAndInsertValue(int n, int m) =
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
-	'			return <nodeOf(n, m, use(replace(generateMembers_bitmap(n, m), [ key(i), val(i) ], [ field(keyName), field(valName), key(i), val(i) ])))>;
+	'			return <nodeOf(n, m+1, use(replace(generateMembers_bitmap(n, m), [ key(i), val(i) ], [ field(keyName), field(valName), key(i), val(i) ])))>;
 	'		<}>case <m>:
-	'			return <nodeOf(n, m, use(insertBeforeOrDefaultAtEnd(generateMembers_bitmap(n, m), [ \node(1) ], [ field(keyName), field(valName) ])))>;
+	'			return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers_bitmap(n, m), [ \node(1) ], [ field(keyName), field(valName) ])))>;
 	'		default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"
 	;
+	
+str generate_bodyOf_copyAndRemoveValue(_, 0)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+	;
+	
+default str generate_bodyOf_copyAndRemoveValue(int n, int m) = 	
+	"	final int bitmap = this.bitmap & ~bitpos;
+	'	final int valmap = this.valmap & ~bitpos;
+	'
+	'	final int valIndex = valIndex(bitpos);
+	'
+	'	switch(valIndex) {
+	'		<for (i <- [1..m+1]) {>case <i-1>:
+	'			return <nodeOf(n, m-1, use(generateMembers_bitmap(n, m) - [ key(i), val(i) ]))>;
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}"
+	;	
+	
+str generate_bodyOf_copyAndRemoveNode(0, _)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+	;
+	
+default str generate_bodyOf_copyAndRemoveNode(int n, int m) = 	
+	"	final int bitmap = this.bitmap & ~bitpos;
+	'
+	'	final int bitIndex = nodeIndex(bitpos);
+	'
+	'	switch(bitIndex) {
+	'		<for (i <- [1..n+1]) {>case <i-1>:
+	'			return <nodeOf(n-1, m, use(generateMembers_bitmap(n, m) - [ \node(i) ]))>;
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}"
+	;	
 
 str generate_bodyOf_copyAndMigrateFromInlineToNode(_, 0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
@@ -845,9 +880,34 @@ default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m) =
 	'		<for (i <- [1..m+1]) {>case <i-1>:
 	'			switch(bitIndex) {
 	'				<for (j <- [1..n+1]) {>case <j-1>:
-	'					return <nodeOf(n, m, use(replace(generateMembers_bitmap(n, m) - [ key(i), val(i) ], [ \node(j) ], [ field(nodeName), \node(j) ])))>;
+	'					return <nodeOf(n+1, m-1, use(replace(generateMembers_bitmap(n, m) - [ key(i), val(i) ], [ \node(j) ], [ field(nodeName), \node(j) ])))>;
 	'				<}>case <n>:
-	'					return <nodeOf(n, m, use(generateMembers_bitmap(n, m) - [ key(i), val(i) ] + [ field(nodeName) ]))>;
+	'					return <nodeOf(n+1, m-1, use(generateMembers_bitmap(n, m) - [ key(i), val(i) ] + [ field(nodeName) ]))>;
+	'				default:
+	'					throw new IllegalStateException(\"Index out of range.\");	
+	'			}
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}"
+	;
+
+str generate_bodyOf_copyAndMigrateFromNodeToInline(0, _)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+	;
+	
+default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m) = 	
+	"	final int valmap = this.valmap | bitpos;
+	'
+	'	final int bitIndex = nodeIndex(bitpos);
+	'	final int valIndex = valIndex(bitpos);
+	'
+	'	switch(bitIndex) {
+	'		<for (i <- [1..n+1]) {>case <i-1>:
+	'			switch(valIndex) {
+	'				<for (j <- [1..m+1]) {>case <j-1>:
+	'					return <nodeOf(n-1, m+1, use(replace(generateMembers_bitmap(n, m) - [ \node(i) ], [ key(j), val(j) ], [ field("<nodeName>.headKey()"), field("<nodeName>.headVal()"), key(j), val(j) ])))>;
+	'				<}>case <m>:
+	'					return <nodeOf(n-1, m+1, use(replace(generateMembers_bitmap(n, m) - [ \node(i) ], [ key(m), val(m) ], [ key(m), val(m), field("<nodeName>.headKey()"), field("<nodeName>.headVal()") ])))>;
 	'				default:
 	'					throw new IllegalStateException(\"Index out of range.\");	
 	'			}
@@ -1428,6 +1488,103 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, str(str, str) eq) 
 	}
 
 	return Result.unchanged(this);";
+	
+str generate_bodyOf_SpecializedBitmapPositionNode_removed(_, _, str(str, str) eq)	
+	= "throw new UnsupportedOperationException();"
+when onlyEqualityDefault && !(eq == equalityDefault)
+	;			
+		
+default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, str(str, str) eq) =
+	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
+	final int bitpos = (1 \<\< mask);
+
+	if ((valmap & bitpos) != 0) { // inplace value
+		final int valIndex = valIndex(bitpos);
+
+		if (<eq("getKey(valIndex)", keyName)>) {			
+			if (!USE_SPECIALIAZIONS && this.payloadArity() == 2 && this.nodeArity() == 0) {
+				/*
+				 * Create new node with remaining pair. The new node
+				 * will a) either become the new root returned, or b)
+				 * unwrapped and inlined during returning.
+				 */
+				final <CompactNode><Generics> thisNew;
+				final int newValmap = (shift == 0) ? this.valmap & ~bitpos
+								: 1 \<\< (keyHash & BIT_PARTITION_MASK);
+
+				if (valIndex == 0) {
+					thisNew = <CompactNode>.<Generics> valNodeOf(mutator, newValmap,
+									newValmap, new Object[] { getKey(1), getValue(1) },
+									(byte) (1));
+				} else {
+					thisNew = <CompactNode>.<Generics> valNodeOf(mutator, newValmap,
+									newValmap, new Object[] { getKey(0), getValue(0) },
+									(byte) (1));
+				}
+
+				return Result.modified(thisNew);
+			} else if (USE_SPECIALIAZIONS && this.arity() == 5) {
+				final <CompactNode><Generics> thisNew = copyAndRemoveValue(mutator, bitpos).convertToGenericNode();
+	
+				return Result.modified(thisNew);
+			} else {
+				final <CompactNode><Generics> thisNew = copyAndRemoveValue(mutator, bitpos);
+	
+				return Result.modified(thisNew);
+			}
+		} else {		
+			return Result.unchanged(this);
+		}
+	} else if ((bitmap & bitpos) != 0) { // node (not value)
+		final int bitIndex = nodeIndex(bitpos);
+		final <CompactNode><Generics> subNode = getNode(nodeIndex(bitpos));
+		final Result<ResultGenerics> <nestedResult> = subNode.removed(
+						mutator, key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+
+		if (!<nestedResult>.isModified()) {
+			return Result.unchanged(this);
+		}
+
+		final <CompactNode><Generics> subNodeNew = <nestedResult>.getNode();
+
+		switch (subNodeNew.sizePredicate()) {
+		case 0: {
+			if (!USE_SPECIALIAZIONS && this.payloadArity() == 0 && this.nodeArity() == 1) {
+				// escalate (singleton or empty) result
+				return <nestedResult>;
+			} else if (USE_SPECIALIAZIONS && this.arity() == 5) {
+				// remove node and convert
+				final <CompactNode><Generics> thisNew = copyAndRemoveNode(mutator, bitpos).convertToGenericNode();
+
+				return Result.modified(thisNew);
+			} else {
+				// remove node
+				final <CompactNode><Generics> thisNew = copyAndRemoveNode(mutator, bitpos);
+
+				return Result.modified(thisNew);
+			}
+		}
+		case 1: {
+			if (!USE_SPECIALIAZIONS && this.payloadArity() == 0 && this.nodeArity() == 1) {
+				// escalate (singleton or empty) result
+				return <nestedResult>;
+			} else {
+				// inline value (move to front)
+				final <CompactNode><Generics> thisNew = copyAndMigrateFromNodeToInline(mutator, bitpos, subNodeNew);
+	
+				return Result.modified(thisNew);
+			}
+		}
+		default: {
+			// modify current node (set replacement node)
+			final <CompactNode><Generics> thisNew = copyAndSetNode(mutator, bitpos, subNodeNew);
+	
+			return Result.modified(thisNew);
+		}
+		}		
+	}
+
+	return Result.unchanged(this);";	
 
 list[Argument] generateMembers(int n, int m) 
 	= [ *payloadTriple(i) | i <- [1..m+1]] 
@@ -1803,19 +1960,19 @@ default str generate_bodyOf_sizePredicate(int n, int m) = "SIZE_MORE_THAN_ONE";
 
 
 str generate_equalityComparisons(int n, int m, str(str, str) eq) =
-	"<for (i <- [1..m+1]) {>
-	'if (<keyPosName><i> != that.<keyPosName><i>) {
+	"if (bitmap != that.bitmap) {
 	'	return false;
 	'}
+	'if (valmap != that.valmap) {
+	'	return false;
+	'}
+	'<for (i <- [1..m+1]) {>
 	'if (!<eq("<keyName><i>", "that.<keyName><i>")>) {
 	'	return false;
 	'}
 	'<if (ds == \map()) {>if (!<eq("<valName><i>", "that.<valName><i>")>) {
 	'	return false;
 	'}<}><}><for (i <- [1..n+1]) {>
-	'if (<nodePosName><i> != that.<nodePosName><i>) {
-	'	return false;
-	'}
 	'if (!<eq("<nodeName><i>", "that.<nodeName><i>")>) {
 	'	return false;
 	'}<}>"
@@ -1924,30 +2081,14 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m) {
 	'	@Override
 	'	Result<ResultGenerics> removed(AtomicReference\<Thread\> mutator, K key,
 	'					int keyHash, int shift) {
-	'		<generate_bodyOf_removed(n, m, equalityDefault)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, equalityDefault)>
 	'	}
 
 	'	@Override
 	'	Result<ResultGenerics> removed(AtomicReference\<Thread\> mutator, K key,
 	'					int keyHash, int shift, Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_removed(n, m, equalityComparator)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, equalityComparator)>
 	'	}
-
-	<if (sortedContent) {>
-	'	<if ((n + m) > 0) {>
-	'	private <CompactNode><Generics> inlineValue(AtomicReference\<Thread\> mutator, <dec(payloadTriple("mask"))>) {
-	'		<generate_bodyOf_inlineValue(n, m)>
-	'	}
-	'	<}>
-	<}>
-	
-	<if (sortedContent) {>
-	'	<for (j <- [1..n+1]) {>
-	'	private <CompactNode><Generics> removeNode<j>AndInlineValue(AtomicReference\<Thread\> mutator, <dec(payloadTriple("mask"))>) {
-	'		<generate_bodyOf_removeNodeAndInlineValue(n, m, j)>
-	'	}
-	'	<}>
-	<}>
 	
 	'	@SuppressWarnings(\"unchecked\")
 	'	@Override
@@ -2032,20 +2173,43 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m) {
 	
 	'	// @Override
 	'	private <CompactNode><Generics> copyAndInsertValue(AtomicReference\<Thread\> mutator, int bitpos, K <keyName>, V <valName>) {
+	'		// TODO: check accuracy of index method calls
 	'		<generate_bodyOf_copyAndInsertValue(n, m)>
 	'	}
+	
+	'	// @Override
+	'	private <CompactNode><Generics> copyAndRemoveValue(AtomicReference\<Thread\> mutator, int bitpos) {
+	'		// TODO: check accuracy of index method calls
+	'		<generate_bodyOf_copyAndRemoveValue(n, m)>
+	'	}	
 
 	'	// @Override
 	'	private <CompactNode><Generics> copyAndSetNode(AtomicReference\<Thread\> mutator, int index, <CompactNode><Generics> <nodeName>) {
 	'		<generate_bodyOf_copyAndSetNode(n, m)>
 	'	}	
 
-	<if (ds == \map()) {>
+	'	// @Override
+	'	private <CompactNode><Generics> copyAndRemoveNode(AtomicReference\<Thread\> mutator, int bitpos) {
+	'		// TODO: check accuracy of index method calls
+	'		<generate_bodyOf_copyAndRemoveNode(n, m)>
+	'	}	
+
 	'	// @Override
 	'	private <CompactNode><Generics> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, int bitpos, <CompactNode><Generics> <nodeName>) {
+	'		// TODO: check accuracy of index method calls
 	'		<generate_bodyOf_copyAndMigrateFromInlineToNode(n, m)>
 	'	}
-	<}>	
+	
+	'	// @Override
+	'	private <CompactNode><Generics> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, int bitpos, <CompactNode><Generics> <nodeName>) {
+	'		// TODO: check accuracy of index method calls
+	'		<generate_bodyOf_copyAndMigrateFromNodeToInline(n, m)>
+	'	}		
+	
+	'	@Override
+	'	<CompactNode><Generics> convertToGenericNode() {
+	'		return valNodeOf(<use(thisMutator)>, bitmap, valmap, new Object[] { <use(generateMembers_bitmap(n, m) - [ field("int", "bitmap"), field("int", "valmap") ])> }, (byte) <m>);
+	'	}	
 	
 	'	@Override
 	'	byte sizePredicate() {
@@ -2056,12 +2220,12 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m) {
 	'	@Override
 	'	public int hashCode() {
 	'		<if ((n + m) > 0) {>final int prime = 31;<}>int result = 1;
-	'		<for (i <- [1..m+1]) {>
-	'		result = prime * result + <keyPosName><i>;
+	'		result = prime * result + bitmap;
+	'		result = prime * result + valmap;
+	'		<for (i <- [1..m+1]) {>		
 	'		result = prime * result + <keyName><i>.hashCode();
 	'		<if (ds == \map()) {>result = prime * result + <valName><i>.hashCode();<}>
 	'		<}><for (i <- [1..n+1]) {>
-	'		result = prime * result + <nodePosName><i>;
 	'		result = prime * result + <nodeName><i>.hashCode();
 	'		<}>	
 	'		return result;
@@ -2089,6 +2253,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m) {
 
 	'	@Override
 	'	public String toString() {		
+	'		// TODO: position variables are missing; need recovery
 	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (ds == \map()) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use(members)>);<}>
 	'	}
 	
