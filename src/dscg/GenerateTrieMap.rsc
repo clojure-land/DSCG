@@ -136,11 +136,12 @@ void main() {
 		//generateLeafNodeString() + 
 		//[ generateGenericNodeClassString(0, 0)] +		
 		//[ generateSpecializedNodeWithBitmapPositionsClassString(n, m) | m <- [0..33], n <- [0..33], (n + m) <= nBound && !((n == 1) && (m == 0)) ];
-		[ generateSpecializedNodeWithBitmapPositionsClassString(2, 2) ] ;
+		[ generateAwesomeNodeClassString()] +
+		[ generateSpecializedNodeWithBitmapPositionsClassString(n, m) | m <- [0..33], n <- [0..33], (n + m) <= nBound && !((n == 1) && (m == 0)) ];
 	writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
 	
 	factoryMethodsStrings =
-		[ generate_valNodeOf_factoryMethod(n, m) | m <- [0..33], n <- [0..33], (n + m) <= nBound + 1 && !((n == 1) && (m == 0)) && !((n == 0) && (m == 0))];
+		[ generate_valNodeOf_factoryMethod_bitmap(n, m) | m <- [0..33], n <- [0..33], (n + m) <= nBound + 1 && !((n == 1) && (m == 0)) && !((n == 0) && (m == 0))];
 	writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/GeneratedFactoryMethods.java|, factoryMethodsStrings);
 }
 	
@@ -253,7 +254,9 @@ list[&T] replace(list[&T] xs, list[&T] old, list[&T] new)
 	= before + new + after
 when [*before, *old, *after] := xs;
 	
-// default list[&T] replace(list[&T] xs, list[&T] old, list[&T] new) = xs;	
+default list[&T] replace(list[&T] xs, list[&T] old, list[&T] new) {throw "aaahh";}	
+
+//default list[&T] replace(list[&T] xs, list[&T] old, list[&T] new) = xs;
 
 // TODO: move to List.rsc?
 list[&T] insertBeforeOrDefaultAtEnd(list[&T] xs, list[&T] old, list[&T] new)
@@ -261,6 +264,13 @@ list[&T] insertBeforeOrDefaultAtEnd(list[&T] xs, list[&T] old, list[&T] new)
 when [*before, *old, *after] := xs;	
 
 default list[&T] insertBeforeOrDefaultAtEnd(list[&T] xs, list[&T] old, list[&T] new) = xs + new;		
+
+// TODO: move to List.rsc?
+list[&T] insertAfterOrDefaultAtFront(list[&T] xs, list[&T] old, list[&T] new)
+	= before + old + new + after
+when [*before, *old, *after] := xs;	
+
+default list[&T] insertAfterOrDefaultAtFront(list[&T] xs, list[&T] old, list[&T] new) = new + xs;
 
 str generate_bodyOf_updated(0, 0, str(str, str) eq) = 
 	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
@@ -907,7 +917,7 @@ default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m) =
 	'				<for (j <- [1..m+1]) {>case <j-1>:
 	'					return <nodeOf(n-1, m+1, use(replace(generateMembers_bitmap(n, m) - [ \node(i) ], [ key(j), val(j) ], [ field("<nodeName>.headKey()"), field("<nodeName>.headVal()"), key(j), val(j) ])))>;
 	'				<}>case <m>:
-	'					return <nodeOf(n-1, m+1, use(replace(generateMembers_bitmap(n, m) - [ \node(i) ], [ key(m), val(m) ], [ key(m), val(m), field("<nodeName>.headKey()"), field("<nodeName>.headVal()") ])))>;
+	'					return <nodeOf(n-1, m+1, use(insertAfterOrDefaultAtFront(generateMembers_bitmap(n, m) - [ \node(i) ], [ key(m), val(m) ], [ field("<nodeName>.headKey()"), field("<nodeName>.headVal()") ])))>;
 	'				default:
 	'					throw new IllegalStateException(\"Index out of range.\");	
 	'			}
@@ -1675,37 +1685,7 @@ str generate_valNodeOf_factoryMethod(int n, int m) {
 			'	return valNodeOf(mutator, bitmap, valmap, new Object[] { <use(argsForArray)> }, (byte) <m>);
 			'}
 			";
-		} else {
-			//return 
-			//"static final <Generics> <CompactNode><Generics> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {
-			//'	final int bitmap = 0 <intercalate(" ", mapper(bitmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
-			//'	final int valmap = 0 <intercalate(" ", mapper(valmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
-			//'	final Object[] content = new Object[<2*m + n>];
-			//'
-			//'	final java.util.SortedMap\<Byte, Map.Entry<Generics>\> sortedPayloadMasks = new java.util.TreeMap\<\>();
-			//'	<for (i <- [1..m+1]) {>
-			//'	sortedPayloadMasks.put(<use(keyPos(i))>, entryOf(<use(key(i))>, <use(val(i))>));
-			//'	<}>
-			//'	
-			//'	final java.util.SortedMap\<Byte, <CompactNode><Generics>\> sortedSubnodeMasks = new java.util.TreeMap\<\>();
-			//'	<for (i <- [1..n+1]) {>
-			//'	sortedSubnodeMasks.put(<use(nodePos(i))>, <use(\node(i))>);
-			//'	<}>
-			//'
-			//'	int index = 0;			
-			//'	for (Map.Entry\<Byte, Map.Entry<Generics>\> entry : sortedPayloadMasks.entrySet()) {
-			//'		content[index++] = entry.getValue().getKey();
-			//'		content[index++] = entry.getValue().getValue();
-			//'	}
-			//'
-			//'	for (Map.Entry\<Byte, CompactMapNode<Generics>\> entry : sortedSubnodeMasks.entrySet()) {
-			//'		content[index++] = entry.getValue();
-			//'	}			
-			//'			
-			//'	return valNodeOf(mutator, bitmap, valmap, content, (byte) <m>);			
-			//'}
-			//";
-					
+		} else {				
 			return 
 			"static final <Generics> <CompactNode><Generics> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {
 			'	final int bitmap = 0 <intercalate(" ", mapper(bitmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
@@ -1735,6 +1715,32 @@ str generate_valNodeOf_factoryMethod(int n, int m) {
 		throw "Arguments out of bounds.";
 	}
 }		
+
+str generate_valNodeOf_factoryMethod_bitmap(int n, int m) {
+	// TODO: remove code duplication
+	members = generateMembers_bitmap(n, m);
+	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
+
+	className = "<toString(ds)><m>To<n>Node";
+
+	if ((n + m) <= nBound) {		
+		return
+		"static final <Generics> <CompactNode><Generics> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
+		'	return new <className>\<\>(<intercalate(", ", mapper(constructorArgs, use))>);
+		'}
+		"; 
+	} else if ((n + m) == nBound + 1 && (n + m) < nMax) {
+		list[Argument] argsForArray = generateMembers_bitmap(n, m) - [ field("int", "bitmap"), field("int", "valmap") ];
+
+		return
+		"static final <Generics> <CompactNode><Generics> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
+		'	return valNodeOf(mutator, bitmap, valmap, new Object[] { <use(argsForArray)> }, (byte) <m>);
+		'}
+		";
+	} else {
+		throw "Arguments out of bounds.";
+	}
+}
 	
 str generateSpecializedNodeWithBytePositionsClassString(int n, int m) {
 	members = generateMembers(n, m);
@@ -2006,7 +2012,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m) {
 	className = "<toString(ds)><m>To<n>Node";
 
 	return
-	"private static final class <className><Generics> extends Compact<toString(ds)>Node<Generics> {
+	"private static final class <className><Generics> extends Awesome<toString(ds)>Node<Generics> {
 	'	<intercalate("\n", mapper(members, str(Argument a) { 
 			str dec = "private final <dec(a)>;";
 			
@@ -2030,64 +2036,6 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m) {
 	'		<if ((n + m) > 0) {>
 	'		<}>assert nodeInvariant();
 	'		assert USE_SPECIALIAZIONS;
-	'	}
-
-	'	final int keyIndex(int bitpos) {
-	'		return Integer.bitCount(valmap & (bitpos - 1));
-	'	}
-
-	'	final int valIndex(int bitpos) {
-	'		return Integer.bitCount(valmap & (bitpos - 1));
-	'	}
-
-	'	// TODO: obviate necessity for bitmap ^ valmap
-	'	final int nodeIndex(int bitpos) {
-	'		return Integer.bitCount((bitmap ^ valmap) & (bitpos - 1));
-	'	}
-
-	'	@Override
-	'	boolean containsKey(Object key, int keyHash, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, equalityDefault)>
-	'	}
-
-	'	@Override
-	'	boolean containsKey(Object key, int keyHash, int shift, Comparator\<Object\> <cmpName>) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, equalityComparator)>
-	'	}
-
-	'	@Override
-	'	Optional<KeyOrMapEntryGenerics> findByKey(Object key, int keyHash, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, equalityDefault)>
-	'	}
-
-	'	@Override
-	'	Optional<KeyOrMapEntryGenerics> findByKey(Object key, int keyHash, int shift,
-	'					Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, equalityComparator)>
-	'	}
-
-	'	@Override
-	'	Result<ResultGenerics> updated(AtomicReference\<Thread\> mutator, K key,
-	'					int keyHash, V<if (ds == \set()) {>oid<}> val, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, equalityDefault)>
-	'	}
-
-	'	@Override
-	'	Result<ResultGenerics> updated(AtomicReference\<Thread\> mutator, K key,
-	'					int keyHash, V<if (ds == \set()) {>oid<}> val, int shift, Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, equalityComparator)>
-	'	}
-
-	'	@Override
-	'	Result<ResultGenerics> removed(AtomicReference\<Thread\> mutator, K key,
-	'					int keyHash, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, equalityDefault)>
-	'	}
-
-	'	@Override
-	'	Result<ResultGenerics> removed(AtomicReference\<Thread\> mutator, K key,
-	'					int keyHash, int shift, Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, equalityComparator)>
 	'	}
 	
 	'	@SuppressWarnings(\"unchecked\")
@@ -2253,8 +2201,104 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m) {
 
 	'	@Override
 	'	public String toString() {		
-	'		// TODO: position variables are missing; need recovery
-	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (ds == \map()) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use(members)>);<}>
+	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (ds == \map()) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(valmap, (byte) <i>)"), key(i), val(i) | i <- [1..m+1]] + [ field("recoverMask(bitmap ^ valmap, (byte) <i>)"), \node(i)	| i <- [1..n+1]])>);<}>
+	'	}
+	
+	'}
+	"
+	;	
+	
+}
+
+str generateAwesomeNodeClassString(int n=0, int m=0) {
+	members = [ field("int", "bitmap"), field("int", "valmap") ];
+	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
+
+	className = "Awesome<toString(ds)>Node";
+
+	return
+	"private static final class <className><Generics> extends Compact<toString(ds)>Node<Generics> {
+	'	<intercalate("\n", mapper(members, str(Argument a) { 
+			str dec = "protected final <dec(a)>;";
+			
+			if (field(_, /.*pos.*/) := a || getter(_, /.*pos.*/) := a) {
+				return "\n<dec>";
+			} else {
+				return dec;
+			} 
+		}))>
+				
+	'	<className>(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
+	'		<intercalate("\n", mapper(members, str(Argument a) { 
+				str dec = "this.<use(a)> = <use(a)>;";
+				
+				if (field(_, /.*pos.*/) := a || getter(_, /.*pos.*/) := a) {
+					return "\n<dec>";
+				} else {
+					return dec;
+				} 
+			}))>
+	'		<if ((n + m) > 0) {>
+	'		<}>assert nodeInvariant();
+	'		assert USE_SPECIALIAZIONS;
+	'	}
+
+	'	final int keyIndex(int bitpos) {
+	'		return Integer.bitCount(valmap & (bitpos - 1));
+	'	}
+
+	'	final int valIndex(int bitpos) {
+	'		return Integer.bitCount(valmap & (bitpos - 1));
+	'	}
+
+	'	// TODO: obviate necessity for bitmap ^ valmap
+	'	final int nodeIndex(int bitpos) {
+	'		return Integer.bitCount((bitmap ^ valmap) & (bitpos - 1));
+	'	}
+
+	'	@Override
+	'	boolean containsKey(Object key, int keyHash, int shift) {
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, equalityDefault)>
+	'	}
+
+	'	@Override
+	'	boolean containsKey(Object key, int keyHash, int shift, Comparator\<Object\> <cmpName>) {
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, equalityComparator)>
+	'	}
+
+	'	@Override
+	'	Optional<KeyOrMapEntryGenerics> findByKey(Object key, int keyHash, int shift) {
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, equalityDefault)>
+	'	}
+
+	'	@Override
+	'	Optional<KeyOrMapEntryGenerics> findByKey(Object key, int keyHash, int shift,
+	'					Comparator\<Object\> cmp) {
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, equalityComparator)>
+	'	}
+
+	'	@Override
+	'	Result<ResultGenerics> updated(AtomicReference\<Thread\> mutator, K key,
+	'					int keyHash, V<if (ds == \set()) {>oid<}> val, int shift) {
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, equalityDefault)>
+	'	}
+
+	'	@Override
+	'	Result<ResultGenerics> updated(AtomicReference\<Thread\> mutator, K key,
+	'					int keyHash, V<if (ds == \set()) {>oid<}> val, int shift, Comparator\<Object\> cmp) {
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, equalityComparator)>
+	'	}
+
+	'	@Override
+	'	Result<ResultGenerics> removed(AtomicReference\<Thread\> mutator, K key,
+	'					int keyHash, int shift) {
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, equalityDefault)>
+	'	}
+
+	'	@Override
+	'	Result<ResultGenerics> removed(AtomicReference\<Thread\> mutator, K key,
+	'					int keyHash, int shift, Comparator\<Object\> cmp) {
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, equalityComparator)>
 	'	}
 	
 	'}
