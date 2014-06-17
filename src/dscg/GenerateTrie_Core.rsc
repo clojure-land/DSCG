@@ -54,12 +54,9 @@ import java.util.concurrent.atomic.AtomicReference;
 public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 
 	@SuppressWarnings(\"unchecked\")
-	private static final TrieMap EMPTY_INPLACE_INDEX_MAP = new TrieMap(
-					CompactMapNode.EMPTY_INPLACE_INDEX_NODE, 0, 0);
+	private static final TrieMap EMPTY_INPLACE_INDEX_MAP = new TrieMap(CompactMapNode.EMPTY_INPLACE_INDEX_NODE, 0, 0);
 
 	private static final boolean DEBUG = false;
-	private static final boolean USE_STACK_ITERATOR = true; // does not effect
-															// TransientMap
 
 	private final <AbstractNode(ds)><Generics(ds)> rootNode;
 	private final int hashCode;
@@ -320,11 +317,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 
 	@Override
 	public SupplierIterator<Generics(ds)> keyIterator() {
-		if (USE_STACK_ITERATOR) {
-			return new MapKeyIterator\<\>(rootNode);
-		} else {
-			return new TrieMapIterator\<\>((CompactMapNode<Generics(ds)>) rootNode);
-		}
+		<generate_bodyOf_keyIterator(setup)>
 	}
 
 	@Override
@@ -537,3 +530,13 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 	<innerClassesString>
 		
 }";
+
+
+str generate_bodyOf_keyIterator(set[Option] setup:{_*, useFixedStackIterator()}) = 
+	"return new MapKeyIterator\<\>(rootNode);"
+	;
+	
+default str generate_bodyOf_keyIterator(set[Option] setup) =
+	"return new TrieMapIterator\<\>((CompactMapNode<Generics(ds)>) rootNode);"
+	;
+	

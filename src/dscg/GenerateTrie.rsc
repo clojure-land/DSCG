@@ -34,7 +34,7 @@ import dscg::GenerateTrie_CoreTransient;
 
 void main() {
 	DataStructure ds = \map();
-	set[Option] setup = { useSpecialization() }; // { compactionViaFieldToMethod() };
+	set[Option] setup = { useSpecialization(), useFixedStackIterator() }; // { compactionViaFieldToMethod() };
 
 	list[str] innerClassStrings 
 		= [ generateOptionalClassString() ]
@@ -45,7 +45,14 @@ void main() {
 		+ [ generateBitmapIndexedNodeClassString(ds, setup)]
 		+ [ generateHashCollisionNodeClassString(ds, setup)]
 		+ [ generateIteratorClassString(ds, setup)]
-		+ [ generateEasyIteratorClassString(ds, setup)]
+		;
+	
+	if (!({_*, useFixedStackIterator()} := setup)) {
+		innerClassStrings = innerClassStrings + [ generateEasyIteratorClassString(ds, setup)];
+	}
+	
+	innerClassStrings 
+		= innerClassStrings
 		+ [ generateNodeIteratorClassString(ds, setup)]
 		+ [ generateCoreTransientClassString(ds, setup)]		
 		;

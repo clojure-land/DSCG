@@ -34,6 +34,7 @@ data Position // TODO: finish!
 data Option // TODO: finish!
 	= none() 
 	| useSpecialization()
+	| useFixedStackIterator()	
 	| methodsWithComparator()
 	| compactionViaFieldToMethod()
 	;
