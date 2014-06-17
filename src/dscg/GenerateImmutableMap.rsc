@@ -16,16 +16,6 @@ import List;
 
 import dscg::Common;
 
-/* 
- * Configuration 
- */
-public str keyName = "key";
-public str valName = "val";
-public str cmpName = "cmp"; 
-
-str equalityDefault(str x, str y) = "<x>.equals(<y>)";
-
-str equalityComparator(str x, str y) = "<cmpName>.compare(<x>, <y>) == 0";
 
 // TODO: open github issue
 //str(str, str) eq = equalityDefault;

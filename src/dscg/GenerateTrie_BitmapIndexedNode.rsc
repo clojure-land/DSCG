@@ -11,14 +11,14 @@
  */
 module dscg::GenerateTrie_BitmapIndexedNode
 
-import dscg::GenerateTrie;
+import dscg::Common;
 
 str generateBitmapIndexedNodeClassString(DataStructure ds, set[Option] setup) {
 
 	className = "BitmapIndexed<toString(ds)>Node";
 
 	return
-	"private static final class <className><Generics()> extends Compact<toString(ds)>Node<Generics()> {
+	"private static final class <className><Generics(ds)> extends Compact<toString(ds)>Node<Generics(ds)> {
 		private AtomicReference\<Thread\> mutator;
 
 		private Object[] nodes;
@@ -67,25 +67,25 @@ str generateBitmapIndexedNodeClassString(DataStructure ds, set[Option] setup) {
 
 		@SuppressWarnings(\"unchecked\")
 		@Override
-		Map.Entry<Generics()> getKeyValueEntry(int index) {
+		Map.Entry<Generics(ds)> getKeyValueEntry(int index) {
 			return entryOf((K) nodes[2 * index], (V) nodes[2 * index + 1]);
 		}
 
 		@SuppressWarnings(\"unchecked\")
 		@Override
-		public <CompactNode()><Generics()> getNode(int index) {
+		public <CompactNode(ds)><Generics(ds)> getNode(int index) {
 			final int offset = 2 * payloadArity;
-			return (<CompactNode()><Generics()>) nodes[offset + index];
+			return (<CompactNode(ds)><Generics(ds)>) nodes[offset + index];
 		}
 
 		@Override
-		SupplierIterator<Generics()> payloadIterator() {
+		SupplierIterator<Generics(ds)> payloadIterator() {
 			return ArrayKeyValueIterator.of(nodes, 0, 2 * payloadArity);
 		}
 
 		@SuppressWarnings(\"unchecked\")
 		@Override
-		Iterator\<<CompactNode()><Generics()>\> nodeIterator() {
+		Iterator\<<CompactNode(ds)><Generics(ds)>\> nodeIterator() {
 			final int offset = 2 * payloadArity;
 
 			for (int i = offset; i \< nodes.length - offset; i++) {
@@ -206,13 +206,13 @@ str generateBitmapIndexedNodeClassString(DataStructure ds, set[Option] setup) {
 		}
 
 		@Override
-		<CompactNode()><Generics()> convertToGenericNode() {
+		<CompactNode(ds)><Generics(ds)> convertToGenericNode() {
 			return this;
 		}
 
 		@Override
-		<CompactNode()><Generics()> copyAndSetValue(AtomicReference\<Thread\> mutator, int index, V val) {
-			final <CompactNode()><Generics()> thisNew;
+		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, int index, V val) {
+			final <CompactNode(ds)><Generics(ds)> thisNew;
 			final int valIndex = 2 * index;
 			
 			if (isAllowedToEdit(this.mutator, mutator)) {
@@ -222,7 +222,7 @@ str generateBitmapIndexedNodeClassString(DataStructure ds, set[Option] setup) {
 			} else {
 				final Object[] editableNodes = copyAndSet(this.nodes, valIndex + 1, val);
 
-				thisNew = <CompactNode()>.<Generics()> valNodeOf(mutator, bitmap, valmap,
+				thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator, bitmap, valmap,
 								editableNodes, payloadArity);
 			}
 			
@@ -230,23 +230,23 @@ str generateBitmapIndexedNodeClassString(DataStructure ds, set[Option] setup) {
 		}
 
 		@Override
-		<CompactNode()><Generics()> copyAndInsertValue(AtomicReference\<Thread\> mutator, int bitpos, K key,
+		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, int bitpos, K key,
 						V val) {			
 			final int valIndex = 2 * Integer.bitCount(valmap & (bitpos - 1));
 			final Object[] editableNodes = copyAndInsertPair(this.nodes, valIndex, key, val);
 			
-			final <CompactNode()><Generics()> thisNew = <CompactNode()>.<Generics()> valNodeOf(mutator, bitmap
+			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator, bitmap
 							| bitpos, valmap | bitpos, editableNodes, (byte) (payloadArity + 1));
 
 			return thisNew;
 		}
 
 		@Override
-		<CompactNode()><Generics()> copyAndRemoveValue(AtomicReference\<Thread\> mutator, int bitpos) {
+		<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, int bitpos) {
 			final int valIndex = 2 * Integer.bitCount(valmap & (bitpos - 1));
 			final Object[] editableNodes = copyAndRemovePair(this.nodes, valIndex);
 
-			final <CompactNode()><Generics()> thisNew = <CompactNode()>.<Generics()> valNodeOf(
+			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(
 							mutator, this.bitmap & ~bitpos, this.valmap & ~bitpos,
 							editableNodes, (byte) (payloadArity - 1));
 
@@ -254,10 +254,10 @@ str generateBitmapIndexedNodeClassString(DataStructure ds, set[Option] setup) {
 		}
 
 		@Override
-		<CompactNode()><Generics()> copyAndSetNode(AtomicReference\<Thread\> mutator, int index,
-						<CompactNode()><Generics()> node) {
+		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, int index,
+						<CompactNode(ds)><Generics(ds)> node) {
 			final int bitIndex = 2 * payloadArity + index;
-			final <CompactNode()><Generics()> thisNew;
+			final <CompactNode(ds)><Generics(ds)> thisNew;
 
 			// modify current node (set replacement node)
 			if (isAllowedToEdit(this.mutator, mutator)) {
@@ -268,7 +268,7 @@ str generateBitmapIndexedNodeClassString(DataStructure ds, set[Option] setup) {
 				final Object[] editableNodes = copyAndSet(this.nodes, bitIndex,
 								node);
 
-				thisNew = <CompactNode()>.<Generics()> valNodeOf(mutator, bitmap, valmap,
+				thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator, bitmap, valmap,
 								editableNodes, payloadArity);
 			}
 
@@ -276,11 +276,11 @@ str generateBitmapIndexedNodeClassString(DataStructure ds, set[Option] setup) {
 		}
 
 		@Override
-		<CompactNode()><Generics()> copyAndRemoveNode(AtomicReference\<Thread\> mutator, int bitpos) {
+		<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, int bitpos) {
 			final int bitIndex = 2 * payloadArity + Integer.bitCount((bitmap ^ valmap) & (bitpos - 1));
 			final Object[] editableNodes = copyAndRemovePair(this.nodes, bitIndex);
 
-			final <CompactNode()><Generics()> thisNew = <CompactNode()>.<Generics()> valNodeOf(
+			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(
 							mutator, bitmap & ~bitpos, valmap, editableNodes,
 							payloadArity);
 
@@ -288,8 +288,8 @@ str generateBitmapIndexedNodeClassString(DataStructure ds, set[Option] setup) {
 		}
 
 		@Override
-		<CompactNode()><Generics()> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
-						int bitpos, <CompactNode()><Generics()> node) {
+		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
+						int bitpos, <CompactNode(ds)><Generics(ds)> node) {
 //			final int bitIndex = 2 * payloadArity + Integer.bitCount((bitmap ^ valmap) & (bitpos - 1));
 			final int valIndex = 2 * Integer.bitCount(valmap & (bitpos - 1));
 			
@@ -300,22 +300,22 @@ str generateBitmapIndexedNodeClassString(DataStructure ds, set[Option] setup) {
 			final Object[] editableNodes = copyAndMoveToBackPair(this.nodes, valIndex, offset
 							+ index, node);
 
-			final <CompactNode()><Generics()> thisNew = <CompactNode()>.<Generics()> valNodeOf(mutator, bitmap
+			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator, bitmap
 							| bitpos, valmap & ~bitpos, editableNodes, (byte) (payloadArity - 1));
 
 			return thisNew;
 		}
 
 		@Override
-		<CompactNode()><Generics()> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
-						int bitpos, <CompactNode()><Generics()> node) {
+		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
+						int bitpos, <CompactNode(ds)><Generics(ds)> node) {
 			final int bitIndex = 2 * payloadArity + Integer.bitCount((bitmap ^ valmap) & (bitpos - 1));
 			final int valIndexNew = Integer.bitCount((valmap | bitpos) & (bitpos - 1));
 
 			final Object[] editableNodes = copyAndMoveToFrontPair(this.nodes, bitIndex,
 							valIndexNew, node.headKey(), node.headVal());
 
-			final <CompactNode()><Generics()> thisNew = <CompactNode()>.<Generics()> valNodeOf(
+			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(
 							mutator, bitmap, valmap | bitpos, editableNodes,
 							(byte) (payloadArity + 1));
 
