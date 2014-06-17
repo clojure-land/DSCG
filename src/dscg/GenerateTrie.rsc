@@ -26,6 +26,8 @@ import dscg::GenerateTrie_AbstractNode;
 import dscg::GenerateTrie_CompactNode;
 import dscg::GenerateTrie_BitmapIndexedNode;
 import dscg::GenerateTrie_HashCollisionNode;
+import dscg::GenerateTrie_Iterator;
+import dscg::GenerateTrie_EasyIterator;
 
 void main() {
 	DataStructure ds = \map();
@@ -39,6 +41,8 @@ void main() {
 		+ [ generateCompactNodeClassString(ds, setup)]
 		+ [ generateBitmapIndexedNodeClassString(ds, setup)]
 		+ [ generateHashCollisionNodeClassString(ds, setup)]
+		+ [ generateIteratorClassString(ds, setup)]
+		+ [ generateEasyIteratorClassString(ds, setup)]
 		;
 		
 	if ({_*, useSpecialization()} := setup) {	
