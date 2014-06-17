@@ -29,12 +29,14 @@ import dscg::GenerateTrie_HashCollisionNode;
 import dscg::GenerateTrie_Iterator;
 import dscg::GenerateTrie_EasyIterator;
 import dscg::GenerateTrie_NodeIterator;
+import dscg::GenerateTrie_Core;
+import dscg::GenerateTrie_CoreTransient;
 
 void main() {
 	DataStructure ds = \map();
 	set[Option] setup = { useSpecialization() }; // { compactionViaFieldToMethod() };
 
-	classStrings 
+	list[str] innerClassStrings 
 		= [ generateOptionalClassString() ]
 		+ [ generateResultClassString() ]
 		+ [ generateAbstractAnyNodeClassString(ds, setup)]
@@ -44,13 +46,16 @@ void main() {
 		+ [ generateHashCollisionNodeClassString(ds, setup)]
 		+ [ generateIteratorClassString(ds, setup)]
 		+ [ generateEasyIteratorClassString(ds, setup)]
-		+ [ generateNodeIteratorClassString(ds, setup)]		
+		+ [ generateNodeIteratorClassString(ds, setup)]
+		+ [ generateCoreTransientClassString(ds, setup)]		
 		;
 		
 	if ({_*, useSpecialization()} := setup) {	
-		classStrings = classStrings + 
+		innerClassStrings = innerClassStrings + 
 		[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ds) | m <- [0..nMax+1], n <- [0..nMax+1], (n + m) <= nBound ];
 	}	
+		
+	list[str] classStrings = [ generateCoreClassString(ds, setup, intercalate("\n", innerClassStrings)) ];	
 		
 	writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
 }
