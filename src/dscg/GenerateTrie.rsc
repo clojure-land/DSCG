@@ -25,18 +25,20 @@ import dscg::GenerateTrie_AbstractAnyNode;
 import dscg::GenerateTrie_AbstractNode;
 import dscg::GenerateTrie_CompactNode;
 import dscg::GenerateTrie_BitmapIndexedNode;
+import dscg::GenerateTrie_HashCollisionNode;
 
 void main() {
 	DataStructure ds = \map();
 	set[Option] setup = { useSpecialization() }; // { compactionViaFieldToMethod() };
 
-	classStrings = 
-		[ generateOptionalClassString() ]
+	classStrings 
+		= [ generateOptionalClassString() ]
 		+ [ generateResultClassString() ]
 		+ [ generateAbstractAnyNodeClassString(ds, setup)]
 		+ [ generateAbstractNodeClassString(ds, setup)]		
 		+ [ generateCompactNodeClassString(ds, setup)]
 		+ [ generateBitmapIndexedNodeClassString(ds, setup)]
+		+ [ generateHashCollisionNodeClassString(ds, setup)]
 		;
 		
 	if ({_*, useSpecialization()} := setup) {	
