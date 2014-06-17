@@ -2124,10 +2124,9 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m) {
 	'		<}>assert nodeInvariant();
 	'	}
 	
-	'	@SuppressWarnings(\"unchecked\")
 	'	@Override
 	'	Iterator\<<CompactNode><Generics>\> nodeIterator() {
-	'		<if (n > 0) {>return ArrayIterator.\<<CompactNode><Generics>\> of(new <CompactNode>[] { <intercalate(", ", ["<nodeName><i>" | i <- [1..n+1]])> });<} else {>return Collections.emptyIterator();<}>
+	'		<if (n > 0) {>return ArrayIterator.of(<intercalate(", ", ["<nodeName><i>" | i <- [1..n+1]])>);<} else {>return Collections.\<<CompactNode><Generics>\>emptyIterator();<}>
 	'	}
 
 	'	@Override
@@ -2374,6 +2373,10 @@ str generateCompactNodeClassString(int n=0, int m=0, set[Option] setup = {}) {
 
 	return
 	"private static abstract class <className><Generics> extends Abstract<toString(ds)>Node<Generics> {
+	'
+	'	protected static final int BIT_PARTITION_SIZE = 5;
+	'	protected static final int BIT_PARTITION_MASK = 0x1f;
+	'
 	'	<intercalate("\n", mapper(members, str(Argument a) { 
 			str dec = "protected final <dec(a)>;";
 			
