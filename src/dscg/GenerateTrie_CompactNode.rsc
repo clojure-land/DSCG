@@ -211,35 +211,35 @@ str generateCompactNodeClassString(DataStructure ds, rel[Option,bool] setup) {
 
 	'	@Override
 	'	boolean containsKey(Object key, int keyHash, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, ds, equalityDefault)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, ds, setup, equalityDefault)>
 	'	}
 
 	'	@Override
 	'	boolean containsKey(Object key, int keyHash, int shift, Comparator\<Object\> <cmpName>) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, ds, equalityComparator)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, ds, setup, equalityComparator)>
 	'	}
 
 	'	@Override
 	'	Optional<KeyOrMapEntryGenerics(ds)> findByKey(Object key, int keyHash, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ds, equalityDefault)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ds, setup, equalityDefault)>
 	'	}
 
 	'	@Override
 	'	Optional<KeyOrMapEntryGenerics(ds)> findByKey(Object key, int keyHash, int shift,
 	'					Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ds, equalityComparator)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ds, setup, equalityComparator)>
 	'	}
 
 	'	@Override
 	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, K key,
 	'					int keyHash, V<if (ds == \set()) {>oid<}> val, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ds, equalityDefault)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ds, setup, equalityDefault)>
 	'	}
 
 	'	@Override
 	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, K key,
 	'					int keyHash, V<if (ds == \set()) {>oid<}> val, int shift, Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ds, equalityComparator)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ds, setup, equalityComparator)>
 	'	}
 
 	'	@Override
@@ -320,12 +320,12 @@ str generate_bodyOf_mergeNodeAndValue(rel[Option,bool] setup:{_*, <useSpecializa
 default str generate_bodyOf_mergeNodeAndValue(Option _, Position _) { throw "something went wrong"; }
 
 
-str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(_, _, str(str, str) eq)	
+str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
-when onlyEqualityDefault && !(eq == equalityDefault)
+when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 	
-default str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(int n, int m, DataStructure ds, str(str, str) eq) = 
+default str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (<keyName>Hash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 	'
@@ -341,12 +341,12 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(int n, int
 	;
 	
 	
-str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(_, _, str(str, str) eq)	
+str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
-when onlyEqualityDefault && !(eq == equalityDefault)
+when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;		
 	
-default str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, DataStructure ds, str(str, str) eq) = 
+default str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 
@@ -374,12 +374,12 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m
 	;
 	
 	
-str generate_bodyOf_SpecializedBitmapPositionNode_updated(_, _, str(str, str) eq)	
+str generate_bodyOf_SpecializedBitmapPositionNode_updated(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
-when onlyEqualityDefault && !(eq == equalityDefault)
+when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 	
-default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, DataStructure ds, str(str, str) eq) = 
+default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 	'
@@ -430,9 +430,9 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'}";
 	
 	
-str generate_bodyOf_SpecializedBitmapPositionNode_removed(_, _, _, str(str, str) eq)	
+str generate_bodyOf_SpecializedBitmapPositionNode_removed(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
-when onlyEqualityDefault && !(eq == equalityDefault)
+when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;			
 		
 str removed_in_subnode_with_newsize0_block(DataStructure ds, rel[Option,bool] setup:{_*, <useSpecialization(),true>}) = 

@@ -35,9 +35,10 @@ import dscg::GenerateTrie_CoreTransient;
 void main() {
 	DataStructure ds = \map();
 	rel[Option,bool] setup = { 
-		<useSpecialization(),true>,
+		<useSpecialization(),false>,
 		<useFixedStackIterator(),true>,
-		<useStructuralEquality(),true>
+		<useStructuralEquality(),true>,
+		<methodsWithComparator(),true>
 	}; // { compactionViaFieldToMethod() };
 
 	list[str] innerClassStrings 
@@ -203,12 +204,12 @@ str generate_bodyOf_updated(0, 0, str(str, str) eq) =
 	'return Result.modified(<nodeOf(0, 1, "mask, <keyName><if (ds == \map()) {>, <valName><}>")>);"
 	;
 	
-str generate_bodyOf_updated(_, _, str(str, str) eq)	
+str generate_bodyOf_updated(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
-when onlyEqualityDefault && !(eq == equalityDefault)
+when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 
-default str generate_bodyOf_updated(int n, int m, DataStructure ds, str(str, str) eq) {	
+default str generate_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) {	
 	// TODO merge both functions
 	replaceValueByNode = str (int i, int j) {	
 		args = generateMembers(n, m) - payloadTriple(i);
@@ -327,16 +328,16 @@ default str nodeOf(int n, int m, str args)
 	= "valNodeOf(mutator, <args>)" 	//= "new Value<m>Index<n>Node(<args>)"
 	;
 
-str generate_bodyOf_removed(0, 0, str(str, str) eq)
+str generate_bodyOf_removed(0, 0, _, _, str(str, str) eq)
 	= "return Result.unchanged(this);"
 	;
 	
-str generate_bodyOf_removed(_, _, str(str, str) eq)	
+str generate_bodyOf_removed(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
-when onlyEqualityDefault && !(eq == equalityDefault)
+when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 
-str generate_bodyOf_removed(0, 2, str(str, str) eq) {
+str generate_bodyOf_removed(0, 2, _, _, str(str, str) eq) {
 	removed_clause_inline = str (int i) { return 
 		"if (mask == <keyPosName><i>) {
 		'	if (<eq("<keyName>", "<keyName><i>")>) {
@@ -364,7 +365,7 @@ str generate_bodyOf_removed(0, 2, str(str, str) eq) {
 	'return result;";		
 }
 
-default str generate_bodyOf_removed(int n, int m, DataStructure ds, str(str, str) eq) {	
+default str generate_bodyOf_removed(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) {	
 	removed_clause_inline = str (int i) { return 
 		"if (mask == <keyPosName><i>) {
 		'	if (<eq("<keyName>", "<keyName><i>")>) {
@@ -419,16 +420,16 @@ default str generate_bodyOf_removed(int n, int m, DataStructure ds, str(str, str
 	'return result;";
 }
 		
-str generate_bodyOf_containsKey(0, 0, str(str, str) eq) 
+str generate_bodyOf_containsKey(0, 0, _, _, str(str, str) eq) 
 	= "return false;"
 	;
 	
-str generate_bodyOf_containsKey(_, _, str(str, str) eq)	
+str generate_bodyOf_containsKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
-when onlyEqualityDefault && !(eq == equalityDefault)
+when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;
 
-default str generate_bodyOf_containsKey(int n, int m, DataStructure ds, str(str, str) eq) 
+default str generate_bodyOf_containsKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) 
 	= "final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);\n\n"	
 	+ intercalate(" else ", 
 		["if(mask == <keyPosName><i>) { return <eq("<keyName>", "<keyName><i>")>; }" | i <- [1..m+1]] +
@@ -565,16 +566,16 @@ default str generate_bodyOf_containsKey_binarySearchPayload(int left, int right,
 
 
 	
-str generate_bodyOf_findByKey(0, 0, str(str, str) eq) 
+str generate_bodyOf_findByKey(0, 0, _, _, str(str, str) eq) 
 	= "return Optional.empty();"
 	;
 
-str generate_bodyOf_findByKey(_, _, str(str, str) eq)	
+str generate_bodyOf_findByKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
-when onlyEqualityDefault && !(eq == equalityDefault)
+when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;
 
-default str generate_bodyOf_findByKey(int n, int m, DataStructure ds, str(str, str) eq) 
+default str generate_bodyOf_findByKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) 
 	= "final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);\n\n"	
 	+ intercalate(" else ", 
 		["if(mask == <keyPosName><i> && <eq("<keyName>", "<keyName><i>")>) { return Optional.of(<if (ds == \map()) {>entryOf(<keyName><i>, <valName><i>)<} else {><keyName><i><}>); }" | i <- [1..m+1]] +
@@ -1075,12 +1076,12 @@ str generateTrieMapClassString(int n) =
 	
 	
 	
-str generate_bodyOf_GenericNode_containsKey(_, _, str(str, str) eq)	
+str generate_bodyOf_GenericNode_containsKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
-when onlyEqualityDefault && !(eq == equalityDefault)
+when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 	
-default str generate_bodyOf_GenericNode_containsKey(int n, int m, DataStructure ds, str(str, str) eq) = 
+default str generate_bodyOf_GenericNode_containsKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (<keyName>Hash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 	'
@@ -1095,12 +1096,12 @@ default str generate_bodyOf_GenericNode_containsKey(int n, int m, DataStructure 
 	'return false;"
 	;
 	
-str generate_bodyOf_GenericNode_findByKey(_, _, str(str, str) eq)	
+str generate_bodyOf_GenericNode_findByKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
-when onlyEqualityDefault && !(eq == equalityDefault)
+when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;		
 	
-default str generate_bodyOf_GenericNode_findByKey(int n, int m, DataStructure ds, str(str, str) eq) = 
+default str generate_bodyOf_GenericNode_findByKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 
@@ -1127,12 +1128,12 @@ default str generate_bodyOf_GenericNode_findByKey(int n, int m, DataStructure ds
 	'return Optional.empty();"
 	;
 	
-str generate_bodyOf_GenericNode_updated(_, _, str(str, str) eq)	
+str generate_bodyOf_GenericNode_updated(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
-when onlyEqualityDefault && !(eq == equalityDefault)
+when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 	
-default str generate_bodyOf_GenericNode_updated(int n, int m, DataStructure ds, str(str, str) eq) = 
+default str generate_bodyOf_GenericNode_updated(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 	'
@@ -1213,12 +1214,12 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, DataStructure ds, 
 	'	return Result.modified(thisNew);
 	'}";	
 		
-str generate_bodyOf_GenericNode_removed(_, _, str(str, str) eq)	
+str generate_bodyOf_GenericNode_removed(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
-when onlyEqualityDefault && !(eq == equalityDefault)
+when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;			
 		
-default str generate_bodyOf_GenericNode_removed(int n, int m, DataStructure ds, str(str, str) eq) =
+default str generate_bodyOf_GenericNode_removed(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) =
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	final int bitpos = (1 \<\< mask);
 

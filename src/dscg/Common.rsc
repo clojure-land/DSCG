@@ -169,7 +169,5 @@ str equalityComparator(str x, str y) = "<cmpName>.compare(<x>, <y>) == 0";
 /*
  * Global State [TODO: remove me!]
  */
-public bool onlyEqualityDefault = false;
-
 public int nMax = 32;
 public int nBound = 8;
