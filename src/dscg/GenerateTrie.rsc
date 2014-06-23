@@ -48,8 +48,14 @@ void main() {
 			+ [ generateResultClassString() ]
 			+ [ generateAbstractAnyNodeClassString(ts, setup)]
 			+ [ generateAbstractNodeClassString(ts, setup)]		
-			+ [ generateCompactNodeClassString(ts, setup)]
-			+ [ generateBitmapIndexedNodeClassString(ts, setup)]
+			+ [ generateCompactNodeClassString(ts, setup)];
+
+		if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {
+			innerClassStrings = innerClassStrings + [ generateBitmapIndexedNodeClassString(ts, setup)];
+		}
+
+		innerClassStrings 
+			= innerClassStrings
 			+ [ generateHashCollisionNodeClassString(ts, setup)]
 			+ [ generateIteratorClassString(ts, setup)]
 			;
@@ -762,6 +768,10 @@ default str generate_bodyOf_copyAndSetNode(int n, int m, ts:___expandedTrieSpeci
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"	
 	;
+
+str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) =
+	"throw new IllegalStateException();"
+when (n + m) == nMax && (n + m) == nBound;
 	
 default str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int valIndex = valIndex(bitpos);
@@ -1864,10 +1874,12 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'		<generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts)>
 	'	}		
 	
+	<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>
 	'	@Override
 	'	<CompactNode(ds)><Generics(ds)> convertToGenericNode() {
 	'		return valNodeOf(<use(thisMutator)>, bitmap, valmap, new Object[] { <use(generateMembers_bitmap(n, m, ts) - [ field("int", "bitmap"), field("int", "valmap") ])> }, (byte) <m>);
-	'	}	
+	'	}
+	<}>	
 	
 	'	@Override
 	'	byte sizePredicate() {

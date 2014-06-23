@@ -72,7 +72,9 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		static final byte SIZE_ONE = 0b01;
 		static final byte SIZE_MORE_THAN_ONE = 0b10;
 
+		<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>
 		abstract <CompactNode(ds)><Generics(ds)> convertToGenericNode();
+		<}>
 
 		/**
 		 * Abstract predicate over a node\'s size. Value can be either
@@ -180,10 +182,12 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'		<if (isOptionEnabled(setup,useSpecialization())) {>EMPTY_INPLACE_INDEX_NODE = new Map0To0Node\<\>(null, 0, 0);<} else {>EMPTY_INPLACE_INDEX_NODE = new BitmapIndexedMapNode\<\>(null, 0, 0, new Object[] {}, (byte) 0);<}>	
 	'	};
 	
+	<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>
 	'	static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> valNodeOf(AtomicReference\<Thread\> mutator,
 	'					int bitmap, int valmap, Object[] nodes, byte payloadArity) {
 	'		return new BitmapIndexedMapNode\<\>(mutator, bitmap, valmap, nodes, payloadArity);
-	'	}	
+	'	}
+	<}>
 
 	'	// TODO: consolidate and remove
 	'	static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> valNodeOf(AtomicReference\<Thread\> mutator) {
@@ -191,7 +195,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'	}
 
 	<if (isOptionEnabled(setup,useSpecialization())) {>
-		<for(j <- [0..nMax+1], i <- [0..nMax+1], (i + j) <= nBound + 1 && !(i == nBound + 1)) {>
+		<for(j <- [0..nMax+1], i <- [0..nMax+1], ((i + j) <= nMax && (i + j) <= nBound + 1 && !(i == nBound + 1))) {>
 			<generate_valNodeOf_factoryMethod_bitmap(i, j, ts, setup)>
 		<}>
 	<}>	
@@ -457,11 +461,11 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 		final int valIndex = valIndex(bitpos);
 
 		if (<eq("getKey(valIndex)", keyName)>) {			
-			<removed_value_block(ts, setup)> else {
+			<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {><removed_value_block(ts, setup)> else {<}>
 				final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveValue(mutator, bitpos);
 	
 				return Result.modified(thisNew);
-			}
+			<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>}<}>
 		} else {		
 			return Result.unchanged(this);
 		}
@@ -478,12 +482,12 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 
 		switch (subNodeNew.sizePredicate()) {
 		case 0: {
-			<removed_in_subnode_with_newsize0_block(ts, setup)> else {
+			<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {><removed_in_subnode_with_newsize0_block(ts, setup)> else {<}>
 				// remove node
 				final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveNode(mutator, bitpos);
 
 				return Result.modified(thisNew);
-			}
+			<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>}<}>
 		}
 		case 1: {
 			<if (isOptionEnabled(setup,useSpecialization())) {>// inline value (move to front)
@@ -598,7 +602,7 @@ default str generate_valNodeOf_factoryMethod_bitmap(int n, int m, ts:___expanded
 		'}
 		";
 	} else {
-		throw "Arguments out of bounds.";
+		throw "Arguments out of bounds (n = <n>, m = <m>).";
 	}
 }
 

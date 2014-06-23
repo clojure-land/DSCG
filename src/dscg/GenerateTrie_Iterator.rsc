@@ -12,21 +12,26 @@
 module dscg::GenerateTrie_Iterator
 
 import dscg::Common;
+import util::Math;
 
 str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
 	"/**
 	 * Iterator skeleton that uses a fixed stack in depth.
 	 */
 	private static abstract class Abstract<toString(ds)>Iterator<Generics(ds)> {
+		
+		// TODO: verify maximum deepness
+		private static final int MAX_DEPTH = <ceil(32/bitPartitionSize)>;
+		
 		protected int currentValueCursor;
 		protected int currentValueLength;
 		protected Abstract<toString(ds)>Node<Generics(ds)> currentValueNode;
 
 		private int currentStackLevel;
-		private int[] nodeCursorsAndLengths = new int[20 * 2];
+		private int[] nodeCursorsAndLengths = new int[MAX_DEPTH * 2];
 
 		@SuppressWarnings(\"unchecked\")
-		Abstract<toString(ds)>Node<Generics(ds)>[] nodes = new Abstract<toString(ds)>Node[16];
+		Abstract<toString(ds)>Node<Generics(ds)>[] nodes = new Abstract<toString(ds)>Node[MAX_DEPTH];
 
 		Abstract<toString(ds)>Iterator(Abstract<toString(ds)>Node<Generics(ds)> rootNode) {
 			currentStackLevel = 0;

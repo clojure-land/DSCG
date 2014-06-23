@@ -207,10 +207,12 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			}<}>
 		}
 
+		<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>
 		@Override
 		<CompactNode(ds)><Generics(ds)> convertToGenericNode() {
 			return this;
 		}
+		<}>
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, int index, V val) {

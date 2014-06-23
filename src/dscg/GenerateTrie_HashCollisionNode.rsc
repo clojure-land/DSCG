@@ -305,10 +305,12 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			return findByKey(key, keyHash, shift, EqualityUtils.getDefaultEqualityComparator());
 		}
 
+		<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>
 		@Override
 		<CompactNode(ds)><Generics(ds)> convertToGenericNode() {
 			return this;
 		}
+		<}>
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, int index, V val) {
