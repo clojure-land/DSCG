@@ -13,7 +13,7 @@ module dscg::GenerateTrie_HashCollisionNode
 
 import dscg::Common;
 
-str generateHashCollisionNodeClassString(DataStructure ds, set[Option] setup) = 
+str generateHashCollisionNodeClassString(DataStructure ds, rel[Option,bool] setup) = 
 	"private static final class HashCollision<toString(ds)>Node<Generics(ds)> extends <CompactNode(ds)><Generics(ds)> {
 		private final K[] keys;
 		private final V[] vals;

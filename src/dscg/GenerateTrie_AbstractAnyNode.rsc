@@ -13,6 +13,6 @@ module dscg::GenerateTrie_AbstractAnyNode
 
 import dscg::Common;
 
-str generateAbstractAnyNodeClassString(DataStructure ds, set[Option] setup) = 
+str generateAbstractAnyNodeClassString(DataStructure ds, rel[Option,bool] setup) = 
 	"protected static abstract class AbstractNode\<K, V\> {}"
 	;

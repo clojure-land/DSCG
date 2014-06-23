@@ -15,7 +15,7 @@ import List;
 
 import dscg::Common;
 
-str generateCompactNodeClassString(DataStructure ds, set[Option] setup) {
+str generateCompactNodeClassString(DataStructure ds, rel[Option,bool] setup) {
 	members = [ field("int", "bitmap"), field("int", "valmap") ];
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
 
@@ -177,7 +177,7 @@ str generateCompactNodeClassString(DataStructure ds, set[Option] setup) {
 	'	static final CompactMapNode EMPTY_INPLACE_INDEX_NODE;
 
 	'	static {
-	'		<if ({_*, useSpecialization()} := setup) {>EMPTY_INPLACE_INDEX_NODE = new Map0To0Node\<\>(null, 0, 0);<} else {>EMPTY_INPLACE_INDEX_NODE = new BitmapIndexedMapNode\<\>(null, 0, 0, new Object[] {}, (byte) 0);<}>	
+	'		<if (isOptionEnabled(setup,useSpecialization())) {>EMPTY_INPLACE_INDEX_NODE = new Map0To0Node\<\>(null, 0, 0);<} else {>EMPTY_INPLACE_INDEX_NODE = new BitmapIndexedMapNode\<\>(null, 0, 0, new Object[] {}, (byte) 0);<}>	
 	'	};
 	
 	'	static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> valNodeOf(AtomicReference\<Thread\> mutator,
@@ -190,7 +190,7 @@ str generateCompactNodeClassString(DataStructure ds, set[Option] setup) {
 	'		return valNodeOf(mutator, 0, 0);
 	'	}
 
-	<if ({_*, useSpecialization()} := setup) {>
+	<if (isOptionEnabled(setup,useSpecialization())) {>
 		<for(j <- [0..nMax+1], i <- [0..nMax+1], (i + j) <= nBound + 1 && !(i == nBound + 1)) {>
 			<generate_valNodeOf_factoryMethod_bitmap(i, j, ds, setup)>
 		<}>
@@ -259,14 +259,14 @@ str generateCompactNodeClassString(DataStructure ds, set[Option] setup) {
 	;
 }
 
-str generate_bodyOf_mergeTwoValues(set[Option] setup:{_*, useSpecialization()}, Position pos:positionField()) =
+str generate_bodyOf_mergeTwoValues(rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionField()) =
 	"if (mask0 \< mask1) {
 	'	return valNodeOf(null, (byte) mask0, key0, val0, (byte) mask1, key1, val1);
 	'} else {
 	'	return valNodeOf(null, (byte) mask1, key1, val1, (byte) mask0, key0, val0);
 	'}";
 
-str generate_bodyOf_mergeTwoValues(set[Option] setup:{_*, useSpecialization()}, Position pos:positionBitmap()) =
+str generate_bodyOf_mergeTwoValues(rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionBitmap()) =
 	"final int valmap = 1 \<\< mask0 | 1 \<\< mask1;
 	'
 	'if (mask0 \< mask1) {
@@ -275,50 +275,47 @@ str generate_bodyOf_mergeTwoValues(set[Option] setup:{_*, useSpecialization()}, 
 	'	return valNodeOf(null, valmap, valmap, key1, val1, key0, val0);
 	'}";	
 	
-str generate_bodyOf_mergeTwoValues(set[Option] setup, Position _) =
+str generate_bodyOf_mergeTwoValues(rel[Option,bool] setup:{_*, <useSpecialization(),false>}, Position _) =
 	"final int valmap = 1 \<\< mask0 | 1 \<\< mask1;
 	'
 	'if (mask0 \< mask1) {
 	'	return valNodeOf(null, valmap, valmap, new Object[] { key0, val0, key1, val1 }, (byte) 2);
 	'} else {
 	'	return valNodeOf(null, valmap, valmap, new Object[] { key1, val1, key0, val0 }, (byte) 2);
-	'}"
-when !(useSpecialization() in setup);	
+	'}";	
 
 default str generate_bodyOf_mergeTwoValues(Option _, Position _) { throw "something went wrong"; }
 
-str generate_bodyOf_mergeOnNextLevel(set[Option] setup:{_*, useSpecialization()}, Position pos:positionField()) =
+str generate_bodyOf_mergeOnNextLevel(rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionField()) =
 	"return valNodeOf(null, (byte) mask0, node);";
 
-str generate_bodyOf_mergeOnNextLevel(set[Option] setup:{_*, useSpecialization()}, Position pos:positionBitmap()) =
+str generate_bodyOf_mergeOnNextLevel(rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionBitmap()) =
 	"final int bitmap = 1 \<\< mask0;
 	'return valNodeOf(null, bitmap, 0, node);";		
 	
-str generate_bodyOf_mergeOnNextLevel(set[Option] setup, Position _) =
+str generate_bodyOf_mergeOnNextLevel(rel[Option,bool] setup:{_*, <useSpecialization(),false>}, Position _) =
 	"final int bitmap = 1 \<\< mask0;
-	'return valNodeOf(null, bitmap, 0, new Object[] { node }, (byte) 0);"
-when !(useSpecialization() in setup);	
+	'return valNodeOf(null, bitmap, 0, new Object[] { node }, (byte) 0);";	
 
 default str generate_bodyOf_mergeOnNextLevel(Option _, Position _) { throw "something went wrong"; }
 
-str generate_bodyOf_mergeNodeAndValue(set[Option] setup:{_*, useSpecialization()}, Position pos:positionField()) =
+str generate_bodyOf_mergeNodeAndValue(rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionField()) =
 	"// store values before node
 	'return valNodeOf(null, (byte) mask1, key1, val1, (byte) mask0, node0);";
 
-str generate_bodyOf_mergeNodeAndValue(set[Option] setup:{_*, useSpecialization()}, Position pos:positionBitmap()) =
+str generate_bodyOf_mergeNodeAndValue(rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionBitmap()) =
 	"final int bitmap = 1 \<\< mask0 | 1 \<\< mask1;
 	'final int valmap = 1 \<\< mask1;
 	'
 	'// store values before node
 	'return valNodeOf(null, bitmap, valmap, key1, val1, node0);";		
 	
-str generate_bodyOf_mergeNodeAndValue(set[Option] setup, Position _) =
+str generate_bodyOf_mergeNodeAndValue(rel[Option,bool] setup:{_*, <useSpecialization(),false>}, Position _) =
 	"final int bitmap = 1 \<\< mask0 | 1 \<\< mask1;
 	'final int valmap = 1 \<\< mask1;
 	'
 	'// store values before node
-	'return valNodeOf(null, bitmap, valmap, new Object[] { key1, val1, node0 }, (byte) 1);"
-when !(useSpecialization() in setup);			
+	'return valNodeOf(null, bitmap, valmap, new Object[] { key1, val1, node0 }, (byte) 1);";			
 
 default str generate_bodyOf_mergeNodeAndValue(Option _, Position _) { throw "something went wrong"; }
 
@@ -438,7 +435,7 @@ str generate_bodyOf_SpecializedBitmapPositionNode_removed(_, _, _, str(str, str)
 when onlyEqualityDefault && !(eq == equalityDefault)
 	;			
 		
-str removed_in_subnode_with_newsize0_block(DataStructure ds, set[Option] setup:{_*, useSpecialization()}) = 
+str removed_in_subnode_with_newsize0_block(DataStructure ds, rel[Option,bool] setup:{_*, <useSpecialization(),true>}) = 
 	"if (this.arity() == <nBound + 1>) {
 	'	// remove node and convert
 	'	final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveNode(mutator, bitpos).convertToGenericNode();
@@ -446,13 +443,13 @@ str removed_in_subnode_with_newsize0_block(DataStructure ds, set[Option] setup:{
 	'	return Result.modified(thisNew);
 	'}";
 
-default str removed_in_subnode_with_newsize0_block(DataStructure ds, set[Option] setup) = 
+default str removed_in_subnode_with_newsize0_block(DataStructure ds, rel[Option,bool] setup) = 
 	"if (this.payloadArity() == 0 && this.nodeArity() == 1) {
 	'	// escalate (singleton or empty) result
 	'	return <nestedResult>;
 	'}";
 		
-default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, DataStructure ds, set[Option] setup, str(str, str) eq) =
+default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) =
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	final int bitpos = (1 \<\< mask);
 
@@ -489,7 +486,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 			}
 		}
 		case 1: {
-			<if ({_*, useSpecialization()} := setup) {>// inline value (move to front)
+			<if (isOptionEnabled(setup,useSpecialization())) {>// inline value (move to front)
 				final <CompactNode(ds)><Generics(ds)> thisNew = copyAndMigrateFromNodeToInline(mutator, bitpos, subNodeNew);
 	
 				return Result.modified(thisNew);<} else {>if (this.payloadArity() == 0 && this.nodeArity() == 1) {
@@ -513,14 +510,14 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 
 	return Result.unchanged(this);";
 	
-str removed_value_block(DataStructure ds, set[Option] setup:{_*, useSpecialization()}) =
+str removed_value_block(DataStructure ds, rel[Option,bool] setup:{_*, <useSpecialization(),true>}) =
 	"if (this.arity() == <nBound + 1>) {
 	'	final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveValue(mutator, bitpos).convertToGenericNode();
 	'
 	'	return Result.modified(thisNew);
 	'}";
 	
-default str removed_value_block(DataStructure ds, set[Option] setup) =
+default str removed_value_block(DataStructure ds, rel[Option,bool] setup) =
 	"if (this.payloadArity() == 2 && this.nodeArity() == 0) {
 	'	/*
 	'	 * Create new node with remaining pair. The new node
@@ -560,7 +557,7 @@ str generate_valNodeOf_factoryMethod_bitmap(0, 0) {
 	;
 }
 
-str generate_valNodeOf_factoryMethod_bitmap(n:1, m:0, set[Option] setup:{_*, compactionViaFieldToMethod()}) {
+str generate_valNodeOf_factoryMethod_bitmap(n:1, m:0, rel[Option,bool] setup:{_*, compactionViaFieldToMethod()}) {
 	// TODO: remove code duplication
 	members = generateMembers_bitmap(n, m, ds);
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
@@ -579,7 +576,7 @@ str generate_valNodeOf_factoryMethod_bitmap(n:1, m:0, set[Option] setup:{_*, com
 	;
 }
 
-default str generate_valNodeOf_factoryMethod_bitmap(int n, int m, DataStructure ds, set[Option] setup) {
+default str generate_valNodeOf_factoryMethod_bitmap(int n, int m, DataStructure ds, rel[Option,bool] setup) {
 	// TODO: remove code duplication
 	members = generateMembers_bitmap(n, m, ds);
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;

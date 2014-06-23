@@ -13,7 +13,7 @@ module dscg::GenerateTrie_EasyIterator
 
 import dscg::Common;
 
-str generateEasyIteratorClassString(DataStructure ds, set[Option] setup) = 
+str generateEasyIteratorClassString(DataStructure ds, rel[Option,bool] setup) = 
 	"/**
 	 * Iterator that first iterates over inlined-values and then continues depth
 	 * first recursively.

@@ -13,7 +13,7 @@ module dscg::GenerateTrie_BitmapIndexedNode
 
 import dscg::Common;
 
-str generateBitmapIndexedNodeClassString(DataStructure ds, set[Option] setup) {
+str generateBitmapIndexedNodeClassString(DataStructure ds, rel[Option,bool] setup) {
 
 	className = "BitmapIndexed<toString(ds)>Node";
 
@@ -196,7 +196,7 @@ str generateBitmapIndexedNodeClassString(DataStructure ds, set[Option] setup) {
 
 		@Override
 		byte sizePredicate() {
-			<if ({_*, useSpecialization()} := setup) {>return SIZE_MORE_THAN_ONE;<} else {>if (this.nodeArity() == 0 && this.payloadArity == 0) {
+			<if (isOptionEnabled(setup,useSpecialization())) {>return SIZE_MORE_THAN_ONE;<} else {>if (this.nodeArity() == 0 && this.payloadArity == 0) {
 				return SIZE_EMPTY;
 			} else if (this.nodeArity() == 0 && this.payloadArity == 1) {
 				return SIZE_ONE;

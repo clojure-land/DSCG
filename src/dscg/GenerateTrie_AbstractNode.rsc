@@ -13,7 +13,7 @@ module dscg::GenerateTrie_AbstractNode
 
 import dscg::Common;
 
-str generateAbstractNodeClassString(DataStructure ds, set[Option] setup) = 
+str generateAbstractNodeClassString(DataStructure ds, rel[Option,bool] setup) = 
 	"protected static abstract class <AbstractNode(ds)><Generics(ds)> extends AbstractNode\<K, V\> {
 
 		abstract boolean containsKey(Object key, int keyHash, int shift);

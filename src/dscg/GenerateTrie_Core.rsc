@@ -13,7 +13,7 @@ module dscg::GenerateTrie_Core
 
 import dscg::Common;
 
-str generateCoreClassString(DataStructure ds, set[Option] setup, str innerClassesString) = 
+str generateCoreClassString(DataStructure ds, rel[Option,bool] setup, str innerClassesString) = 
 "/*******************************************************************************
  * Copyright (c) 2013-2014 CWI
  * All rights reserved. This program and the accompanying materials
@@ -317,7 +317,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 
 	@Override
 	public SupplierIterator<Generics(ds)> keyIterator() {
-		<generate_bodyOf_keyIterator(setup)>
+		<generate_bodyOf_keyIterator(ds, setup)>
 	}
 
 	@Override
@@ -532,11 +532,11 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 }";
 
 
-str generate_bodyOf_keyIterator(set[Option] setup:{_*, useFixedStackIterator()}) = 
+str generate_bodyOf_keyIterator(DataStructure ds, rel[Option,bool] setup:{_*, useFixedStackIterator()}) = 
 	"return new MapKeyIterator\<\>(rootNode);"
 	;
 	
-default str generate_bodyOf_keyIterator(set[Option] setup) =
+default str generate_bodyOf_keyIterator(DataStructure ds, rel[Option,bool] setup) =
 	"return new TrieMapIterator\<\>((CompactMapNode<Generics(ds)>) rootNode);"
 	;
 	

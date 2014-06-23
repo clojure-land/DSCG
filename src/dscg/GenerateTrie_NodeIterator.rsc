@@ -13,7 +13,7 @@ module dscg::GenerateTrie_NodeIterator
 
 import dscg::Common;
 
-str generateNodeIteratorClassString(DataStructure ds, set[Option] setup) = 
+str generateNodeIteratorClassString(DataStructure ds, rel[Option,bool] setup) = 
 	"/**
 	 * Iterator that first iterates over inlined-values and then continues depth
 	 * first recursively.

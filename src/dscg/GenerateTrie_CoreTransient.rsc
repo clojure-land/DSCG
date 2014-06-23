@@ -13,7 +13,7 @@ module dscg::GenerateTrie_CoreTransient
 
 import dscg::Common;
 
-str generateCoreTransientClassString(DataStructure ds, set[Option] setup) = 
+str generateCoreTransientClassString(DataStructure ds, rel[Option,bool] setup) = 
 	"static final class TransientTrieMap<Generics(ds)> extends AbstractMap<Generics(ds)> implements
 					TransientMap<Generics(ds)> {
 		final private AtomicReference\<Thread\> mutator;

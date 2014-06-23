@@ -39,7 +39,13 @@ data Option // TODO: finish!
 	| compactionViaFieldToMethod()
 	;
 
-	
+bool isOptionEnabled(rel[Option,bool] setup, Option \o) { 
+	if ({_*, <\o, b>} := setup) {
+		return b;
+	} else {
+		throw "Option not present.";
+	}
+}
 	
 /*
  * Rewrite Rules
