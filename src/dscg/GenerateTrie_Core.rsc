@@ -13,7 +13,7 @@ module dscg::GenerateTrie_Core
 
 import dscg::Common;
 
-str generateCoreClassString(DataStructure ds, rel[Option,bool] setup, str innerClassesString) = 
+str generateCoreClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str innerClassesString) = 
 "/*******************************************************************************
  * Copyright (c) 2013-2014 CWI
  * All rights reserved. This program and the accompanying materials

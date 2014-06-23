@@ -15,7 +15,7 @@ import List;
 
 import dscg::Common;
 
-str generateCompactNodeClassString(DataStructure ds, rel[Option,bool] setup) {
+str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) {
 	members = [ field("int", "bitmap"), field("int", "valmap") ];
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
 
@@ -192,7 +192,7 @@ str generateCompactNodeClassString(DataStructure ds, rel[Option,bool] setup) {
 
 	<if (isOptionEnabled(setup,useSpecialization())) {>
 		<for(j <- [0..nMax+1], i <- [0..nMax+1], (i + j) <= nBound + 1 && !(i == nBound + 1)) {>
-			<generate_valNodeOf_factoryMethod_bitmap(i, j, ds, setup)>
+			<generate_valNodeOf_factoryMethod_bitmap(i, j, ts, setup)>
 		<}>
 	<}>	
 
@@ -211,47 +211,47 @@ str generateCompactNodeClassString(DataStructure ds, rel[Option,bool] setup) {
 
 	'	@Override
 	'	boolean containsKey(Object key, int keyHash, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, ds, setup, equalityDefault)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, ts, setup, equalityDefault)>
 	'	}
 
 	'	@Override
 	'	boolean containsKey(Object key, int keyHash, int shift, Comparator\<Object\> <cmpName>) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, ds, setup, equalityComparator)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, ts, setup, equalityComparator)>
 	'	}
 
 	'	@Override
 	'	Optional<KeyOrMapEntryGenerics(ds)> findByKey(Object key, int keyHash, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ds, setup, equalityDefault)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ts, setup, equalityDefault)>
 	'	}
 
 	'	@Override
 	'	Optional<KeyOrMapEntryGenerics(ds)> findByKey(Object key, int keyHash, int shift,
 	'					Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ds, setup, equalityComparator)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ts, setup, equalityComparator)>
 	'	}
 
 	'	@Override
 	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, K key,
 	'					int keyHash, V<if (ds == \set()) {>oid<}> val, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ds, setup, equalityDefault)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, setup, equalityDefault)>
 	'	}
 
 	'	@Override
 	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, K key,
 	'					int keyHash, V<if (ds == \set()) {>oid<}> val, int shift, Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ds, setup, equalityComparator)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, setup, equalityComparator)>
 	'	}
 
 	'	@Override
 	'	Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, K key,
 	'					int keyHash, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ds, setup, equalityDefault)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, setup, equalityDefault)>
 	'	}
 
 	'	@Override
 	'	Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, K key,
 	'					int keyHash, int shift, Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ds, setup, equalityComparator)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, setup, equalityComparator)>
 	'	}
 	
 	'}
@@ -325,7 +325,7 @@ str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(_, _, _, rel[Optio
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 	
-default str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) = 
+default str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (<keyName>Hash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 	'
@@ -346,7 +346,7 @@ str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(_, _, _, rel[Option,
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;		
 	
-default str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) = 
+default str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 
@@ -379,7 +379,7 @@ str generate_bodyOf_SpecializedBitmapPositionNode_updated(_, _, _, rel[Option,bo
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 	
-default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) = 
+default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 	'
@@ -435,7 +435,7 @@ str generate_bodyOf_SpecializedBitmapPositionNode_removed(_, _, _, rel[Option,bo
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;			
 		
-str removed_in_subnode_with_newsize0_block(DataStructure ds, rel[Option,bool] setup:{_*, <useSpecialization(),true>}) = 
+str removed_in_subnode_with_newsize0_block(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),true>}) = 
 	"if (this.arity() == <nBound + 1>) {
 	'	// remove node and convert
 	'	final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveNode(mutator, bitpos).convertToGenericNode();
@@ -443,13 +443,13 @@ str removed_in_subnode_with_newsize0_block(DataStructure ds, rel[Option,bool] se
 	'	return Result.modified(thisNew);
 	'}";
 
-default str removed_in_subnode_with_newsize0_block(DataStructure ds, rel[Option,bool] setup) = 
+default str removed_in_subnode_with_newsize0_block(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
 	"if (this.payloadArity() == 0 && this.nodeArity() == 1) {
 	'	// escalate (singleton or empty) result
 	'	return <nestedResult>;
 	'}";
 		
-default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) =
+default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) =
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	final int bitpos = (1 \<\< mask);
 
@@ -457,7 +457,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 		final int valIndex = valIndex(bitpos);
 
 		if (<eq("getKey(valIndex)", keyName)>) {			
-			<removed_value_block(ds, setup)> else {
+			<removed_value_block(ts, setup)> else {
 				final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveValue(mutator, bitpos);
 	
 				return Result.modified(thisNew);
@@ -478,7 +478,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 
 		switch (subNodeNew.sizePredicate()) {
 		case 0: {
-			<removed_in_subnode_with_newsize0_block(ds, setup)> else {
+			<removed_in_subnode_with_newsize0_block(ts, setup)> else {
 				// remove node
 				final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveNode(mutator, bitpos);
 
@@ -510,14 +510,14 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 
 	return Result.unchanged(this);";
 	
-str removed_value_block(DataStructure ds, rel[Option,bool] setup:{_*, <useSpecialization(),true>}) =
+str removed_value_block(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),true>}) =
 	"if (this.arity() == <nBound + 1>) {
 	'	final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveValue(mutator, bitpos).convertToGenericNode();
 	'
 	'	return Result.modified(thisNew);
 	'}";
 	
-default str removed_value_block(DataStructure ds, rel[Option,bool] setup) =
+default str removed_value_block(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
 	"if (this.payloadArity() == 2 && this.nodeArity() == 0) {
 	'	/*
 	'	 * Create new node with remaining pair. The new node
@@ -545,9 +545,9 @@ int oneShiftedLeftBy(int count) = toInt(pow(2, count)) when count >= 0 && count 
 int oneShiftedLeftBy(31) = -2147483648;
 default int oneShiftedLeftBy(int count) { throw "Not supported!"; }
 
-str generate_valNodeOf_factoryMethod_bitmap(0, 0) { 
+str generate_valNodeOf_factoryMethod_bitmap(0, 0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) { 
 	// TODO: remove code duplication
-	members = generateMembers_bitmap(0, 0);
+	members = generateMembers_bitmap(0, 0, ts);
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
 
 	return
@@ -557,9 +557,9 @@ str generate_valNodeOf_factoryMethod_bitmap(0, 0) {
 	;
 }
 
-str generate_valNodeOf_factoryMethod_bitmap(n:1, m:0, rel[Option,bool] setup:{_*, compactionViaFieldToMethod()}) {
+str generate_valNodeOf_factoryMethod_bitmap(n:1, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, compactionViaFieldToMethod()}) {
 	// TODO: remove code duplication
-	members = generateMembers_bitmap(n, m, ds);
+	members = generateMembers_bitmap(n, m, ts);
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
 
 	className = "<toString(ds)><m>To<n>Node";
@@ -576,9 +576,9 @@ str generate_valNodeOf_factoryMethod_bitmap(n:1, m:0, rel[Option,bool] setup:{_*
 	;
 }
 
-default str generate_valNodeOf_factoryMethod_bitmap(int n, int m, DataStructure ds, rel[Option,bool] setup) {
+default str generate_valNodeOf_factoryMethod_bitmap(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) {
 	// TODO: remove code duplication
-	members = generateMembers_bitmap(n, m, ds);
+	members = generateMembers_bitmap(n, m, ts);
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
 
 	className = "<toString(ds)><m>To<n>Node";
@@ -590,7 +590,7 @@ default str generate_valNodeOf_factoryMethod_bitmap(int n, int m, DataStructure 
 		'}
 		"; 
 	} else if ((n + m) == nBound + 1 && (n + m) < nMax) {
-		list[Argument] argsForArray = generateMembers_bitmap(n, m, ds) - [ field("int", "bitmap"), field("int", "valmap") ];
+		list[Argument] argsForArray = generateMembers_bitmap(n, m, ts) - [ field("int", "bitmap"), field("int", "valmap") ];
 
 		return
 		"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
@@ -603,7 +603,7 @@ default str generate_valNodeOf_factoryMethod_bitmap(int n, int m, DataStructure 
 }
 
 
-list[Argument] generateMembers_bitmap(int n, int m, DataStructure ds) 
+list[Argument] generateMembers_bitmap(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) 
 	= [ bitmap, valmap ]
 	+ [ key(i), val(i) | i <- [1..m+1]] 
 	+ [ \node(ds, i)   | i <- [1..n+1]]

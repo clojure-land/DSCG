@@ -13,7 +13,7 @@ module dscg::GenerateTrie_Iterator
 
 import dscg::Common;
 
-str generateIteratorClassString(DataStructure ds, rel[Option,bool] setup) = 
+str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
 	"/**
 	 * Iterator skeleton that uses a fixed stack in depth.
 	 */

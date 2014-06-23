@@ -33,43 +33,46 @@ import dscg::GenerateTrie_Core;
 import dscg::GenerateTrie_CoreTransient;
 
 void main() {
-	DataStructure ds = \map();
-	rel[Option,bool] setup = { 
-		<useSpecialization(),false>,
-		<useFixedStackIterator(),true>,
-		<useStructuralEquality(),true>,
-		<methodsWithComparator(),true>
-	}; // { compactionViaFieldToMethod() };
+	TrieSpecifics ts = trieSpecifics(\map(), 5, 8);	
+	if(___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound) := ts) {
 
-	list[str] innerClassStrings 
-		= [ generateOptionalClassString() ]
-		+ [ generateResultClassString() ]
-		+ [ generateAbstractAnyNodeClassString(ds, setup)]
-		+ [ generateAbstractNodeClassString(ds, setup)]		
-		+ [ generateCompactNodeClassString(ds, setup)]
-		+ [ generateBitmapIndexedNodeClassString(ds, setup)]
-		+ [ generateHashCollisionNodeClassString(ds, setup)]
-		+ [ generateIteratorClassString(ds, setup)]
-		;
+		rel[Option,bool] setup = { 
+			<useSpecialization(),true>,
+			<useFixedStackIterator(),true>,
+			<useStructuralEquality(),true>,
+			<methodsWithComparator(),true>
+		}; // { compactionViaFieldToMethod() };
 	
-	if (!isOptionEnabled(setup,useFixedStackIterator())) {
-		innerClassStrings = innerClassStrings + [ generateEasyIteratorClassString(ds, setup)];
+		list[str] innerClassStrings 
+			= [ generateOptionalClassString() ]
+			+ [ generateResultClassString() ]
+			+ [ generateAbstractAnyNodeClassString(ts, setup)]
+			+ [ generateAbstractNodeClassString(ts, setup)]		
+			+ [ generateCompactNodeClassString(ts, setup)]
+			+ [ generateBitmapIndexedNodeClassString(ts, setup)]
+			+ [ generateHashCollisionNodeClassString(ts, setup)]
+			+ [ generateIteratorClassString(ts, setup)]
+			;
+		
+		if (!isOptionEnabled(setup,useFixedStackIterator())) {
+			innerClassStrings = innerClassStrings + [ generateEasyIteratorClassString(ts, setup)];
+		}
+		
+		innerClassStrings 
+			= innerClassStrings
+			+ [ generateNodeIteratorClassString(ts, setup)]
+			+ [ generateCoreTransientClassString(ts, setup)]		
+			;
+			
+		if (isOptionEnabled(setup,useSpecialization())) {
+			innerClassStrings = innerClassStrings + 
+			[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ts, setup) | m <- [0..nMax+1], n <- [0..nMax+1], (n + m) <= nBound ];
+		}
+			
+		list[str] classStrings = [ generateCoreClassString(ts, setup, intercalate("\n", innerClassStrings)) ];	
+			
+		writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
 	}
-	
-	innerClassStrings 
-		= innerClassStrings
-		+ [ generateNodeIteratorClassString(ds, setup)]
-		+ [ generateCoreTransientClassString(ds, setup)]		
-		;
-		
-	if (isOptionEnabled(setup,useSpecialization())) {
-		innerClassStrings = innerClassStrings + 
-		[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ds, setup) | m <- [0..nMax+1], n <- [0..nMax+1], (n + m) <= nBound ];
-	}
-		
-	list[str] classStrings = [ generateCoreClassString(ds, setup, intercalate("\n", innerClassStrings)) ];	
-		
-	writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
 }
 	
 str generateClassString(int n) =  
@@ -583,7 +586,7 @@ default str generate_bodyOf_findByKey(int n, int m, DataStructure ds, rel[Option
 	+ " else { return Optional.empty(); }"
 	;	
 			
-str generateGenericNodeClassString(int n, int m, DataStructure ds) =
+str generateGenericNodeClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) =
 	"private static final class Index<n>Node<Generics(ds)> extends <CompactNode(ds)><Generics(ds)> {
 	'	<for (i <- [1..n+1]) {>
 	'	private final byte <nodePosName><i>;
@@ -697,7 +700,7 @@ str generate_bodyOf_copyAndSetValue(_, 0, _)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
 	
-default str generate_bodyOf_copyAndSetValue(int n, int m, DataStructure ds) = 	
+default str generate_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	//"	if (isAllowedToEdit(<use(thisMutator)>, mutator)) {
 	//'		// no copying if already editable
 	//'
@@ -713,14 +716,14 @@ default str generate_bodyOf_copyAndSetValue(int n, int m, DataStructure ds) =
 	//'
 	//'		switch(index) {
 	//'			<for (i <- [1..m+1]) {>case <i-1>:
-	//'				return <nodeOf(n, m, use(replace(generateMembers_bitmap(n, m, ds), [ val(i) ], [ field(valName) ])))>;
+	//'				return <nodeOf(n, m, use(replace(generateMembers_bitmap(n, m, ts), [ val(i) ], [ field(valName) ])))>;
 	//'			<}>default:
 	//'				throw new IllegalStateException(\"Index out of range.\");
 	//'		}	
 	//'	}"
 	"	switch(index) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
-	'			return <nodeOf(n, m, use(replace(generateMembers_bitmap(n, m, ds), [ val(i) ], [ field(valName) ])))>;
+	'			return <nodeOf(n, m, use(replace(generateMembers_bitmap(n, m, ts), [ val(i) ], [ field(valName) ])))>;
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");
 	'	}"
@@ -731,7 +734,7 @@ str generate_bodyOf_copyAndSetNode(0, _, _)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
 	
-default str generate_bodyOf_copyAndSetNode(int n, int m, DataStructure ds) = 	
+default str generate_bodyOf_copyAndSetNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	//"	if (isAllowedToEdit(<use(thisMutator)>, mutator)) {
 	//'		// no copying if already editable
 	//'
@@ -747,20 +750,20 @@ default str generate_bodyOf_copyAndSetNode(int n, int m, DataStructure ds) =
 	//'
 	//'		switch(index) {
 	//'			<for (i <- [1..n+1]) {>case <i-1>:
-	//'				return <nodeOf(n, m, use(replace(generateMembers_bitmap(n, m, ds), [ \node(ds, i) ], [ field(nodeName) ])))>;
+	//'				return <nodeOf(n, m, use(replace(generateMembers_bitmap(n, m, ts), [ \node(ds, i) ], [ field(nodeName) ])))>;
 	//'			<}>default:
 	//'				throw new IllegalStateException(\"Index out of range.\");
 	//'		}	
 	//'	}"
 	"	switch(index) {
 	'		<for (i <- [1..n+1]) {>case <i-1>:
-	'			return <nodeOf(n, m, use(replace(generateMembers_bitmap(n, m, ds), [ \node(ds, i) ], [ field(nodeName) ])))>;
+	'			return <nodeOf(n, m, use(replace(generateMembers_bitmap(n, m, ts), [ \node(ds, i) ], [ field(nodeName) ])))>;
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"	
 	;
 	
-default str generate_bodyOf_copyAndInsertValue(int n, int m, DataStructure ds) = 	
+default str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int valIndex = valIndex(bitpos);
 	'
 	'	final int bitmap = this.bitmap | bitpos;
@@ -768,9 +771,9 @@ default str generate_bodyOf_copyAndInsertValue(int n, int m, DataStructure ds) =
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
-	'			return <nodeOf(n, m+1, use(replace(generateMembers_bitmap(n, m, ds), [ key(i), val(i) ], [ field(keyName), field(valName), key(i), val(i) ])))>;
+	'			return <nodeOf(n, m+1, use(replace(generateMembers_bitmap(n, m, ts), [ key(i), val(i) ], [ field(keyName), field(valName), key(i), val(i) ])))>;
 	'		<}>case <m>:
-	'			return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers_bitmap(n, m, ds), [ \node(ds, 1) ], [ field(keyName), field(valName) ])))>;
+	'			return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers_bitmap(n, m, ts), [ \node(ds, 1) ], [ field(keyName), field(valName) ])))>;
 	'		default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"
@@ -780,7 +783,7 @@ str generate_bodyOf_copyAndRemoveValue(_, 0, _)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
 	
-default str generate_bodyOf_copyAndRemoveValue(int n, int m, DataStructure ds) = 	
+default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int valIndex = valIndex(bitpos);
 	'
 	'	final int bitmap = this.bitmap & ~bitpos;
@@ -788,7 +791,7 @@ default str generate_bodyOf_copyAndRemoveValue(int n, int m, DataStructure ds) =
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
-	'			return <nodeOf(n, m-1, use(generateMembers_bitmap(n, m, ds) - [ key(i), val(i) ]))>;
+	'			return <nodeOf(n, m-1, use(generateMembers_bitmap(n, m, ts) - [ key(i), val(i) ]))>;
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"
@@ -798,14 +801,14 @@ str generate_bodyOf_copyAndRemoveNode(0, _, _)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
 	
-default str generate_bodyOf_copyAndRemoveNode(int n, int m, DataStructure ds) = 	
+default str generate_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int bitIndex = nodeIndex(bitpos);
 	'
 	'	final int bitmap = this.bitmap & ~bitpos;
 	'
 	'	switch(bitIndex) {
 	'		<for (i <- [1..n+1]) {>case <i-1>:
-	'			return <nodeOf(n-1, m, use(generateMembers_bitmap(n, m, ds) - [ \node(ds, i) ]))>;
+	'			return <nodeOf(n-1, m, use(generateMembers_bitmap(n, m, ts) - [ \node(ds, i) ]))>;
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"
@@ -815,7 +818,7 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode(_, 0, _)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
 	
-default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, DataStructure ds) = 	
+default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int bitIndex = Integer.bitCount(((bitmap | bitpos) ^ (valmap & ~bitpos)) & (bitpos - 1));
 	'	final int valIndex = valIndex(bitpos);
 	'
@@ -826,9 +829,9 @@ default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, DataStr
 	'		<for (i <- [1..m+1]) {>case <i-1>:
 	'			switch(bitIndex) {
 	'				<for (j <- [1..n+1]) {>case <j-1>:
-	'					return <nodeOf(n+1, m-1, use(replace(generateMembers_bitmap(n, m, ds) - [ key(i), val(i) ], [ \node(ds, j) ], [ field(nodeName), \node(ds, j) ])))>;
+	'					return <nodeOf(n+1, m-1, use(replace(generateMembers_bitmap(n, m, ts) - [ key(i), val(i) ], [ \node(ds, j) ], [ field(nodeName), \node(ds, j) ])))>;
 	'				<}>case <n>:
-	'					return <nodeOf(n+1, m-1, use(generateMembers_bitmap(n, m, ds) - [ key(i), val(i) ] + [ field(nodeName) ]))>;
+	'					return <nodeOf(n+1, m-1, use(generateMembers_bitmap(n, m, ts) - [ key(i), val(i) ] + [ field(nodeName) ]))>;
 	'				default:
 	'					throw new IllegalStateException(\"Index out of range.\");	
 	'			}
@@ -841,7 +844,7 @@ str generate_bodyOf_copyAndMigrateFromNodeToInline(0, _, _)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
 	
-default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, DataStructure ds) = 	
+default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = valIndex(bitpos);
 	'	
@@ -854,9 +857,9 @@ default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, DataStr
 	'		<for (i <- [1..n+1]) {>case <i-1>:
 	'			switch(valIndex) {
 	'				<for (j <- [1..m+1]) {>case <j-1>:
-	'					return <nodeOf(n-1, m+1, use(replace(generateMembers_bitmap(n, m, ds) - [ \node(ds, i) ], [ key(j), val(j) ], [ key(), val(), key(j), val(j) ])))>;
+	'					return <nodeOf(n-1, m+1, use(replace(generateMembers_bitmap(n, m, ts) - [ \node(ds, i) ], [ key(j), val(j) ], [ key(), val(), key(j), val(j) ])))>;
 	'				<}>case <m>:
-	'					return <nodeOf(n-1, m+1, use([ bitmap, valmap ] + insertAfterOrDefaultAtFront(generateMembers_bitmap(n, m, ds) - [ bitmap, valmap ] - [ \node(ds, i) ], [ key(m), val(m) ], [ key(), val() ])))>;
+	'					return <nodeOf(n-1, m+1, use([ bitmap, valmap ] + insertAfterOrDefaultAtFront(generateMembers_bitmap(n, m, ts) - [ bitmap, valmap ] - [ \node(ds, i) ], [ key(m), val(m) ], [ key(), val() ])))>;
 	'				default:
 	'					throw new IllegalStateException(\"Index out of range.\");	
 	'			}
@@ -1081,7 +1084,7 @@ str generate_bodyOf_GenericNode_containsKey(_, _, _, rel[Option,bool] setup, str
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 	
-default str generate_bodyOf_GenericNode_containsKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) = 
+default str generate_bodyOf_GenericNode_containsKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (<keyName>Hash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 	'
@@ -1101,7 +1104,7 @@ str generate_bodyOf_GenericNode_findByKey(_, _, _, rel[Option,bool] setup, str(s
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;		
 	
-default str generate_bodyOf_GenericNode_findByKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) = 
+default str generate_bodyOf_GenericNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 
@@ -1133,7 +1136,7 @@ str generate_bodyOf_GenericNode_updated(_, _, _, rel[Option,bool] setup, str(str
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 	
-default str generate_bodyOf_GenericNode_updated(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) = 
+default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'final int bitpos = (1 \<\< mask);
 	'
@@ -1219,7 +1222,7 @@ str generate_bodyOf_GenericNode_removed(_, _, _, rel[Option,bool] setup, str(str
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;			
 		
-default str generate_bodyOf_GenericNode_removed(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) =
+default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) =
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	final int bitpos = (1 \<\< mask);
 
@@ -1340,7 +1343,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, DataStructure ds, 
 
 	return Result.unchanged(this);";
 
-list[Argument] generateMembers(int n, int m, DataStructure ds) 
+list[Argument] generateMembers(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) 
 	= [ *payloadTriple(i) | i <- [1..m+1]] 
 	+ [ *subnodePair(i)   | i <- [1..n+1]]
 	;
@@ -1353,7 +1356,7 @@ list[Argument] generateSubnodeMembers(int n)
 	= [ *subnodePair(i)   | i <- [1..n+1]]
 	;	
 
-//str generate_valNodeOf_factoryMethod_special(int n, int m, DataStructure ds) {
+//str generate_valNodeOf_factoryMethod_special(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) {
 //	return 
 //	"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {
 //	'	final int bitmap = 0 <intercalate(" ", mapper(bitmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
@@ -1386,11 +1389,11 @@ list[Argument] generateSubnodeMembers(int n)
 //}
 
 
-str generate_valNodeOf_factoryMethod(0, 0) { throw "TODO"; }
+str generate_valNodeOf_factoryMethod(0, 0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) { throw "TODO"; }
 		
-str generate_valNodeOf_factoryMethod(1, 0) { throw "TODO"; }
+str generate_valNodeOf_factoryMethod(1, 0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) { throw "TODO"; }
 
-str generate_valNodeOf_factoryMethod(int n, int m, DataStructure ds) {
+str generate_valNodeOf_factoryMethod(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) {
 	// TODO: remove code duplication
 	members = generateMembers(n, m);
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
@@ -1458,7 +1461,7 @@ str generate_valNodeOf_factoryMethod(int n, int m, DataStructure ds) {
 	}
 }
 	
-str generateSpecializedNodeWithBytePositionsClassString(int n, int m, DataStructure ds, rel[Option,bool] setup) {
+str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) {
 	members = generateMembers(n, m);
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
 
@@ -1673,12 +1676,12 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, DataStruct
 	;
 }
 
-str generate_bodyOf_sizePredicate(0, 0, DataStructure ds) = "SIZE_EMPTY";
-str generate_bodyOf_sizePredicate(0, 1, DataStructure ds) = "SIZE_ONE";	
-default str generate_bodyOf_sizePredicate(int n, int m, DataStructure ds) = "SIZE_MORE_THAN_ONE";
+str generate_bodyOf_sizePredicate(0, 0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = "SIZE_EMPTY";
+str generate_bodyOf_sizePredicate(0, 1, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = "SIZE_ONE";	
+default str generate_bodyOf_sizePredicate(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = "SIZE_MORE_THAN_ONE";
 
 
-str generate_equalityComparisons(int n, int m, DataStructure ds, str(str, str) eq) =
+str generate_equalityComparisons(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), str(str, str) eq) =
 	"if (bitmap != that.bitmap) {
 	'	return false;
 	'}
@@ -1698,11 +1701,11 @@ str generate_equalityComparisons(int n, int m, DataStructure ds, str(str, str) e
 	;
 	 
 
-str generate_bodyOf_inlineValue(int n, int m, DataStructure ds) =
+str generate_bodyOf_inlineValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) =
 	"return <nodeOf(n, m+1, use(payloadTriple("mask") + generateSubnodeMembers(n)))>;"
 when m == 0;
 
-default str generate_bodyOf_inlineValue(int n, int m, DataStructure ds) =
+default str generate_bodyOf_inlineValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) =
 	"<intercalate(" else ", [ "if (mask \< <keyPosName><i>) { return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers(n, m), payloadTriple(i), payloadTriple("mask"))))>; }" | i <- [1..m+1] ])> else {
 	'	return <nodeOf(n, m+1, use(generatePayloadMembers(m) + payloadTriple("mask") + generateSubnodeMembers(n)))>;
 	'}"
@@ -1718,8 +1721,8 @@ default str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
 	'}"
 	;
 
-str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, DataStructure ds, rel[Option,bool] setup) {
-	members = generateMembers_bitmap(n, m, ds);
+str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) {
+	members = generateMembers_bitmap(n, m, ts);
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
 
 	className = "<toString(ds)><m>To<n>Node";
@@ -1827,48 +1830,48 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, DataStru
 	<if (ds == \map()) {>
 	'	@Override
 	'	<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, int index, V <valName>) {
-	'		<generate_bodyOf_copyAndSetValue(n, m, ds)>
+	'		<generate_bodyOf_copyAndSetValue(n, m, ts)>
 	'	}
 	<}>	
 	
 	'	@Override
 	'	<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, int bitpos, K <keyName>, V <valName>) {		
-	'		<generate_bodyOf_copyAndInsertValue(n, m, ds)>
+	'		<generate_bodyOf_copyAndInsertValue(n, m, ts)>
 	'	}
 	
 	'	@Override
 	'	<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, int bitpos) {
-	'		<generate_bodyOf_copyAndRemoveValue(n, m, ds)>
+	'		<generate_bodyOf_copyAndRemoveValue(n, m, ts)>
 	'	}	
 
 	'	@Override
 	'	<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, int index, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-	'		<generate_bodyOf_copyAndSetNode(n, m, ds)>
+	'		<generate_bodyOf_copyAndSetNode(n, m, ts)>
 	'	}	
 
 	'	@Override
 	'	<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, int bitpos) {
-	'		<generate_bodyOf_copyAndRemoveNode(n, m, ds)>
+	'		<generate_bodyOf_copyAndRemoveNode(n, m, ts)>
 	'	}	
 
 	'	@Override
 	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, int bitpos, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-	'		<generate_bodyOf_copyAndMigrateFromInlineToNode(n, m, ds)>
+	'		<generate_bodyOf_copyAndMigrateFromInlineToNode(n, m, ts)>
 	'	}
 	
 	'	@Override
 	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, int bitpos, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-	'		<generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ds)>
+	'		<generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts)>
 	'	}		
 	
 	'	@Override
 	'	<CompactNode(ds)><Generics(ds)> convertToGenericNode() {
-	'		return valNodeOf(<use(thisMutator)>, bitmap, valmap, new Object[] { <use(generateMembers_bitmap(n, m, ds) - [ field("int", "bitmap"), field("int", "valmap") ])> }, (byte) <m>);
+	'		return valNodeOf(<use(thisMutator)>, bitmap, valmap, new Object[] { <use(generateMembers_bitmap(n, m, ts) - [ field("int", "bitmap"), field("int", "valmap") ])> }, (byte) <m>);
 	'	}	
 	
 	'	@Override
 	'	byte sizePredicate() {
-	'		return <generate_bodyOf_sizePredicate(n, m, ds)>;
+	'		return <generate_bodyOf_sizePredicate(n, m, ts)>;
 	'	}
 
 	<if (isOptionEnabled(setup, useStructuralEquality())) {>
@@ -1897,7 +1900,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, DataStru
 	'		}
 	'		<if ((n + m) > 0) {><className><QuestionMarkGenerics(ds)> that = (<className><QuestionMarkGenerics(ds)>) other;
 	'
-	'		<generate_equalityComparisons(n, m, ds, equalityDefault)><}>
+	'		<generate_equalityComparisons(n, m, ts, equalityDefault)><}>
 	'
 	'		return true;
 	'	}

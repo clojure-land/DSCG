@@ -13,7 +13,7 @@ module dscg::GenerateTrie_BitmapIndexedNode
 
 import dscg::Common;
 
-str generateBitmapIndexedNodeClassString(DataStructure ds, rel[Option,bool] setup) {
+str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) {
 
 	className = "BitmapIndexed<toString(ds)>Node";
 

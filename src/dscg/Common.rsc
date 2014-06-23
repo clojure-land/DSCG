@@ -20,7 +20,25 @@ data DataStructure
 	| \set()
 	| \vector()
 	;
-
+	
+data TrieSpecifics 
+	= ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound)
+	;
+	
+TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound) {
+	if (bitPartitionSize < 1 || bitPartitionSize > 6) {
+		throw "Unsupported bit partition size of <bitPartitionSize>.";
+	}
+	
+	int nMax = 32; // toInt(pow(2, bitPartitionSize));
+	
+	if (nBound > nMax) {
+		throw "Specialization bound (<nBound>) must be smaller than the number of buckets (<nMax>)";
+	}
+	
+	return ___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound);
+}
+	
 data Argument
 	= field (str \type, str name)
 	| getter(str \type, str name)
@@ -164,10 +182,3 @@ public str keyPosName = "pos";
 str equalityDefault(str x, str y) = "<x>.equals(<y>)";
 
 str equalityComparator(str x, str y) = "<cmpName>.compare(<x>, <y>) == 0";
-
-
-/*
- * Global State [TODO: remove me!]
- */
-public int nMax = 32;
-public int nBound = 8;
