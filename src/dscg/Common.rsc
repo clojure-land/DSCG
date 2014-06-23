@@ -12,7 +12,7 @@
 module dscg::Common
 
 import List;
-
+import util::Math;
 
 
 data DataStructure
@@ -30,7 +30,7 @@ TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound) 
 		throw "Unsupported bit partition size of <bitPartitionSize>.";
 	}
 	
-	int nMax = 32; // toInt(pow(2, bitPartitionSize));
+	int nMax = toInt(pow(2, bitPartitionSize));
 	
 	if (nBound > nMax) {
 		throw "Specialization bound (<nBound>) must be smaller than the number of buckets (<nMax>)";

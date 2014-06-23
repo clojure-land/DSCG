@@ -42,8 +42,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	return
 	"private static abstract class <className><Generics(ds)> extends Abstract<toString(ds)>Node<Generics(ds)> {
 	'
-	'	protected static final int BIT_PARTITION_SIZE = 5;
-	'	protected static final int BIT_PARTITION_MASK = 0x1f;
+	'	protected static final int BIT_PARTITION_SIZE = <bitPartitionSize>;
+	'	protected static final int BIT_PARTITION_MASK = 0b<for (i <- [1..bitPartitionSize+1]) {>1<}>;
 	'
 	'	<intercalate("\n", mapper(members, str(Argument a) { 
 			str dec = "protected final <dec(a)>;";

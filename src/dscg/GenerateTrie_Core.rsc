@@ -534,7 +534,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 }";
 
 
-str generate_bodyOf_keyIterator(DataStructure ds, rel[Option,bool] setup:{_*, useFixedStackIterator()}) = 
+str generate_bodyOf_keyIterator(DataStructure ds, rel[Option,bool] setup:{_*, <useFixedStackIterator(),true>}) = 
 	"return new MapKeyIterator\<\>(rootNode);"
 	;
 	
