@@ -379,10 +379,29 @@ str generateCoreTransientClassString(DataStructure ds, rel[Option,bool] setup) =
 			}
 		}
 
+		<if (isOptionEnabled(setup, useStructuralEquality())) {>
 		@Override
-		public boolean equals(Object o) {
-			return rootNode.equals(o);
+		public boolean equals(Object other) {
+			if (other == this) {
+				return true;
+			}
+			if (other == null) {
+				return false;
+			}
+	
+			if (other instanceof TransientTrieMap) {
+				TransientTrieMap\<?, ?\> that = (TransientTrieMap\<?, ?\>) other;
+	
+				if (this.size() != that.size()) {
+					return false;
+				}
+	
+				return rootNode.equals(that.rootNode);
+			}
+	
+			return super.equals(other);
 		}
+		<}>
 
 		@Override
 		public int hashCode() {

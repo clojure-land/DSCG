@@ -32,9 +32,9 @@ data Position // TODO: finish!
 	;
 	
 data Option // TODO: finish!
-	= none() 
-	| useSpecialization()
-	| useFixedStackIterator()	
+	= useSpecialization()
+	| useFixedStackIterator()
+	| useStructuralEquality()	
 	| methodsWithComparator()
 	| compactionViaFieldToMethod()
 	;
@@ -43,7 +43,7 @@ bool isOptionEnabled(rel[Option,bool] setup, Option \o) {
 	if ({_*, <\o, b>} := setup) {
 		return b;
 	} else {
-		throw "Option not present.";
+		throw "Option <\o> not present.";
 	}
 }
 	
@@ -169,7 +169,6 @@ str equalityComparator(str x, str y) = "<cmpName>.compare(<x>, <y>) == 0";
 /*
  * Global State [TODO: remove me!]
  */
-public bool sortedContent = true;
 public bool onlyEqualityDefault = false;
 
 public int nMax = 32;

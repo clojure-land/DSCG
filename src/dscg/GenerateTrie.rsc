@@ -36,7 +36,8 @@ void main() {
 	DataStructure ds = \map();
 	rel[Option,bool] setup = { 
 		<useSpecialization(),true>,
-		<useFixedStackIterator(),true>
+		<useFixedStackIterator(),true>,
+		<useStructuralEquality(),true>
 	}; // { compactionViaFieldToMethod() };
 
 	list[str] innerClassStrings 
@@ -62,7 +63,7 @@ void main() {
 		
 	if (isOptionEnabled(setup,useSpecialization())) {
 		innerClassStrings = innerClassStrings + 
-		[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ds) | m <- [0..nMax+1], n <- [0..nMax+1], (n + m) <= nBound ];
+		[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ds, setup) | m <- [0..nMax+1], n <- [0..nMax+1], (n + m) <= nBound ];
 	}
 		
 	list[str] classStrings = [ generateCoreClassString(ds, setup, intercalate("\n", innerClassStrings)) ];	
@@ -237,7 +238,7 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, str(str, str
 					'		// merge into node
 					'		final <CompactNode(ds)><Generics(ds)> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <valName><i>, <keyName>, <keyName>Hash, <valName>, shift + BIT_PARTITION_SIZE);
 					'		
-					'		<if (sortedContent) {><if (n == 0) {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
+					'		<if (isOptionEnabled(setup, useStructuralEquality())) {><if (n == 0) {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
 					'			result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);
 					'		}<}><} else {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<}>
 					'	}
@@ -311,7 +312,7 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, str(str, str
 	'		
 	'<intercalate(" else ", [ updated_clause_inline(i)| i <- [1..m+1]] + [ updated_clause_node(i)| i <- [1..n+1]])> else {
 	'	// no value
-	'	<if (sortedContent) {>result = Result.modified(inlineValue(mutator, <use(payloadTriple("mask"))>));<} else {>result = Result.modified(<nodeOf(n, m+1, use(generatePayloadMembers(m) + payloadTriple("mask") + generateSubnodeMembers(n)))>);<}>
+	'	<if (isOptionEnabled(setup, useStructuralEquality())) {>result = Result.modified(inlineValue(mutator, <use(payloadTriple("mask"))>));<} else {>result = Result.modified(<nodeOf(n, m+1, use(generatePayloadMembers(m) + payloadTriple("mask") + generateSubnodeMembers(n)))>);<}>
 	'}
 	'		
 	'return result;";	
@@ -390,7 +391,7 @@ default str generate_bodyOf_removed(int n, int m, DataStructure ds, str(str, str
 					result = <nestedResult>;
 					break;< } else {> case SIZE_ONE:
 					// inline sub-node value
-					<if (sortedContent) {>result = Result.modified(removeNode<i>AndInlineValue(mutator, <use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()"))>));<} else {>result = Result.modified(<nodeOf(n-1, m+1, use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()") + generateMembers(n, m) - subnodePair(i)))>);<}>
+					<if (isOptionEnabled(setup, useStructuralEquality())) {>result = Result.modified(removeNode<i>AndInlineValue(mutator, <use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()"))>));<} else {>result = Result.modified(<nodeOf(n-1, m+1, use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()") + generateMembers(n, m) - subnodePair(i)))>);<}>
 					break;<}>
 					
 				case SIZE_MORE_THAN_ONE:
@@ -1416,7 +1417,7 @@ str generate_valNodeOf_factoryMethod(int n, int m, DataStructure ds) {
 			argsForArray = [ key(i) | i <- [1..m+1]] + [ \node(ds, j) | j <- [1..n+1]];
 		}
 		
-		if (sortedContent) {			
+		if (isOptionEnabled(setup, useStructuralEquality())) {			
 			return
 			"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
 			'	final int bitmap = 0 <intercalate(" ", mapper(bitmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
@@ -1456,7 +1457,7 @@ str generate_valNodeOf_factoryMethod(int n, int m, DataStructure ds) {
 	}
 }
 	
-str generateSpecializedNodeWithBytePositionsClassString(int n, int m, DataStructure ds) {
+str generateSpecializedNodeWithBytePositionsClassString(int n, int m, DataStructure ds, rel[Option,bool] setup) {
 	members = generateMembers(n, m);
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
 
@@ -1512,7 +1513,7 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, DataStruct
 	'		<generate_bodyOf_removed(n, m, equalityComparator)>
 	'	}
 
-	<if (sortedContent) {>
+	<if (isOptionEnabled(setup, useStructuralEquality())) {>
 	'	<if ((n + m) > 0) {>
 	'	private <CompactNode(ds)><Generics(ds)> inlineValue(AtomicReference\<Thread\> mutator, <dec(payloadTriple("mask"))>) {
 	'		<generate_bodyOf_inlineValue(n, m)>
@@ -1520,7 +1521,7 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, DataStruct
 	'	<}>
 	<}>
 	
-	<if (sortedContent) {>
+	<if (isOptionEnabled(setup, useStructuralEquality())) {>
 	'	<for (j <- [1..n+1]) {>
 	'	private <CompactNode(ds)><Generics(ds)> removeNode<j>AndInlineValue(AtomicReference\<Thread\> mutator, <dec(payloadTriple("mask"))>) {
 	'		<generate_bodyOf_removeNodeAndInlineValue(n, m, j)>
@@ -1628,7 +1629,7 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, DataStruct
 	'		return <generate_bodyOf_sizePredicate(n, m)>;
 	'	}
 
-	<if (sortedContent) {>
+	<if (isOptionEnabled(setup, useStructuralEquality())) {>
 	'	@Override
 	'	public int hashCode() {
 	'		<if ((n + m) > 0) {>final int prime = 31; int result = 1;<} else {>int result = 1;<}>
@@ -1716,7 +1717,7 @@ default str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
 	'}"
 	;
 
-str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, DataStructure ds) {
+str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, DataStructure ds, rel[Option,bool] setup) {
 	members = generateMembers_bitmap(n, m, ds);
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
 
@@ -1869,7 +1870,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, DataStru
 	'		return <generate_bodyOf_sizePredicate(n, m, ds)>;
 	'	}
 
-	<if (sortedContent) {>
+	<if (isOptionEnabled(setup, useStructuralEquality())) {>
 	'	@Override
 	'	public int hashCode() {
 	'		<if ((n + m) > 0) {>final int prime = 31; int result = 1; result = prime * result + bitmap; result = prime * result + valmap;<} else {>int result = 1;<}>	

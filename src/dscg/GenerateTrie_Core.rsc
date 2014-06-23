@@ -398,6 +398,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 		return hashCode;
 	}
 
+	<if (isOptionEnabled(setup, useStructuralEquality())) {>
 	@Override
 	public boolean equals(Object other) {
 		if (other == this) {
@@ -419,6 +420,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 
 		return super.equals(other);
 	}
+	<}>
 
 	/*
 	 * For analysis purposes only.

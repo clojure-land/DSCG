@@ -129,6 +129,7 @@ str generateBitmapIndexedNodeClassString(DataStructure ds, rel[Option,bool] setu
 			return nodes.length - 2 * payloadArity;
 		}
 
+		<if (isOptionEnabled(setup, useStructuralEquality())) {>
 		@Override
 		public int hashCode() {
 			final int prime = 31;
@@ -162,6 +163,7 @@ str generateBitmapIndexedNodeClassString(DataStructure ds, rel[Option,bool] setu
 			}
 			return true;
 		}
+		<}>
 
 		@Override
 		public String toString() {

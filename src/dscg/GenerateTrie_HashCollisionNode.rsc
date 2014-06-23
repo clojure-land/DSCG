@@ -208,6 +208,7 @@ str generateHashCollisionNodeClassString(DataStructure ds, rel[Option,bool] setu
 			throw new IllegalStateException(\"Is leaf node.\");
 		}
 
+		<if (isOptionEnabled(setup, useStructuralEquality())) {>
 		@Override
 		public int hashCode() {
 			final int prime = 31;
@@ -262,6 +263,7 @@ str generateHashCollisionNodeClassString(DataStructure ds, rel[Option,bool] setu
 
 			return true;
 		}
+		<}>
 
 		@Override
 		Optional\<Map.Entry<Generics(ds)>\> findByKey(Object key, int hash, int shift, Comparator\<Object\> cmp) {
