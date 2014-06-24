@@ -20,7 +20,6 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		private final int hash;
 
 		HashCollisionMapNode(int hash, K[] keys, V[] vals) {
-			super(null, 0, 0); // TODO: Split compact node base class and remove dependency on constructor
 			this.keys = keys;
 			this.vals = vals;
 			this.hash = hash;

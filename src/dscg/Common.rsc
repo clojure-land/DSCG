@@ -81,8 +81,11 @@ Argument nodePos(int i) = field("byte", "<nodePosName><i>");
 Argument \node(DataStructure ds)		= field("<CompactNode(ds)><Generics(ds)>", "<nodeName>");
 Argument \node(DataStructure ds, int i) = field("<CompactNode(ds)><Generics(ds)>", "<nodeName><i>");
 
-public Argument bitmap = field("int", "bitmap");
-public Argument valmap = field("int", "valmap");
+public Argument bitmapField = field("int", "bitmap");
+public Argument valmapField = field("int", "valmap");
+
+public Argument bitmapMethod = getter("int", "bitmap");
+public Argument valmapMethod = getter("int", "valmap");
 
 public Argument thisMutator = field("Void", "null");
 
@@ -96,12 +99,18 @@ default str use(Argument a) { throw "You forgot <a>!"; }
 /***/
 str use(list[Argument] xs) = intercalate(", ", mapper(xs, use));
 
-str dec(field(\type, name)) = "<\type> <name>";
-str dec(getter(\type, name)) = "<\type> <name>()";
+str dec(field(\type, name)) = "final <\type> <name>";
+str dec(getter(\type, name)) = "abstract <\type> <name>()";
 default str dec(Argument a) { throw "You forgot <a>!"; }
 /***/
 str dec(list[Argument] xs) = intercalate(", ", mapper(xs, dec));
 
+// convertions
+Argument asField(getter(\type, name)) = field(\type, name);
+Argument asField(f:field(_, _)) = f;
+default Argument asField(Argument a) { throw "You forgot <a>!"; }
+/***/
+list[Argument] asFieldList(list[Argument] xs) = mapper(xs, asField);
 
 default str toString(\map()) = "Map";
 default str toString(\set()) = "Set";
@@ -182,3 +191,11 @@ public str keyPosName = "pos";
 str equalityDefault(str x, str y) = "<x>.equals(<y>)";
 
 str equalityComparator(str x, str y) = "<cmpName>.compare(<x>, <y>) == 0";
+
+
+
+str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:true) = "CompactMixed<toString(ds)>Node";
+str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:false) = "CompactNodesOnly<toString(ds)>Node";
+str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:false, bool values:true) = "CompactValuesOnly<toString(ds)>Node";
+str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:false, bool values:false) = "CompactEmpty<toString(ds)>Node";
+default str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes, bool values) { throw "Ahhh"; }

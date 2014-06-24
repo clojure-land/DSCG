@@ -77,7 +77,8 @@ void main() {
 			
 		list[str] classStrings = [ generateCoreClassString(ts, setup, intercalate("\n", innerClassStrings)) ];	
 			
-		writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
+		// writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
+		writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/TrieMap.java|, classStrings);		
 	}
 }
 	
@@ -727,9 +728,12 @@ default str generate_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpec
 	//'				throw new IllegalStateException(\"Index out of range.\");
 	//'		}	
 	//'	}"
-	"	switch(index) {
+	"	final int bitmap = this.<use(bitmapMethod)>;
+	'	final int valmap = this.<use(valmapMethod)>;
+	'	
+	'	switch(index) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
-	'			return <nodeOf(n, m, use(replace(generateMembers_bitmap(n, m, ts), [ val(i) ], [ field(valName) ])))>;
+	'			return <nodeOf(n, m, use(replace(metadataArguments(n, m, ts) + contentArguments(n, m, ts), [ val(i) ], [ field(valName) ])))>;
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");
 	'	}"
@@ -761,9 +765,12 @@ default str generate_bodyOf_copyAndSetNode(int n, int m, ts:___expandedTrieSpeci
 	//'				throw new IllegalStateException(\"Index out of range.\");
 	//'		}	
 	//'	}"
-	"	switch(index) {
+	"	final int bitmap = this.<use(bitmapMethod)>;
+	'	final int valmap = this.<use(valmapMethod)>;
+	'	
+	'	switch(index) {
 	'		<for (i <- [1..n+1]) {>case <i-1>:
-	'			return <nodeOf(n, m, use(replace(generateMembers_bitmap(n, m, ts), [ \node(ds, i) ], [ field(nodeName) ])))>;
+	'			return <nodeOf(n, m, use(replace(metadataArguments(n, m, ts) + contentArguments(n, m, ts), [ \node(ds, i) ], [ field(nodeName) ])))>;
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"	
@@ -776,14 +783,14 @@ when (n + m) == nMax && (n + m) == nBound;
 default str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int valIndex = valIndex(bitpos);
 	'
-	'	final int bitmap = this.bitmap | bitpos;
-	'	final int valmap = this.valmap | bitpos;
+	'	final int bitmap = this.<use(bitmapMethod)> | bitpos;
+	'	final int valmap = this.<use(valmapMethod)> | bitpos;
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
-	'			return <nodeOf(n, m+1, use(replace(generateMembers_bitmap(n, m, ts), [ key(i), val(i) ], [ field(keyName), field(valName), key(i), val(i) ])))>;
+	'			return <nodeOf(n, m+1, use(replace(metadataArguments(n, m, ts) + contentArguments(n, m, ts), [ key(i), val(i) ], [ field(keyName), field(valName), key(i), val(i) ])))>;
 	'		<}>case <m>:
-	'			return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers_bitmap(n, m, ts), [ \node(ds, 1) ], [ field(keyName), field(valName) ])))>;
+	'			return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(metadataArguments(n, m, ts) + contentArguments(n, m, ts), [ \node(ds, 1) ], [ field(keyName), field(valName) ])))>;
 	'		default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"
@@ -796,12 +803,12 @@ str generate_bodyOf_copyAndRemoveValue(_, 0, _)
 default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int valIndex = valIndex(bitpos);
 	'
-	'	final int bitmap = this.bitmap & ~bitpos;
-	'	final int valmap = this.valmap & ~bitpos;
+	'	final int bitmap = this.<use(bitmapMethod)> & ~bitpos;
+	'	final int valmap = this.<use(valmapMethod)> & ~bitpos;
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
-	'			return <nodeOf(n, m-1, use(generateMembers_bitmap(n, m, ts) - [ key(i), val(i) ]))>;
+	'			return <nodeOf(n, m-1, use(metadataArguments(n, m, ts) + contentArguments(n, m, ts) - [ key(i), val(i) ]))>;
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"
@@ -814,11 +821,12 @@ str generate_bodyOf_copyAndRemoveNode(0, _, _)
 default str generate_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int bitIndex = nodeIndex(bitpos);
 	'
-	'	final int bitmap = this.bitmap & ~bitpos;
+	'	final int bitmap = this.<use(bitmapMethod)> & ~bitpos;
+	'	final int valmap = this.<use(valmapMethod)>;
 	'
 	'	switch(bitIndex) {
 	'		<for (i <- [1..n+1]) {>case <i-1>:
-	'			return <nodeOf(n-1, m, use(generateMembers_bitmap(n, m, ts) - [ \node(ds, i) ]))>;
+	'			return <nodeOf(n-1, m, use(metadataArguments(n, m, ts) + contentArguments(n, m, ts) - [ \node(ds, i) ]))>;
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"
@@ -829,19 +837,19 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode(_, 0, _)
 	;
 	
 default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
-	"	final int bitIndex = Integer.bitCount(((bitmap | bitpos) ^ (valmap & ~bitpos)) & (bitpos - 1));
+	"	final int bitIndex = Integer.bitCount(((<use(bitmapMethod)> | bitpos) ^ (<use(valmapMethod)> & ~bitpos)) & (bitpos - 1));
 	'	final int valIndex = valIndex(bitpos);
 	'
-	'	final int bitmap = this.bitmap | bitpos;
-	'	final int valmap = this.valmap & ~bitpos;
+	'	final int bitmap = this.<use(bitmapMethod)> | bitpos;
+	'	final int valmap = this.<use(valmapMethod)> & ~bitpos;
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
 	'			switch(bitIndex) {
 	'				<for (j <- [1..n+1]) {>case <j-1>:
-	'					return <nodeOf(n+1, m-1, use(replace(generateMembers_bitmap(n, m, ts) - [ key(i), val(i) ], [ \node(ds, j) ], [ field(nodeName), \node(ds, j) ])))>;
+	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(n, m, ts) + contentArguments(n, m, ts) - [ key(i), val(i) ], [ \node(ds, j) ], [ field(nodeName), \node(ds, j) ])))>;
 	'				<}>case <n>:
-	'					return <nodeOf(n+1, m-1, use(generateMembers_bitmap(n, m, ts) - [ key(i), val(i) ] + [ field(nodeName) ]))>;
+	'					return <nodeOf(n+1, m-1, use(metadataArguments(n, m, ts) + contentArguments(n, m, ts) - [ key(i), val(i) ] + [ field(nodeName) ]))>;
 	'				default:
 	'					throw new IllegalStateException(\"Index out of range.\");	
 	'			}
@@ -858,18 +866,19 @@ default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___e
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = valIndex(bitpos);
 	'	
-	'	final int valmap = this.valmap | bitpos;
+	'	final int bitmap = this.<use(bitmapMethod)>;	
+	'	final int valmap = this.<use(valmapMethod)> | bitpos;
 	'
-	'	final <dec(key())> = <nodeName>.headKey();
-	'	final <dec(val())> = <nodeName>.headVal();	
+	'	<dec(key())> = <nodeName>.headKey();
+	'	<dec(val())> = <nodeName>.headVal();	
 	'
 	'	switch(bitIndex) {
 	'		<for (i <- [1..n+1]) {>case <i-1>:
 	'			switch(valIndex) {
 	'				<for (j <- [1..m+1]) {>case <j-1>:
-	'					return <nodeOf(n-1, m+1, use(replace(generateMembers_bitmap(n, m, ts) - [ \node(ds, i) ], [ key(j), val(j) ], [ key(), val(), key(j), val(j) ])))>;
+	'					return <nodeOf(n-1, m+1, use(replace(metadataArguments(n, m, ts) + contentArguments(n, m, ts) - [ \node(ds, i) ], [ key(j), val(j) ], [ key(), val(), key(j), val(j) ])))>;
 	'				<}>case <m>:
-	'					return <nodeOf(n-1, m+1, use([ bitmap, valmap ] + insertAfterOrDefaultAtFront(generateMembers_bitmap(n, m, ts) - [ bitmap, valmap ] - [ \node(ds, i) ], [ key(m), val(m) ], [ key(), val() ])))>;
+	'					return <nodeOf(n-1, m+1, use([ bitmapField, valmapField ] + insertAfterOrDefaultAtFront(contentArguments(n, m, ts) - [ \node(ds, i) ], [ key(m), val(m) ], [ key(), val() ])))>;
 	'				default:
 	'					throw new IllegalStateException(\"Index out of range.\");	
 	'			}
@@ -1412,7 +1421,7 @@ str generate_valNodeOf_factoryMethod(int n, int m, ts:___expandedTrieSpecifics(d
 
 	if ((n + m) <= nBound) {		
 		return
-		"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
+		"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> valNodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 		'	return new <className>\<\>(<intercalate(", ", mapper(constructorArgs, use))>);
 		'}
 		"; 
@@ -1478,7 +1487,7 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 	className = "<toString(ds)><m>To<n>Node";
 
 	return
-	"private static final class <className><Generics(ds)> extends Compact<toString(ds)>Node<Generics(ds)> {
+	"private static final class <className><Generics(ds)> extends <className_compactNode(ts, setup, n != 0, m != 0)><Generics(ds)> {
 	'	<intercalate("\n", mapper(members, str(Argument a) { 
 			str dec = "private final <dec(a)>;";
 			
@@ -1692,10 +1701,10 @@ default str generate_bodyOf_sizePredicate(int n, int m, ts:___expandedTrieSpecif
 
 
 str generate_equalityComparisons(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), str(str, str) eq) =
-	"if (bitmap != that.bitmap) {
+	"if (<use(bitmapMethod)> != that.<use(bitmapMethod)>) {
 	'	return false;
 	'}
-	'if (valmap != that.valmap) {
+	'if (<use(valmapMethod)> != that.<use(valmapMethod)>) {
 	'	return false;
 	'}
 	'<for (i <- [1..m+1]) {>
@@ -1732,15 +1741,14 @@ default str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
 	;
 
 str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) {
-	members = generateMembers_bitmap(n, m, ts);
-	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
+	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + metadataArguments(n, m, ts) + contentArguments(n, m, ts);
 
 	className = "<toString(ds)><m>To<n>Node";
 
 	return
-	"private static final class <className><Generics(ds)> extends Compact<toString(ds)>Node<Generics(ds)> {
-	'	<intercalate("\n", mapper(members, str(Argument a) { 
-			str dec = "private final <dec(a)>;";
+	"private static final class <className><Generics(ds)> extends <className_compactNode(ts, setup, n != 0, m != 0)><Generics(ds)> {
+	'	<intercalate("\n", mapper(contentArguments(n, m, ts), str(Argument a) { 
+			str dec = "private <dec(a)>;";
 			
 			if (field(_, /.*pos.*/) := a || getter(_, /.*pos.*/) := a) {
 				return "\n<dec>";
@@ -1749,9 +1757,9 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 			} 
 		}))>
 				
-	'	<className>(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {					
+	'	<className>(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 	'		super(mutator, bitmap, valmap);
-	'		<intercalate("\n", mapper(members, str(Argument a) { 
+	'		<intercalate("\n", mapper(contentArguments(n, m, ts), str(Argument a) { 
 				str dec = "this.<use(a)> = <use(a)>;";
 				
 				if (field(_, /.*pos.*/) := a || getter(_, /.*pos.*/) := a) {
@@ -1877,7 +1885,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>
 	'	@Override
 	'	<CompactNode(ds)><Generics(ds)> convertToGenericNode() {
-	'		return valNodeOf(<use(thisMutator)>, bitmap, valmap, new Object[] { <use(generateMembers_bitmap(n, m, ts) - [ field("int", "bitmap"), field("int", "valmap") ])> }, (byte) <m>);
+	'		return valNodeOf(<use(thisMutator)>, <use(bitmapMethod)>, <use(valmapMethod)>, new Object[] { <use(contentArguments(n, m, ts))> }, (byte) <m>);
 	'	}
 	<}>	
 	
@@ -1889,7 +1897,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	<if (isOptionEnabled(setup, useStructuralEquality())) {>
 	'	@Override
 	'	public int hashCode() {
-	'		<if ((n + m) > 0) {>final int prime = 31; int result = 1; result = prime * result + bitmap; result = prime * result + valmap;<} else {>int result = 1;<}>	
+	'		<if ((n + m) > 0) {>final int prime = 31; int result = 1; result = prime * result + <use(bitmapMethod)>; result = prime * result + <use(valmapMethod)>;<} else {>int result = 1;<}>	
 	'		<for (i <- [1..m+1]) {>		
 	'		result = prime * result + <keyName><i>.hashCode();
 	'		<if (ds == \map()) {>result = prime * result + <valName><i>.hashCode();<}>
@@ -1921,7 +1929,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 
 	'	@Override
 	'	public String toString() {		
-	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (ds == \map()) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(valmap, (byte) <i>)"), key(i), val(i) | i <- [1..m+1]] + [ field("recoverMask(bitmap ^ valmap, (byte) <i>)"), \node(ds, i)	| i <- [1..n+1]])>);<}>
+	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (ds == \map()) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(<use(valmapMethod)>, (byte) <i>)"), key(i), val(i) | i <- [1..m+1]] + [ field("recoverMask(<use(bitmapMethod)> ^ <use(valmapMethod)>, (byte) <i>)"), \node(ds, i)	| i <- [1..n+1]])>);<}>
 	'	}
 	
 	'}
