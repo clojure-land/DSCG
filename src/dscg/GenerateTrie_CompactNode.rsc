@@ -199,9 +199,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'		return Integer.bitCount(<use(valmapMethod)> & (bitpos - 1));
 	'	}
 
-	'	// TODO: obviate necessity for bitmap ^ valmap
 	'	final int nodeIndex(int bitpos) {
-	'		return Integer.bitCount((<use(bitmapMethod)> ^ <use(valmapMethod)>) & (bitpos - 1));
+	'		return Integer.bitCount(<use(bitmapMethod)> & (bitpos - 1));
 	'	}
 
 	'	@Override
@@ -303,7 +302,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 		@Override
 		public int bitmap() {
-			return valmap; // TODO: separate valmap/bitmap semantic
+			return 0;
 		}
 
 		@Override
@@ -345,18 +344,18 @@ str generate_bodyOf_mergeTwoValues(rel[Option,bool] setup:{_*, <useSpecializatio
 	"final int valmap = 1 \<\< mask0 | 1 \<\< mask1;
 	'
 	'if (mask0 \< mask1) {
-	'	return valNodeOf(null, valmap, valmap, key0, val0, key1, val1);
+	'	return valNodeOf(null, 0, valmap, key0, val0, key1, val1);
 	'} else {
-	'	return valNodeOf(null, valmap, valmap, key1, val1, key0, val0);
+	'	return valNodeOf(null, 0, valmap, key1, val1, key0, val0);
 	'}";	
 	
 str generate_bodyOf_mergeTwoValues(rel[Option,bool] setup:{_*, <useSpecialization(),false>}, Position _) =
 	"final int valmap = 1 \<\< mask0 | 1 \<\< mask1;
 	'
 	'if (mask0 \< mask1) {
-	'	return valNodeOf(null, valmap, valmap, new Object[] { key0, val0, key1, val1 }, (byte) 2);
+	'	return valNodeOf(null, 0, valmap, new Object[] { key0, val0, key1, val1 }, (byte) 2);
 	'} else {
-	'	return valNodeOf(null, valmap, valmap, new Object[] { key1, val1, key0, val0 }, (byte) 2);
+	'	return valNodeOf(null, 0, valmap, new Object[] { key1, val1, key0, val0 }, (byte) 2);
 	'}";	
 
 default str generate_bodyOf_mergeTwoValues(Option _, Position _) { throw "something went wrong"; }
@@ -600,7 +599,7 @@ default str removed_value_block(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 	'	 * unwrapped and inlined during returning.
 	'	 */
 	'	final <CompactNode(ds)><Generics(ds)> thisNew;
-	'	final int newValmap = (shift == 0) ? this.valmap & ~bitpos
+	'	final int newValmap = (shift == 0) ? this.valmap ^ bitpos
 	'					: 1 \<\< (keyHash & BIT_PARTITION_MASK);
 	'
 	'	if (valIndex == 0) {
@@ -673,13 +672,6 @@ default str generate_valNodeOf_factoryMethod_bitmap(int n, int m, ts:___expanded
 		throw "Arguments out of bounds (n = <n>, m = <m>).";
 	}
 }
-
-//// TODO: check where it is used and replace with something else ...
-//list[Argument] generateMembers_bitmap(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) 
-//	= [ bitmapField, valmapField ]
-//	+ [ key(i), val(i) | i <- [1..m+1]] 
-//	+ [ \node(ds, i)   | i <- [1..n+1]]
-//	;
 
 list[Argument] metadataArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) 
 	= [ bitmapField, valmapField ]

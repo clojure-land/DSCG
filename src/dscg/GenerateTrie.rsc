@@ -783,7 +783,7 @@ when (n + m) == nMax && (n + m) == nBound;
 default str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int valIndex = valIndex(bitpos);
 	'
-	'	final int bitmap = this.<use(bitmapMethod)> | bitpos;
+	'	final int bitmap = this.<use(bitmapMethod)>;
 	'	final int valmap = this.<use(valmapMethod)> | bitpos;
 	'
 	'	switch(valIndex) {
@@ -803,8 +803,8 @@ str generate_bodyOf_copyAndRemoveValue(_, 0, _)
 default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int valIndex = valIndex(bitpos);
 	'
-	'	final int bitmap = this.<use(bitmapMethod)> & ~bitpos;
-	'	final int valmap = this.<use(valmapMethod)> & ~bitpos;
+	'	final int bitmap = this.<use(bitmapMethod)>;
+	'	final int valmap = this.<use(valmapMethod)> ^ bitpos;
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
@@ -821,7 +821,7 @@ str generate_bodyOf_copyAndRemoveNode(0, _, _)
 default str generate_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int bitIndex = nodeIndex(bitpos);
 	'
-	'	final int bitmap = this.<use(bitmapMethod)> & ~bitpos;
+	'	final int bitmap = this.<use(bitmapMethod)> ^ bitpos;
 	'	final int valmap = this.<use(valmapMethod)>;
 	'
 	'	switch(bitIndex) {
@@ -837,11 +837,11 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode(_, 0, _)
 	;
 	
 default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
-	"	final int bitIndex = Integer.bitCount(((<use(bitmapMethod)> | bitpos) ^ (<use(valmapMethod)> & ~bitpos)) & (bitpos - 1));
+	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = valIndex(bitpos);
 	'
 	'	final int bitmap = this.<use(bitmapMethod)> | bitpos;
-	'	final int valmap = this.<use(valmapMethod)> & ~bitpos;
+	'	final int valmap = this.<use(valmapMethod)> ^ bitpos;
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
@@ -866,7 +866,7 @@ default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___e
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = valIndex(bitpos);
 	'	
-	'	final int bitmap = this.<use(bitmapMethod)>;	
+	'	final int bitmap = this.<use(bitmapMethod)> ^ bitpos;	
 	'	final int valmap = this.<use(valmapMethod)> | bitpos;
 	'
 	'	<dec(key())> = <nodeName>.headKey();
@@ -1189,11 +1189,11 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrie
 	'		final <CompactNode(ds)><Generics(ds)> nodeNew = mergeNodes((K) nodes[valIndex], nodes[valIndex].hashCode(),<if (ds == \map()) {> (V) nodes[valIndex + 1],<}> key, keyHash,<if (ds == \map()) {> val,<}> shift + BIT_PARTITION_SIZE);
 	'
 	'		final int offset = <if (ds == \map()) {>2 * <}>(payloadArity - 1);
-	'		final int index = Integer.bitCount(((bitmap | bitpos) ^ (valmap & ~bitpos)) & (bitpos - 1));
+	'		final int index = Integer.bitCount(((bitmap | bitpos) ^ (valmap ^ bitpos)) & (bitpos - 1));
 	'
 	'		final Object[] editableNodes = copyAndMoveToBack<if (ds == \map()) {>Pair<}>(this.nodes, valIndex, offset + index, nodeNew);
 	'
-	'		final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator, bitmap | bitpos, valmap & ~bitpos, editableNodes, (byte) (payloadArity - 1));
+	'		final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator, bitmap | bitpos, valmap ^ bitpos, editableNodes, (byte) (payloadArity - 1));
 	'
 	'		return Result.modified(thisNew);
 	'	}
@@ -1256,7 +1256,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 				 * unwrapped and inlined during returning.
 				 */
 				final <CompactNode(ds)><Generics(ds)> thisNew;
-				final int newValmap = (shift == 0) ? this.valmap & ~bitpos
+				final int newValmap = (shift == 0) ? this.valmap ^ bitpos
 								: 1 \<\< (keyHash & BIT_PARTITION_MASK);
 
 				if (valIndex == 0) {
@@ -1274,7 +1274,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 				final Object[] editableNodes = copyAndRemove<if (ds == \map()) {>Pair<}>(this.nodes, valIndex);
 	
 				final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator,
-								this.bitmap & ~bitpos, this.valmap & ~bitpos, editableNodes,
+								this.bitmap ^ bitpos, this.valmap ^ bitpos, editableNodes,
 								(byte) (payloadArity - 1));
 	
 				return Result.modified(thisNew.convertToGenericNode());
@@ -1282,7 +1282,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 				final Object[] editableNodes = copyAndRemove<if (ds == \map()) {>Pair<}>(this.nodes, valIndex);
 	
 				final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator,
-								this.bitmap & ~bitpos, this.valmap & ~bitpos, editableNodes,
+								this.bitmap ^ bitpos, this.valmap ^ bitpos, editableNodes,
 								(byte) (payloadArity - 1));
 	
 				return Result.modified(thisNew);
@@ -1312,7 +1312,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 				final Object[] editableNodes = copyAndRemove<if (ds == \map()) {>Pair<}>(this.nodes, bitIndex);
 
 				final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator,
-								bitmap & ~bitpos, valmap, editableNodes, payloadArity);
+								bitmap ^ bitpos, valmap, editableNodes, payloadArity);
 
 				return Result.modified(thisNew.convertToGenericNode());
 			} else {
@@ -1320,7 +1320,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 				final Object[] editableNodes = copyAndRemove<if (ds == \map()) {>Pair<}>(this.nodes, bitIndex);
 
 				final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator,
-								bitmap & ~bitpos, valmap, editableNodes, payloadArity);
+								bitmap ^ bitpos, valmap, editableNodes, payloadArity);
 
 				return Result.modified(thisNew);
 			}
@@ -1929,7 +1929,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 
 	'	@Override
 	'	public String toString() {		
-	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (ds == \map()) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(<use(valmapMethod)>, (byte) <i>)"), key(i), val(i) | i <- [1..m+1]] + [ field("recoverMask(<use(bitmapMethod)> ^ <use(valmapMethod)>, (byte) <i>)"), \node(ds, i)	| i <- [1..n+1]])>);<}>
+	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (ds == \map()) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(<use(valmapMethod)>, (byte) <i>)"), key(i), val(i) | i <- [1..m+1]] + [ field("recoverMask(<use(bitmapMethod)>, (byte) <i>)"), \node(ds, i)	| i <- [1..n+1]])>);<}>
 	'	}
 	
 	'}

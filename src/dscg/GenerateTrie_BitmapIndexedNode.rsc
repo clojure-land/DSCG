@@ -28,7 +28,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 						Object[] nodes, byte payloadArity) {
 			super(mutator, bitmap, valmap);
 			
-			assert (2 * Integer.bitCount(valmap) + Integer.bitCount(bitmap ^ valmap) == nodes.length);
+			assert (2 * Integer.bitCount(valmap) + Integer.bitCount(bitmap) == nodes.length);
 
 			this.mutator = mutator;
 
@@ -180,7 +180,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			}
 
 			for (byte i = 0; i \< nodeArity(); i++) {
-				final byte pos = recoverMask(<use(bitmapMethod)> ^ <use(valmapMethod)>, (byte) (i + 1));
+				final byte pos = recoverMask(<use(bitmapMethod)>, (byte) (i + 1));
 				bldr.append(String.format(\"@%d: %s\", pos, getNode(i)));
 
 				if (!((i + 1) == nodeArity())) {
@@ -232,22 +232,22 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, int bitpos, K key,
 						V val) {			
-			final int valIndex = 2 * Integer.bitCount(<use(valmapMethod)> & (bitpos - 1));
+			final int valIndex = 2 * valIndex(bitpos);
 			final Object[] editableNodes = copyAndInsertPair(this.nodes, valIndex, key, val);
 			
-			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator, <use(bitmapMethod)>
-							| bitpos, <use(valmapMethod)> | bitpos, editableNodes, (byte) (payloadArity + 1));
+			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator, <use(bitmapMethod)>, 
+							<use(valmapMethod)> | bitpos, editableNodes, (byte) (payloadArity + 1));
 
 			return thisNew;
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, int bitpos) {
-			final int valIndex = 2 * Integer.bitCount(<use(valmapMethod)> & (bitpos - 1));
+			final int valIndex = 2 * valIndex(bitpos);
 			final Object[] editableNodes = copyAndRemovePair(this.nodes, valIndex);
 
 			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(
-							mutator, this.<use(bitmapMethod)> & ~bitpos, this.<use(valmapMethod)> & ~bitpos,
+							mutator, this.<use(bitmapMethod)>, this.<use(valmapMethod)> ^ bitpos,
 							editableNodes, (byte) (payloadArity - 1));
 
 			return thisNew;
@@ -277,11 +277,11 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, int bitpos) {
-			final int bitIndex = 2 * payloadArity + Integer.bitCount((<use(bitmapMethod)> ^ <use(valmapMethod)>) & (bitpos - 1));
+			final int bitIndex = 2 * payloadArity + nodeIndex(bitpos);
 			final Object[] editableNodes = copyAndRemovePair(this.nodes, bitIndex);
 
 			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(
-							mutator, <use(bitmapMethod)> & ~bitpos, <use(valmapMethod)>, editableNodes,
+							mutator, <use(bitmapMethod)> ^ bitpos, <use(valmapMethod)>, editableNodes,
 							payloadArity);
 
 			return thisNew;
@@ -290,18 +290,15 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
 						int bitpos, <CompactNode(ds)><Generics(ds)> node) {
-//			final int bitIndex = 2 * payloadArity + Integer.bitCount((<use(bitmapMethod)> ^ <use(valmapMethod)>) & (bitpos - 1));
-			final int valIndex = 2 * Integer.bitCount(<use(valmapMethod)> & (bitpos - 1));
+			final int valIndex = 2 * valIndex(bitpos);
 			
 			final int offset = 2 * (payloadArity - 1);
-			final int index = Integer.bitCount(((<use(bitmapMethod)> | bitpos) ^ (<use(valmapMethod)> & ~bitpos))
-							& (bitpos - 1));
+			final int index = nodeIndex(bitpos);
 
-			final Object[] editableNodes = copyAndMoveToBackPair(this.nodes, valIndex, offset
-							+ index, node);
+			final Object[] editableNodes = copyAndMoveToBackPair(this.nodes, valIndex, offset + index, node);
 
 			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator, <use(bitmapMethod)>
-							| bitpos, <use(valmapMethod)> & ~bitpos, editableNodes, (byte) (payloadArity - 1));
+							| bitpos, <use(valmapMethod)> ^ bitpos, editableNodes, (byte) (payloadArity - 1));
 
 			return thisNew;
 		}
@@ -309,14 +306,14 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
 						int bitpos, <CompactNode(ds)><Generics(ds)> node) {
-			final int bitIndex = 2 * payloadArity + Integer.bitCount((<use(bitmapMethod)> ^ <use(valmapMethod)>) & (bitpos - 1));
-			final int valIndexNew = Integer.bitCount((<use(valmapMethod)> | bitpos) & (bitpos - 1));
+			final int bitIndex = 2 * payloadArity + nodeIndex(bitpos);
+			final int valIndexNew = valIndex(bitpos); // TODO: unify index usage copyAndMoveToFrontPair as with other methods
 
 			final Object[] editableNodes = copyAndMoveToFrontPair(this.nodes, bitIndex,
 							valIndexNew, node.headKey(), node.headVal());
 
 			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> valNodeOf(
-							mutator, <use(bitmapMethod)>, <use(valmapMethod)> | bitpos, editableNodes,
+							mutator, <use(bitmapMethod)> ^ bitpos, <use(valmapMethod)> | bitpos, editableNodes,
 							(byte) (payloadArity + 1));
 
 			return thisNew;
