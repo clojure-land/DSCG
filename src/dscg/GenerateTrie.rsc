@@ -714,7 +714,7 @@ str generate_bodyOf_copyAndSetValue(_, 0, _)
 	;
 	
 default str generate_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
-	"	final int index = valIndex(bitpos);
+	"	final int index = dataIndex(bitpos);
 	'	
 	'	<dec(bitmapField)> = this.<use(bitmapMethod)>;
 	'	<dec(valmapField)> = this.<use(valmapMethod)>;
@@ -751,7 +751,7 @@ str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics
 when (n + m) == nMax && (n + m) == nBound;
 	
 default str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
-	"	final int valIndex = valIndex(bitpos);
+	"	final int valIndex = dataIndex(bitpos);
 	'
 	'	<dec(bitmapField)> = this.<use(bitmapMethod)>;
 	'	<dec(valmapField)> = this.<use(valmapMethod)> | bitpos;
@@ -771,7 +771,7 @@ str generate_bodyOf_copyAndRemoveValue(_, 0, _)
 	;
 	
 default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
-	"	final int valIndex = valIndex(bitpos);
+	"	final int valIndex = dataIndex(bitpos);
 	'
 	'	<dec(bitmapField)> = this.<use(bitmapMethod)>;
 	'	<dec(valmapField)> = this.<use(valmapMethod)> ^ bitpos;
@@ -808,7 +808,7 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode(_, 0, _)
 	
 default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int bitIndex = nodeIndex(bitpos);
-	'	final int valIndex = valIndex(bitpos);
+	'	final int valIndex = dataIndex(bitpos);
 	'
 	'	<dec(bitmapField)> = this.<use(bitmapMethod)> | bitpos;
 	'	<dec(valmapField)> = this.<use(valmapMethod)> ^ bitpos;
@@ -834,7 +834,7 @@ str generate_bodyOf_copyAndMigrateFromNodeToInline(0, _, _)
 	
 default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int bitIndex = nodeIndex(bitpos);
-	'	final int valIndex = valIndex(bitpos);
+	'	final int valIndex = dataIndex(bitpos);
 	'	
 	'	<dec(bitmapField)> = this.<use(bitmapMethod)> ^ bitpos;	
 	'	<dec(valmapField)> = this.<use(valmapMethod)> | bitpos;
@@ -1078,7 +1078,7 @@ default str generate_bodyOf_GenericNode_containsKey(int n, int m, ts:___expanded
 	'final int bitpos = (1 \<\< mask);
 	'
 	'if ((valmap & bitpos) != 0) {
-	'	return <eq("nodes[valIndex(bitpos)]", keyName)>;
+	'	return <eq("nodes[dataIndex(bitpos)]", keyName)>;
 	'}
 	'
 	'if ((bitmap & bitpos) != 0) {
@@ -1098,7 +1098,7 @@ default str generate_bodyOf_GenericNode_findByKey(int n, int m, ts:___expandedTr
 	'final int bitpos = (1 \<\< mask);
 
 	'if ((valmap & bitpos) != 0) { // inplace value
-	'	final int valIndex = valIndex(bitpos);
+	'	final int valIndex = dataIndex(bitpos);
 	'
 	'	if (<eq("nodes[valIndex]", keyName)>) {
 	'		final K _key = (K) nodes[valIndex];
@@ -1130,7 +1130,7 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrie
 	'final int bitpos = (1 \<\< mask);
 	'
 	'if ((valmap & bitpos) != 0) { // inplace value
-	'	final int valIndex = valIndex(bitpos);
+	'	final int valIndex = dataIndex(bitpos);
 	'
 	'	final Object currentKey = nodes[valIndex];
 	'
@@ -1199,7 +1199,7 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrie
 	'	return Result.modified(thisNew);
 	'} else {
 	'	// no value
-	'	final Object[] editableNodes = copyAndInsert<if (ds == \map()) {>Pair<}>(this.nodes, valIndex(bitpos), key<if (ds == \map()) {>, val<}>);
+	'	final Object[] editableNodes = copyAndInsert<if (ds == \map()) {>Pair<}>(this.nodes, dataIndex(bitpos), key<if (ds == \map()) {>, val<}>);
 	'
 	'	final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> nodeOf(mutator, bitmap | bitpos, valmap | bitpos, editableNodes, (byte) (payloadArity + 1));
 	'
@@ -1216,7 +1216,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 	final int bitpos = (1 \<\< mask);
 
 	if ((valmap & bitpos) != 0) { // inplace value
-		final int valIndex = valIndex(bitpos);
+		final int valIndex = dataIndex(bitpos);
 
 		if (<eq("nodes[valIndex]", keyName)>) {			
 			if (!USE_SPECIALIAZIONS && this.payloadArity() == 2 && this.nodeArity() == 0) {

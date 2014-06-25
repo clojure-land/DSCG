@@ -189,13 +189,9 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		<for(j <- [0..nMax+1], i <- [0..nMax+1], ((i + j) <= nMax && (i + j) <= nBound + 1 && !(i == nBound + 1))) {>
 			<generate_valNodeOf_factoryMethod_bitmap(i, j, ts, setup)>
 		<}>
-	<}>	
+	<}>
 
-	'	final int keyIndex(int bitpos) {
-	'		return Integer.bitCount(<use(valmapMethod)> & (bitpos - 1));
-	'	}
-
-	'	final int valIndex(int bitpos) {
+	'	final int dataIndex(int bitpos) {
 	'		return Integer.bitCount(<use(valmapMethod)> & (bitpos - 1));
 	'	}
 
@@ -404,7 +400,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(int n, int
 	'final int bitpos = (1 \<\< mask);
 	'
 	'if ((<use(valmapMethod)> & bitpos) != 0) {
-	'	return <eq("getKey(keyIndex(bitpos))", keyName)>;
+	'	return <eq("getKey(dataIndex(bitpos))", keyName)>;
 	'}
 	'
 	'if ((<use(bitmapMethod)> & bitpos) != 0) {
@@ -425,11 +421,11 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m
 	'final int bitpos = (1 \<\< mask);
 
 	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
-	'	// final int valIndex = valIndex(bitpos);
+	'	// final int valIndex = dataIndex(bitpos);
 	'
-	'	if (<eq("getKey(keyIndex(bitpos))", keyName)>) {
-	'		final K _key = getKey(keyIndex(bitpos));
-	'		final V _val = getValue(valIndex(bitpos));
+	'	if (<eq("getKey(dataIndex(bitpos))", keyName)>) {
+	'		final K _key = getKey(dataIndex(bitpos));
+	'		final V _val = getValue(dataIndex(bitpos));
 	'
 	'		final Map.Entry<Generics(ds)> entry = entryOf(_key, _val);
 	'		return Optional.of(entry);
@@ -458,10 +454,10 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'final int bitpos = (1 \<\< mask);
 	'
 	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
-	'	final K currentKey = getKey(keyIndex(bitpos));
+	'	final K currentKey = getKey(dataIndex(bitpos));
 	'
 	'	if (<eq("currentKey", keyName)>) {
-	'		<if (ds == \set()) {>return Result.unchanged(this);<} else {>final V currentVal = getValue(valIndex(bitpos));
+	'		<if (ds == \set()) {>return Result.unchanged(this);<} else {>final V currentVal = getValue(dataIndex(bitpos));
 	'
 	'		if (<eq("currentVal", valName)>) {
 	'			return Result.unchanged(this);
@@ -472,7 +468,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'
 	'		return Result.updated(thisNew, currentVal);<}>
 	'	} else {
-	'		final <CompactNode(ds)><Generics(ds)> nodeNew = mergeNodes(getKey(keyIndex(bitpos)), getKey(keyIndex(bitpos)).hashCode(),<if (ds == \map()) {> getValue(valIndex(bitpos)),<}> key, keyHash,<if (ds == \map()) {> val,<}> shift + BIT_PARTITION_SIZE);
+	'		final <CompactNode(ds)><Generics(ds)> nodeNew = mergeNodes(getKey(dataIndex(bitpos)), getKey(dataIndex(bitpos)).hashCode(),<if (ds == \map()) {> getValue(dataIndex(bitpos)),<}> key, keyHash,<if (ds == \map()) {> val,<}> shift + BIT_PARTITION_SIZE);
 	'
 	'		final <CompactNode(ds)><Generics(ds)> thisNew = copyAndMigrateFromInlineToNode(mutator, bitpos, nodeNew);
 	'
@@ -528,7 +524,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 	final int bitpos = (1 \<\< mask);
 
 	if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
-		final int valIndex = valIndex(bitpos);
+		final int valIndex = dataIndex(bitpos);
 
 		if (<eq("getKey(valIndex)", keyName)>) {			
 			<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {><removed_value_block(ts, setup)> else {<}>

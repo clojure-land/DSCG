@@ -212,7 +212,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, int bitpos, V val) {
-			<dec(field("int", "idx"))> = 2 * valIndex(bitpos) + 1;
+			<dec(field("int", "idx"))> = 2 * dataIndex(bitpos) + 1;
 			
 			if (isAllowedToEdit(this.mutator, mutator)) {
 				// no copying if already editable
@@ -246,7 +246,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, int bitpos, K key,
 						V val) {			
-			<dec(field("int", "idx"))> = 2 * valIndex(bitpos);
+			<dec(field("int", "idx"))> = 2 * dataIndex(bitpos);
 			
 			<dec(field("Object[]", "src"))> = this.nodes;
 			<arraycopyAndInsertTuple(field("Object[]", "src"), field("Object[]", "dst"), 2, [key(), val()], field("int", "idx"))>
@@ -270,7 +270,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, int bitpos) {
-			<dec(field("int", "idx"))> = 2 * valIndex(bitpos);
+			<dec(field("int", "idx"))> = 2 * dataIndex(bitpos);
 			
 			<dec(field("Object[]", "src"))> = this.nodes;
 			<arraycopyAndRemoveTuple(field("Object[]", "src"), field("Object[]", "dst"), 2, field("int", "idx"))>
@@ -285,7 +285,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
 						int bitpos, <CompactNode(ds)><Generics(ds)> node) {
-			<dec(field("int", "idxOld"))> = 2 * valIndex(bitpos);
+			<dec(field("int", "idxOld"))> = 2 * dataIndex(bitpos);
 			<dec(field("int", "idxNew"))> = 2 * (payloadArity - 1) + nodeIndex(bitpos);
 			
 			<dec(field("Object[]", "src"))> = this.nodes;
@@ -298,7 +298,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
 						int bitpos, <CompactNode(ds)><Generics(ds)> node) {
 			<dec(field("int", "idxOld"))> = 2 * payloadArity + nodeIndex(bitpos);
-			<dec(field("int", "idxNew"))> = valIndex(bitpos);
+			<dec(field("int", "idxNew"))> = dataIndex(bitpos);
 
 			<dec(field("Object[]", "src"))> = this.nodes;
 			<arraycopyAndMigrateFromNodeTupleToDataTuple(field("Object[]", "src"), field("Object[]", "dst"), 1, field("int", "idxOld"), 2, field("int", "idxNew"), [ field("node.headKey()"), field("node.headVal()") ])>
