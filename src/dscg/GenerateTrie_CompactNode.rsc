@@ -110,14 +110,14 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		}
 
 	<if (ds == \map()) {>
-	'	abstract <CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, int index, V <valName>);
+	'	abstract <CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, int bitpos, V <valName>);
 	<}>	
 	
 	'	abstract <CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, int bitpos, K <keyName>, V <valName>);
 	
 	'	abstract <CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, int bitpos);
 
-	'	abstract <CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, int index, <CompactNode(ds)><Generics(ds)> <nodeName>);
+	'	abstract <CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, int bitpos, <CompactNode(ds)><Generics(ds)> <nodeName>);
 
 	'	abstract <CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, int bitpos);
 
@@ -468,7 +468,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'		}
 	'
 	'		// update mapping
-	'		final <CompactNode(ds)><Generics(ds)> thisNew = copyAndSetValue(mutator, valIndex(bitpos), val);
+	'		final <CompactNode(ds)><Generics(ds)> thisNew = copyAndSetValue(mutator, bitpos, val);
 	'
 	'		return Result.updated(thisNew, currentVal);<}>
 	'	} else {
@@ -487,7 +487,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'		return Result.unchanged(this);
 	'	}
 	'
-	'	final <CompactNode(ds)><Generics(ds)> thisNew = copyAndSetNode(mutator, nodeIndex(bitpos), <nestedResult>.getNode());
+	'	final <CompactNode(ds)><Generics(ds)> thisNew = copyAndSetNode(mutator, bitpos, <nestedResult>.getNode());
 	'
 		<if (ds == \map()) {>
 	'	if (<nestedResult>.hasReplacedValue()) {

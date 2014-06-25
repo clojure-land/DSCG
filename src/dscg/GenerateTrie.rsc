@@ -714,27 +714,9 @@ str generate_bodyOf_copyAndSetValue(_, 0, _)
 	;
 	
 default str generate_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
-	//"	if (isAllowedToEdit(<use(thisMutator)>, mutator)) {
-	//'		// no copying if already editable
-	//'
-	//'		switch(index) {
-	//'			<for (i <- [1..m+1]) {>case <i-1>:
-	//'				<valName><i> = <valName>;
-	//'			<}>default:
-	//'				throw new IllegalStateException(\"Index out of range.\");
-	//'		}
-	//'		return this;
-	//'	} else {
-	//'		// create node with updated value
-	//'
-	//'		switch(index) {
-	//'			<for (i <- [1..m+1]) {>case <i-1>:
-	//'				return <nodeOf(n, m, use(replace(generateMembers_bitmap(n, m, ts), [ val(i) ], [ field(valName) ])))>;
-	//'			<}>default:
-	//'				throw new IllegalStateException(\"Index out of range.\");
-	//'		}	
-	//'	}"
-	"	<dec(bitmapField)> = this.<use(bitmapMethod)>;
+	"	final int index = valIndex(bitpos);
+	'	
+	'	<dec(bitmapField)> = this.<use(bitmapMethod)>;
 	'	<dec(valmapField)> = this.<use(valmapMethod)>;
 	'	
 	'	switch(index) {
@@ -750,28 +732,10 @@ str generate_bodyOf_copyAndSetNode(0, _, _)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
 	
-default str generate_bodyOf_copyAndSetNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
-	//"	if (isAllowedToEdit(<use(thisMutator)>, mutator)) {
-	//'		// no copying if already editable
-	//'
-	//'		switch(index) {
-	//'			<for (i <- [1..n+1]) {>case <i-1>:
-	//'				<nodeName><i> = <nodeName>;
-	//'			<}>default:
-	//'				throw new IllegalStateException(\"Index out of range.\");
-	//'		}
-	//'		return this;
-	//'	} else {
-	//'		// create node with updated value
-	//'
-	//'		switch(index) {
-	//'			<for (i <- [1..n+1]) {>case <i-1>:
-	//'				return <nodeOf(n, m, use(replace(generateMembers_bitmap(n, m, ts), [ \node(ds, i) ], [ field(nodeName) ])))>;
-	//'			<}>default:
-	//'				throw new IllegalStateException(\"Index out of range.\");
-	//'		}	
-	//'	}"
-	"	<dec(bitmapField)> = this.<use(bitmapMethod)>;
+default str generate_bodyOf_copyAndSetNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 
+	"	final int index = nodeIndex(bitpos);
+	'
+	'	<dec(bitmapField)> = this.<use(bitmapMethod)>;
 	'	<dec(valmapField)> = this.<use(valmapMethod)>;
 	'	
 	'	switch(index) {
@@ -1853,7 +1817,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 
 	<if (ds == \map()) {>
 	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, int index, V <valName>) {
+	'	<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, int bitpos, V <valName>) {
 	'		<generate_bodyOf_copyAndSetValue(n, m, ts)>
 	'	}
 	<}>	
@@ -1869,7 +1833,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'	}	
 
 	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, int index, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'	<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, int bitpos, <CompactNode(ds)><Generics(ds)> <nodeName>) {
 	'		<generate_bodyOf_copyAndSetNode(n, m, ts)>
 	'	}	
 

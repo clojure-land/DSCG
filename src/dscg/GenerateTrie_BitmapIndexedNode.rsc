@@ -211,22 +211,36 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		<}>
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, int index, V val) {
-			final <CompactNode(ds)><Generics(ds)> thisNew;
-			final int valIndex = 2 * index;
+		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, int bitpos, V val) {
+			<dec(field("int", "idx"))> = 2 * valIndex(bitpos) + 1;
 			
 			if (isAllowedToEdit(this.mutator, mutator)) {
 				// no copying if already editable
-				this.nodes[valIndex + 1] = val;
-				thisNew = this;
+				this.nodes[<use(field("int", "idx"))>] = val;
+				return this;
 			} else {
-				final Object[] editableNodes = copyAndSet(this.nodes, valIndex + 1, val);
-
-				thisNew = <CompactNode(ds)>.<Generics(ds)> nodeOf(mutator, <use(bitmapMethod)>, <use(valmapMethod)>,
-								editableNodes, payloadArity);
+				<dec(field("Object[]", "src"))> = this.nodes;
+				<arraycopyAndSetTuple(field("Object[]", "src"), field("Object[]", "dst"), 1, [val()], field("int", "idx"))>
+				
+				return nodeOf(mutator, <use(bitmapMethod)>, <use(valmapMethod)>, <use(field("Object[]", "dst"))>, payloadArity);
 			}
-			
-			return thisNew;
+		}
+
+		@Override
+		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, int bitpos,
+						<CompactNode(ds)><Generics(ds)> node) {
+			<dec(field("int", "idx"))> = 2 * payloadArity + nodeIndex(bitpos);
+
+			if (isAllowedToEdit(this.mutator, mutator)) {
+				// no copying if already editable
+				this.nodes[<use(field("int", "idx"))>] = node;
+				return this;
+			} else {
+				<dec(field("Object[]", "src"))> = this.nodes;
+				<arraycopyAndSetTuple(field("Object[]", "src"), field("Object[]", "dst"), 1, [\node(ds)], field("int", "idx"))>
+				
+				return nodeOf(mutator, <use(bitmapMethod)>, <use(valmapMethod)>, <use(field("Object[]", "dst"))>, payloadArity);
+			}
 		}
 
 		@Override
@@ -235,56 +249,35 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			<dec(field("int", "idx"))> = 2 * valIndex(bitpos);
 			
 			<dec(field("Object[]", "src"))> = this.nodes;
-			<arraycopyAndInsertPair(field("Object[]", "src"), field("Object[]", "dst"), [key(), val()], field("int", "idx"))>
+			<arraycopyAndInsertTuple(field("Object[]", "src"), field("Object[]", "dst"), 2, [key(), val()], field("int", "idx"))>
 			
-			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> nodeOf(mutator, <use(bitmapMethod)>, 
-							<use(valmapMethod)> | bitpos, <use(field("Object[]", "dst"))>, (byte) (payloadArity + 1));
-
-			return thisNew;
-		}
-
-		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, int bitpos) {
-			final int valIndex = 2 * valIndex(bitpos);
-			final Object[] editableNodes = copyAndRemovePair(this.nodes, valIndex);
-
-			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> nodeOf(
-							mutator, this.<use(bitmapMethod)>, this.<use(valmapMethod)> ^ bitpos,
-							editableNodes, (byte) (payloadArity - 1));
-
-			return thisNew;
-		}
-
-		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, int index,
-						<CompactNode(ds)><Generics(ds)> node) {
-			final int bitIndex = 2 * payloadArity + index;
-			final <CompactNode(ds)><Generics(ds)> thisNew;
-
-			// modify current node (set replacement node)
-			if (isAllowedToEdit(this.mutator, mutator)) {
-				// no copying if already editable
-				this.nodes[bitIndex] = node;
-				thisNew = this;
-			} else {
-				final Object[] editableNodes = copyAndSet(this.nodes, bitIndex,
-								node);
-
-				thisNew = <CompactNode(ds)>.<Generics(ds)> nodeOf(mutator, <use(bitmapMethod)>, <use(valmapMethod)>,
-								editableNodes, payloadArity);
-			}
+			final <CompactNode(ds)><Generics(ds)> thisNew = nodeOf(mutator, <use(bitmapMethod)>, <use(valmapMethod)> | bitpos, <use(field("Object[]", "dst"))>, (byte) (payloadArity + 1));
 
 			return thisNew;
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, int bitpos) {
-			final int bitIndex = 2 * payloadArity + nodeIndex(bitpos);
-			final Object[] editableNodes = copyAndRemovePair(this.nodes, bitIndex);
+			<dec(field("int", "idx"))> = 2 * payloadArity + nodeIndex(bitpos);
+			
+			<dec(field("Object[]", "src"))> = this.nodes;
+			<arraycopyAndRemoveTuple(field("Object[]", "src"), field("Object[]", "dst"), 1, field("int", "idx"))>
+			
+			final <CompactNode(ds)><Generics(ds)> thisNew = nodeOf(mutator, <use(bitmapMethod)> ^ bitpos, <use(valmapMethod)>, <use(field("Object[]", "dst"))>, payloadArity);
 
-			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> nodeOf(
-							mutator, <use(bitmapMethod)> ^ bitpos, <use(valmapMethod)>, editableNodes,
-							payloadArity);
+			return thisNew;
+		}
+
+		@Override
+		<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, int bitpos) {
+			<dec(field("int", "idx"))> = 2 * valIndex(bitpos);
+			
+			<dec(field("Object[]", "src"))> = this.nodes;
+			<arraycopyAndRemoveTuple(field("Object[]", "src"), field("Object[]", "dst"), 2, field("int", "idx"))>
+
+			final <CompactNode(ds)><Generics(ds)> thisNew = nodeOf(
+							mutator, <use(bitmapMethod)>, <use(valmapMethod)> ^ bitpos,
+							<use(field("Object[]", "dst"))>, (byte) (payloadArity - 1));
 
 			return thisNew;
 		}

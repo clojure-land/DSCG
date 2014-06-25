@@ -32,7 +32,6 @@ import static org.eclipse.imp.pdb.facts.util.ArrayUtils.copyAndInsert;
 import static org.eclipse.imp.pdb.facts.util.ArrayUtils.copyAndMoveToBackPair;
 import static org.eclipse.imp.pdb.facts.util.ArrayUtils.copyAndMoveToFrontPair;
 import static org.eclipse.imp.pdb.facts.util.ArrayUtils.copyAndRemove;
-import static org.eclipse.imp.pdb.facts.util.ArrayUtils.copyAndRemovePair;
 import static org.eclipse.imp.pdb.facts.util.ArrayUtils.copyAndSet;
 
 import java.text.DecimalFormat;
