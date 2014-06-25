@@ -60,5 +60,42 @@ str arraycopyAndSetTuple(Argument src, Argument dst, int tupleSize, list[Argumen
 		System.arraycopy(<use(src)>, 0, <use(dst)>, 0, <use(src)>.length);
 		<for (i <- [0..tupleSize]) {><use(dst)>[<use(newAtIndex)> + <i>] = <use(new[i])>;<}>
 		";
+}	
+		
+str arraycopyAndMigrateFromDataTupleToNodeTuple(Argument src, Argument dst, int oldTupleSize, Argument oldAtIndex, int newTupleSize, Argument newAtIndex, list[Argument] new) {
+	if (newTupleSize != size(new)) {
+		throw "Invalid arguments.";
+	}	
+
+	dst = field("Object[]", dst.name);
+
+	return
+		"<dec(dst)> = new Object[<use(src)>.length - <oldTupleSize> + <newTupleSize>];
+
+		// copy \'<use(src)>\' and remove <oldTupleSize> element(s) at position \'<use(oldAtIndex)>\' and insert <newTupleSize> element(s) at position \'<use(newAtIndex)>\' (TODO: carefully test)
+		assert <use(oldAtIndex)> \<= <use(newAtIndex)>;		
+		System.arraycopy(<use(src)>, 0, <use(dst)>, 0, <use(oldAtIndex)>);
+		System.arraycopy(<use(src)>, <use(oldAtIndex)> + <oldTupleSize>, <use(dst)>, <use(oldAtIndex)>, <use(newAtIndex)> - <use(oldAtIndex)>);
+		<for (i <- [0..newTupleSize]) {><use(dst)>[<use(newAtIndex)> + <i>] = <use(new[i])>;<}>
+		System.arraycopy(<use(src)>, <use(newAtIndex)> + <oldTupleSize>, <use(dst)>, <use(newAtIndex)> + <newTupleSize>, <use(src)>.length - <use(newAtIndex)> - <oldTupleSize>);
+		";
+}	
+			
+str arraycopyAndMigrateFromNodeTupleToDataTuple(Argument src, Argument dst, int oldTupleSize, Argument oldAtIndex, int newTupleSize, Argument newAtIndex, list[Argument] new) {
+	if (newTupleSize != size(new)) {
+		throw "Invalid arguments.";
+	}	
+
+	dst = field("Object[]", dst.name);
+
+	return
+		"<dec(dst)> = new Object[<use(src)>.length - <oldTupleSize> + <newTupleSize>];
+
+		// copy \'<use(src)>\' and remove <oldTupleSize> element(s) at position \'<use(oldAtIndex)>\' and insert <newTupleSize> element(s) at position \'<use(newAtIndex)>\' (TODO: carefully test)
+		assert <use(oldAtIndex)> \>= <use(newAtIndex)>;
+		System.arraycopy(<use(src)>, 0, <use(dst)>, 0, <use(newAtIndex)>);
+		<for (i <- [0..newTupleSize]) {><use(dst)>[<use(newAtIndex)> + <i>] = <use(new[i])>;<}>
+		System.arraycopy(<use(src)>, <use(newAtIndex)>, <use(dst)>, <use(newAtIndex)> + <newTupleSize>, <use(oldAtIndex)> - <use(newAtIndex)>);
+		System.arraycopy(<use(src)>, <use(oldAtIndex)> + <oldTupleSize>, <use(dst)>, <use(oldAtIndex)> + <oldTupleSize>, <use(src)>.length - <use(oldAtIndex)> - <oldTupleSize>);
+		";
 }
-	

@@ -29,8 +29,6 @@ package org.eclipse.imp.pdb.facts.util;
 
 import static org.eclipse.imp.pdb.facts.util.AbstractSpecialisedImmutableMap.entryOf;
 import static org.eclipse.imp.pdb.facts.util.ArrayUtils.copyAndInsert;
-import static org.eclipse.imp.pdb.facts.util.ArrayUtils.copyAndMoveToBackPair;
-import static org.eclipse.imp.pdb.facts.util.ArrayUtils.copyAndMoveToFrontPair;
 import static org.eclipse.imp.pdb.facts.util.ArrayUtils.copyAndRemove;
 import static org.eclipse.imp.pdb.facts.util.ArrayUtils.copyAndSet;
 

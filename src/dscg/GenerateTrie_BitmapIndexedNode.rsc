@@ -285,33 +285,25 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
 						int bitpos, <CompactNode(ds)><Generics(ds)> node) {
-			final int valIndex = 2 * valIndex(bitpos);
+			<dec(field("int", "idxOld"))> = 2 * valIndex(bitpos);
+			<dec(field("int", "idxNew"))> = 2 * (payloadArity - 1) + nodeIndex(bitpos);
 			
-			final int offset = 2 * (payloadArity - 1);
-			final int index = nodeIndex(bitpos);
+			<dec(field("Object[]", "src"))> = this.nodes;
+			<arraycopyAndMigrateFromDataTupleToNodeTuple(field("Object[]", "src"), field("Object[]", "dst"), 2, field("int", "idxOld"), 1, field("int", "idxNew"), [ \node(ds) ])>
 
-			final Object[] editableNodes = copyAndMoveToBackPair(this.nodes, valIndex, offset + index, node);
-
-			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> nodeOf(mutator, <use(bitmapMethod)>
-							| bitpos, <use(valmapMethod)> ^ bitpos, editableNodes, (byte) (payloadArity - 1));
-
-			return thisNew;
+			return nodeOf(mutator, <use(bitmapMethod)> | bitpos, <use(valmapMethod)> ^ bitpos, <use(field("Object[]", "dst"))>, (byte) (payloadArity - 1));
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
 						int bitpos, <CompactNode(ds)><Generics(ds)> node) {
-			final int bitIndex = 2 * payloadArity + nodeIndex(bitpos);
-			final int valIndexNew = valIndex(bitpos); // TODO: unify index usage copyAndMoveToFrontPair as with other methods
+			<dec(field("int", "idxOld"))> = 2 * payloadArity + nodeIndex(bitpos);
+			<dec(field("int", "idxNew"))> = valIndex(bitpos);
 
-			final Object[] editableNodes = copyAndMoveToFrontPair(this.nodes, bitIndex,
-							valIndexNew, node.headKey(), node.headVal());
+			<dec(field("Object[]", "src"))> = this.nodes;
+			<arraycopyAndMigrateFromNodeTupleToDataTuple(field("Object[]", "src"), field("Object[]", "dst"), 1, field("int", "idxOld"), 2, field("int", "idxNew"), [ field("node.headKey()"), field("node.headVal()") ])>
 
-			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> nodeOf(
-							mutator, <use(bitmapMethod)> ^ bitpos, <use(valmapMethod)> | bitpos, editableNodes,
-							(byte) (payloadArity + 1));
-
-			return thisNew;
+			return nodeOf(mutator, <use(bitmapMethod)> ^ bitpos, <use(valmapMethod)> | bitpos, <use(field("Object[]", "dst"))>, (byte) (payloadArity + 1));
 		}
 	'}";
 }
