@@ -78,7 +78,13 @@ void main() {
 		list[str] classStrings = [ generateCoreClassString(ts, setup, intercalate("\n", innerClassStrings)) ];	
 			
 		// writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
-		writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/TrieMap.java|, classStrings);		
+		if (ds == \map()) {
+			writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/TrieMap.java|, classStrings);
+		} else if (ds == \set()) {
+			writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/TrieSet.java|, classStrings);
+		} else {
+			throw "not supported";
+		}
 	}
 }
 	

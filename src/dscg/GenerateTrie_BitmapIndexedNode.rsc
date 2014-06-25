@@ -12,6 +12,7 @@
 module dscg::GenerateTrie_BitmapIndexedNode
 
 import dscg::Common;
+import dscg::ArrayUtils;
 
 str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) {
 
@@ -231,11 +232,13 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, int bitpos, K key,
 						V val) {			
-			final int valIndex = 2 * valIndex(bitpos);
-			final Object[] editableNodes = copyAndInsertPair(this.nodes, valIndex, key, val);
+			<dec(field("int", "idx"))> = 2 * valIndex(bitpos);
+			
+			<dec(field("Object[]", "src"))> = this.nodes;
+			<arraycopyAndInsertPair(field("Object[]", "src"), field("Object[]", "dst"), [key(), val()], field("int", "idx"))>
 			
 			final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> nodeOf(mutator, <use(bitmapMethod)>, 
-							<use(valmapMethod)> | bitpos, editableNodes, (byte) (payloadArity + 1));
+							<use(valmapMethod)> | bitpos, <use(field("Object[]", "dst"))>, (byte) (payloadArity + 1));
 
 			return thisNew;
 		}
