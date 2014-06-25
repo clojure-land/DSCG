@@ -716,8 +716,8 @@ str generate_bodyOf_copyAndSetValue(_, 0, _)
 default str generate_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int index = dataIndex(bitpos);
 	'	
-	'	<dec(bitmapField)> = this.<use(bitmapMethod)>;
-	'	<dec(valmapField)> = this.<use(valmapMethod)>;
+	'	<dec(___bitmapField(bitPartitionSize))> = this.<use(bitmapMethod)>;
+	'	<dec(___valmapField(bitPartitionSize))> = this.<use(valmapMethod)>;
 	'	
 	'	switch(index) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
@@ -735,8 +735,8 @@ str generate_bodyOf_copyAndSetNode(0, _, _)
 default str generate_bodyOf_copyAndSetNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 
 	"	final int index = nodeIndex(bitpos);
 	'
-	'	<dec(bitmapField)> = this.<use(bitmapMethod)>;
-	'	<dec(valmapField)> = this.<use(valmapMethod)>;
+	'	<dec(___bitmapField(bitPartitionSize))> = this.<use(bitmapMethod)>;
+	'	<dec(___valmapField(bitPartitionSize))> = this.<use(valmapMethod)>;
 	'	
 	'	switch(index) {
 	'		<for (i <- [1..n+1]) {>case <i-1>:
@@ -753,8 +753,8 @@ when (n + m) == nMax && (n + m) == nBound;
 default str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int valIndex = dataIndex(bitpos);
 	'
-	'	<dec(bitmapField)> = this.<use(bitmapMethod)>;
-	'	<dec(valmapField)> = this.<use(valmapMethod)> | bitpos;
+	'	<dec(___bitmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(bitmapMethod)>);
+	'	<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(valmapMethod)> | bitpos);
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
@@ -773,8 +773,8 @@ str generate_bodyOf_copyAndRemoveValue(_, 0, _)
 default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int valIndex = dataIndex(bitpos);
 	'
-	'	<dec(bitmapField)> = this.<use(bitmapMethod)>;
-	'	<dec(valmapField)> = this.<use(valmapMethod)> ^ bitpos;
+	'	<dec(___bitmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(bitmapMethod)>);
+	'	<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(valmapMethod)> ^ bitpos);
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
@@ -791,8 +791,8 @@ str generate_bodyOf_copyAndRemoveNode(0, _, _)
 default str generate_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int bitIndex = nodeIndex(bitpos);
 	'
-	'	<dec(bitmapField)> = this.<use(bitmapMethod)> ^ bitpos;
-	'	<dec(valmapField)> = this.<use(valmapMethod)>;
+	'	<dec(___bitmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(bitmapMethod)> ^ bitpos);
+	'	<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(valmapMethod)>);
 	'
 	'	switch(bitIndex) {
 	'		<for (i <- [1..n+1]) {>case <i-1>:
@@ -810,8 +810,8 @@ default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___e
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
 	'
-	'	<dec(bitmapField)> = this.<use(bitmapMethod)> | bitpos;
-	'	<dec(valmapField)> = this.<use(valmapMethod)> ^ bitpos;
+	'	<dec(___bitmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(bitmapMethod)> | bitpos);
+	'	<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(valmapMethod)> ^ bitpos);
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
@@ -836,8 +836,8 @@ default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___e
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
 	'	
-	'	<dec(bitmapField)> = this.<use(bitmapMethod)> ^ bitpos;	
-	'	<dec(valmapField)> = this.<use(valmapMethod)> | bitpos;
+	'	<dec(___bitmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(bitmapMethod)> ^ bitpos);	
+	'	<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(valmapMethod)> | bitpos);
 	'
 	'	<dec(key())> = <nodeName>.headKey();
 	'	<dec(val())> = <nodeName>.headVal();	
@@ -1075,7 +1075,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 default str generate_bodyOf_GenericNode_containsKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (<keyName>Hash \>\>\> shift) & BIT_PARTITION_MASK;
-	'final int bitpos = (1 \<\< mask);
+	'<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
 	'
 	'if ((valmap & bitpos) != 0) {
 	'	return <eq("nodes[dataIndex(bitpos)]", keyName)>;
@@ -1095,7 +1095,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 default str generate_bodyOf_GenericNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
-	'final int bitpos = (1 \<\< mask);
+	'<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
 
 	'if ((valmap & bitpos) != 0) { // inplace value
 	'	final int valIndex = dataIndex(bitpos);
@@ -1127,7 +1127,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
-	'final int bitpos = (1 \<\< mask);
+	'<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
 	'
 	'if ((valmap & bitpos) != 0) { // inplace value
 	'	final int valIndex = dataIndex(bitpos);
@@ -1213,7 +1213,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 		
 default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) =
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
-	final int bitpos = (1 \<\< mask);
+	<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
 
 	if ((valmap & bitpos) != 0) { // inplace value
 		final int valIndex = dataIndex(bitpos);
@@ -1227,7 +1227,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 				 */
 				final <CompactNode(ds)><Generics(ds)> thisNew;
 				final int newValmap = (shift == 0) ? this.valmap ^ bitpos
-								: 1 \<\< (keyHash & BIT_PARTITION_MASK);
+								: 1L \<\< (keyHash & BIT_PARTITION_MASK);
 
 				if (valIndex == 0) {
 					thisNew = <CompactNode(ds)>.<Generics(ds)> nodeOf(mutator, newValmap,
@@ -1817,38 +1817,38 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 
 	<if (ds == \map()) {>
 	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, int bitpos, V <valName>) {
+	'	<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, V <valName>) {
 	'		<generate_bodyOf_copyAndSetValue(n, m, ts)>
 	'	}
 	<}>	
 	
 	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, int bitpos, K <keyName>, V <valName>) {		
+	'	<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, K <keyName>, V <valName>) {		
 	'		<generate_bodyOf_copyAndInsertValue(n, m, ts)>
 	'	}
 	
 	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, int bitpos) {
+	'	<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
 	'		<generate_bodyOf_copyAndRemoveValue(n, m, ts)>
 	'	}	
 
 	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, int bitpos, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'	<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
 	'		<generate_bodyOf_copyAndSetNode(n, m, ts)>
 	'	}	
 
 	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, int bitpos) {
+	'	<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
 	'		<generate_bodyOf_copyAndRemoveNode(n, m, ts)>
 	'	}	
 
 	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, int bitpos, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
 	'		<generate_bodyOf_copyAndMigrateFromInlineToNode(n, m, ts)>
 	'	}
 	
 	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, int bitpos, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
 	'		<generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts)>
 	'	}		
 	
@@ -1867,7 +1867,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	<if (isOptionEnabled(setup, useStructuralEquality())) {>
 	'	@Override
 	'	public int hashCode() {
-	'		<if ((n + m) > 0) {>final int prime = 31; int result = 1; result = prime * result + <use(bitmapMethod)>; result = prime * result + <use(valmapMethod)>;<} else {>int result = 1;<}>	
+	'		<if ((n + m) > 0) {>final int prime = 31; int result = 1; result = prime * result + (<primitiveHashCode(___bitmapMethod(bitPartitionSize))>); result = prime * result + (<primitiveHashCode(___valmapMethod(bitPartitionSize))>);<} else {>int result = 1;<}>	
 	'		<for (i <- [1..m+1]) {>		
 	'		result = prime * result + <keyName><i>.hashCode();
 	'		<if (ds == \map()) {>result = prime * result + <valName><i>.hashCode();<}>

@@ -25,17 +25,17 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		private Object[] nodes;
 		final private byte payloadArity;
 
-		BitmapIndexedMapNode(AtomicReference\<Thread\> mutator, <dec(bitmapField)>, <dec(valmapField)>, Object[] nodes, byte payloadArity) {
+		BitmapIndexedMapNode(AtomicReference\<Thread\> mutator, <dec(___bitmapField(bitPartitionSize))>, <dec(___valmapField(bitPartitionSize))>, Object[] nodes, byte payloadArity) {
 			super(mutator, <use(bitmapField)>, <use(valmapField)>);
 			
-			assert (2 * Integer.bitCount(<use(valmapField)>) + Integer.bitCount(<use(bitmapField)>) == nodes.length);
+			assert (2 * <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapField(bitPartitionSize))>) + <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___bitmapField(bitPartitionSize))>) == nodes.length);
 
 			this.mutator = mutator;
 
 			this.nodes = nodes;
 			this.payloadArity = payloadArity;
 
-			assert (payloadArity == Integer.bitCount(<use(valmapField)>));
+			assert (payloadArity == <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapField(bitPartitionSize))>));
 			// assert (payloadArity() \>= 2 || nodeArity() \>= 1); // =
 			// // SIZE_MORE_THAN_ONE
 
@@ -130,8 +130,8 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		public int hashCode() {
 			final int prime = 31;
 			int result = 0;
-			result = prime * result + <use(bitmapMethod)>;
-			result = prime * result + <use(valmapMethod)>;
+			result = prime * result + (<primitiveHashCode(___valmapMethod(bitPartitionSize))>);
+			result = prime * result + (<primitiveHashCode(___valmapMethod(bitPartitionSize))>);
 			result = prime * result + Arrays.hashCode(nodes);
 			return result;
 		}
@@ -211,7 +211,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		<}>
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, int bitpos, V val) {
+		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, V val) {
 			<dec(field("int", "idx"))> = 2 * dataIndex(bitpos) + 1;
 			
 			if (isAllowedToEdit(this.mutator, mutator)) {
@@ -227,7 +227,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, int bitpos,
+		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>,
 						<CompactNode(ds)><Generics(ds)> node) {
 			<dec(field("int", "idx"))> = 2 * payloadArity + nodeIndex(bitpos);
 
@@ -244,66 +244,60 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, int bitpos, K key,
+		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, K key,
 						V val) {			
 			<dec(field("int", "idx"))> = 2 * dataIndex(bitpos);
 			
 			<dec(field("Object[]", "src"))> = this.nodes;
 			<arraycopyAndInsertTuple(field("Object[]", "src"), field("Object[]", "dst"), 2, [key(), val()], field("int", "idx"))>
 			
-			final <CompactNode(ds)><Generics(ds)> thisNew = nodeOf(mutator, <use(bitmapMethod)>, <use(valmapMethod)> | bitpos, <use(field("Object[]", "dst"))>, (byte) (payloadArity + 1));
-
-			return thisNew;
+			return nodeOf(mutator, <use(bitmapMethod)>, (<chunkSizeToPrimitive(bitPartitionSize)>) (<use(valmapMethod)> | bitpos), <use(field("Object[]", "dst"))>, (byte) (payloadArity + 1));
 		}
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, int bitpos) {
+		<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
 			<dec(field("int", "idx"))> = 2 * payloadArity + nodeIndex(bitpos);
 			
 			<dec(field("Object[]", "src"))> = this.nodes;
 			<arraycopyAndRemoveTuple(field("Object[]", "src"), field("Object[]", "dst"), 1, field("int", "idx"))>
 			
-			final <CompactNode(ds)><Generics(ds)> thisNew = nodeOf(mutator, <use(bitmapMethod)> ^ bitpos, <use(valmapMethod)>, <use(field("Object[]", "dst"))>, payloadArity);
-
-			return thisNew;
+			return nodeOf(mutator, (<chunkSizeToPrimitive(bitPartitionSize)>) (<use(bitmapMethod)> ^ bitpos), <use(valmapMethod)>, <use(field("Object[]", "dst"))>, payloadArity);
 		}
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, int bitpos) {
+		<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
 			<dec(field("int", "idx"))> = 2 * dataIndex(bitpos);
 			
 			<dec(field("Object[]", "src"))> = this.nodes;
 			<arraycopyAndRemoveTuple(field("Object[]", "src"), field("Object[]", "dst"), 2, field("int", "idx"))>
 
-			final <CompactNode(ds)><Generics(ds)> thisNew = nodeOf(
-							mutator, <use(bitmapMethod)>, <use(valmapMethod)> ^ bitpos,
+			return nodeOf(
+							mutator, <use(bitmapMethod)>, (<chunkSizeToPrimitive(bitPartitionSize)>) (<use(valmapMethod)> ^ bitpos),
 							<use(field("Object[]", "dst"))>, (byte) (payloadArity - 1));
-
-			return thisNew;
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
-						int bitpos, <CompactNode(ds)><Generics(ds)> node) {
+						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
 			<dec(field("int", "idxOld"))> = 2 * dataIndex(bitpos);
 			<dec(field("int", "idxNew"))> = 2 * (payloadArity - 1) + nodeIndex(bitpos);
 			
 			<dec(field("Object[]", "src"))> = this.nodes;
 			<arraycopyAndMigrateFromDataTupleToNodeTuple(field("Object[]", "src"), field("Object[]", "dst"), 2, field("int", "idxOld"), 1, field("int", "idxNew"), [ \node(ds) ])>
 
-			return nodeOf(mutator, <use(bitmapMethod)> | bitpos, <use(valmapMethod)> ^ bitpos, <use(field("Object[]", "dst"))>, (byte) (payloadArity - 1));
+			return nodeOf(mutator, (<chunkSizeToPrimitive(bitPartitionSize)>) (<use(bitmapMethod)> | bitpos), (<chunkSizeToPrimitive(bitPartitionSize)>) (<use(valmapMethod)> ^ bitpos), <use(field("Object[]", "dst"))>, (byte) (payloadArity - 1));
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
-						int bitpos, <CompactNode(ds)><Generics(ds)> node) {
+						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
 			<dec(field("int", "idxOld"))> = 2 * payloadArity + nodeIndex(bitpos);
 			<dec(field("int", "idxNew"))> = dataIndex(bitpos);
 
 			<dec(field("Object[]", "src"))> = this.nodes;
 			<arraycopyAndMigrateFromNodeTupleToDataTuple(field("Object[]", "src"), field("Object[]", "dst"), 1, field("int", "idxOld"), 2, field("int", "idxNew"), [ field("node.headKey()"), field("node.headVal()") ])>
 
-			return nodeOf(mutator, <use(bitmapMethod)> ^ bitpos, <use(valmapMethod)> | bitpos, <use(field("Object[]", "dst"))>, (byte) (payloadArity + 1));
+			return nodeOf(mutator, (<chunkSizeToPrimitive(bitPartitionSize)>) (<use(bitmapMethod)> ^ bitpos), (<chunkSizeToPrimitive(bitPartitionSize)>) (<use(valmapMethod)> | bitpos), <use(field("Object[]", "dst"))>, (byte) (payloadArity + 1));
 		}
 	'}";
 }

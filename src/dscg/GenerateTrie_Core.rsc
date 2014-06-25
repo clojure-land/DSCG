@@ -129,7 +129,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 	}
 
 	// returns 0 \<= mask \<= <nMax-1>
-	static byte recoverMask(int map, byte i_th) {
+	static byte recoverMask(<chunkSizeToPrimitive(bitPartitionSize)> map, byte i_th) {
 		assert 1 \<= i_th && i_th \<= <nMax>;
 
 		byte cnt1 = 0;
@@ -144,7 +144,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 				}
 			}
 
-			map = map \>\> 1;
+			map = (<chunkSizeToPrimitive(bitPartitionSize)>) (map \>\> 1);
 			mask += 1;
 		}
 

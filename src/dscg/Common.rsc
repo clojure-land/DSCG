@@ -20,7 +20,20 @@ data DataStructure
 	| \set()
 	| \vector()
 	;
-	
+
+data Argument
+	= field (str \type, str name)
+	| getter(str \type, str name)
+	;
+
+data Option // TODO: finish!
+	= useSpecialization()
+	| useFixedStackIterator()
+	| useStructuralEquality()	
+	| methodsWithComparator()
+	| compactionViaFieldToMethod()
+	;
+
 data TrieSpecifics 
 	= ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound)
 	;
@@ -38,23 +51,10 @@ TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound) 
 	
 	return ___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound);
 }
-	
-data Argument
-	= field (str \type, str name)
-	| getter(str \type, str name)
-	;
 
 data Position // TODO: finish!
 	= positionField(bool sorted = true)
 	| positionBitmap()
-	;
-	
-data Option // TODO: finish!
-	= useSpecialization()
-	| useFixedStackIterator()
-	| useStructuralEquality()	
-	| methodsWithComparator()
-	| compactionViaFieldToMethod()
 	;
 
 bool isOptionEnabled(rel[Option,bool] setup, Option \o) { 
@@ -81,14 +81,45 @@ Argument nodePos(int i) = field("byte", "<nodePosName><i>");
 Argument \node(DataStructure ds)		= field("<CompactNode(ds)><Generics(ds)>", "<nodeName>");
 Argument \node(DataStructure ds, int i) = field("<CompactNode(ds)><Generics(ds)>", "<nodeName><i>");
 
-public Argument bitmapField = field("int", "nodeMap");
-public Argument valmapField = field("int", "dataMap");
+public Argument bitmapField = field("nodeMap");
+public Argument valmapField = field("dataMap");
+public Argument bitposField = field("bitpos");
 
-public Argument bitmapMethod = getter("int", "nodeMap");
-public Argument valmapMethod = getter("int", "dataMap");
+Argument ___bitmapField(int bitPartitionSize) = field(chunkSizeToPrimitive(bitPartitionSize), "nodeMap");
+Argument ___valmapField(int bitPartitionSize) = field(chunkSizeToPrimitive(bitPartitionSize), "dataMap");
+Argument ___bitposField(int bitPartitionSize) = field(chunkSizeToPrimitive(bitPartitionSize), "bitpos");
+
+public Argument bitmapMethod = getter("nodeMap");
+public Argument valmapMethod = getter("dataMap");
+
+Argument ___bitmapMethod(int bitPartitionSize) = getter(chunkSizeToPrimitive(bitPartitionSize), "nodeMap");
+Argument ___valmapMethod(int bitPartitionSize) = getter(chunkSizeToPrimitive(bitPartitionSize), "dataMap");
+Argument ___bitposMethod(int bitPartitionSize) = getter(chunkSizeToPrimitive(bitPartitionSize), "bitpos");
 
 public Argument thisMutator = field("Void", "null");
 
+str chunkSizeToPrimitive(int _:3) = "byte";
+str chunkSizeToPrimitive(int _:4) = "short";
+str chunkSizeToPrimitive(int _:5) = "int";
+str chunkSizeToPrimitive(int _:6) = "long";
+
+str chunkSizeToObject(int _:3) = "Byte";
+str chunkSizeToObject(int _:4) = "Short";
+str chunkSizeToObject(int _:5) = "Integer";
+str chunkSizeToObject(int _:6) = "Long";
+
+str integerOrLongObject(int _:6) = "Long";
+str integerOrLongObject(int _:n) = "Integer" when n > 0 && n < 6;
+
+// convert either to int or to long and take care of unsigned conversion 
+str useSafeUnsigned(Argument a) = "(int)(<use(a)> & 0xFF)"   when a has \type && a.\type == "byte";
+str useSafeUnsigned(Argument a) = "(int)(<use(a)> & 0xFFFF)" when a has \type && a.\type == "short";
+str useSafeUnsigned(Argument a) = "<use(a)>"                 when a has \type && a.\type == "int";
+str useSafeUnsigned(Argument a) = "<use(a)>" when a has \type && a.\type == "long";
+default str useSafeUnsigned(Argument a) { throw "ahhh"; }
+
+str primitiveHashCode(Argument a) = "(int)(<use(a)> ^ (<use(a)> \>\>\> 32))" when a has \type && a.\type == "long";
+default str primitiveHashCode(Argument a) = "(int) <use(a)>";
 
 /*
  * Functions
