@@ -137,7 +137,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			for (int i = 0; i \< keys.length; i++) {
 				if (cmp.compare(keys[i], key) == 0) {
 					if (this.arity() == 1) {
-						return Result.modified(<CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator));
+						return Result.modified(<CompactNode(ds)>.<Generics(ds)> nodeOf(mutator));
 					} else if (this.arity() == 2) {
 						/*
 						 * Create root node with singleton element. This node
@@ -146,7 +146,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 						 */
 						final K theOtherKey = (i == 0) ? keys[1] : keys[0];
 						final V theOtherVal = (i == 0) ? vals[1] : vals[0];
-						return <CompactNode(ds)>.<Generics(ds)> valNodeOf(mutator).updated(mutator,
+						return <CompactNode(ds)>.<Generics(ds)> nodeOf(mutator).updated(mutator,
 										theOtherKey, keyHash, theOtherVal, 0, cmp);
 					} else {
 						return Result.modified(new HashCollisionMapNode\<\>(keyHash,

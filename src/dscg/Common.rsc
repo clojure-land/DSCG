@@ -81,11 +81,11 @@ Argument nodePos(int i) = field("byte", "<nodePosName><i>");
 Argument \node(DataStructure ds)		= field("<CompactNode(ds)><Generics(ds)>", "<nodeName>");
 Argument \node(DataStructure ds, int i) = field("<CompactNode(ds)><Generics(ds)>", "<nodeName><i>");
 
-public Argument bitmapField = field("int", "bitmap");
-public Argument valmapField = field("int", "valmap");
+public Argument bitmapField = field("int", "nodeMap");
+public Argument valmapField = field("int", "dataMap");
 
-public Argument bitmapMethod = getter("int", "bitmap");
-public Argument valmapMethod = getter("int", "valmap");
+public Argument bitmapMethod = getter("int", "nodeMap");
+public Argument valmapMethod = getter("int", "dataMap");
 
 public Argument thisMutator = field("Void", "null");
 
