@@ -15,7 +15,7 @@ import List;
 import dscg::Common;
 
 /*
- * usage: arraycopyAndInsertTuple(field("Object[]", "src"), field("Object[]", "dst"), [field("K", "key"), field("V", "val")], field("int", "idx"));
+ * usage: arraycopyAndInsertTuple(field("Object[]", "src"), field("Object[]", "dst"), [key("key"), val("val")], field("int", "idx"));
  */
 str arraycopyAndInsertTuple(Argument src, Argument dst, int tupleSize, list[Argument] new, Argument newAtIndex) {
 	if (tupleSize != size(new)) {

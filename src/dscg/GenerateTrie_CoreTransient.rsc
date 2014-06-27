@@ -14,8 +14,8 @@ module dscg::GenerateTrie_CoreTransient
 import dscg::Common;
 
 str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
-	"static final class TransientTrieMap<Generics(ds)> extends AbstractMap<Generics(ds)> implements
-					TransientMap<Generics(ds)> {
+	"static final class TransientTrieMap<Generics(ds)> extends AbstractMap<GenericsExpanded(ds)> implements
+					TransientMap<GenericsExpanded(ds)> {
 		final private AtomicReference\<Thread\> mutator;
 		private <AbstractNode(ds)><Generics(ds)> rootNode;
 		private int hashCode;
@@ -35,8 +35,8 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		private boolean invariant() {
 			int _hash = 0;
 
-			for (Iterator\<Map.Entry<Generics(ds)>\> it = entryIterator(); it.hasNext();) {
-				final Map.Entry<Generics(ds)> entry = it.next();
+			for (Iterator\<Map.Entry<GenericsExpanded(ds)>\> it = entryIterator(); it.hasNext();) {
+				final Map.Entry<GenericsExpanded(ds)> entry = it.next();
 
 				_hash += entry.getKey().hashCode() ^ entry.getValue().hashCode();
 			}
@@ -56,7 +56,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 
 		@Override
 		public V get(Object key) {
-			final Optional\<Map.Entry<Generics(ds)>\> result = rootNode.findByKey(key, key.hashCode(), 0);
+			final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(key, key.hashCode(), 0);
 
 			if (result.isPresent()) {
 				return result.get().getValue();
@@ -67,7 +67,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 
 		@Override
 		public V getEquivalent(Object key, Comparator\<Object\> cmp) {
-			final Optional\<Map.Entry<Generics(ds)>\> result = rootNode
+			final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode
 							.findByKey(key, key.hashCode(), 0, cmp);
 
 			if (result.isPresent()) {
@@ -270,15 +270,15 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public Set\<java.util.Map.Entry<Generics(ds)>\> entrySet() {
-			Set\<java.util.Map.Entry<Generics(ds)>\> entrySet = null;
+		public Set\<java.util.Map.Entry<GenericsExpanded(ds)>\> entrySet() {
+			Set\<java.util.Map.Entry<GenericsExpanded(ds)>\> entrySet = null;
 
 			if (entrySet == null) {
-				entrySet = new AbstractSet\<java.util.Map.Entry<Generics(ds)>\>() {
+				entrySet = new AbstractSet\<java.util.Map.Entry<GenericsExpanded(ds)>\>() {
 					@Override
-					public Iterator\<java.util.Map.Entry<Generics(ds)>\> iterator() {
-						return new Iterator\<Entry<Generics(ds)>\>() {
-							private final Iterator\<Entry<Generics(ds)>\> i = entryIterator();
+					public Iterator\<java.util.Map.Entry<GenericsExpanded(ds)>\> iterator() {
+						return new Iterator\<Entry<GenericsExpanded(ds)>\>() {
+							private final Iterator\<Entry<GenericsExpanded(ds)>\> i = entryIterator();
 
 							@Override
 							public boolean hasNext() {
@@ -286,7 +286,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 							}
 
 							@Override
-							public Entry<Generics(ds)> next() {
+							public Entry<GenericsExpanded(ds)> next() {
 								return i.next();
 							}
 
@@ -334,7 +334,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public Iterator\<Map.Entry<Generics(ds)>\> entryIterator() {
+		public Iterator\<Map.Entry<GenericsExpanded(ds)>\> entryIterator() {
 			// return new TrieMapEntryIterator\<\>(keyIterator());
 			return new MapEntryIterator\<\>(rootNode); // TODO: iterator does not
 														// support removal
@@ -414,7 +414,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public Immutable<toString(ds)><Generics(ds)> freeze() {
+		public Immutable<toString(ds)><GenericsExpanded(ds)> freeze() {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 			}

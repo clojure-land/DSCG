@@ -18,7 +18,7 @@ str generateEasyIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 	 * Iterator that first iterates over inlined-values and then continues depth
 	 * first recursively.
 	 */
-	private static class Trie<toString(ds)>Iterator<Generics(ds)> implements SupplierIterator<SupplierIteratorGenerics(ds)> {
+	private static class Trie<toString(ds)>Iterator<GenericsDec(ds)> implements SupplierIterator<SupplierIteratorGenerics(ds)> {
 
 		final Deque\<Iterator\<? extends <CompactNode(ds)>\>\> nodeIteratorStack;
 		SupplierIterator<SupplierIteratorGenerics(ds)> valueIterator;

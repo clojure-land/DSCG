@@ -72,14 +72,17 @@ Argument field (str name) = field ("???", name);
 Argument getter(str name) = getter("???", name);
 
 Argument keyPos(int i) = field("byte", "<keyPosName><i>");
-Argument key()		= field("K", "<keyName>");
-Argument key(int i) = field("K", "<keyName><i>");
-Argument val()		= field("V", "<valName>");
-Argument val(int i) = field("V", "<valName><i>");
+Argument key()				= key("<keyName>");
+Argument key(int i) 		= key("<keyName><i>");
+Argument key(str name) 		= field("K", "<name>");
+Argument val()				= val("<valName>");
+Argument val(int i) 		= val("<valName><i>");
+Argument val(str name) 		= field("int", "<name>");
 
 Argument nodePos(int i) = field("byte", "<nodePosName><i>");
-Argument \node(DataStructure ds)		= field("<CompactNode(ds)><Generics(ds)>", "<nodeName>");
-Argument \node(DataStructure ds, int i) = field("<CompactNode(ds)><Generics(ds)>", "<nodeName><i>");
+Argument \node(DataStructure ds)			= field("<CompactNode(ds)><Generics(ds)>", "<nodeName>");
+Argument \node(DataStructure ds, int i) 	= field("<CompactNode(ds)><Generics(ds)>", "<nodeName><i>");
+Argument \node(DataStructure ds, str name)	= field("<CompactNode(ds)><Generics(ds)>", name);
 
 public Argument bitmapField = field("nodeMap");
 public Argument valmapField = field("dataMap");
@@ -103,13 +106,13 @@ str chunkSizeToPrimitive(int _:4) = "short";
 str chunkSizeToPrimitive(int _:5) = "int";
 str chunkSizeToPrimitive(int _:6) = "long";
 
-str chunkSizeToObject(int _:3) = "Byte";
-str chunkSizeToObject(int _:4) = "Short";
-str chunkSizeToObject(int _:5) = "Integer";
-str chunkSizeToObject(int _:6) = "Long";
+str chunkSizeToObject(int _:3) = "java.lang.Byte";
+str chunkSizeToObject(int _:4) = "java.lang.Short";
+str chunkSizeToObject(int _:5) = "java.lang.Integer";
+str chunkSizeToObject(int _:6) = "java.lang.Long";
 
-str integerOrLongObject(int _:6) = "Long";
-str integerOrLongObject(int _:n) = "Integer" when n > 0 && n < 6;
+str integerOrLongObject(int _:6) = "java.lang.Long";
+str integerOrLongObject(int _:n) = "java.lang.Integer" when n > 0 && n < 6;
 
 // convert either to int or to long and take care of unsigned conversion 
 str useSafeUnsigned(Argument a) = "(int)(<use(a)> & 0xFF)"   when a has \type && a.\type == "byte";
@@ -118,8 +121,24 @@ str useSafeUnsigned(Argument a) = "<use(a)>"                 when a has \type &&
 str useSafeUnsigned(Argument a) = "<use(a)>" when a has \type && a.\type == "long";
 default str useSafeUnsigned(Argument a) { throw "ahhh"; }
 
+str hashCode(Argument a) = primitiveHashCode(a) when isPrimitive(a.\type);
+default str hashCode(Argument a) = "<use(a)>.hashCode()";
+
 str primitiveHashCode(Argument a) = "(int)(<use(a)> ^ (<use(a)> \>\>\> 32))" when a has \type && a.\type == "long";
 default str primitiveHashCode(Argument a) = "(int) <use(a)>";
+
+str primitiveToClass("byte")  = "java.lang.Byte";
+str primitiveToClass("short") = "java.lang.Short";
+str primitiveToClass("int")   = "java.lang.Integer";
+str primitiveToClass("long")  = "java.lang.Long";
+default str primitiveToClass(str nonPrimitive)  = nonPrimitive;
+
+
+bool isPrimitive("byte")  = true;
+bool isPrimitive("short") = true;
+bool isPrimitive("int")   = true;
+bool isPrimitive("long")  = true;
+default bool isPrimitive(str _)  = false;
 
 /*
  * Functions
@@ -178,9 +197,9 @@ list[Argument] payloadTriple(str posName, int i) {
 
 list[Argument] payloadTriple(str posName, str keyName, str valName) {
 	if (ds == \map()) {
-		return [ field("byte", posName), field("K", keyName), field("V", valName) ];
+		return [ field("byte", posName), key(keyName), val(valName) ];
 	} else { 
-		return [ field("byte", posName), field("K", keyName) ];
+		return [ field("byte", posName), key(keyName) ];
 	}
 } 
 
@@ -189,13 +208,27 @@ list[Argument] subnodePair(int i) = [ nodePos(i), \node(ds, i) ];
 str AbstractNode(DataStructure ds) = "Abstract<toString(ds)>Node";
 str CompactNode(DataStructure ds) = "Compact<toString(ds)>Node";
 
-str Generics(DataStructure ds:\map) = "\<K, V\>";
-str Generics(DataStructure ds:\set) = "\<K\>";
+str Generics(DataStructure ds:\map) = "\<<primitiveToClass(key().\type)>, <primitiveToClass(val().\type)>\>" when isPrimitive(key().\type) && isPrimitive(val().\type);
+str Generics(DataStructure ds:\map) = "\<<primitiveToClass(val().\type)>\>" when isPrimitive(key().\type) && !isPrimitive(val().\type);
+str Generics(DataStructure ds:\map) = "\<<primitiveToClass(key().\type)>\>" when !isPrimitive(key().\type) && isPrimitive(val().\type);
+
+str GenericsExpanded(DataStructure ds:\map) = "\<<primitiveToClass(key().\type)>, <primitiveToClass(val().\type)>\>";
+
+
+str Generics(DataStructure ds:\set) = "\<<primitiveToClass(key().\type)>\>"; // TODO
+
+str GenericsDec(DataStructure ds:\map) = "\<K <GenericsDecExtentionForPrimitives(key().\type)>, V <GenericsDecExtentionForPrimitives(val().\type)>\>";
+str GenericsDec(DataStructure ds:\set) = "\<K <GenericsDecExtentionForPrimitives(key().\type)>\>";
+str GenericsDecExtentionForPrimitives(str name) = "extends <primitiveToClass(name)>" when isPrimitive(name);
+default str GenericsDecExtentionForPrimitives(str _) = "";
 
 str ResultGenerics(DataStructure ds:\map) = "\<K, V, ? extends <CompactNode(ds)><Generics(ds)>\>";
 str ResultGenerics(DataStructure ds:\set) = "\<K, Void, ? extends <CompactNode(ds)><Generics(ds)>\>";
 
-str KeyOrMapEntryGenerics(DataStructure ds:\map) = "\<java.util.Map.Entry<Generics(ds)>\>";
+str ResultGenericsDec(DataStructure ds:\map) = "\<K <GenericsDecExtentionForPrimitives(key().\type)>, V <GenericsDecExtentionForPrimitives(val().\type)>, ? extends <CompactNode(ds)><Generics(ds)>\>";
+str ResultGenericsDec(DataStructure ds:\set) = "\<K <GenericsDecExtentionForPrimitives(key().\type)>, Void, ? extends <CompactNode(ds)><Generics(ds)>\>";
+
+str KeyOrMapEntryGenerics(DataStructure ds:\map) = "\<java.util.Map.Entry<GenericsExpanded(ds)>\>";
 str KeyOrMapEntryGenerics(DataStructure ds:\set) = "\<K\>";
 
 str SupplierIteratorGenerics(DataStructure ds:\map) = "\<K, V\>";
@@ -220,10 +253,15 @@ public str nestedResult = "nestedResult";
 public str keyPosName = "pos";
 
 str equalityDefault(str x, str y) = "<x>.equals(<y>)";
+str equalityDefaultForArguments(Argument x, Argument y) = "<use(x)> == <use(y)>"
+	when x.\type == y.\type && isPrimitive(x.\type) && isPrimitive(y.\type);
+default str equalityDefaultForArguments(Argument x, Argument y) = "<use(x)> == <use(y)>";
+	
 
 str equalityComparator(str x, str y) = "<cmpName>.compare(<x>, <y>) == 0";
-
-
+str equalityComparatorForArguments(Argument x, Argument y) = "<use(x)> == <use(y)>"
+	when x.\type == y.\type && isPrimitive(x.\type) && isPrimitive(y.\type);
+default str equalityComparatorForArguments(Argument x, Argument y) = "<use(x)> == <use(y)>";	
 
 str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:true) = "CompactMixed<toString(ds)>Node";
 str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:false) = "CompactNodesOnly<toString(ds)>Node";

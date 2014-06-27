@@ -81,14 +81,14 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		 * 
 		 * @return first key
 		 */
-		abstract K headKey();
+		abstract <key().\type> headKey();
 
 		/**
 		 * Returns the first value stored within this node.
 		 * 
 		 * @return first value
 		 */
-		abstract V headVal();
+		abstract <val().\type> headVal();
 
 		@Override
 		abstract <CompactNode(ds)><Generics(ds)> getNode(int index);
@@ -151,7 +151,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		}
 
 		static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> mergeNodes(<CompactNode(ds)><Generics(ds)> node0,
-						int keyHash0, K key1, int keyHash1, V val1, int shift) {
+						int keyHash0, <dec(key(1))>, int keyHash1, <dec(val(1))>, int shift) {
 			final int mask0 = (keyHash0 \>\>\> shift) & BIT_PARTITION_MASK;
 			final int mask1 = (keyHash1 \>\>\> shift) & BIT_PARTITION_MASK;
 
@@ -199,11 +199,11 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'		return <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___bitmapMethod(bitPartitionSize))> & (bitpos - 1));
 	'	}
 
-		K keyAt(<dec(___bitposField(bitPartitionSize))>) {
+		<key().\type> keyAt(<dec(___bitposField(bitPartitionSize))>) {
 			return getKey(dataIndex(bitpos)); 
 		}
 	
-		V valAt(<dec(___bitposField(bitPartitionSize))>) {
+		<val().\type> valAt(<dec(___bitposField(bitPartitionSize))>) {
 			return getValue(dataIndex(bitpos)); 
 		}
 
@@ -434,10 +434,10 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m
 
 	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
 	'	if (<eq("keyAt(bitpos)", keyName)>) {
-	'		final K _key = keyAt(bitpos);
-	'		final V _val = valAt(bitpos);
+	'		<dec(key("_key"))> = keyAt(bitpos);
+	'		<dec(val("_val"))> = valAt(bitpos);
 	'
-	'		final Map.Entry<Generics(ds)> entry = entryOf(_key, _val);
+	'		final Map.Entry<GenericsExpanded(ds)> entry = (java.util.Map.Entry<GenericsExpanded(ds)>) entryOf(_key, _val);
 	'		return Optional.of(entry);
 	'	}
 	'
@@ -467,7 +467,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'	final K currentKey = keyAt(bitpos);
 	'
 	'	if (<eq("currentKey", keyName)>) {
-	'		<if (ds == \set()) {>return Result.unchanged(this);<} else {>final V currentVal = valAt(bitpos);
+	'		<if (ds == \set()) {>return Result.unchanged(this);<} else {><dec(val("currentVal"))> = valAt(bitpos);
 	'
 	'		if (<eq("currentVal", valName)>) {
 	'			return Result.unchanged(this);
@@ -628,7 +628,7 @@ str generate_valNodeOf_factoryMethod_bitmap(n:0, m:0, ts:___expandedTrieSpecific
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + metadataArguments(n, m, ts) + contentArguments(n, m, ts);
 
 	return
-	"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
+	"static final <GenericsDec(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 	'	return EMPTY_INPLACE_INDEX_NODE;
 	'}"
 	;
@@ -641,7 +641,7 @@ str generate_valNodeOf_factoryMethod_bitmap(n:1, m:0, ts:___expandedTrieSpecific
 	className = "<toString(ds)><m>To<n>Node";
 
 	return
-	"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
+	"static final <GenericsDec(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 	'	switch(<use(bitmapMethod)>) {
 	'	<for (i <- [1..nMax+1]) {>case <oneShiftedLeftBy(i-1)>:
 	'		return new <toString(ds)><m>To<n>NodeAtMask<i-1>\<\>(<intercalate(", ", mapper(constructorArgs, use))>);
@@ -660,7 +660,7 @@ default str generate_valNodeOf_factoryMethod_bitmap(int n, int m, ts:___expanded
 
 	if ((n + m) <= nBound) {		
 		return
-		"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
+		"static final <GenericsDec(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 		'	return new <className>\<\>(<intercalate(", ", mapper(constructorArgs, use))>);
 		'}
 		"; 
@@ -668,7 +668,7 @@ default str generate_valNodeOf_factoryMethod_bitmap(int n, int m, ts:___expanded
 		list[Argument] argsForArray = contentArguments(n, m, ts);
 
 		return
-		"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
+		"static final <GenericsDec(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 		'	return nodeOf(mutator, <bitmapField.name>, <valmapField.name>, new Object[] { <use(argsForArray)> }, (byte) <m>);
 		'}
 		";

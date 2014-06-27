@@ -43,9 +43,9 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 			return x != null && y != null && (x == y || x.get() == y.get());
 		}
 
-		abstract K getKey(int index);
+		abstract <key().\type> getKey(int index);
 
-		abstract V getValue(int index);
+		abstract <val().\type> getValue(int index);
 
 		abstract java.util.Map.Entry<Generics(ds)> getKeyValueEntry(int index);
 

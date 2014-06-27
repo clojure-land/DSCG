@@ -47,7 +47,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 @SuppressWarnings(\"rawtypes\")
-public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
+public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded(ds)> {
 
 	@SuppressWarnings(\"unchecked\")
 	private static final TrieMap EMPTY_INPLACE_INDEX_MAP = new TrieMap(CompactMapNode.EMPTY_INPLACE_INDEX_NODE, 0, 0);
@@ -68,21 +68,21 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 	}
 
 	@SuppressWarnings(\"unchecked\")
-	public static final <Generics(ds)> ImmutableMap<Generics(ds)> of() {
+	public static final <Generics(ds)> ImmutableMap<GenericsExpanded(ds)> of() {
 		return TrieMap.EMPTY_INPLACE_INDEX_MAP;
 	}
 
 	@SuppressWarnings(\"unchecked\")
-	public static final <Generics(ds)> ImmutableMap<Generics(ds)> of(Object... keyValuePairs) {
+	public static final <Generics(ds)> ImmutableMap<GenericsExpanded(ds)> of(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
 			throw new IllegalArgumentException(\"Length of argument list is uneven: no key/value pairs.\");
 		}
 
-		ImmutableMap<Generics(ds)> result = TrieMap.EMPTY_INPLACE_INDEX_MAP;
+		ImmutableMap<GenericsExpanded(ds)> result = TrieMap.EMPTY_INPLACE_INDEX_MAP;
 
 		for (int i = 0; i \< keyValuePairs.length; i += 2) {
-			final K key = (K) keyValuePairs[i];
-			final V val = (V) keyValuePairs[i + 1];
+			<dec(key())> = (<key().\type>) keyValuePairs[i];
+			<dec(val())> = (<val().\type>) keyValuePairs[i + 1];
 
 			result = result.__put(key, val);
 		}
@@ -91,22 +91,22 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 	}
 
 	@SuppressWarnings(\"unchecked\")
-	public static final <Generics(ds)> TransientMap<Generics(ds)> transientOf() {
+	public static final <Generics(ds)> TransientMap<GenericsExpanded(ds)> transientOf() {
 		return TrieMap.EMPTY_INPLACE_INDEX_MAP.asTransient();
 	}
 
 	@SuppressWarnings(\"unchecked\")
-	public static final <Generics(ds)> TransientMap<Generics(ds)> transientOf(Object... keyValuePairs) {
+	public static final <Generics(ds)> TransientMap<GenericsExpanded(ds)> transientOf(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
 			throw new IllegalArgumentException(
 							\"Length of argument list is uneven: no key/value pairs.\");
 		}
 
-		final TransientMap<Generics(ds)> result = TrieMap.EMPTY_INPLACE_INDEX_MAP.asTransient();
+		final TransientMap<GenericsExpanded(ds)> result = TrieMap.EMPTY_INPLACE_INDEX_MAP.asTransient();
 
 		for (int i = 0; i \< keyValuePairs.length; i += 2) {
-			final K key = (K) keyValuePairs[i];
-			final V val = (V) keyValuePairs[i + 1];
+			<dec(key())> = (<key().\type>) keyValuePairs[i];
+			<dec(val())> = (<val().\type>) keyValuePairs[i + 1];
 
 			result.__put(key, val);
 		}
@@ -118,8 +118,8 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 		int _hash = 0;
 		int _count = 0;
 
-		for (Iterator\<Map.Entry<Generics(ds)>\> it = entryIterator(); it.hasNext();) {
-			final Map.Entry<Generics(ds)> entry = it.next();
+		for (Iterator\<Map.Entry<GenericsExpanded(ds)>\> it = entryIterator(); it.hasNext();) {
+			final Map.Entry<GenericsExpanded(ds)> entry = it.next();
 
 			_hash += entry.getKey().hashCode() ^ entry.getValue().hashCode();
 			_count += 1;
@@ -199,16 +199,16 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 	}
 
 	@Override
-	public ImmutableMap<Generics(ds)> __putAll(Map\<? extends K, ? extends V\> map) {
-		TransientMap<Generics(ds)> tmp = asTransient();
+	public ImmutableMap<GenericsExpanded(ds)> __putAll(Map\<? extends K, ? extends V\> map) {
+		TransientMap<GenericsExpanded(ds)> tmp = asTransient();
 		tmp.__putAll(map);
 		return tmp.freeze();
 	}
 
 	@Override
-	public ImmutableMap<Generics(ds)> __putAllEquivalent(Map\<? extends K, ? extends V\> map,
+	public ImmutableMap<GenericsExpanded(ds)> __putAllEquivalent(Map\<? extends K, ? extends V\> map,
 					Comparator\<Object\> cmp) {
-		TransientMap<Generics(ds)> tmp = asTransient();
+		TransientMap<GenericsExpanded(ds)> tmp = asTransient();
 		tmp.__putAllEquivalent(map, cmp);
 		return tmp.freeze();
 	}
@@ -286,7 +286,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 
 	@Override
 	public V get(Object key) {
-		final Optional\<Map.Entry<Generics(ds)>\> result = rootNode.findByKey(key, key.hashCode(), 0);
+		final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(key, key.hashCode(), 0);
 
 		if (result.isPresent()) {
 			return result.get().getValue();
@@ -297,7 +297,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 
 	@Override
 	public V getEquivalent(Object key, Comparator\<Object\> cmp) {
-		final Optional\<Map.Entry<Generics(ds)>\> result = rootNode.findByKey(key, key.hashCode(), 0, cmp);
+		final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(key, key.hashCode(), 0, cmp);
 
 		if (result.isPresent()) {
 			return result.get().getValue();
@@ -322,20 +322,20 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 	}
 
 	@Override
-	public Iterator\<Map.Entry<Generics(ds)>\> entryIterator() {
+	public Iterator\<Map.Entry<GenericsExpanded(ds)>\> entryIterator() {
 		return new MapEntryIterator\<\>(rootNode);
 	}
 
 	@Override
-	public Set\<java.util.Map.Entry<Generics(ds)>\> entrySet() {
-		Set\<java.util.Map.Entry<Generics(ds)>\> entrySet = null;
+	public Set\<java.util.Map.Entry<GenericsExpanded(ds)>\> entrySet() {
+		Set\<java.util.Map.Entry<GenericsExpanded(ds)>\> entrySet = null;
 
 		if (entrySet == null) {
-			entrySet = new AbstractSet\<java.util.Map.Entry<Generics(ds)>\>() {
+			entrySet = new AbstractSet\<java.util.Map.Entry<GenericsExpanded(ds)>\>() {
 				@Override
-				public Iterator\<java.util.Map.Entry<Generics(ds)>\> iterator() {
-					return new Iterator\<Entry<Generics(ds)>\>() {
-						private final Iterator\<Entry<Generics(ds)>\> i = entryIterator();
+				public Iterator\<java.util.Map.Entry<GenericsExpanded(ds)>\> iterator() {
+					return new Iterator\<Entry<GenericsExpanded(ds)>\>() {
+						private final Iterator\<Entry<GenericsExpanded(ds)>\> i = entryIterator();
 
 						@Override
 						public boolean hasNext() {
@@ -343,7 +343,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 						}
 
 						@Override
-						public Entry<Generics(ds)> next() {
+						public Entry<GenericsExpanded(ds)> next() {
 							return i.next();
 						}
 
@@ -385,7 +385,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<Generics(ds)> {
 	}
 
 	@Override
-	public TransientMap<Generics(ds)> asTransient() {
+	public TransientMap<GenericsExpanded(ds)> asTransient() {
 		return new TransientTrieMap<Generics(ds)>(this);
 	}
 

@@ -857,14 +857,14 @@ default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___e
 	'	}"
 	;
 	
-str generate_bodyOf_getKeyValueEntry(0)
+str generate_bodyOf_getKeyValueEntry(DataStructure ds, 0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
 	
-default str generate_bodyOf_getKeyValueEntry(int m) = 	
+default str generate_bodyOf_getKeyValueEntry(DataStructure ds, int m) = 	
 	"		switch(index) {
 	'			<for (i <- [1..m+1]) {>case <i-1>:
-	'				return entryOf(<keyName><i>, <valName><i>);
+	'				return (java.util.Map.Entry<Generics(ds)>) entryOf(<keyName><i>, <valName><i>);
 	'			<}>default:
 	'				throw new IllegalStateException(\"Index out of range.\");
 	'			}"
@@ -1582,13 +1582,13 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 	'	}
 	
 	'	@Override
-	'	K headKey() {
+	'	<key().\type> headKey() {
 	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a key.\")<} else {>return key1<}>;
 	'	}
 
 	<if (ds == \map()) {>
 	'	@Override
-	'	V headVal() {
+	'	<val().\type> headVal() {
 	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a value.\")<} else {>return val1<}>;
 	'	}	
 	<}>
@@ -1613,7 +1613,7 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 	<if (ds == \map()) {>
 	'	@Override
 	'	Map.Entry<Generics(ds)> getKeyValueEntry(int index) {
-	'		<generate_bodyOf_getKeyValueEntry(m)>
+	'		<generate_bodyOf_getKeyValueEntry(ds, m)>
 	'	}
 	<}>	
 	
@@ -1670,7 +1670,7 @@ str generate_bodyOf_sizePredicate(0, 1, ts:___expandedTrieSpecifics(ds, bitParti
 default str generate_bodyOf_sizePredicate(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = "SIZE_MORE_THAN_ONE";
 
 
-str generate_equalityComparisons(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), str(str, str) eq) =
+str generate_equalityComparisons(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), str(Argument, Argument) eq) =
 	"if (<use(bitmapMethod)> != that.<use(bitmapMethod)>) {
 	'	return false;
 	'}
@@ -1678,13 +1678,13 @@ str generate_equalityComparisons(int n, int m, ts:___expandedTrieSpecifics(ds, b
 	'	return false;
 	'}
 	'<for (i <- [1..m+1]) {>
-	'if (!<eq("<keyName><i>", "that.<keyName><i>")>) {
+	'if (!(<eq(key("<keyName><i>"), key("that.<keyName><i>"))>)) {
 	'	return false;
 	'}
-	'<if (ds == \map()) {>if (!<eq("<valName><i>", "that.<valName><i>")>) {
+	'<if (ds == \map()) {>if (!(<eq(val("<valName><i>"), val("that.<valName><i>"))>)) {
 	'	return false;
 	'}<}><}><for (i <- [1..n+1]) {>
-	'if (!<eq("<nodeName><i>", "that.<nodeName><i>")>) {
+	'if (!(<eq(\node(ds, "<nodeName><i>"), \node(ds, "that.<nodeName><i>"))>)) {
 	'	return false;
 	'}<}>"
 	;
@@ -1780,13 +1780,13 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'	}
 	
 	'	@Override
-	'	K headKey() {
+	'	<key().\type> headKey() {
 	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a key.\")<} else {>return key1<}>;
 	'	}
 
 	<if (ds == \map()) {>
 	'	@Override
-	'	V headVal() {
+	'	<val().\type> headVal() {
 	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a value.\")<} else {>return val1<}>;
 	'	}	
 	<}>
@@ -1797,13 +1797,13 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'	}
 	
 	'	@Override
-	'	K getKey(int index) {
+	'	<key().\type> getKey(int index) {
 	'		<generate_bodyOf_getKey(m)>
 	'	}
 
 	<if (ds == \map()) {>
 	'	@Override
-	'	V getValue(int index) {
+	'	<val().\type> getValue(int index) {
 	'		<generate_bodyOf_getValue(m)>
 	'	}
 	<}>
@@ -1811,7 +1811,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	<if (ds == \map()) {>
 	'	@Override
 	'	Map.Entry<Generics(ds)> getKeyValueEntry(int index) {
-	'		<generate_bodyOf_getKeyValueEntry(m)>
+	'		<generate_bodyOf_getKeyValueEntry(ds, m)>
 	'	}
 	<}>		
 
@@ -1869,10 +1869,10 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'	public int hashCode() {
 	'		<if ((n + m) > 0) {>final int prime = 31; int result = 1; result = prime * result + (<primitiveHashCode(___bitmapMethod(bitPartitionSize))>); result = prime * result + (<primitiveHashCode(___valmapMethod(bitPartitionSize))>);<} else {>int result = 1;<}>	
 	'		<for (i <- [1..m+1]) {>		
-	'		result = prime * result + <keyName><i>.hashCode();
-	'		<if (ds == \map()) {>result = prime * result + <valName><i>.hashCode();<}>
+	'		result = prime * result + <hashCode(key(i))>;
+	'		<if (ds == \map()) {>result = prime * result + <hashCode(val(i))>;<}>
 	'		<}><for (i <- [1..n+1]) {>
-	'		result = prime * result + <nodeName><i>.hashCode();
+	'		result = prime * result + <hashCode(\node(ds, i))>;
 	'		<}>	
 	'		return result;
 	'	}
@@ -1890,7 +1890,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'		}
 	'		<if ((n + m) > 0) {><className><QuestionMarkGenerics(ds)> that = (<className><QuestionMarkGenerics(ds)>) other;
 	'
-	'		<generate_equalityComparisons(n, m, ts, equalityDefault)><}>
+	'		<generate_equalityComparisons(n, m, ts, equalityDefaultForArguments)><}>
 	'
 	'		return true;
 	'	}
