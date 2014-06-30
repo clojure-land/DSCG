@@ -110,10 +110,10 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		}
 
 	<if (ds == \map()) {>
-	'	abstract <CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, V <valName>);
+	'	abstract <CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(val())>);
 	<}>	
 	
-	'	abstract <CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, K <keyName>, V <valName>);
+	'	abstract <CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(key())>, <dec(val())>);
 	
 	'	abstract <CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>);
 
@@ -126,13 +126,12 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'	abstract <CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>);
 
 		@SuppressWarnings(\"unchecked\")
-		static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> mergeNodes(K key0, int keyHash0, V val0, K key1,
-						int keyHash1, V val1, int shift) {
+		static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> mergeNodes(<dec(key("key0"))>, int keyHash0, <dec(val("val0"))>, <dec(key("key1"))>, int keyHash1, <dec(val("val1"))>, int shift) {
 			assert key0.equals(key1) == false;
 
 			if (keyHash0 == keyHash1) {
-				return new HashCollisionMapNode\<\>(keyHash0, (K[]) new Object[] { key0, key1 },
-								(V[]) new Object[] { val0, val1 });
+				return new HashCollisionMapNode\<\>(keyHash0, (<key().\type>[]) new <if (isPrimitive(key().\type)) {><key().\type><} else {>Object<}>[] { key0, key1 },
+								(<val().\type>[]) new <if (isPrimitive(val().\type)) {><val().\type><} else {>Object<}>[] { val0, val1 });
 			}
 
 			final int mask0 = (keyHash0 \>\>\> shift) & BIT_PARTITION_MASK;
@@ -150,8 +149,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 			}
 		}
 
-		static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> mergeNodes(<CompactNode(ds)><Generics(ds)> node0,
-						int keyHash0, <dec(key(1))>, int keyHash1, <dec(val(1))>, int shift) {
+		static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> mergeNodes(<CompactNode(ds)><Generics(ds)> node0, int keyHash0, <dec(key(1))>, int keyHash1, <dec(val(1))>, int shift) {
 			final int mask0 = (keyHash0 \>\>\> shift) & BIT_PARTITION_MASK;
 			final int mask1 = (keyHash1 \>\>\> shift) & BIT_PARTITION_MASK;
 
@@ -213,47 +211,43 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 	'	@Override
 	'	boolean containsKey(Object key, int keyHash, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, ts, setup, equalityDefault)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, ts, setup, equalityDefaultForArguments)>
 	'	}
 
 	'	@Override
 	'	boolean containsKey(Object key, int keyHash, int shift, Comparator\<Object\> <cmpName>) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, ts, setup, equalityComparator)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, ts, setup, equalityComparatorForArguments)>
 	'	}
 
 	'	@Override
 	'	Optional<KeyOrMapEntryGenerics(ds)> findByKey(Object key, int keyHash, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ts, setup, equalityDefault)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ts, setup, equalityDefaultForArguments)>
 	'	}
 
 	'	@Override
 	'	Optional<KeyOrMapEntryGenerics(ds)> findByKey(Object key, int keyHash, int shift,
 	'					Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ts, setup, equalityComparator)>
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ts, setup, equalityComparatorForArguments)>
 	'	}
 
 	'	@Override
-	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, K key,
-	'					int keyHash, V<if (ds == \set()) {>oid<}> val, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, setup, equalityDefault)>
+	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(key())>, int keyHash, <dec(val())>, int shift) {
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, setup, equalityDefaultForArguments)>
 	'	}
 
 	'	@Override
-	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, K key,
-	'					int keyHash, V<if (ds == \set()) {>oid<}> val, int shift, Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, setup, equalityComparator)>
+	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(key())>, int keyHash, <dec(val())>, int shift, Comparator\<Object\> cmp) {
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, setup, equalityComparatorForArguments)>
 	'	}
 
 	'	@Override
-	'	Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, K key,
-	'					int keyHash, int shift) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, setup, equalityDefault)>
+	'	Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, <dec(key())>, int keyHash, int shift) {
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, setup, equalityDefaultForArguments)>
 	'	}
 
 	'	@Override
-	'	Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, K key,
-	'					int keyHash, int shift, Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, setup, equalityComparator)>
+	'	Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, <dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp) {
+	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, setup, equalityComparatorForArguments)>
 	'	}
 	
 	'}
@@ -402,38 +396,38 @@ str generate_bodyOf_mergeNodeAndValue(ts:___expandedTrieSpecifics(ds, bitPartiti
 default str generate_bodyOf_mergeNodeAndValue(TrieSpecifics _, Option _, Position _) { throw "something went wrong"; }
 
 
-str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
+str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(_, _, _, rel[Option,bool] setup, str(Argument, Argument) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 	
-default str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
+default str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
 	"final int mask = (<keyName>Hash \>\>\> shift) & BIT_PARTITION_MASK;
 	'<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
 	'
 	'if ((<use(valmapMethod)> & bitpos) != 0) {
-	'	return <eq("keyAt(bitpos)", keyName)>;
+	'	return <eq(key("keyAt(bitpos)"), key())>;
 	'}
 	'
 	'if ((<use(bitmapMethod)> & bitpos) != 0) {
-	'	return nodeAt(bitpos).containsKey(<keyName>, <keyName>Hash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+	'	return nodeAt(bitpos).containsKey(<keyName>, <keyName>Hash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
 	'}
 	'
 	'return false;"
 	;
 	
 	
-str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
+str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(_, _, _, rel[Option,bool] setup, str(Argument, Argument) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;		
 	
-default str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
+default str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
 
 	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
-	'	if (<eq("keyAt(bitpos)", keyName)>) {
+	'	if (<eq(key("keyAt(bitpos)"), key())>) {
 	'		<dec(key("_key"))> = keyAt(bitpos);
 	'		<dec(val("_val"))> = valAt(bitpos);
 	'
@@ -447,29 +441,29 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m
 	'if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
 	'	final <AbstractNode(ds)><Generics(ds)> subNode = nodeAt(bitpos);
 	'
-	'	return subNode.findByKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+	'	return subNode.findByKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
 	'}
 	'
 	'return Optional.empty();"
 	;
 	
 	
-str generate_bodyOf_SpecializedBitmapPositionNode_updated(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
+str generate_bodyOf_SpecializedBitmapPositionNode_updated(_, _, _, rel[Option,bool] setup, str(Argument, Argument) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 	
-default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
+default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
 	'
 	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
-	'	final K currentKey = keyAt(bitpos);
+	'	<dec(key("currentKey"))> = keyAt(bitpos);
 	'
-	'	if (<eq("currentKey", keyName)>) {
+	'	if (<eq(key("currentKey"), key())>) {
 	'		<if (ds == \set()) {>return Result.unchanged(this);<} else {><dec(val("currentVal"))> = valAt(bitpos);
 	'
-	'		if (<eq("currentVal", valName)>) {
+	'		if (<eq(key("currentVal"), val())>) {
 	'			return Result.unchanged(this);
 	'		}
 	'
@@ -487,7 +481,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'} else if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
 	'	final <CompactNode(ds)><Generics(ds)> subNode = nodeAt(bitpos);
 	'
-	'	final Result<ResultGenerics(ds)> <nestedResult> = subNode.updated(mutator, key, keyHash, val, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+	'	final Result<ResultGenerics(ds)> <nestedResult> = subNode.updated(mutator, key, keyHash, val, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
 	'
 	'	if (!<nestedResult>.isModified()) {
 	'		return Result.unchanged(this);
@@ -510,7 +504,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'}";
 	
 	
-str generate_bodyOf_SpecializedBitmapPositionNode_removed(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
+str generate_bodyOf_SpecializedBitmapPositionNode_removed(_, _, _, rel[Option,bool] setup, str(Argument, Argument) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;			
@@ -529,12 +523,12 @@ default str removed_in_subnode_with_newsize0_block(ts:___expandedTrieSpecifics(d
 	'	return <nestedResult>;
 	'}";
 		
-default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) =
+default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) =
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
 
 	if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
-		if (<eq("keyAt(bitpos)", keyName)>) {
+		if (<eq(key("keyAt(bitpos)"), key())>) {
 			<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {><removed_value_block(ts, setup)> else {<}>
 				final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveValue(mutator, bitpos);
 	
@@ -546,7 +540,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 	} else if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
 		final <CompactNode(ds)><Generics(ds)> subNode = nodeAt(bitpos);
 		final Result<ResultGenerics(ds)> <nestedResult> = subNode.removed(
-						mutator, key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+						mutator, key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
 
 		if (!<nestedResult>.isModified()) {
 			return Result.unchanged(this);
@@ -628,7 +622,7 @@ str generate_valNodeOf_factoryMethod_bitmap(n:0, m:0, ts:___expandedTrieSpecific
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + metadataArguments(n, m, ts) + contentArguments(n, m, ts);
 
 	return
-	"static final <GenericsDec(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
+	"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 	'	return EMPTY_INPLACE_INDEX_NODE;
 	'}"
 	;
@@ -641,7 +635,7 @@ str generate_valNodeOf_factoryMethod_bitmap(n:1, m:0, ts:___expandedTrieSpecific
 	className = "<toString(ds)><m>To<n>Node";
 
 	return
-	"static final <GenericsDec(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
+	"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 	'	switch(<use(bitmapMethod)>) {
 	'	<for (i <- [1..nMax+1]) {>case <oneShiftedLeftBy(i-1)>:
 	'		return new <toString(ds)><m>To<n>NodeAtMask<i-1>\<\>(<intercalate(", ", mapper(constructorArgs, use))>);
@@ -660,7 +654,7 @@ default str generate_valNodeOf_factoryMethod_bitmap(int n, int m, ts:___expanded
 
 	if ((n + m) <= nBound) {		
 		return
-		"static final <GenericsDec(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
+		"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 		'	return new <className>\<\>(<intercalate(", ", mapper(constructorArgs, use))>);
 		'}
 		"; 
@@ -668,7 +662,7 @@ default str generate_valNodeOf_factoryMethod_bitmap(int n, int m, ts:___expanded
 		list[Argument] argsForArray = contentArguments(n, m, ts);
 
 		return
-		"static final <GenericsDec(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
+		"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 		'	return nodeOf(mutator, <bitmapField.name>, <valmapField.name>, new Object[] { <use(argsForArray)> }, (byte) <m>);
 		'}
 		";

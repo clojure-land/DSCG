@@ -49,22 +49,22 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			assert nodeInvariant();
 		}
 		
-		@SuppressWarnings(\"unchecked\")
+		<if (!isPrimitive(key())) {>@SuppressWarnings(\"unchecked\")<}>
 		@Override
-		K getKey(int index) {
-			return (K) nodes[2 * index];
+		<key().\type> getKey(int index) {
+			return (<key().\type>) nodes[2 * index];
+		}
+
+		<if (!isPrimitive(val())) {>@SuppressWarnings(\"unchecked\")<}>
+		@Override
+		<val().\type> getValue(int index) {
+			return (<val().\type>) nodes[2 * index + 1];
 		}
 
 		@SuppressWarnings(\"unchecked\")
 		@Override
-		V getValue(int index) {
-			return (V) nodes[2 * index + 1];
-		}
-
-		@SuppressWarnings(\"unchecked\")
-		@Override
-		Map.Entry<Generics(ds)> getKeyValueEntry(int index) {
-			return entryOf((K) nodes[2 * index], (V) nodes[2 * index + 1]);
+		Map.Entry<GenericsExpanded(ds)> getKeyValueEntry(int index) {
+			return entryOf((<key().\type>) nodes[2 * index], (<val().\type>) nodes[2 * index + 1]);
 		}
 
 		@SuppressWarnings(\"unchecked\")
@@ -75,7 +75,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 
 		@Override
-		SupplierIterator<Generics(ds)> payloadIterator() {
+		SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator() {
 			return ArrayKeyValueIterator.of(nodes, 0, 2 * payloadArity);
 		}
 
@@ -91,18 +91,18 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			return (Iterator) ArrayIterator.of(nodes, offset, nodes.length - offset);
 		}
 
-		@SuppressWarnings(\"unchecked\")
+		<if (!isPrimitive(key())) {>@SuppressWarnings(\"unchecked\")<}>
 		@Override
-		K headKey() {
+		<key().\type> headKey() {
 			assert hasPayload();
-			return (K) nodes[0];
+			return (<key().\type>) nodes[0];
 		}
 
-		@SuppressWarnings(\"unchecked\")
+		<if (!isPrimitive(val())) {>@SuppressWarnings(\"unchecked\")<}>
 		@Override
-		V headVal() {
+		<val().\type> headVal() {
 			assert hasPayload();
-			return (V) nodes[1];
+			return (<val().\type>) nodes[1];
 		}
 
 		@Override
@@ -147,7 +147,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			if (getClass() != other.getClass()) {
 				return false;
 			}
-			BitmapIndexedMapNode\<?, ?\> that = (BitmapIndexedMapNode\<?, ?\>) other;
+			BitmapIndexedMapNode<QuestionMarkGenerics(ds)> that = (BitmapIndexedMapNode<QuestionMarkGenerics(ds)>) other;
 			if (<use(bitmapMethod)> != that.<use(bitmapMethod)>) {
 				return false;
 			}
@@ -211,7 +211,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		<}>
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, V val) {
+		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(val())>) {
 			<dec(field("int", "idx"))> = 2 * dataIndex(bitpos) + 1;
 			
 			if (isAllowedToEdit(this.mutator, mutator)) {
@@ -227,8 +227,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>,
-						<CompactNode(ds)><Generics(ds)> node) {
+		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
 			<dec(field("int", "idx"))> = 2 * payloadArity + nodeIndex(bitpos);
 
 			if (isAllowedToEdit(this.mutator, mutator)) {
@@ -244,8 +243,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, K key,
-						V val) {			
+		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(key())>, <dec(val())>) {
 			<dec(field("int", "idx"))> = 2 * dataIndex(bitpos);
 			
 			<dec(field("Object[]", "src"))> = this.nodes;

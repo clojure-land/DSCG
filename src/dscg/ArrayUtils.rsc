@@ -22,10 +22,13 @@ str arraycopyAndInsertTuple(Argument src, Argument dst, int tupleSize, list[Argu
 		throw "Invalid arguments.";
 	}	
 	
-	dst = field("Object[]", dst.name); 
-	
+	if (src.\type != dst.\type) {
+		throw "Invalid arguments.";
+	}	
+		
 	return
-		"<dec(dst)> = new Object[<use(src)>.length + <tupleSize>];
+		"<if (!isPrimitiveArray(dst)) {>@SuppressWarnings(\"unchecked\")<}>
+		<dec(dst)> = <if (!isPrimitiveArray(dst)) {>(<dst.\type>)<}> new <if (isPrimitiveArray(dst.\type)) {><typeStringWithoutArray(dst)><} else {>Object<}>[<use(src)>.length + <tupleSize>];
 
 		// copy \'<use(src)>\' and insert <tupleSize> element(s) at position \'<use(newAtIndex)>\'
 		System.arraycopy(<use(src)>, 0, <use(dst)>, 0, <use(newAtIndex)>);
@@ -35,10 +38,13 @@ str arraycopyAndInsertTuple(Argument src, Argument dst, int tupleSize, list[Argu
 }
 
 str arraycopyAndRemoveTuple(Argument src, Argument dst, int tupleSize, Argument newAtIndex) {
-	dst = field("Object[]", dst.name); 
+	if (src.\type != dst.\type) {
+		throw "Invalid arguments.";
+	}		
 	
 	return
-		"<dec(dst)> = new Object[<use(src)>.length - <tupleSize>];
+		"<if (!isPrimitiveArray(dst)) {>@SuppressWarnings(\"unchecked\")<}>
+		<dec(dst)> = <if (!isPrimitiveArray(dst)) {>(<dst.\type>)<}> new <if (isPrimitiveArray(dst.\type)) {><typeStringWithoutArray(dst)><} else {>Object<}>[<use(src)>.length - <tupleSize>];
 
 		// copy \'<use(src)>\' and remove <tupleSize> element(s) at position \'<use(newAtIndex)>\'
 		System.arraycopy(<use(src)>, 0, <use(dst)>, 0, <use(newAtIndex)>);
@@ -46,15 +52,22 @@ str arraycopyAndRemoveTuple(Argument src, Argument dst, int tupleSize, Argument 
 		";
 }
 
+// TODO: move to Common.rsc?
+str typeStringWithoutArray(field(/^<t:.*>\[\]$/, name)) = t; // TODO file bug report: doesn't work if I use \type instead of t
+//default str typeStringWithoutArray(Argument a) = a.\type;
+
 str arraycopyAndSetTuple(Argument src, Argument dst, int tupleSize, list[Argument] new, Argument newAtIndex) {
 	if (tupleSize != size(new)) {
 		throw "Invalid arguments.";
 	}	
 
-	dst = field("Object[]", dst.name); 
+	if (src.\type != dst.\type) {
+		throw "Invalid arguments.";
+	} 
 	
 	return
-		"<dec(dst)> = new Object[<use(src)>.length];
+		"<if (!isPrimitiveArray(dst)) {>@SuppressWarnings(\"unchecked\")<}>
+		<dec(dst)> = <if (!isPrimitiveArray(dst)) {>(<dst.\type>)<}> new <if (isPrimitiveArray(dst.\type)) {><typeStringWithoutArray(dst)><} else {>Object<}>[<use(src)>.length];
 
 		// copy \'<use(src)>\' and set <tupleSize> element(s) at position \'<use(newAtIndex)>\'
 		System.arraycopy(<use(src)>, 0, <use(dst)>, 0, <use(src)>.length);

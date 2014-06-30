@@ -864,7 +864,7 @@ str generate_bodyOf_getKeyValueEntry(DataStructure ds, 0)
 default str generate_bodyOf_getKeyValueEntry(DataStructure ds, int m) = 	
 	"		switch(index) {
 	'			<for (i <- [1..m+1]) {>case <i-1>:
-	'				return (java.util.Map.Entry<Generics(ds)>) entryOf(<keyName><i>, <valName><i>);
+	'				return (java.util.Map.Entry<GenericsExpanded(ds)>) entryOf(<keyName><i>, <valName><i>);
 	'			<}>default:
 	'				throw new IllegalStateException(\"Index out of range.\");
 	'			}"
@@ -1612,7 +1612,7 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 		
 	<if (ds == \map()) {>
 	'	@Override
-	'	Map.Entry<Generics(ds)> getKeyValueEntry(int index) {
+	'	Map.Entry<GenericsExpanded(ds)> getKeyValueEntry(int index) {
 	'		<generate_bodyOf_getKeyValueEntry(ds, m)>
 	'	}
 	<}>	
@@ -1810,20 +1810,20 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	
 	<if (ds == \map()) {>
 	'	@Override
-	'	Map.Entry<Generics(ds)> getKeyValueEntry(int index) {
+	'	Map.Entry<GenericsExpanded(ds)> getKeyValueEntry(int index) {
 	'		<generate_bodyOf_getKeyValueEntry(ds, m)>
 	'	}
 	<}>		
 
 	<if (ds == \map()) {>
 	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, V <valName>) {
+	'	<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(val())>) {
 	'		<generate_bodyOf_copyAndSetValue(n, m, ts)>
 	'	}
 	<}>	
 	
 	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, K <keyName>, V <valName>) {		
+	'	<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(key())>, <dec(val())>) {		
 	'		<generate_bodyOf_copyAndInsertValue(n, m, ts)>
 	'	}
 	

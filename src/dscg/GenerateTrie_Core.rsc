@@ -28,9 +28,6 @@ str generateCoreClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nM
 package org.eclipse.imp.pdb.facts.util;
 
 import static org.eclipse.imp.pdb.facts.util.AbstractSpecialisedImmutableMap.entryOf;
-import static org.eclipse.imp.pdb.facts.util.ArrayUtils.copyAndInsert;
-import static org.eclipse.imp.pdb.facts.util.ArrayUtils.copyAndRemove;
-import static org.eclipse.imp.pdb.facts.util.ArrayUtils.copyAndSet;
 
 import java.text.DecimalFormat;
 import java.util.AbstractMap;
@@ -153,7 +150,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	}
 
 	@Override
-	public TrieMap<Generics(ds)> __put(K key, V val) {
+	public TrieMap<Generics(ds)> __put(<dec(primitiveToClass(key()))>, <dec(primitiveToClass(val()))>) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.updated(null, key,
 						keyHash, val, 0);
@@ -161,13 +158,13 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 		if (result.isModified()) {
 			if (result.hasReplacedValue()) {
 				final int valHashOld = result.getReplacedValue().hashCode();
-				final int valHashNew = val.hashCode();
+				final int valHashNew = <hashCode(val())>;
 
 				return new TrieMap<Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHashNew)
 								- (keyHash ^ valHashOld), cachedSize);
 			}
 
-			final int valHash = val.hashCode();
+			final int valHash = <hashCode(val())>;
 			return new TrieMap<Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHash),
 							cachedSize + 1);
 		}
@@ -176,7 +173,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	}
 
 	@Override
-	public TrieMap<Generics(ds)> __putEquivalent(K key, V val, Comparator\<Object\> cmp) {
+	public TrieMap<Generics(ds)> __putEquivalent(<dec(primitiveToClass(key()))>, <dec(primitiveToClass(val()))>, Comparator\<Object\> cmp) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.updated(null, key,
 						keyHash, val, 0, cmp);
@@ -184,13 +181,13 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 		if (result.isModified()) {
 			if (result.hasReplacedValue()) {
 				final int valHashOld = result.getReplacedValue().hashCode();
-				final int valHashNew = val.hashCode();
+				final int valHashNew = <hashCode(val())>;
 
 				return new TrieMap<Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHashNew)
 								- (keyHash ^ valHashOld), cachedSize);
 			}
 
-			final int valHash = val.hashCode();
+			final int valHash = <hashCode(val())>;
 			return new TrieMap<Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHash),
 							cachedSize + 1);
 		}
@@ -199,14 +196,14 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	}
 
 	@Override
-	public ImmutableMap<GenericsExpanded(ds)> __putAll(Map\<? extends K, ? extends V\> map) {
+	public ImmutableMap<GenericsExpanded(ds)> __putAll(Map<GenericsExpandedUpperBounded(ds)> map) {
 		TransientMap<GenericsExpanded(ds)> tmp = asTransient();
 		tmp.__putAll(map);
 		return tmp.freeze();
 	}
 
 	@Override
-	public ImmutableMap<GenericsExpanded(ds)> __putAllEquivalent(Map\<? extends K, ? extends V\> map,
+	public ImmutableMap<GenericsExpanded(ds)> __putAllEquivalent(Map<GenericsExpandedUpperBounded(ds)> map,
 					Comparator\<Object\> cmp) {
 		TransientMap<GenericsExpanded(ds)> tmp = asTransient();
 		tmp.__putAllEquivalent(map, cmp);
@@ -214,7 +211,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	}
 
 	@Override
-	public TrieMap<Generics(ds)> __remove(K key) {
+	public TrieMap<Generics(ds)> __remove(<dec(key())>) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.removed(null, key,
 						keyHash, 0);
@@ -234,7 +231,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	}
 
 	@Override
-	public TrieMap<Generics(ds)> __removeEquivalent(K key, Comparator\<Object\> cmp) {
+	public TrieMap<Generics(ds)> __removeEquivalent(<dec(key())>, Comparator\<Object\> cmp) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.removed(null, key,
 						keyHash, 0, cmp);
@@ -266,7 +263,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 
 	@Override
 	public boolean containsValue(Object o) {
-		for (Iterator\<V\> iterator = valueIterator(); iterator.hasNext();) {
+		for (Iterator\<<primitiveToClass(val()).\type>\> iterator = valueIterator(); iterator.hasNext();) {
 			if (iterator.next().equals(o)) {
 				return true;
 			}
@@ -276,7 +273,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 
 	@Override
 	public boolean containsValueEquivalent(Object o, Comparator\<Object\> cmp) {
-		for (Iterator\<V\> iterator = valueIterator(); iterator.hasNext();) {
+		for (Iterator\<<primitiveToClass(val()).\type>\> iterator = valueIterator(); iterator.hasNext();) {
 			if (cmp.compare(iterator.next(), o) == 0) {
 				return true;
 			}
@@ -285,7 +282,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	}
 
 	@Override
-	public V get(Object key) {
+	public <primitiveToClass(val()).\type> get(Object key) {
 		final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(key, key.hashCode(), 0);
 
 		if (result.isPresent()) {
@@ -296,7 +293,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	}
 
 	@Override
-	public V getEquivalent(Object key, Comparator\<Object\> cmp) {
+	public <primitiveToClass(val()).\type> getEquivalent(Object key, Comparator\<Object\> cmp) {
 		final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(key, key.hashCode(), 0, cmp);
 
 		if (result.isPresent()) {
@@ -312,12 +309,12 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	}
 
 	@Override
-	public SupplierIterator<Generics(ds)> keyIterator() {
+	public SupplierIterator<SupplierIteratorGenerics(ds)> keyIterator() {
 		<generate_bodyOf_keyIterator(ds, setup)>
 	}
 
 	@Override
-	public Iterator\<V\> valueIterator() {
+	public Iterator\<<primitiveToClass(val()).\type>\> valueIterator() {
 		return new MapValueIterator\<\>(rootNode);
 	}
 
@@ -405,7 +402,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 		}
 
 		if (other instanceof TrieMap) {
-			TrieMap\<?, ?\> that = (TrieMap\<?, ?\>) other;
+			TrieMap<QuestionMarkGenerics(ds)> that = (TrieMap<QuestionMarkGenerics(ds)>) other;
 
 			if (this.size() != that.size()) {
 				return false;

@@ -105,14 +105,14 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 	}
 	
 	private static final class <toString(ds)>KeyIterator<Generics(ds)> extends Abstract<toString(ds)>Iterator<Generics(ds)> implements
-					SupplierIterator<Generics(ds)> {
+					SupplierIterator<SupplierIteratorGenerics(ds)> {
 
 		<toString(ds)>KeyIterator(<AbstractNode(ds)><Generics(ds)> rootNode) {
 			super(rootNode);
 		}
 
 		@Override
-		public <primitiveToClass(key().\type)> next() {
+		public <primitiveToClass(key()).\type> next() {
 			if (!hasNext()) {
 				throw new NoSuchElementException();
 			} else {
@@ -121,20 +121,20 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		}
 
 		@Override
-		public <primitiveToClass(val().\type)> get() {
+		public <primitiveToClass(val()).\type> get() {
 			throw new UnsupportedOperationException();
 		}
 	}
 
 	private static final class <toString(ds)>ValueIterator<Generics(ds)> extends Abstract<toString(ds)>Iterator<Generics(ds)> implements
-					SupplierIterator\<V, K\> {
+					SupplierIterator<SupplierIteratorGenericsReversed(ds)> {
 
 		<toString(ds)>ValueIterator(<AbstractNode(ds)><Generics(ds)> rootNode) {
 			super(rootNode);
 		}
 
 		@Override
-		public <primitiveToClass(val().\type)> next() {
+		public <primitiveToClass(val()).\type> next() {
 			if (!hasNext()) {
 				throw new NoSuchElementException();
 			} else {
@@ -143,7 +143,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		}
 
 		@Override
-		public <primitiveToClass(key().\type)> get() {
+		public <primitiveToClass(key()).\type> get() {
 			throw new UnsupportedOperationException();
 		}
 	}
@@ -156,7 +156,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		}
 
 		@Override
-		public Map.Entry<Generics(ds)> next() {
+		public Map.Entry<GenericsExpanded(ds)> next() {
 			if (!hasNext()) {
 				throw new NoSuchElementException();
 			} else {
@@ -165,7 +165,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		}
 
 		@Override
-		public <primitiveToClass(key().\type)> get() {
+		public <primitiveToClass(key()).\type> get() {
 			throw new UnsupportedOperationException();
 		}
 	}"

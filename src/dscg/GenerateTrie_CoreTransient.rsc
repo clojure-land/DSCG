@@ -55,7 +55,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public V get(Object key) {
+		public <primitiveToClass(val()).\type> get(Object key) {
 			final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(key, key.hashCode(), 0);
 
 			if (result.isPresent()) {
@@ -66,7 +66,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public V getEquivalent(Object key, Comparator\<Object\> cmp) {
+		public <primitiveToClass(val()).\type> getEquivalent(Object key, Comparator\<Object\> cmp) {
 			final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode
 							.findByKey(key, key.hashCode(), 0, cmp);
 
@@ -78,23 +78,22 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public V __put(K key, V val) {
+		public <primitiveToClass(val()).\type> __put(<dec(primitiveToClass(key()))>, <dec(primitiveToClass(val()))>) {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 			}
 
 			final int keyHash = key.hashCode();
-			final Result<ResultGenerics(ds)> result = rootNode.updated(mutator,
-							key, keyHash, val, 0);
+			final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, key, keyHash, val, 0);
 
 			if (result.isModified()) {
 				rootNode = result.getNode();
 
 				if (result.hasReplacedValue()) {
-					final V old = result.getReplacedValue();
+					<dec(val("old"))> = result.getReplacedValue();
 
-					final int valHashOld = old.hashCode();
-					final int valHashNew = val.hashCode();
+					final int valHashOld = <hashCode(val("old"))>;
+					final int valHashNew = <hashCode(val())>;
 
 					hashCode += keyHash ^ valHashNew;
 					hashCode -= keyHash ^ valHashOld;
@@ -105,7 +104,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 					}
 					return old;
 				} else {
-					final int valHashNew = val.hashCode();
+					final int valHashNew = <hashCode(val())>;
 
 					hashCode += keyHash ^ valHashNew;
 					cachedSize += 1;
@@ -124,23 +123,22 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public V __putEquivalent(K key, V val, Comparator\<Object\> cmp) {
+		public <primitiveToClass(val()).\type> __putEquivalent(<dec(primitiveToClass(key()))>, <dec(primitiveToClass(val()))>, Comparator\<Object\> cmp) {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 			}
 
 			final int keyHash = key.hashCode();
-			final Result<ResultGenerics(ds)> result = rootNode.updated(mutator,
-							key, keyHash, val, 0, cmp);
+			final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, key, keyHash, val, 0, cmp);
 
 			if (result.isModified()) {
 				rootNode = result.getNode();
 
 				if (result.hasReplacedValue()) {
-					final V old = result.getReplacedValue();
+					<dec(val("old"))> = result.getReplacedValue();
 
-					final int valHashOld = old.hashCode();
-					final int valHashNew = val.hashCode();
+					final int valHashOld = <hashCode(val("old"))>;
+					final int valHashNew = <hashCode(val())>;
 
 					hashCode += keyHash ^ valHashNew;
 					hashCode -= keyHash ^ valHashOld;
@@ -151,7 +149,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 					}
 					return old;
 				} else {
-					final int valHashNew = val.hashCode();
+					final int valHashNew = <hashCode(val())>;
 
 					hashCode += keyHash ^ valHashNew;
 					cachedSize += 1;
@@ -170,7 +168,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean __remove(K key) {
+		public boolean __remove(<dec(key())>) {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 
@@ -204,7 +202,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean __removeEquivalent(K key, Comparator\<Object\> cmp) {
+		public boolean __removeEquivalent(<dec(key())>, Comparator\<Object\> cmp) {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 			}
@@ -238,12 +236,12 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean __putAll(Map\<? extends K, ? extends V\> map) {
+		public boolean __putAll(Map<GenericsExpandedUpperBounded(ds)> map) {
 			boolean modified = false;
 
-			for (Entry\<? extends K, ? extends V\> entry : map.entrySet()) {
+			for (Entry<GenericsExpandedUpperBounded(ds)> entry : map.entrySet()) {
 				final boolean isPresent = containsKey(entry.getKey());
-				final V replaced = __put(entry.getKey(), entry.getValue());
+				<dec(primitiveToClass(val("replaced")))> = __put(entry.getKey(), entry.getValue());
 
 				if (!isPresent || replaced != null) {
 					modified = true;
@@ -254,12 +252,12 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean __putAllEquivalent(Map\<? extends K, ? extends V\> map, Comparator\<Object\> cmp) {
+		public boolean __putAllEquivalent(Map<GenericsExpandedUpperBounded(ds)> map, Comparator\<Object\> cmp) {
 			boolean modified = false;
 
-			for (Entry\<? extends K, ? extends V\> entry : map.entrySet()) {
+			for (Entry<GenericsExpandedUpperBounded(ds)> entry : map.entrySet()) {
 				final boolean isPresent = containsKeyEquivalent(entry.getKey(), cmp);
-				final V replaced = __putEquivalent(entry.getKey(), entry.getValue(), cmp);
+				<dec(primitiveToClass(val("replaced")))> = __putEquivalent(entry.getKey(), entry.getValue(), cmp);
 
 				if (!isPresent || replaced != null) {
 					modified = true;
@@ -322,12 +320,12 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public SupplierIterator<Generics(ds)> keyIterator() {
+		public SupplierIterator<SupplierIteratorGenerics(ds)> keyIterator() {
 			return new TransientMapKeyIterator\<\>(this);
 		}
 
 		@Override
-		public Iterator\<V\> valueIterator() {
+		public Iterator\<<primitiveToClass(val()).\type>\> valueIterator() {
 			// return new TrieMapValueIterator\<\>(keyIterator());
 			return new MapValueIterator\<\>(rootNode); // TODO: iterator does not
 														// support removal
@@ -345,10 +343,10 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		 * depth first recursively.
 		 */
 		private static class TransientMapKeyIterator<Generics(ds)> extends AbstractMapIterator<Generics(ds)>
-						implements SupplierIterator<Generics(ds)> {
+						implements SupplierIterator<SupplierIteratorGenerics(ds)> {
 
 			final TransientTrie<toString(ds)><Generics(ds)> transientTrieMap;
-			K lastKey;
+			<primitiveToClass(key()).\type> lastKey;
 
 			TransientMapKeyIterator(TransientTrie<toString(ds)><Generics(ds)> transientTrieMap) {
 				super(transientTrieMap.rootNode);
@@ -356,7 +354,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 
 			@Override
-			public K next() {
+			public <primitiveToClass(key()).\type> next() {
 				if (!hasNext()) {
 					throw new NoSuchElementException();
 				} else {
@@ -366,7 +364,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 
 			@Override
-			public V get() {
+			public <primitiveToClass(val()).\type> get() {
 				throw new UnsupportedOperationException();
 			}
 
@@ -390,7 +388,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 	
 			if (other instanceof TransientTrieMap) {
-				TransientTrieMap\<?, ?\> that = (TransientTrieMap\<?, ?\>) other;
+				TransientTrieMap<QuestionMarkGenerics(ds)> that = (TransientTrieMap<QuestionMarkGenerics(ds)>) other;
 	
 				if (this.size() != that.size()) {
 					return false;
