@@ -16,13 +16,13 @@ import dscg::Common;
 str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
 	"protected static abstract class <AbstractNode(ds)><Generics(ds)> extends AbstractNode<GenericsExpanded(ds)> {
 
-		abstract boolean containsKey(Object key, int keyHash, int shift);
+		abstract boolean containsKey(<dec(key())>, int keyHash, int shift);
 
-		abstract boolean containsKey(Object key, int keyHash, int shift, Comparator\<Object\> cmp);
+		abstract boolean containsKey(<dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp);
 
-		abstract Optional<KeyOrMapEntryGenerics(ds)> findByKey(Object key, int keyHash, int shift);
+		abstract Optional<KeyOrMapEntryGenerics(ds)> findByKey(<dec(key())>, int keyHash, int shift);
 
-		abstract Optional<KeyOrMapEntryGenerics(ds)> findByKey(Object key, int keyHash, int shift, Comparator\<Object\> cmp);
+		abstract Optional<KeyOrMapEntryGenerics(ds)> findByKey(<dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp);
 
 		abstract Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(key())>, int keyHash, <dec(val())>, int shift);
 
@@ -67,7 +67,7 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 		}
 
 		int size() {
-			final SupplierIterator<SupplierIteratorGenerics(ds)> it = new <toString(ds)>KeyIterator\<\>(this);
+			final SupplierIterator<SupplierIteratorGenerics(ds)> it = new <toString(ds)>KeyIterator<InferredGenerics()>(this);
 
 			int size = 0;
 			while (it.hasNext()) {

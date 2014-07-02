@@ -14,13 +14,17 @@ module dscg::GenerateTrie_HashCollisionNode
 import dscg::Common;
 import dscg::ArrayUtils;
 
-str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
-	"private static final class HashCollision<toString(ds)>Node<Generics(ds)> extends <CompactNode(ds)><Generics(ds)> {
+str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix) {
+
+	str hashCollisionClassName = "HashCollision<toString(ds)>Node<classNamePostfix>";
+
+	return  
+	"private static final class <hashCollisionClassName><Generics(ds)> extends <CompactNode(ds)><Generics(ds)> {
 		private final <key().\type>[] keys;
 		private final <val().\type>[] vals;
 		private final int hash;
 
-		HashCollisionMapNode(final int hash, final <key().\type>[] keys, <val().\type>[] vals) {
+		<hashCollisionClassName>(final int hash, final <key().\type>[] keys, <val().\type>[] vals) {
 			this.keys = keys;
 			this.vals = vals;
 			this.hash = hash;
@@ -70,9 +74,9 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 
 		@Override
-		public boolean containsKey(Object key, int keyHash, int shift, Comparator\<Object\> cmp) {
+		public boolean containsKey(<dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp) {
 			if (this.hash == keyHash) {
-				for (K k : keys) {
+				for (<key().\type> k : keys) {
 					if (cmp.compare(k, key) == 0) {
 						return true;
 					}
@@ -103,7 +107,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 					<dec(field("<val().\type>[]", "src"))> = this.vals;
 					<arraycopyAndSetTuple(field("<val().\type>[]", "src"), field("<val().\type>[]", "dst"), 1, [val()], field("int", "idx"))>
 
-					final <CompactNode(ds)><Generics(ds)> thisNew = new HashCollisionMapNode\<\>(this.hash, this.keys, dst);
+					final <CompactNode(ds)><Generics(ds)> thisNew = new <hashCollisionClassName><InferredGenerics()>(this.hash, this.keys, dst);
 
 					return Result.updated(thisNew, currentVal);
 				}
@@ -112,7 +116,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			<arraycopyAndInsertTuple(field("<key().\type>[]", "this.keys"), field("<key().\type>[]", "keysNew"), 1, [key()], field("int", "keys.length"))>
 			<arraycopyAndInsertTuple(field("<val().\type>[]", "this.vals"), field("<val().\type>[]", "valsNew"), 1, [val()], field("int", "vals.length"))>
 
-			return Result.modified(new HashCollisionMapNode\<\>(keyHash, keysNew, valsNew));
+			return Result.modified(new <hashCollisionClassName><InferredGenerics()>(keyHash, keysNew, valsNew));
 		}
 
 		/**
@@ -141,7 +145,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 						<arraycopyAndRemoveTuple(field("<key().\type>[]", "this.keys"), field("<key().\type>[]", "keysNew"), 1, field("int", "idx"))>
 						<arraycopyAndRemoveTuple(field("<val().\type>[]", "this.vals"), field("<val().\type>[]", "valsNew"), 1, field("int", "idx"))>
 
-						return Result.modified(new HashCollisionMapNode\<\>(keyHash, keysNew, valsNew));
+						return Result.modified(new <hashCollisionClassName><InferredGenerics()>(keyHash, keysNew, valsNew));
 					}
 				}
 			}
@@ -221,7 +225,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 				return false;
 			}
 
-			HashCollisionMapNode<Generics(ds)> that = (HashCollisionMapNode<Generics(ds)>) other;
+			<hashCollisionClassName><Generics(ds)> that = (<hashCollisionClassName><Generics(ds)>) other;
 
 			if (hash != that.hash) {
 				return false;
@@ -244,7 +248,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 					<dec(key())> = keys[i];
 					<dec(val())> = vals[i];
 
-					if (<equalityDefaultForArguments(key(), key("otherKey"))> && <equalityDefaultForArguments(val(), key("otherVal"))>) {
+					if (<equalityDefaultForArguments(key(), key("otherKey"))> && <equalityDefaultForArguments(val(), val("otherVal"))>) {
 						continue outerLoop;
 					}
 				}
@@ -256,9 +260,9 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		<}>
 
 		@Override
-		Optional\<Map.Entry<GenericsExpanded(ds)>\> findByKey(Object key, int hash, int shift, Comparator\<Object\> cmp) {
+		Optional\<Map.Entry<GenericsExpanded(ds)>\> findByKey(<dec(key())>, int hash, int shift, Comparator\<Object\> cmp) {
 			for (int i = 0; i \< keys.length; i++) {
-				final K _key = keys[i];
+				<dec(key("_key"))> = keys[i];
 				if (cmp.compare(key, _key) == 0) {
 					<dec(val("_val"))> = vals[i];
 					return Optional.of(entryOf(_key, _val));
@@ -285,13 +289,13 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 		// TODO: generate instead of delegate
 		@Override
-		boolean containsKey(Object key, int keyHash, int shift) {
+		boolean containsKey(<dec(key())>, int keyHash, int shift) {
 			return containsKey(key, keyHash, shift, EqualityUtils.getDefaultEqualityComparator());
 		}
 
 		// TODO: generate instead of delegate
 		@Override
-		Optional\<java.util.Map.Entry<GenericsExpanded(ds)>\> findByKey(Object key, int keyHash, int shift) {
+		Optional\<java.util.Map.Entry<GenericsExpanded(ds)>\> findByKey(<dec(key())>, int keyHash, int shift) {
 			return findByKey(key, keyHash, shift, EqualityUtils.getDefaultEqualityComparator());
 		}
 
@@ -347,3 +351,4 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 	}"
 	;
+}

@@ -77,7 +77,7 @@ Argument key(int i) 		= key("<keyName><i>");
 Argument key(str name) 		= field("K", "<name>");
 Argument val()				= val("<valName>");
 Argument val(int i) 		= val("<valName><i>");
-Argument val(str name) 		= field("int", "<name>");
+Argument val(str name) 		= field("V", "<name>");
 
 Argument nodePos(int i) = field("byte", "<nodePosName><i>");
 Argument \node(DataStructure ds)			= field("<CompactNode(ds)><Generics(ds)>", "<nodeName>");
@@ -234,18 +234,26 @@ list[Argument] subnodePair(int i) = [ nodePos(i), \node(ds, i) ];
 str AbstractNode(DataStructure ds) = "Abstract<toString(ds)>Node";
 str CompactNode(DataStructure ds) = "Compact<toString(ds)>Node";
 
-str Generics(DataStructure ds:\map) = "\<<primitiveToClass(key()).\type>, <primitiveToClass(val()).\type>\>" when isPrimitive(key().\type) && isPrimitive(val().\type);
-str Generics(DataStructure ds:\map) = "\<<primitiveToClass(val()).\type>\>" when isPrimitive(key().\type) && !isPrimitive(val().\type);
-str Generics(DataStructure ds:\map) = "\<<primitiveToClass(key()).\type>\>" when !isPrimitive(key().\type) && isPrimitive(val().\type);
-//str Generics(DataStructure ds:\map) = "\<<primitiveToClass(key()).\type>, <primitiveToClass(val()).\type>\>";
+str Generics(DataStructure ds:\map) = "" when isPrimitive(key()) && isPrimitive(val());
+str Generics(DataStructure ds:\map) = "\<<primitiveToClass(key()).\type>, <primitiveToClass(val()).\type>\>" when !isPrimitive(key()) && !isPrimitive(val());
+str Generics(DataStructure ds:\map) = "\<<primitiveToClass(val()).\type>\>" when  isPrimitive(key()) && !isPrimitive(val());
+str Generics(DataStructure ds:\map) = "\<<primitiveToClass(key()).\type>\>" when !isPrimitive(key()) &&  isPrimitive(val());
+//default str Generics(DataStructure ds:\map) = "\<<primitiveToClass(key())>, <primitiveToClass(val())>\>";
+
+//str Generics(DataStructure ds:\map) = "\<<primitiveToClass(key())>, <primitiveToClass(val())>\>" when isPrimitive(key()) && isPrimitive(val());
+//str Generics(DataStructure ds:\map) = "\<<primitiveToClass(val())>\>" when isPrimitive(key()) && !isPrimitive(val());
+//str Generics(DataStructure ds:\map) = "\<<primitiveToClass(key())>\>" when !isPrimitive(key()) && isPrimitive(val());
+
+//str Generics(DataStructure ds:\set) = "\<<primitiveToClass(key())>\>"; // TODO
+
+
+str InferredGenerics() = "" when isPrimitive(key().\type) && isPrimitive(val().\type);
+default str InferredGenerics() = "\<\>";
 
 str GenericsExpanded(DataStructure ds:\map) = "\<<primitiveToClass(key()).\type>, <primitiveToClass(val()).\type>\>";
 str GenericsExpandedReversed(DataStructure ds:\map) = "\<<primitiveToClass(val()).\type>, <primitiveToClass(key()).\type>\>";
 
 str GenericsExpandedUpperBounded(DataStructure ds:\map) = "\<? extends <primitiveToClass(key()).\type>, ? extends <primitiveToClass(val()).\type>\>";
-
-
-str Generics(DataStructure ds:\set) = "\<<primitiveToClass(key()).\type>\>"; // TODO
 
 str GenericsDec(DataStructure ds:\map) = "\<K <GenericsDecExtentionForPrimitives(key())>, V <GenericsDecExtentionForPrimitives(val())>\>";
 str GenericsDec(DataStructure ds:\set) = "\<K <GenericsDecExtentionForPrimitives(key())>\>";
@@ -266,14 +274,11 @@ str SupplierIteratorGenerics(DataStructure ds:\set) = "\<K, K\>";
 
 str SupplierIteratorGenericsReversed(DataStructure ds:\map) = GenericsExpandedReversed(ds);
 
-str QuestionMarkGenerics(DataStructure ds:\map) = "\<?, ?\>" when isPrimitive(key().\type) && isPrimitive(val().\type);
+str QuestionMarkGenerics(DataStructure ds:\map) = "" when isPrimitive(key().\type) && isPrimitive(val().\type);
+str QuestionMarkGenerics(DataStructure ds:\map) = "\<?, ?\>" when !isPrimitive(key().\type) && !isPrimitive(val().\type);
 str QuestionMarkGenerics(DataStructure ds:\map) = "\<?\>" when !isPrimitive(key().\type) && isPrimitive(val().\type);
 str QuestionMarkGenerics(DataStructure ds:\map) = "\<?\>" when isPrimitive(key().\type) && !isPrimitive(val().\type);
 default str QuestionMarkGenerics(DataStructure ds:\map) = "\<\>";
-
-str Generics(DataStructure ds:\map) = "\<<primitiveToClass(key()).\type>, <primitiveToClass(val()).\type>\>" when isPrimitive(key().\type) && isPrimitive(val().\type);
-str Generics(DataStructure ds:\map) = "\<<primitiveToClass(val()).\type>\>" when isPrimitive(key().\type) && !isPrimitive(val().\type);
-str Generics(DataStructure ds:\map) = "\<<primitiveToClass(key()).\type>\>" when !isPrimitive(key().\type) && isPrimitive(val().\type);
 
 str QuestionMarkGenerics(DataStructure ds:\set) = "\<?\>";
 
@@ -292,16 +297,22 @@ public str nestedResult = "nestedResult";
 
 public str keyPosName = "pos";
 
-str equalityDefault(str x, str y) = "<x>.equals(<y>)";
+str equalityDefault(str x, str y) = "<x>.equals(<y>)"; // TODO: remove
+
 str equalityDefaultForArguments(Argument x, Argument y) = "<use(x)> == <use(y)>"
 	when x.\type == y.\type && isPrimitive(x.\type) && isPrimitive(y.\type);
-default str equalityDefaultForArguments(Argument x, Argument y) = "<use(x)> == <use(y)>";
+str equalityDefaultForArguments(Argument x, Argument y) = "<use(x)>.equals(<use(y)>)"
+	when x.\type == y.\type && !isPrimitive(x.\type) && !isPrimitive(y.\type);
+default str equalityDefaultForArguments(Argument x, Argument y) { throw "Ahhh"; }
 	
 
-str equalityComparator(str x, str y) = "<cmpName>.compare(<x>, <y>) == 0";
+str equalityComparator(str x, str y) = "<cmpName>.compare(<x>, <y>) == 0"; // TODO: remove
+
 str equalityComparatorForArguments(Argument x, Argument y) = "<use(x)> == <use(y)>"
 	when x.\type == y.\type && isPrimitive(x.\type) && isPrimitive(y.\type);
-default str equalityComparatorForArguments(Argument x, Argument y) = "<use(x)> == <use(y)>";	
+str equalityComparatorForArguments(Argument x, Argument y) = "<cmpName>.compare(<use(x)>, <use(y)>) == 0"
+	when x.\type == y.\type && !isPrimitive(x.\type) && !isPrimitive(y.\type);
+default str equalityComparatorForArguments(Argument x, Argument y) { throw "Ahhh"; }	
 
 str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:true) = "CompactMixed<toString(ds)>Node";
 str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:false) = "CompactNodesOnly<toString(ds)>Node";

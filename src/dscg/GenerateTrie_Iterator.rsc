@@ -149,7 +149,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 	}
 
 	private static final class <toString(ds)>EntryIterator<Generics(ds)> extends Abstract<toString(ds)>Iterator<Generics(ds)> implements
-					SupplierIterator\<Map.Entry<GenericsExpanded(ds)>, K\> {
+					SupplierIterator\<Map.Entry<GenericsExpanded(ds)>, <primitiveToClass(key()).\type>\> {
 
 		<toString(ds)>EntryIterator(<AbstractNode(ds)><Generics(ds)> rootNode) {
 			super(rootNode);

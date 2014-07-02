@@ -13,6 +13,7 @@ module dscg::GenerateTrie
 
 import IO;
 import List;
+import String;
 import util::Math;
 
 import dscg::Common;
@@ -42,13 +43,21 @@ void main() {
 			<useStructuralEquality(),true>,
 			<methodsWithComparator(),true>
 		}; // { compactionViaFieldToMethod() };
+
+		str classNamePostfix = "";
+		if (isPrimitive(key())) {
+			classNamePostfix = classNamePostfix + "_<capitalize(key().\type)>Key";
+		}	
+		if (isPrimitive(val())) {
+			classNamePostfix = classNamePostfix + "_<capitalize(val().\type)>Value";
+		}
 	
 		list[str] innerClassStrings 
 			= [ generateOptionalClassString() ]
 			+ [ generateResultClassString() ]
 			+ [ generateAbstractAnyNodeClassString(ts, setup)]
 			+ [ generateAbstractNodeClassString(ts, setup)]		
-			+ [ generateCompactNodeClassString(ts, setup)];
+			+ [ generateCompactNodeClassString(ts, setup, classNamePostfix)];
 
 		if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {
 			innerClassStrings = innerClassStrings + [ generateBitmapIndexedNodeClassString(ts, setup)];
@@ -56,8 +65,8 @@ void main() {
 
 		innerClassStrings 
 			= innerClassStrings
-			+ [ generateHashCollisionNodeClassString(ts, setup)]
-			+ [ generateIteratorClassString(ts, setup)]
+			+ [ generateHashCollisionNodeClassString(ts, setup, classNamePostfix)]
+			+ [ generateIteratorClassString(ts, setup)] // , classNamePostfix
 			;
 		
 		if (!isOptionEnabled(setup,useFixedStackIterator())) {
@@ -66,25 +75,19 @@ void main() {
 		
 		innerClassStrings 
 			= innerClassStrings
-			+ [ generateNodeIteratorClassString(ts, setup)]
-			+ [ generateCoreTransientClassString(ts, setup)]		
+			+ [ generateNodeIteratorClassString(ts, setup, classNamePostfix)]
+			+ [ generateCoreTransientClassString(ts, setup, classNamePostfix)]		
 			;
 			
 		if (isOptionEnabled(setup,useSpecialization())) {
 			innerClassStrings = innerClassStrings + 
-			[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ts, setup) | m <- [0..nMax+1], n <- [0..nMax+1], (n + m) <= nBound ];
+			[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ts, setup, classNamePostfix) | m <- [0..nMax+1], n <- [0..nMax+1], (n + m) <= nBound ];
 		}
 			
-		list[str] classStrings = [ generateCoreClassString(ts, setup, intercalate("\n", innerClassStrings)) ];	
+		list[str] classStrings = [ generateCoreClassString(ts, setup, intercalate("\n", innerClassStrings), classNamePostfix)];			
 			
 		// writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
-		if (ds == \map()) {
-			writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/TrieMap.java|, classStrings);
-		} else if (ds == \set()) {
-			writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/TrieSet.java|, classStrings);
-		} else {
-			throw "not supported";
-		}
+		writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/Trie<toString(ds)><classNamePostfix>.java|, classStrings);
 	}
 }
 	
@@ -1710,13 +1713,13 @@ default str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
 	'}"
 	;
 
-str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) {
+str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix) {
 	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + metadataArguments(n, m, ts) + contentArguments(n, m, ts);
 
-	className = "<toString(ds)><m>To<n>Node";
+	specializedClassName = "<toString(ds)><m>To<n>Node<classNamePostfix>";
 
 	return
-	"private static final class <className><Generics(ds)> extends <className_compactNode(ts, setup, n != 0, m != 0)><Generics(ds)> {
+	"private static final class <specializedClassName><Generics(ds)> extends <className_compactNode(ts, setup, n != 0, m != 0)><Generics(ds)> {
 	'	<intercalate("\n", mapper(contentArguments(n, m, ts), str(Argument a) { 
 			str dec = "private <dec(a)>;";
 			
@@ -1727,7 +1730,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 			} 
 		}))>
 				
-	'	<className>(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
+	'	<specializedClassName>(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 	'		super(mutator, <use(bitmapField)>, <use(valmapField)>);
 	'		<intercalate("\n", mapper(contentArguments(n, m, ts), str(Argument a) { 
 				str dec = "this.<use(a)> = <use(a)>;";
@@ -1888,7 +1891,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'		if (getClass() != other.getClass()) {
 	'			return false;
 	'		}
-	'		<if ((n + m) > 0) {><className><QuestionMarkGenerics(ds)> that = (<className><QuestionMarkGenerics(ds)>) other;
+	'		<if ((n + m) > 0) {><specializedClassName><QuestionMarkGenerics(ds)> that = (<specializedClassName><QuestionMarkGenerics(ds)>) other;
 	'
 	'		<generate_equalityComparisons(n, m, ts, equalityDefaultForArguments)><}>
 	'

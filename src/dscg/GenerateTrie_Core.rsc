@@ -13,7 +13,12 @@ module dscg::GenerateTrie_Core
 
 import dscg::Common;
 
-str generateCoreClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str innerClassesString) = 
+str generateCoreClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str innerClassesString, str classNamePostfix) { 
+
+	str coreClassName = "Trie<toString(ds)><classNamePostfix>";
+	str nodeIteratorClassName = "Trie<toString(ds)><classNamePostfix>NodeIterator";
+
+return 
 "/*******************************************************************************
  * Copyright (c) 2013-2014 CWI
  * All rights reserved. This program and the accompanying materials
@@ -44,10 +49,10 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 @SuppressWarnings(\"rawtypes\")
-public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded(ds)> {
+public class <coreClassName><Generics(ds)> extends AbstractImmutableMap<GenericsExpanded(ds)> {
 
 	@SuppressWarnings(\"unchecked\")
-	private static final TrieMap EMPTY_INPLACE_INDEX_MAP = new TrieMap(CompactMapNode.EMPTY_INPLACE_INDEX_NODE, 0, 0);
+	private static final <coreClassName> EMPTY_INPLACE_INDEX_MAP = new <coreClassName>(CompactMapNode.EMPTY_INPLACE_INDEX_NODE, 0, 0);
 
 	private static final boolean DEBUG = false;
 
@@ -55,7 +60,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	private final int hashCode;
 	private final int cachedSize;
 
-	TrieMap(<AbstractNode(ds)><Generics(ds)> rootNode, int hashCode, int cachedSize) {
+	<coreClassName>(<AbstractNode(ds)><Generics(ds)> rootNode, int hashCode, int cachedSize) {
 		this.rootNode = rootNode;
 		this.hashCode = hashCode;
 		this.cachedSize = cachedSize;
@@ -66,7 +71,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 
 	@SuppressWarnings(\"unchecked\")
 	public static final <Generics(ds)> ImmutableMap<GenericsExpanded(ds)> of() {
-		return TrieMap.EMPTY_INPLACE_INDEX_MAP;
+		return <coreClassName>.EMPTY_INPLACE_INDEX_MAP;
 	}
 
 	@SuppressWarnings(\"unchecked\")
@@ -75,7 +80,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 			throw new IllegalArgumentException(\"Length of argument list is uneven: no key/value pairs.\");
 		}
 
-		ImmutableMap<GenericsExpanded(ds)> result = TrieMap.EMPTY_INPLACE_INDEX_MAP;
+		ImmutableMap<GenericsExpanded(ds)> result = <coreClassName>.EMPTY_INPLACE_INDEX_MAP;
 
 		for (int i = 0; i \< keyValuePairs.length; i += 2) {
 			<dec(key())> = (<key().\type>) keyValuePairs[i];
@@ -89,7 +94,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 
 	@SuppressWarnings(\"unchecked\")
 	public static final <Generics(ds)> TransientMap<GenericsExpanded(ds)> transientOf() {
-		return TrieMap.EMPTY_INPLACE_INDEX_MAP.asTransient();
+		return <coreClassName>.EMPTY_INPLACE_INDEX_MAP.asTransient();
 	}
 
 	@SuppressWarnings(\"unchecked\")
@@ -99,7 +104,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 							\"Length of argument list is uneven: no key/value pairs.\");
 		}
 
-		final TransientMap<GenericsExpanded(ds)> result = TrieMap.EMPTY_INPLACE_INDEX_MAP.asTransient();
+		final TransientMap<GenericsExpanded(ds)> result = <coreClassName>.EMPTY_INPLACE_INDEX_MAP.asTransient();
 
 		for (int i = 0; i \< keyValuePairs.length; i += 2) {
 			<dec(key())> = (<key().\type>) keyValuePairs[i];
@@ -150,7 +155,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	}
 
 	@Override
-	public TrieMap<Generics(ds)> __put(<dec(primitiveToClass(key()))>, <dec(primitiveToClass(val()))>) {
+	public <coreClassName><Generics(ds)> __put(<dec(primitiveToClass(key()))>, <dec(primitiveToClass(val()))>) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.updated(null, key,
 						keyHash, val, 0);
@@ -160,12 +165,12 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 				final int valHashOld = result.getReplacedValue().hashCode();
 				final int valHashNew = <hashCode(val())>;
 
-				return new TrieMap<Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHashNew)
+				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHashNew)
 								- (keyHash ^ valHashOld), cachedSize);
 			}
 
 			final int valHash = <hashCode(val())>;
-			return new TrieMap<Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHash),
+			return new <coreClassName><Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHash),
 							cachedSize + 1);
 		}
 
@@ -173,7 +178,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	}
 
 	@Override
-	public TrieMap<Generics(ds)> __putEquivalent(<dec(primitiveToClass(key()))>, <dec(primitiveToClass(val()))>, Comparator\<Object\> cmp) {
+	public <coreClassName><Generics(ds)> __putEquivalent(<dec(primitiveToClass(key()))>, <dec(primitiveToClass(val()))>, Comparator\<Object\> cmp) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.updated(null, key,
 						keyHash, val, 0, cmp);
@@ -183,12 +188,12 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 				final int valHashOld = result.getReplacedValue().hashCode();
 				final int valHashNew = <hashCode(val())>;
 
-				return new TrieMap<Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHashNew)
+				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHashNew)
 								- (keyHash ^ valHashOld), cachedSize);
 			}
 
 			final int valHash = <hashCode(val())>;
-			return new TrieMap<Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHash),
+			return new <coreClassName><Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHash),
 							cachedSize + 1);
 		}
 
@@ -211,7 +216,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	}
 
 	@Override
-	public TrieMap<Generics(ds)> __remove(<dec(key())>) {
+	public <coreClassName><Generics(ds)> __remove(<dec(primitiveToClass(key()))>) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.removed(null, key,
 						keyHash, 0);
@@ -223,7 +228,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 
 			final int valHash = rootNode.findByKey(key, keyHash, 0).get().getValue().hashCode();
 
-			return new TrieMap<Generics(ds)>(result.getNode(), hashCode - (keyHash ^ valHash),
+			return new <coreClassName><Generics(ds)>(result.getNode(), hashCode - (keyHash ^ valHash),
 							cachedSize - 1);
 		}
 
@@ -231,7 +236,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	}
 
 	@Override
-	public TrieMap<Generics(ds)> __removeEquivalent(<dec(key())>, Comparator\<Object\> cmp) {
+	public <coreClassName><Generics(ds)> __removeEquivalent(<dec(primitiveToClass(key()))>, Comparator\<Object\> cmp) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.removed(null, key,
 						keyHash, 0, cmp);
@@ -244,7 +249,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 			final int valHash = rootNode.findByKey(key, keyHash, 0, cmp).get().getValue()
 							.hashCode();
 
-			return new TrieMap<Generics(ds)>(result.getNode(), hashCode - (keyHash ^ valHash),
+			return new <coreClassName><Generics(ds)>(result.getNode(), hashCode - (keyHash ^ valHash),
 							cachedSize - 1);
 		}
 
@@ -253,12 +258,22 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 
 	@Override
 	public boolean containsKey(Object o) {
-		return rootNode.containsKey(o, o.hashCode(), 0);
+		try {
+			<dec(key())> = (<key().\type>) o;
+			return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0);			
+		} catch (ClassCastException unused) {
+			return false;
+		}
 	}
 
 	@Override
 	public boolean containsKeyEquivalent(Object o, Comparator\<Object\> cmp) {
-		return rootNode.containsKey(o, o.hashCode(), 0, cmp);
+		try {
+			<dec(key())> = (<key().\type>) o;
+			return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0, cmp);			
+		} catch (ClassCastException unused) {
+			return false;
+		}
 	}
 
 	@Override
@@ -282,23 +297,33 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	}
 
 	@Override
-	public <primitiveToClass(val()).\type> get(Object key) {
-		final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(key, key.hashCode(), 0);
-
-		if (result.isPresent()) {
-			return result.get().getValue();
-		} else {
+	public <primitiveToClass(val()).\type> get(Object o) {
+		try {
+			<dec(key())> = (<key().\type>) o;
+			final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
+	
+			if (result.isPresent()) {
+				return result.get().getValue();
+			} else {
+				return null;
+			}			
+		} catch (ClassCastException unused) {
 			return null;
 		}
 	}
 
 	@Override
-	public <primitiveToClass(val()).\type> getEquivalent(Object key, Comparator\<Object\> cmp) {
-		final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(key, key.hashCode(), 0, cmp);
-
-		if (result.isPresent()) {
-			return result.get().getValue();
-		} else {
+	public <primitiveToClass(val()).\type> getEquivalent(Object o, Comparator\<Object\> cmp) {
+		try {
+			<dec(key())> = (<key().\type>) o;
+			final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
+	
+			if (result.isPresent()) {
+				return result.get().getValue();
+			} else {
+				return null;
+			}			
+		} catch (ClassCastException unused) {
 			return null;
 		}
 	}
@@ -315,12 +340,12 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 
 	@Override
 	public Iterator\<<primitiveToClass(val()).\type>\> valueIterator() {
-		return new MapValueIterator\<\>(rootNode);
+		return new MapValueIterator<InferredGenerics()>(rootNode);
 	}
 
 	@Override
 	public Iterator\<Map.Entry<GenericsExpanded(ds)>\> entryIterator() {
-		return new MapEntryIterator\<\>(rootNode);
+		return new MapEntryIterator<InferredGenerics()>(rootNode);
 	}
 
 	@Override
@@ -353,23 +378,23 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 
 				@Override
 				public int size() {
-					return TrieMap.this.size();
+					return <coreClassName>.this.size();
 				}
 
 				@Override
 				public boolean isEmpty() {
-					return TrieMap.this.isEmpty();
+					return <coreClassName>.this.isEmpty();
 				}
 
 				@SuppressWarnings(\"deprecation\")
 				@Override
 				public void clear() {
-					TrieMap.this.clear();
+					<coreClassName>.this.clear();
 				}
 
 				@Override
 				public boolean contains(Object k) {
-					return TrieMap.this.containsKey(k);
+					return <coreClassName>.this.containsKey(k);
 				}
 			};
 		}
@@ -383,7 +408,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 
 	@Override
 	public TransientMap<GenericsExpanded(ds)> asTransient() {
-		return new TransientTrieMap<Generics(ds)>(this);
+		return new Transient<coreClassName><Generics(ds)>(this);
 	}
 
 	@Override
@@ -401,8 +426,8 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 			return false;
 		}
 
-		if (other instanceof TrieMap) {
-			TrieMap<QuestionMarkGenerics(ds)> that = (TrieMap<QuestionMarkGenerics(ds)>) other;
+		if (other instanceof <coreClassName>) {
+			<coreClassName><QuestionMarkGenerics(ds)> that = (<coreClassName><QuestionMarkGenerics(ds)>) other;
 
 			if (this.size() != that.size()) {
 				return false;
@@ -426,7 +451,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	 * For analysis purposes only.
 	 */
 	protected Iterator\<<AbstractNode(ds)><Generics(ds)>\> nodeIterator() {
-		return new TrieMapNodeIterator\<\>(rootNode);
+		return new <nodeIteratorClassName><InferredGenerics()>(rootNode);
 	}
 
 	/*
@@ -479,7 +504,7 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	/*
 	 * For analysis purposes only.
 	 */
-	protected void printStatistics() {
+	public void printStatistics() {
 		final int[][] sumArityCombinations = arityCombinationsHistogram();
 		final int[] sumArity = arityHistogram();
 		final int sumNodes = getNodeCount();
@@ -525,13 +550,13 @@ public class TrieMap<Generics(ds)> extends AbstractImmutableMap<GenericsExpanded
 	<innerClassesString>
 		
 }";
-
+}
 
 str generate_bodyOf_keyIterator(DataStructure ds, rel[Option,bool] setup:{_*, <useFixedStackIterator(),true>}) = 
-	"return new MapKeyIterator\<\>(rootNode);"
+	"return new MapKeyIterator<InferredGenerics()>(rootNode);"
 	;
 	
 default str generate_bodyOf_keyIterator(DataStructure ds, rel[Option,bool] setup) =
-	"return new TrieMapIterator\<\>((CompactMapNode<Generics(ds)>) rootNode);"
+	"return new <coreClassName>Iterator<InferredGenerics()>((CompactMapNode<Generics(ds)>) rootNode);"
 	;
 	

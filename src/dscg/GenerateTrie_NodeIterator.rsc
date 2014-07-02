@@ -13,16 +13,20 @@ module dscg::GenerateTrie_NodeIterator
 
 import dscg::Common;
 
-str generateNodeIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
+str generateNodeIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix) {
+
+	str nodeIteratorClassName = "Trie<toString(ds)><classNamePostfix>NodeIterator";	
+
+	return 
 	"/**
 	 * Iterator that first iterates over inlined-values and then continues depth
 	 * first recursively.
 	 */
-	private static class Trie<toString(ds)>NodeIterator<Generics(ds)> implements Iterator\<<AbstractNode(ds)><Generics(ds)>\> {
+	private static class <nodeIteratorClassName><Generics(ds)> implements Iterator\<<AbstractNode(ds)><Generics(ds)>\> {
 
 		final Deque\<Iterator\<? extends <AbstractNode(ds)><Generics(ds)>\>\> nodeIteratorStack;
 
-		TrieMapNodeIterator(<AbstractNode(ds)><Generics(ds)> rootNode) {
+		<nodeIteratorClassName>(<AbstractNode(ds)><Generics(ds)> rootNode) {
 			nodeIteratorStack = new ArrayDeque\<\>();
 			nodeIteratorStack.push(Collections.singleton(rootNode).iterator());
 		}
@@ -64,3 +68,4 @@ str generateNodeIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 		}
 	}"
 	;
+}

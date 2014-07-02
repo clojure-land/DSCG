@@ -11,21 +11,27 @@
  */
 module dscg::GenerateTrie_CoreTransient
 
+import String;
 import dscg::Common;
 
-str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
-	"static final class TransientTrieMap<Generics(ds)> extends AbstractMap<GenericsExpanded(ds)> implements
+str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix) { 
+	
+	str className = "TransientTrie<toString(ds)><classNamePostfix>";	
+	str persistentClassName = "Trie<toString(ds)><classNamePostfix>";
+	
+	return
+	"static final class <className><Generics(ds)> extends AbstractMap<GenericsExpanded(ds)> implements
 					TransientMap<GenericsExpanded(ds)> {
 		final private AtomicReference\<Thread\> mutator;
 		private <AbstractNode(ds)><Generics(ds)> rootNode;
 		private int hashCode;
 		private int cachedSize;
 
-		TransientTrieMap(Trie<toString(ds)><Generics(ds)> trieMap) {
-			this.mutator = new AtomicReference\<Thread\>(Thread.currentThread());
-			this.rootNode = trieMap.rootNode;
-			this.hashCode = trieMap.hashCode;
-			this.cachedSize = trieMap.cachedSize;
+		<className>(<persistentClassName><Generics(ds)> <uncapitalize(persistentClassName)>) {
+			this.mutator    = new AtomicReference\<Thread\>(Thread.currentThread());
+			this.rootNode   = <uncapitalize(persistentClassName)>.rootNode;
+			this.hashCode   = <uncapitalize(persistentClassName)>.hashCode;
+			this.cachedSize = <uncapitalize(persistentClassName)>.cachedSize;
 			if (DEBUG) {
 				assert invariant();
 			}
@@ -46,33 +52,53 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 
 		@Override
 		public boolean containsKey(Object o) {
-			return rootNode.containsKey(o, o.hashCode(), 0);
-		}
-
-		@Override
-		public boolean containsKeyEquivalent(Object o, Comparator\<Object\> cmp) {
-			return rootNode.containsKey(o, o.hashCode(), 0, cmp);
-		}
-
-		@Override
-		public <primitiveToClass(val()).\type> get(Object key) {
-			final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(key, key.hashCode(), 0);
-
-			if (result.isPresent()) {
-				return result.get().getValue();
-			} else {
-				return null;
+			try {
+				<dec(key())> = (<key().\type>) o;
+				return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0);			
+			} catch (ClassCastException unused) {
+				return false;
 			}
 		}
-
+	
 		@Override
-		public <primitiveToClass(val()).\type> getEquivalent(Object key, Comparator\<Object\> cmp) {
-			final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode
-							.findByKey(key, key.hashCode(), 0, cmp);
-
-			if (result.isPresent()) {
-				return result.get().getValue();
-			} else {
+		public boolean containsKeyEquivalent(Object o, Comparator\<Object\> cmp) {
+			try {
+				<dec(key())> = (<key().\type>) o;
+				return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0, cmp);			
+			} catch (ClassCastException unused) {
+				return false;
+			}
+		}
+		
+		
+		@Override
+		public <primitiveToClass(val()).\type> get(Object o) {
+			try {
+				<dec(key())> = (<key().\type>) o;
+				final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
+		
+				if (result.isPresent()) {
+					return result.get().getValue();
+				} else {
+					return null;
+				}			
+			} catch (ClassCastException unused) {
+				return null;
+			}
+		}		
+			
+		@Override
+		public <primitiveToClass(val()).\type> getEquivalent(Object o, Comparator\<Object\> cmp) {
+			try {
+				<dec(key())> = (<key().\type>) o;
+				final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
+		
+				if (result.isPresent()) {
+					return result.get().getValue();
+				} else {
+					return null;
+				}			
+			} catch (ClassCastException unused) {
 				return null;
 			}
 		}
@@ -168,7 +194,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean __remove(<dec(key())>) {
+		public boolean __remove(<dec(primitiveToClass(key()))>) {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 
@@ -202,7 +228,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean __removeEquivalent(<dec(key())>, Comparator\<Object\> cmp) {
+		public boolean __removeEquivalent(<dec(primitiveToClass(key()))>, Comparator\<Object\> cmp) {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 			}
@@ -297,22 +323,22 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 
 					@Override
 					public int size() {
-						return TransientTrieMap.this.size();
+						return <className>.this.size();
 					}
 
 					@Override
 					public boolean isEmpty() {
-						return TransientTrieMap.this.isEmpty();
+						return <className>.this.isEmpty();
 					}
 
 					@Override
 					public void clear() {
-						TransientTrieMap.this.clear();
+						<className>.this.clear();
 					}
 
 					@Override
 					public boolean contains(Object k) {
-						return TransientTrieMap.this.containsKey(k);
+						return <className>.this.containsKey(k);
 					}
 				};
 			}
@@ -321,20 +347,20 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 
 		@Override
 		public SupplierIterator<SupplierIteratorGenerics(ds)> keyIterator() {
-			return new TransientMapKeyIterator\<\>(this);
+			return new TransientMapKeyIterator<InferredGenerics()>(this);
 		}
 
 		@Override
 		public Iterator\<<primitiveToClass(val()).\type>\> valueIterator() {
-			// return new TrieMapValueIterator\<\>(keyIterator());
-			return new MapValueIterator\<\>(rootNode); // TODO: iterator does not
+			// return new TrieMapValueIterator<InferredGenerics()>(keyIterator());
+			return new MapValueIterator<InferredGenerics()>(rootNode); // TODO: iterator does not
 														// support removal
 		}
 
 		@Override
 		public Iterator\<Map.Entry<GenericsExpanded(ds)>\> entryIterator() {
-			// return new TrieMapEntryIterator\<\>(keyIterator());
-			return new MapEntryIterator\<\>(rootNode); // TODO: iterator does not
+			// return new TrieMapEntryIterator<InferredGenerics()>(keyIterator());
+			return new MapEntryIterator<InferredGenerics()>(rootNode); // TODO: iterator does not
 														// support removal
 		}
 
@@ -345,12 +371,12 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		private static class TransientMapKeyIterator<Generics(ds)> extends AbstractMapIterator<Generics(ds)>
 						implements SupplierIterator<SupplierIteratorGenerics(ds)> {
 
-			final TransientTrie<toString(ds)><Generics(ds)> transientTrieMap;
+			final <className><Generics(ds)> <uncapitalize(className)>;
 			<primitiveToClass(key()).\type> lastKey;
 
-			TransientMapKeyIterator(TransientTrie<toString(ds)><Generics(ds)> transientTrieMap) {
-				super(transientTrieMap.rootNode);
-				this.transientTrieMap = transientTrieMap;
+			TransientMapKeyIterator(<className><Generics(ds)> <uncapitalize(className)>) {
+				super(<uncapitalize(className)>.rootNode);
+				this.<uncapitalize(className)> = <uncapitalize(className)>;
 			}
 
 			@Override
@@ -373,7 +399,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			 */
 			@Override
 			public void remove() {
-				transientTrieMap.__remove(lastKey);
+				<uncapitalize(className)>.__remove(lastKey);
 			}
 		}
 
@@ -387,8 +413,8 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 				return false;
 			}
 	
-			if (other instanceof TransientTrieMap) {
-				TransientTrieMap<QuestionMarkGenerics(ds)> that = (TransientTrieMap<QuestionMarkGenerics(ds)>) other;
+			if (other instanceof <className>) {
+				<className><QuestionMarkGenerics(ds)> that = (<className><QuestionMarkGenerics(ds)>) other;
 	
 				if (this.size() != that.size()) {
 					return false;
@@ -418,7 +444,8 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 
 			mutator.set(null);
-			return new Trie<toString(ds)><Generics(ds)>(rootNode, hashCode, cachedSize);
+			return new <persistentClassName><Generics(ds)>(rootNode, hashCode, cachedSize);
 		}
 	}"
 	;
+}
