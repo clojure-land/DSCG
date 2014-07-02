@@ -38,9 +38,13 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 
 		abstract <key().\type> getKey(int index);
 
+		<if (ds == \map()) {>
 		abstract <val().\type> getValue(int index);
+		<}>
 
+		<if (ds == \map()) {>
 		abstract java.util.Map.Entry<GenericsExpanded(ds)> getKeyValueEntry(int index);
+		<}>
 
 		abstract <AbstractNode(ds)><Generics(ds)> getNode(int index);
 

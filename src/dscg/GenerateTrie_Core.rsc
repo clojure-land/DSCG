@@ -11,6 +11,7 @@
  */
 module dscg::GenerateTrie_Core
 
+import String;
 import dscg::Common;
 
 str generateCoreClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str innerClassesString, str classNamePostfix) { 
@@ -49,10 +50,10 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 @SuppressWarnings(\"rawtypes\")
-public class <coreClassName><Generics(ds)> extends AbstractImmutableMap<GenericsExpanded(ds)> {
+public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds)><GenericsExpanded(ds)> {
 
 	@SuppressWarnings(\"unchecked\")
-	private static final <coreClassName> EMPTY_INPLACE_INDEX_MAP = new <coreClassName>(CompactMapNode.EMPTY_INPLACE_INDEX_NODE, 0, 0);
+	private static final <coreClassName> EMPTY_INPLACE_INDEX_MAP = new <coreClassName>(Compact<toString(ds)>Node.EMPTY_INPLACE_INDEX_NODE, 0, 0);
 
 	private static final boolean DEBUG = false;
 
@@ -70,17 +71,17 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutableMap<Generics
 	}
 
 	@SuppressWarnings(\"unchecked\")
-	public static final <Generics(ds)> ImmutableMap<GenericsExpanded(ds)> of() {
+	public static final <Generics(ds)> Immutable<toString(ds)><GenericsExpanded(ds)> of() {
 		return <coreClassName>.EMPTY_INPLACE_INDEX_MAP;
 	}
 
 	@SuppressWarnings(\"unchecked\")
-	public static final <Generics(ds)> ImmutableMap<GenericsExpanded(ds)> of(Object... keyValuePairs) {
+	public static final <Generics(ds)> Immutable<toString(ds)><GenericsExpanded(ds)> of(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
 			throw new IllegalArgumentException(\"Length of argument list is uneven: no key/value pairs.\");
 		}
 
-		ImmutableMap<GenericsExpanded(ds)> result = <coreClassName>.EMPTY_INPLACE_INDEX_MAP;
+		Immutable<toString(ds)><GenericsExpanded(ds)> result = <coreClassName>.EMPTY_INPLACE_INDEX_MAP;
 
 		for (int i = 0; i \< keyValuePairs.length; i += 2) {
 			<dec(key())> = (<key().\type>) keyValuePairs[i];
@@ -93,18 +94,18 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutableMap<Generics
 	}
 
 	@SuppressWarnings(\"unchecked\")
-	public static final <Generics(ds)> TransientMap<GenericsExpanded(ds)> transientOf() {
+	public static final <Generics(ds)> Transient<toString(ds)><GenericsExpanded(ds)> transientOf() {
 		return <coreClassName>.EMPTY_INPLACE_INDEX_MAP.asTransient();
 	}
 
 	@SuppressWarnings(\"unchecked\")
-	public static final <Generics(ds)> TransientMap<GenericsExpanded(ds)> transientOf(Object... keyValuePairs) {
+	public static final <Generics(ds)> Transient<toString(ds)><GenericsExpanded(ds)> transientOf(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
 			throw new IllegalArgumentException(
 							\"Length of argument list is uneven: no key/value pairs.\");
 		}
 
-		final TransientMap<GenericsExpanded(ds)> result = <coreClassName>.EMPTY_INPLACE_INDEX_MAP.asTransient();
+		final Transient<toString(ds)><GenericsExpanded(ds)> result = <coreClassName>.EMPTY_INPLACE_INDEX_MAP.asTransient();
 
 		for (int i = 0; i \< keyValuePairs.length; i += 2) {
 			<dec(key())> = (<key().\type>) keyValuePairs[i];
@@ -201,16 +202,16 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutableMap<Generics
 	}
 
 	@Override
-	public ImmutableMap<GenericsExpanded(ds)> __putAll(Map<GenericsExpandedUpperBounded(ds)> map) {
-		TransientMap<GenericsExpanded(ds)> tmp = asTransient();
+	public Immutable<toString(ds)><GenericsExpanded(ds)> __putAll(<toString(ds)><GenericsExpandedUpperBounded(ds)> map) {
+		Transient<toString(ds)><GenericsExpanded(ds)> tmp = asTransient();
 		tmp.__putAll(map);
 		return tmp.freeze();
 	}
 
 	@Override
-	public ImmutableMap<GenericsExpanded(ds)> __putAllEquivalent(Map<GenericsExpandedUpperBounded(ds)> map,
+	public Immutable<toString(ds)><GenericsExpanded(ds)> __putAllEquivalent(<toString(ds)><GenericsExpandedUpperBounded(ds)> map,
 					Comparator\<Object\> cmp) {
-		TransientMap<GenericsExpanded(ds)> tmp = asTransient();
+		Transient<toString(ds)><GenericsExpanded(ds)> tmp = asTransient();
 		tmp.__putAllEquivalent(map, cmp);
 		return tmp.freeze();
 	}
@@ -340,12 +341,12 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutableMap<Generics
 
 	@Override
 	public Iterator\<<primitiveToClass(val()).\type>\> valueIterator() {
-		return new MapValueIterator<InferredGenerics()>(rootNode);
+		return new <toString(ds)>ValueIterator<InferredGenerics()>(rootNode);
 	}
 
 	@Override
 	public Iterator\<Map.Entry<GenericsExpanded(ds)>\> entryIterator() {
-		return new MapEntryIterator<InferredGenerics()>(rootNode);
+		return new <toString(ds)>EntryIterator<InferredGenerics()>(rootNode);
 	}
 
 	@Override
@@ -557,6 +558,6 @@ str generate_bodyOf_keyIterator(DataStructure ds, rel[Option,bool] setup:{_*, <u
 	;
 	
 default str generate_bodyOf_keyIterator(DataStructure ds, rel[Option,bool] setup) =
-	"return new <coreClassName>Iterator<InferredGenerics()>((CompactMapNode<Generics(ds)>) rootNode);"
+	"return new <coreClassName>Iterator<InferredGenerics()>((Compact<toString(ds)>Node<Generics(ds)>) rootNode);"
 	;
 	

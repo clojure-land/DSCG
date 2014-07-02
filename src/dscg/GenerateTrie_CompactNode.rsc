@@ -84,12 +84,14 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		 */
 		abstract <key().\type> headKey();
 
+		<if (ds == \map()) {>
 		/**
 		 * Returns the first value stored within this node.
 		 * 
 		 * @return first value
 		 */
 		abstract <val().\type> headVal();
+		<}>
 
 		@Override
 		abstract <CompactNode(ds)><Generics(ds)> getNode(int index);
@@ -676,7 +678,12 @@ list[Argument] metadataArguments(int n, int m, ts:___expandedTrieSpecifics(ds, b
 	= [ ___bitmapField(bitPartitionSize), ___valmapField(bitPartitionSize) ]
 	;
 
-list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) 
+list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound)) 
 	= [ key(i), val(i) | i <- [1..m+1]] 
+	+ [ \node(ds, i)   | i <- [1..n+1]]
+	;	
+
+list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound)) 
+	= [ key(i)         | i <- [1..m+1]] 
 	+ [ \node(ds, i)   | i <- [1..n+1]]
 	;	

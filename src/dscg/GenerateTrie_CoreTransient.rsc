@@ -20,8 +20,8 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 	str persistentClassName = "Trie<toString(ds)><classNamePostfix>";
 	
 	return
-	"static final class <className><Generics(ds)> extends AbstractMap<GenericsExpanded(ds)> implements
-					TransientMap<GenericsExpanded(ds)> {
+	"static final class <className><Generics(ds)> extends Abstract<toString(ds)><GenericsExpanded(ds)> implements
+					Transient<toString(ds)><GenericsExpanded(ds)> {
 		final private AtomicReference\<Thread\> mutator;
 		private <AbstractNode(ds)><Generics(ds)> rootNode;
 		private int hashCode;
@@ -37,7 +37,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 		}
 
-		// TODO: merge with TrieMap invariant (as function)
+		// TODO: merge with Trie<toString(ds)> invariant (as function)
 		private boolean invariant() {
 			int _hash = 0;
 
@@ -262,7 +262,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean __putAll(Map<GenericsExpandedUpperBounded(ds)> map) {
+		public boolean __putAll(<toString(ds)><GenericsExpandedUpperBounded(ds)> map) {
 			boolean modified = false;
 
 			for (Entry<GenericsExpandedUpperBounded(ds)> entry : map.entrySet()) {
@@ -278,7 +278,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean __putAllEquivalent(Map<GenericsExpandedUpperBounded(ds)> map, Comparator\<Object\> cmp) {
+		public boolean __putAllEquivalent(<toString(ds)><GenericsExpandedUpperBounded(ds)> map, Comparator\<Object\> cmp) {
 			boolean modified = false;
 
 			for (Entry<GenericsExpandedUpperBounded(ds)> entry : map.entrySet()) {
@@ -347,20 +347,20 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 
 		@Override
 		public SupplierIterator<SupplierIteratorGenerics(ds)> keyIterator() {
-			return new TransientMapKeyIterator<InferredGenerics()>(this);
+			return new Transient<toString(ds)>KeyIterator<InferredGenerics()>(this);
 		}
 
 		@Override
 		public Iterator\<<primitiveToClass(val()).\type>\> valueIterator() {
-			// return new TrieMapValueIterator<InferredGenerics()>(keyIterator());
-			return new MapValueIterator<InferredGenerics()>(rootNode); // TODO: iterator does not
+			// return new Trie<toString(ds)>ValueIterator<InferredGenerics()>(keyIterator());
+			return new <toString(ds)>ValueIterator<InferredGenerics()>(rootNode); // TODO: iterator does not
 														// support removal
 		}
 
 		@Override
 		public Iterator\<Map.Entry<GenericsExpanded(ds)>\> entryIterator() {
 			// return new TrieMapEntryIterator<InferredGenerics()>(keyIterator());
-			return new MapEntryIterator<InferredGenerics()>(rootNode); // TODO: iterator does not
+			return new <toString(ds)>EntryIterator<InferredGenerics()>(rootNode); // TODO: iterator does not
 														// support removal
 		}
 
@@ -368,13 +368,13 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		 * Iterator that first iterates over inlined-values and then continues
 		 * depth first recursively.
 		 */
-		private static class TransientMapKeyIterator<Generics(ds)> extends AbstractMapIterator<Generics(ds)>
+		private static class Transient<toString(ds)>KeyIterator<Generics(ds)> extends Abstract<toString(ds)>Iterator<Generics(ds)>
 						implements SupplierIterator<SupplierIteratorGenerics(ds)> {
 
 			final <className><Generics(ds)> <uncapitalize(className)>;
 			<primitiveToClass(key()).\type> lastKey;
 
-			TransientMapKeyIterator(<className><Generics(ds)> <uncapitalize(className)>) {
+			Transient<toString(ds)>KeyIterator(<className><Generics(ds)> <uncapitalize(className)>) {
 				super(<uncapitalize(className)>.rootNode);
 				this.<uncapitalize(className)> = <uncapitalize(className)>;
 			}
