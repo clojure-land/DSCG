@@ -109,6 +109,6 @@ str arraycopyAndMigrateFromNodeTupleToDataTuple(Argument src, Argument dst, int 
 		System.arraycopy(<use(src)>, 0, <use(dst)>, 0, <use(newAtIndex)>);
 		<for (i <- [0..newTupleSize]) {><use(dst)>[<use(newAtIndex)> + <i>] = <use(new[i])>;<}>
 		System.arraycopy(<use(src)>, <use(newAtIndex)>, <use(dst)>, <use(newAtIndex)> + <newTupleSize>, <use(oldAtIndex)> - <use(newAtIndex)>);
-		System.arraycopy(<use(src)>, <use(oldAtIndex)> + <oldTupleSize>, <use(dst)>, <use(oldAtIndex)> + <oldTupleSize>, <use(src)>.length - <use(oldAtIndex)> - <oldTupleSize>);
+		System.arraycopy(<use(src)>, <use(oldAtIndex)> + <oldTupleSize>, <use(dst)>, <use(oldAtIndex)> + <newTupleSize>, <use(src)>.length - <use(oldAtIndex)> - <oldTupleSize>);
 		";
 }
