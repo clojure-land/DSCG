@@ -14,46 +14,36 @@ module dscg::GenerateTrie_HashCollisionNode
 import dscg::Common;
 import dscg::ArrayUtils;
 
+str hashCollisionClassName = "TODO: REMOVE THIS GLOBAL STATE!";
+
 str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix) {
 
-	str hashCollisionClassName = "HashCollision<toString(ds)>Node<classNamePostfix>";
+	hashCollisionClassName = "HashCollision<toString(ds)>Node<classNamePostfix>";
 
 	return  
 	"private static final class <hashCollisionClassName><Generics(ds)> extends <CompactNode(ds)><Generics(ds)> {
 		private final <key().\type>[] keys;
-		private final <val().\type>[] vals;
+		<if (ds == \map()) {>private final <val().\type>[] vals;<}>
 		private final int hash;
 
-		<hashCollisionClassName>(final int hash, final <key().\type>[] keys, <val().\type>[] vals) {
+		<hashCollisionClassName>(final int hash, final <key().\type>[] keys<if (ds == \map()) {>, <val().\type>[] vals<}>) {
 			this.keys = keys;
-			this.vals = vals;
+			<if (ds == \map()) {>this.vals = vals;<}>
 			this.hash = hash;
 
 			assert payloadArity() \>= 2;
 		}
 
-		@Override
-		SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator() {
-			// TODO: change representation of keys and values
-			assert keys.length == vals.length;
+		<generate_payloadIterator(ts, setup)>
 
-			final Object[] keysAndVals = new Object[keys.length + vals.length];
+		@Override
+		public String toString() {			
+			<if (ds == \map()) {>final Object[] keysAndVals = new Object[keys.length + vals.length];
 			for (int i = 0; i \< keys.length; i++) {
 				keysAndVals[2 * i] = keys[i];
 				keysAndVals[2 * i + 1] = vals[i];
 			}
-
-			return ArrayKeyValueIterator.of(keysAndVals);
-		}
-
-		@Override
-		public String toString() {
-			final Object[] keysAndVals = new Object[keys.length + vals.length];
-			for (int i = 0; i \< keys.length; i++) {
-				keysAndVals[2 * i] = keys[i];
-				keysAndVals[2 * i + 1] = vals[i];
-			}
-			return Arrays.toString(keysAndVals);
+			return Arrays.toString(keysAndVals);<} else {>return Arrays.toString(keys);<}>
 		}
 
 		@Override
@@ -67,90 +57,55 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			return keys[0];
 		}
 
+		<if (ds == \map()) {>
 		@Override
 		<val().\type> headVal() {
 			assert hasPayload();
 			return vals[0];
 		}
+		<}>
 
-		@Override
-		public boolean containsKey(<dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp) {
-			if (this.hash == keyHash) {
-				for (<key().\type> k : keys) {
-					if (cmp.compare(k, key) == 0) {
-						return true;
-					}
-				}
-			}
-			return false;
-		}
+	'	@Override
+	'	public boolean containsKey(<dec(key())>, int keyHash, int shift) {
+	'		<generate_bodyOf_HashCollisionNode_containsKey(ts, setup, equalityDefaultForArguments)>			
+	'	}
 
-		/**
-		 * Inserts an object if not yet present. Note, that this implementation
-		 * always returns a new immutable {@link TrieMap} instance.
-		 */
-		@Override
-		Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(key())>, int keyHash, <dec(val())>, int shift, Comparator\<Object\> cmp) {
-			if (this.hash != keyHash) {
-				return Result.modified(mergeNodes(this, this.hash, key, keyHash, val, shift));
-			}
+	'	@Override
+	'	public boolean containsKey(<dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp) {
+	'		<generate_bodyOf_HashCollisionNode_containsKey(ts, setup, equalityComparatorForArguments)>
+	'	}
+		
+	'	@Override
+	'	Optional<KeyOrMapEntryGenerics(ds)> findByKey(<dec(key())>, int hash, int shift) {
+	'		<generate_bodyOf_HashCollisionNode_findByKey(ts, setup, equalityDefaultForArguments)>			
+	'	}
 
-			for (int idx = 0; idx \< keys.length; idx++) {
-				if (cmp.compare(keys[idx], key) == 0) {
+	'	@Override
+	'	Optional<KeyOrMapEntryGenerics(ds)> findByKey(<dec(key())>, int hash, int shift, Comparator\<Object\> cmp) {
+	'		<generate_bodyOf_HashCollisionNode_findByKey(ts, setup, equalityComparatorForArguments)>
+	'	}		
 
-					<dec(val("currentVal"))> = vals[idx];
+	'	@Override
+	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts))>, int keyHash, int shift) {
+	'		<generate_bodyOf_HashCollisionNode_updated(ts, setup, equalityDefaultForArguments)>
+	'	}
 
-					if (cmp.compare(currentVal, val) == 0) {
-						return Result.unchanged(this);
-					}
+	'	@Override
+	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts))>, int keyHash, int shift, Comparator\<Object\> cmp) {
+	'		<generate_bodyOf_HashCollisionNode_updated(ts, setup, equalityComparatorForArguments)>
+	'	}
 
-					<dec(field("<val().\type>[]", "src"))> = this.vals;
-					<arraycopyAndSetTuple(field("<val().\type>[]", "src"), field("<val().\type>[]", "dst"), 1, [val()], field("int", "idx"))>
+	'	@SuppressWarnings(\"unchecked\")
+	'	@Override
+	'	Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, <dec(key())>, int keyHash, int shift) {
+	'		<generate_bodyOf_HashCollisionNode_removed(ts, setup, equalityDefaultForArguments)>
+	'	}
 
-					final <CompactNode(ds)><Generics(ds)> thisNew = new <hashCollisionClassName><InferredGenerics()>(this.hash, this.keys, dst);
-
-					return Result.updated(thisNew, currentVal);
-				}
-			}
-
-			<arraycopyAndInsertTuple(field("<key().\type>[]", "this.keys"), field("<key().\type>[]", "keysNew"), 1, [key()], field("int", "keys.length"))>
-			<arraycopyAndInsertTuple(field("<val().\type>[]", "this.vals"), field("<val().\type>[]", "valsNew"), 1, [val()], field("int", "vals.length"))>
-
-			return Result.modified(new <hashCollisionClassName><InferredGenerics()>(keyHash, keysNew, valsNew));
-		}
-
-		/**
-		 * Removes an object if present. Note, that this implementation always
-		 * returns a new immutable {@link TrieMap} instance.
-		 */
-		@SuppressWarnings(\"unchecked\")
-		@Override
-		Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator,
-						<dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp) {
-			for (int idx = 0; idx \< keys.length; idx++) {
-				if (cmp.compare(keys[idx], key) == 0) {
-					if (this.arity() == 1) {
-						return Result.modified(<CompactNode(ds)>.<Generics(ds)> nodeOf(mutator));
-					} else if (this.arity() == 2) {
-						/*
-						 * Create root node with singleton element. This node
-						 * will be a) either be the new root returned, or b)
-						 * unwrapped and inlined.
-						 */
-						<dec(key("theOtherKey"))> = (idx == 0) ? keys[1] : keys[0];
-						<dec(val("theOtherVal"))> = (idx == 0) ? vals[1] : vals[0];
-						return <CompactNode(ds)>.<Generics(ds)> nodeOf(mutator).updated(mutator,
-										theOtherKey, keyHash, theOtherVal, 0, cmp);
-					} else {
-						<arraycopyAndRemoveTuple(field("<key().\type>[]", "this.keys"), field("<key().\type>[]", "keysNew"), 1, field("int", "idx"))>
-						<arraycopyAndRemoveTuple(field("<val().\type>[]", "this.vals"), field("<val().\type>[]", "valsNew"), 1, field("int", "idx"))>
-
-						return Result.modified(new <hashCollisionClassName><InferredGenerics()>(keyHash, keysNew, valsNew));
-					}
-				}
-			}
-			return Result.unchanged(this);
-		}
+	'	@SuppressWarnings(\"unchecked\")
+	'	@Override
+	'	Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, <dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp) {
+	'		<generate_bodyOf_HashCollisionNode_removed(ts, setup, equalityComparatorForArguments)>
+	'	}
 
 		@Override
 		boolean hasPayload() {
@@ -187,15 +142,19 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			return keys[index];
 		}
 
+		<if (ds == \map()) {>
 		@Override
 		<val().\type> getValue(int index) {
 			return vals[index];
 		}
+		<}>
 
+		<if (ds == \map()) {>
 		@Override
 		Map.Entry<GenericsExpanded(ds)> getKeyValueEntry(int index) {
 			return entryOf(keys[index], vals[index]);
 		}
+		<}>
 
 		@Override
 		public <CompactNode(ds)><Generics(ds)> getNode(int index) {
@@ -208,8 +167,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			final int prime = 31;
 			int result = 0;
 			result = prime * result + hash;
-			result = prime * result + Arrays.hashCode(keys);
-			result = prime * result + Arrays.hashCode(vals);
+			result = prime * result + Arrays.hashCode(keys);<if (ds == \map()) {>result = prime * result + Arrays.hashCode(vals);<}>
 			return result;
 		}
 
@@ -259,46 +217,6 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 		<}>
 
-		@Override
-		Optional\<Map.Entry<GenericsExpanded(ds)>\> findByKey(<dec(key())>, int hash, int shift, Comparator\<Object\> cmp) {
-			for (int i = 0; i \< keys.length; i++) {
-				<dec(key("_key"))> = keys[i];
-				if (cmp.compare(key, _key) == 0) {
-					<dec(val("_val"))> = vals[i];
-					return Optional.of(entryOf(_key, _val));
-				}
-			}
-			return Optional.empty();
-		}
-
-		// TODO: generate instead of delegate
-		@Override
-		Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator,
-						<dec(key())>, int keyHash, <dec(val())>, int shift) {
-			return updated(mutator, key, keyHash, val, shift,
-							EqualityUtils.getDefaultEqualityComparator());
-		}
-
-		// TODO: generate instead of delegate
-		@Override
-		Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator,
-						<dec(key())>, int keyHash, int shift) {
-			return removed(mutator, key, keyHash, shift,
-							EqualityUtils.getDefaultEqualityComparator());
-		}
-
-		// TODO: generate instead of delegate
-		@Override
-		boolean containsKey(<dec(key())>, int keyHash, int shift) {
-			return containsKey(key, keyHash, shift, EqualityUtils.getDefaultEqualityComparator());
-		}
-
-		// TODO: generate instead of delegate
-		@Override
-		Optional\<java.util.Map.Entry<GenericsExpanded(ds)>\> findByKey(<dec(key())>, int keyHash, int shift) {
-			return findByKey(key, keyHash, shift, EqualityUtils.getDefaultEqualityComparator());
-		}
-
 		<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>
 		@Override
 		<CompactNode(ds)><Generics(ds)> convertToGenericNode() {
@@ -306,49 +224,177 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 		<}>
 
+		<if (ds == \map()) {>
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(val())>) {
-			// TODO Auto-generated method stub
-			return null;
+			throw new UnsupportedOperationException();
 		}
+		<}>
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(key())>, <dec(val())>) {
-			// TODO Auto-generated method stub
-			return null;
+		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(payloadTuple(ts))>) {
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
-			// TODO Auto-generated method stub
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
-			// TODO Auto-generated method stub
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
-			// TODO Auto-generated method stub
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
 						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
-			// TODO Auto-generated method stub
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
 						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
-			// TODO Auto-generated method stub
-			return null;
+			throw new UnsupportedOperationException();
 		}
 	}"
 	;
 }
+
+str generate_bodyOf_HashCollisionNode_updated(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) =
+"if (this.hash != keyHash) {
+	return Result.modified(mergeNodes(this, this.hash, <use(payloadTuple(ts))>, keyHash, shift));
+}
+
+for (int idx = 0; idx \< keys.length; idx++) {
+	if (<eq(key("keys[idx]"), key())>) {
+	
+		<if (ds == \map()) {>	
+			<dec(val("currentVal"))> = vals[idx];
+
+			if (<eq(val("currentVal"), val())>)) {
+				return Result.unchanged(this);
+			}
+
+			<dec(field("<val().\type>[]", "src"))> = this.vals;
+			<arraycopyAndSetTuple(field("<val().\type>[]", "src"), field("<val().\type>[]", "dst"), 1, [val()], field("int", "idx"))>
+
+			final <CompactNode(ds)><Generics(ds)> thisNew = new <hashCollisionClassName><InferredGenerics()>(this.hash, this.keys, dst);
+
+			return Result.updated(thisNew, currentVal);
+		<} else {>
+			return Result.unchanged(this);
+		<}>
+	}
+}
+
+<arraycopyAndInsertTuple(field("<key().\type>[]", "this.keys"), field("<key().\type>[]", "keysNew"), 1, [key()], field("int", "keys.length"))>
+<if (ds == \map()) {><arraycopyAndInsertTuple(field("<val().\type>[]", "this.vals"), field("<val().\type>[]", "valsNew"), 1, [val()], field("int", "vals.length"))><}>
+
+return Result.modified(new <hashCollisionClassName><InferredGenerics()>(keyHash, keysNew<if (ds == \map()) {>, valsNew<}>));"; 
+
+
+str generate_bodyOf_HashCollisionNode_removed(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = "
+for (int idx = 0; idx \< keys.length; idx++) {
+	if (<eq(key("keys[idx]"), key())>) {
+		if (this.arity() == 1) {
+			return Result.modified(<CompactNode(ds)>.<Generics(ds)> nodeOf(mutator));
+		} else if (this.arity() == 2) {
+			/*
+			 * Create root node with singleton element. This node
+			 * will be a) either be the new root returned, or b)
+			 * unwrapped and inlined.
+			 */
+			<dec(key("theOtherKey"))> = (idx == 0) ? keys[1] : keys[0];
+			<if (ds == \map()) {><dec(val("theOtherVal"))> = (idx == 0) ? vals[1] : vals[0];<}>
+			return <CompactNode(ds)>.<Generics(ds)> nodeOf(mutator).updated(mutator,
+							theOtherKey<if (ds == \map()) {>, theOtherVal<}>, keyHash, 0<if (!(eq == equalityDefaultForArguments)) {>, cmp<}>);
+		} else {
+			<arraycopyAndRemoveTuple(field("<key().\type>[]", "this.keys"), field("<key().\type>[]", "keysNew"), 1, field("int", "idx"))>
+			<if (ds == \map()) {><arraycopyAndRemoveTuple(field("<val().\type>[]", "this.vals"), field("<val().\type>[]", "valsNew"), 1, field("int", "idx"))><}>
+
+			return Result.modified(new <hashCollisionClassName><InferredGenerics()>(keyHash, keysNew<if (ds == \map()) {>, valsNew<}>));
+		}
+	}
+}
+return Result.unchanged(this);
+";
+
+
+str generate_bodyOf_HashCollisionNode_containsKey(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
+"
+if (this.hash == keyHash) {
+	for (<key().\type> k : keys) {
+		if (<eq(key("k"), key())>) {
+			return true;
+		}
+	}
+}
+return false;
+";
+
+
+str generate_bodyOf_HashCollisionNode_findByKey(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
+	"
+	for (int i = 0; i \< keys.length; i++) {
+		<dec(key("_key"))> = keys[i];
+		if (<eq(key(), key("_key"))>) {
+			<dec(val("_val"))> = vals[i];
+			return Optional.of(entryOf(_key, _val));
+		}
+	}
+	return Optional.empty();
+	"
+	;
+
+
+str generate_bodyOf_HashCollisionNode_findByKey(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
+	"
+	for (int i = 0; i \< keys.length; i++) {
+		<dec(key("_key"))> = keys[i];
+		if (<eq(key(), key("_key"))>) {
+			return Optional.of(_key);
+		}
+	}
+	return Optional.empty();
+	"
+	;
+
+
+str generate_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
+	"
+	@Override
+	SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator() {			
+		// TODO: change representation of keys and values
+		assert keys.length == vals.length;
+	
+		final Object[] keysAndVals = new Object[keys.length + vals.length];
+		for (int i = 0; i \< keys.length; i++) {
+			keysAndVals[2 * i] = keys[i];
+			keysAndVals[2 * i + 1] = vals[i];
+		}
+	
+		return ArrayKeyValueIterator.of(keysAndVals);
+	}
+	"
+	;
+	
+str generate_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
+	"
+	@Override
+	SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator() {			
+		final Object[] keysAndVals = new Object[2 * keys.length];
+		for (int i = 0; i \< keys.length; i++) {
+			keysAndVals[2 * i] = keys[i];
+			keysAndVals[2 * i + 1] = keys[i];
+		}
+	
+		return ArrayKeyValueIterator.of(keysAndVals);
+	}
+	"
+	;	

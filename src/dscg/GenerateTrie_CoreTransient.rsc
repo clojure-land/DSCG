@@ -11,8 +11,10 @@
  */
 module dscg::GenerateTrie_CoreTransient
 
+import List;
 import String;
 import dscg::Common;
+import dscg::GenerateTrie_Core_Common;
 
 str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix) { 
 	
@@ -33,25 +35,14 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			this.hashCode   = <uncapitalize(persistentClassName)>.hashCode;
 			this.cachedSize = <uncapitalize(persistentClassName)>.cachedSize;
 			if (DEBUG) {
-				assert invariant();
+				assert checkHashCodeAndSize(hashCode, cachedSize);
 			}
 		}
-
-		// TODO: merge with Trie<toString(ds)> invariant (as function)
-		private boolean invariant() {
-			int _hash = 0;
-
-			for (Iterator\<Map.Entry<GenericsExpanded(ds)>\> it = entryIterator(); it.hasNext();) {
-				final Map.Entry<GenericsExpanded(ds)> entry = it.next();
-
-				_hash += entry.getKey().hashCode() ^ entry.getValue().hashCode();
-			}
-
-			return this.hashCode == _hash;
-		}
+		
+		<generate_checkHashCodeAndSize(ts, setup)>	
 
 		@Override
-		public boolean containsKey(Object o) {
+		public boolean <containsKeyMethodName(ds)>(Object o) {
 			try {
 				<dec(key())> = (<key().\type>) o;
 				return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0);			
@@ -61,7 +52,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 	
 		@Override
-		public boolean containsKeyEquivalent(Object o, Comparator\<Object\> cmp) {
+		public boolean <containsKeyMethodName(ds)>Equivalent(Object o, Comparator\<Object\> cmp) {
 			try {
 				<dec(key())> = (<key().\type>) o;
 				return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0, cmp);			
@@ -72,13 +63,13 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		
 		
 		@Override
-		public <primitiveToClass(val()).\type> get(Object o) {
+		public <dsAtFunction__range_type(ds)> get(Object o) {
 			try {
 				<dec(key())> = (<key().\type>) o;
-				final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
+				final Optional<KeyOrMapEntryGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
 		
 				if (result.isPresent()) {
-					return result.get().getValue();
+					return result.get()<if (ds == \map()) {>.getValue()<}>;
 				} else {
 					return null;
 				}			
@@ -88,13 +79,13 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}		
 			
 		@Override
-		public <primitiveToClass(val()).\type> getEquivalent(Object o, Comparator\<Object\> cmp) {
+		public <dsAtFunction__range_type(ds)> getEquivalent(Object o, Comparator\<Object\> cmp) {
 			try {
 				<dec(key())> = (<key().\type>) o;
-				final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
+				final Optional<KeyOrMapEntryGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
 		
 				if (result.isPresent()) {
-					return result.get().getValue();
+					return result.get()<if (ds == \map()) {>.getValue()<}>;
 				} else {
 					return null;
 				}			
@@ -103,95 +94,8 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 		}
 
-		@Override
-		public <primitiveToClass(val()).\type> __put(<dec(primitiveToClass(key()))>, <dec(primitiveToClass(val()))>) {
-			if (mutator.get() == null) {
-				throw new IllegalStateException(\"Transient already frozen.\");
-			}
-
-			final int keyHash = key.hashCode();
-			final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, key, keyHash, val, 0);
-
-			if (result.isModified()) {
-				rootNode = result.getNode();
-
-				if (result.hasReplacedValue()) {
-					<dec(val("old"))> = result.getReplacedValue();
-
-					final int valHashOld = <hashCode(val("old"))>;
-					final int valHashNew = <hashCode(val())>;
-
-					hashCode += keyHash ^ valHashNew;
-					hashCode -= keyHash ^ valHashOld;
-					// cachedSize remains same
-
-					if (DEBUG) {
-						assert invariant();
-					}
-					return old;
-				} else {
-					final int valHashNew = <hashCode(val())>;
-
-					hashCode += keyHash ^ valHashNew;
-					cachedSize += 1;
-
-					if (DEBUG) {
-						assert invariant();
-					}
-					return null;
-				}
-			}
-
-			if (DEBUG) {
-				assert invariant();
-			}
-			return null;
-		}
-
-		@Override
-		public <primitiveToClass(val()).\type> __putEquivalent(<dec(primitiveToClass(key()))>, <dec(primitiveToClass(val()))>, Comparator\<Object\> cmp) {
-			if (mutator.get() == null) {
-				throw new IllegalStateException(\"Transient already frozen.\");
-			}
-
-			final int keyHash = key.hashCode();
-			final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, key, keyHash, val, 0, cmp);
-
-			if (result.isModified()) {
-				rootNode = result.getNode();
-
-				if (result.hasReplacedValue()) {
-					<dec(val("old"))> = result.getReplacedValue();
-
-					final int valHashOld = <hashCode(val("old"))>;
-					final int valHashNew = <hashCode(val())>;
-
-					hashCode += keyHash ^ valHashNew;
-					hashCode -= keyHash ^ valHashOld;
-					// cachedSize remains same
-
-					if (DEBUG) {
-						assert invariant();
-					}
-					return old;
-				} else {
-					final int valHashNew = <hashCode(val())>;
-
-					hashCode += keyHash ^ valHashNew;
-					cachedSize += 1;
-
-					if (DEBUG) {
-						assert invariant();
-					}
-					return null;
-				}
-			}
-
-			if (DEBUG) {
-				assert invariant();
-			}
-			return null;
-		}
+		<insertOrPut(ts, setup, useComparator = false)>
+		<insertOrPut(ts, setup, useComparator = true )>
 
 		@Override
 		public boolean __remove(<dec(primitiveToClass(key()))>) {
@@ -201,28 +105,38 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 
 			final int keyHash = key.hashCode();
-			final Result<ResultGenerics(ds)> result = rootNode.removed(mutator,
-							key, keyHash, 0);
+			final Result<ResultGenerics(ds)> result = rootNode.removed(mutator, key, keyHash, 0);
 
 			if (result.isModified()) {
-				// TODO: carry deleted value in result
-				// assert result.hasReplacedValue();
-				// final int valHash = result.getReplacedValue().hashCode();
-
-				final int valHash = rootNode.findByKey(key, keyHash, 0).get().getValue().hashCode();
-
-				rootNode = result.getNode();
-				hashCode -= keyHash ^ valHash;
-				cachedSize -= 1;
-
-				if (DEBUG) {
-					assert invariant();
-				}
-				return true;
+				<if (ds == \map()) {>
+					// TODO: carry deleted value in result
+					// assert result.hasReplacedValue();
+					// final int valHash = result.getReplacedValue().hashCode();
+	
+					final int valHash = rootNode.findByKey(key, keyHash, 0).get()<if(ds == \map()) {>.getValue()<}>.hashCode();
+	
+					rootNode = result.getNode();
+					hashCode -= keyHash ^ valHash;
+					cachedSize -= 1;
+	
+					if (DEBUG) {
+						assert checkHashCodeAndSize(hashCode, cachedSize);
+					}
+					return true;
+				<} else {>
+					rootNode = result.getNode();
+					hashCode -= keyHash;
+					cachedSize -= 1;
+	
+					if (DEBUG) {
+						assert checkHashCodeAndSize(hashCode, cachedSize);
+					}
+					return true;				
+				<}>
 			}
 
 			if (DEBUG) {
-				assert invariant();
+				assert checkHashCodeAndSize(hashCode, cachedSize);
 			}
 			return false;
 		}
@@ -234,40 +148,50 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 
 			final int keyHash = key.hashCode();
-			final Result<ResultGenerics(ds)> result = rootNode.removed(mutator,
-							key, keyHash, 0, cmp);
+			final Result<ResultGenerics(ds)> result = rootNode.removed(mutator, key, keyHash, 0, cmp);
 
 			if (result.isModified()) {
-				// TODO: carry deleted value in result
-				// assert result.hasReplacedValue();
-				// final int valHash = result.getReplacedValue().hashCode();
-
-				final int valHash = rootNode.findByKey(key, keyHash, 0, cmp).get().getValue()
-								.hashCode();
-
-				rootNode = result.getNode();
-				hashCode -= keyHash ^ valHash;
-				cachedSize -= 1;
-
-				if (DEBUG) {
-					assert invariant();
-				}
-				return true;
+				<if (ds == \map()) {>			
+					// TODO: carry deleted value in result
+					// assert result.hasReplacedValue();
+					// final int valHash = result.getReplacedValue().hashCode();
+	
+					final int valHash = rootNode.findByKey(key, keyHash, 0, cmp).get()<if(ds == \map()) {>.getValue()<}>.hashCode();
+	
+					rootNode = result.getNode();
+					hashCode -= keyHash ^ valHash;
+					cachedSize -= 1;
+	
+					if (DEBUG) {
+						assert checkHashCodeAndSize(hashCode, cachedSize);
+					}
+					return true;
+				<} else {>
+					rootNode = result.getNode();
+					hashCode -= keyHash;
+					cachedSize -= 1;
+	
+					if (DEBUG) {
+						assert checkHashCodeAndSize(hashCode, cachedSize);
+					}
+					return true;				
+				<}>
 			}
 
 			if (DEBUG) {
-				assert invariant();
+				assert checkHashCodeAndSize(hashCode, cachedSize);
 			}
 			return false;
+						
 		}
 
 		@Override
-		public boolean __putAll(<toString(ds)><GenericsExpandedUpperBounded(ds)> map) {
+		public boolean <insertOrPutMethodName(ds)>All(Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)> map) {
 			boolean modified = false;
 
 			for (Entry<GenericsExpandedUpperBounded(ds)> entry : map.entrySet()) {
 				final boolean isPresent = containsKey(entry.getKey());
-				<dec(primitiveToClass(val("replaced")))> = __put(entry.getKey(), entry.getValue());
+				<dec(primitiveToClass(val("replaced")))> = <insertOrPutMethodName(ds)>(entry.getKey(), entry.getValue());
 
 				if (!isPresent || replaced != null) {
 					modified = true;
@@ -278,12 +202,12 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean __putAllEquivalent(<toString(ds)><GenericsExpandedUpperBounded(ds)> map, Comparator\<Object\> cmp) {
+		public boolean <insertOrPutMethodName(ds)>AllEquivalent(Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)> map, Comparator\<Object\> cmp) {
 			boolean modified = false;
 
 			for (Entry<GenericsExpandedUpperBounded(ds)> entry : map.entrySet()) {
 				final boolean isPresent = containsKeyEquivalent(entry.getKey(), cmp);
-				<dec(primitiveToClass(val("replaced")))> = __putEquivalent(entry.getKey(), entry.getValue(), cmp);
+				<dec(primitiveToClass(val("replaced")))> = <insertOrPutMethodName(ds)>Equivalent(entry.getKey(), entry.getValue(), cmp);
 
 				if (!isPresent || replaced != null) {
 					modified = true;
@@ -293,6 +217,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			return modified;
 		}
 
+		<if (ds == \map()) {>
 		@Override
 		public Set\<java.util.Map.Entry<GenericsExpanded(ds)>\> entrySet() {
 			Set\<java.util.Map.Entry<GenericsExpanded(ds)>\> entrySet = null;
@@ -344,12 +269,26 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 			return entrySet;
 		}
+		<}>
+
+		@Override
+		public int size() {
+			return cachedSize;
+		}
+
+		<if (ds == \set()) {>
+		@Override
+		public Iterator<Generics(ds)> iterator() {
+			return keyIterator();
+		}
+		<}>
 
 		@Override
 		public SupplierIterator<SupplierIteratorGenerics(ds)> keyIterator() {
 			return new Transient<toString(ds)>KeyIterator<InferredGenerics()>(this);
 		}
 
+		<if (ds == \map()) {>
 		@Override
 		public Iterator\<<primitiveToClass(val()).\type>\> valueIterator() {
 			// return new Trie<toString(ds)>ValueIterator<InferredGenerics()>(keyIterator());
@@ -363,6 +302,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			return new <toString(ds)>EntryIterator<InferredGenerics()>(rootNode); // TODO: iterator does not
 														// support removal
 		}
+		<}>
 
 		/**
 		 * Iterator that first iterates over inlined-values and then continues
@@ -390,7 +330,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 
 			@Override
-			public <primitiveToClass(val()).\type> get() {
+			public <dsAtFunction__range_type(ds)> get() {
 				throw new UnsupportedOperationException();
 			}
 
@@ -449,3 +389,98 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 	}"
 	;
 }
+
+
+str generate_insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
+	"
+	@Override
+	public <primitiveToClass(val()).\type> <insertOrPutMethodName(ds)>(<dec(mapper(payloadTuple(ts), primitiveToClass))>) {
+		if (mutator.get() == null) {
+			throw new IllegalStateException(\"Transient already frozen.\");
+		}
+
+		final int keyHash = key.hashCode();
+		final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, <use(payloadTuple(ts))>, keyHash, 0);
+
+		if (result.isModified()) {
+			rootNode = result.getNode();
+
+			if (result.hasReplacedValue()) {
+				<dec(val("old"))> = result.getReplacedValue();
+
+				final int valHashOld = <hashCode(val("old"))>;
+				final int valHashNew = <hashCode(val())>;
+
+				hashCode += keyHash ^ valHashNew;
+				hashCode -= keyHash ^ valHashOld;
+				// cachedSize remains same
+
+				if (DEBUG) {
+					assert checkHashCodeAndSize(hashCode, cachedSize);
+				}
+				return old;
+			} else {
+				final int valHashNew = <hashCode(val())>;
+
+				hashCode += keyHash ^ valHashNew;
+				cachedSize += 1;
+
+				if (DEBUG) {
+					assert checkHashCodeAndSize(hashCode, cachedSize);
+				}
+				return null;
+			}
+		}
+
+		if (DEBUG) {
+			assert checkHashCodeAndSize(hashCode, cachedSize);
+		}
+		return null;
+	}
+	"
+	;
+
+	
+str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts), primitiveToClass), Argument res = field("boolean", "???"), bool useComparator = false) {
+	str methodName = "<insertOrPutMethodName(ds)><if (useComparator) {>Equivalent<}>"; 
+	
+	list[Argument] filterArgs(list[Argument] args) {
+		if (useComparator) {
+			return args + field("Comparator\<Object\>", "cmp");
+		} else {
+			return args;
+		}
+	};
+	
+	return
+	"
+	@Override
+	public boolean <methodName>(<dec(filterArgs(args))>) {
+		if (mutator.get() == null) {
+			throw new IllegalStateException(\"Transient already frozen.\");
+		}
+
+		final int keyHash = key.hashCode();
+		final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, <use(payloadTuple(ts))>, keyHash, 0<if (useComparator) {>, cmp<}>);
+
+		if (result.isModified()) {
+			rootNode = result.getNode();
+
+			hashCode += keyHash;
+			cachedSize += 1;
+
+			if (DEBUG) {
+				assert checkHashCodeAndSize(hashCode, cachedSize);
+			}
+			return true;
+		}
+
+		if (DEBUG) {
+			assert checkHashCodeAndSize(hashCode, cachedSize);
+		}
+		return false;
+	}
+	"
+	;		
+}
+

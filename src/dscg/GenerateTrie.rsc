@@ -34,7 +34,7 @@ import dscg::GenerateTrie_Core;
 import dscg::GenerateTrie_CoreTransient;
 
 void main() {
-	TrieSpecifics ts = trieSpecifics(\set(), 3, 8);	
+	TrieSpecifics ts = trieSpecifics(\set(), 5, 8);	
 	if(___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound) := ts) {
 
 		rel[Option,bool] setup = { 
@@ -103,12 +103,12 @@ str generateClassString(int n) =
 	'	}
 
 	'	@Override
-	'	public boolean containsKey(Object <keyName>) {
+	'	public boolean <containsKeyMethodName(ds)>(Object <keyName>) {
 	'		<generate_bodyOf_containsKeyOrVal(n, equalityDefault, keyName)>	
 	'	}
 
 	'	@Override
-	'	public boolean containsKeyEquivalent(Object <keyName>, Comparator\<Object\> <cmpName>) {
+	'	public boolean <containsKeyMethodName(ds)>Equivalent(Object <keyName>, Comparator\<Object\> <cmpName>) {
 	'		<generate_bodyOf_containsKeyOrVal(n, equalityComparator, keyName)>	
 	'	}
 	
@@ -639,13 +639,13 @@ str generateGenericNodeClassString(int n, int m, ts:___expandedTrieSpecifics(ds,
 	
 	'	@SuppressWarnings(\"unchecked\")
 	'	@Override
-	'	boolean containsKey(Object <keyName>, int <keyName>Hash, int shift) {
+	'	boolean <containsKeyMethodName(ds)>(Object <keyName>, int <keyName>Hash, int shift) {
 	'		<generate_bodyOf_GenericNode_containsKey(n, m, equalityDefault)>
 	'	}
 
 	'	@SuppressWarnings(\"unchecked\")
 	'	@Override
-	'	boolean containsKey(Object <keyName>, int <keyName>Hash, int shift, Comparator\<Object\> <cmpName>) {
+	'	boolean <containsKeyMethodName(ds)>(Object <keyName>, int <keyName>Hash, int shift, Comparator\<Object\> <cmpName>) {
 	'		<generate_bodyOf_GenericNode_containsKey(n, m, equalityComparator)>
 	'	}
 
@@ -761,9 +761,9 @@ default str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieS
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
-	'			return <nodeOf(n, m+1, use(replace(metadataArguments(n, m, ts) + contentArguments(n, m, ts), [ key(i), val(i) ], [ field(keyName), field(valName), key(i), val(i) ])))>;
+	'			return <nodeOf(n, m+1, use(replace(metadataArguments(n, m, ts) + contentArguments(n, m, ts), payloadTuple(ts, i), payloadTuple(ts) + payloadTuple(ts, i) )))>;
 	'		<}>case <m>:
-	'			return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(metadataArguments(n, m, ts) + contentArguments(n, m, ts), [ \node(ds, 1) ], [ field(keyName), field(valName) ])))>;
+	'			return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(metadataArguments(n, m, ts) + contentArguments(n, m, ts), [ \node(ds, 1) ], payloadTuple(ts) )))>;
 	'		default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"
@@ -781,7 +781,7 @@ default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieS
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
-	'			return <nodeOf(n, m-1, use(metadataArguments(n, m, ts) + contentArguments(n, m, ts) - [ key(i), val(i) ]))>;
+	'			return <nodeOf(n, m-1, use(metadataArguments(n, m, ts) + contentArguments(n, m, ts) - payloadTuple(ts, i)))>;
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"
@@ -820,9 +820,9 @@ default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___e
 	'		<for (i <- [1..m+1]) {>case <i-1>:
 	'			switch(bitIndex) {
 	'				<for (j <- [1..n+1]) {>case <j-1>:
-	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(n, m, ts) + contentArguments(n, m, ts) - [ key(i), val(i) ], [ \node(ds, j) ], [ field(nodeName), \node(ds, j) ])))>;
+	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(n, m, ts) + contentArguments(n, m, ts) - payloadTuple(ts, i), [ \node(ds, j) ], [ field(nodeName), \node(ds, j) ])))>;
 	'				<}>case <n>:
-	'					return <nodeOf(n+1, m-1, use(metadataArguments(n, m, ts) + contentArguments(n, m, ts) - [ key(i), val(i) ] + [ field(nodeName) ]))>;
+	'					return <nodeOf(n+1, m-1, use(metadataArguments(n, m, ts) + contentArguments(n, m, ts) - payloadTuple(ts, i) + [ field(nodeName) ]))>;
 	'				default:
 	'					throw new IllegalStateException(\"Index out of range.\");	
 	'			}
@@ -843,15 +843,15 @@ default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___e
 	'	<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(valmapMethod)> | bitpos);
 	'
 	'	<dec(key())> = <nodeName>.headKey();
-	'	<dec(val())> = <nodeName>.headVal();	
+	'	<if (ds == \map()) {><dec(val())> = <nodeName>.headVal();<}>	
 	'
 	'	switch(bitIndex) {
 	'		<for (i <- [1..n+1]) {>case <i-1>:
 	'			switch(valIndex) {
 	'				<for (j <- [1..m+1]) {>case <j-1>:
-	'					return <nodeOf(n-1, m+1, use(replace(metadataArguments(n, m, ts) + contentArguments(n, m, ts) - [ \node(ds, i) ], [ key(j), val(j) ], [ key(), val(), key(j), val(j) ])))>;
+	'					return <nodeOf(n-1, m+1, use(replace(metadataArguments(n, m, ts) + contentArguments(n, m, ts) - [ \node(ds, i) ], payloadTuple(ts, j), payloadTuple(ts) + payloadTuple(ts, j))))>;
 	'				<}>case <m>:
-	'					return <nodeOf(n-1, m+1, use([ bitmapField, valmapField ] + insertAfterOrDefaultAtFront(contentArguments(n, m, ts) - [ \node(ds, i) ], [ key(m), val(m) ], [ key(), val() ])))>;
+	'					return <nodeOf(n-1, m+1, use([ bitmapField, valmapField ] + insertAfterOrDefaultAtFront(contentArguments(n, m, ts) - [ \node(ds, i) ], payloadTuple(ts, m), payloadTuple(ts))))>;
 	'				default:
 	'					throw new IllegalStateException(\"Index out of range.\");	
 	'			}
@@ -955,7 +955,7 @@ str generateLeafNodeString() =
 		}
 
 		@Override
-		boolean containsKey(Object key, int hash, int shift, Comparator\<Object\> cmp) {
+		boolean <containsKeyMethodName(ds)>(Object key, int hash, int shift, Comparator\<Object\> cmp) {
 			return this.keyHash == hash && cmp.compare(this.key, key) == 0;
 		}
 
@@ -1526,12 +1526,12 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 	<}>
 
 	'	@Override
-	'	boolean containsKey(Object key, int keyHash, int shift) {
+	'	boolean <containsKeyMethodName(ds)>(Object key, int keyHash, int shift) {
 	'		<generate_bodyOf_containsKey(n, m, equalityDefault)>
 	'	}
 
 	'	@Override
-	'	boolean containsKey(Object key, int keyHash, int shift, Comparator\<Object\> <cmpName>) {
+	'	boolean <containsKeyMethodName(ds)>(Object key, int keyHash, int shift, Comparator\<Object\> <cmpName>) {
 	'		<generate_bodyOf_containsKey(n, m, equalityComparator)>
 	'	}
 
@@ -1826,7 +1826,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	<}>	
 	
 	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(key())>, <dec(val())>) {		
+	'	<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(payloadTuple(ts))>) {		
 	'		<generate_bodyOf_copyAndInsertValue(n, m, ts)>
 	'	}
 	
@@ -1902,7 +1902,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 
 	'	@Override
 	'	public String toString() {		
-	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (ds == \map()) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(<use(valmapMethod)>, (byte) <i>)"), key(i), val(i) | i <- [1..m+1]] + [ field("recoverMask(<use(bitmapMethod)>, (byte) <i>)"), \node(ds, i)	| i <- [1..n+1]])>);<}>
+	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (ds == \map()) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(<use(valmapMethod)>, (byte) <i>)"), *payloadTuple(ts, i) | i <- [1..m+1]] + [ field("recoverMask(<use(bitmapMethod)>, (byte) <i>)"), \node(ds, i)	| i <- [1..n+1]])>);<}>
 	'	}
 	
 	'}

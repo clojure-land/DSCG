@@ -148,10 +148,11 @@ bool isPrimitive("byte")  = true;
 bool isPrimitive("short") = true;
 bool isPrimitive("int")   = true;
 bool isPrimitive("long")  = true;
+default bool isPrimitive(str x) = false;
 /***/
-bool isPrimitive(Argument a)  = isPrimitive(a.\type);
+bool isPrimitive(Argument a) = isPrimitive(a.\type);
+default bool isPrimitive(_) { throw "aahh"; }
 /***/
-default bool isPrimitive(str _)  = false;
 
 
 
@@ -159,10 +160,11 @@ bool isPrimitiveArray("byte[]")  = true;
 bool isPrimitiveArray("short[]") = true;
 bool isPrimitiveArray("int[]")   = true;
 bool isPrimitiveArray("long[]")  = true;
+default bool isPrimitiveArray(str x) = false;
 /***/
 bool isPrimitiveArray(Argument a)  = isPrimitiveArray(a.\type);
+default bool isPrimitiveArray(_) { throw "aahh"; }
 /***/
-default bool isPrimitiveArray(str _)  = false;
 
 
 
@@ -252,6 +254,9 @@ default str InferredGenerics() = "\<\>";
 str GenericsExpanded(DataStructure ds:\map()) = "\<<primitiveToClass(key()).\type>, <primitiveToClass(val()).\type>\>";
 str GenericsExpanded(DataStructure ds:\set()) = "\<<primitiveToClass(key()).\type>\>";
 
+str UnifiedGenericsExpanded(DataStructure ds:\map()) = "\<<primitiveToClass(key()).\type>, <primitiveToClass(val()).\type>\>";
+str UnifiedGenericsExpanded(DataStructure ds:\set()) = "\<<primitiveToClass(key()).\type>, java.lang.Void\>";
+
 str GenericsExpandedReversed(DataStructure ds:\map()) = "\<<primitiveToClass(val()).\type>, <primitiveToClass(key()).\type>\>";
 str GenericsExpandedReversed(DataStructure ds:\set()) = GenericsExpanded(ds);
 
@@ -317,8 +322,58 @@ str equalityComparatorForArguments(Argument x, Argument y) = "<cmpName>.compare(
 	when x.\type == y.\type && !isPrimitive(x.\type) && !isPrimitive(y.\type);
 default str equalityComparatorForArguments(Argument x, Argument y) { throw "Ahhh"; }	
 
+/*
+ * Mainly CompactNode specifics
+ */
 str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:true) = "CompactMixed<toString(ds)>Node";
 str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:false) = "CompactNodesOnly<toString(ds)>Node";
 str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:false, bool values:true) = "CompactValuesOnly<toString(ds)>Node";
 str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:false, bool values:false) = "CompactEmpty<toString(ds)>Node";
 default str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes, bool values) { throw "Ahhh"; }
+
+list[Argument] metadataArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) 
+	= [ ___bitmapField(bitPartitionSize), ___valmapField(bitPartitionSize) ]
+	;
+
+list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound)) 
+	= [ key(i), val(i) | i <- [1..m+1]] 
+	+ [ \node(ds, i)   | i <- [1..n+1]]
+	;	
+
+list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound)) 
+	= [ key(i)         | i <- [1..m+1]] 
+	+ [ \node(ds, i)   | i <- [1..n+1]]
+	;	
+
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), str name) = [ key(name), val(name) ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), str name) = [ key(name) ];
+	
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), int i) = [ key(i), val(i) ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), int i) = [ key(i) ];
+
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound)) = [ key(), val() ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound)) = [ key() ];
+
+
+str containsKeyMethodName(DataStructure ds:\map()) = "containsKey";
+str containsKeyMethodName(DataStructure ds:\set()) = "contains";
+default str containsKeyMethodName(_) { throw "Ahhh"; }
+
+str insertOrPutMethodName(DataStructure ds:\map()) = "__put";
+str insertOrPutMethodName(DataStructure ds:\set()) = "__insert";
+default str insertOrPutMethodName(_) { throw "Ahhh"; }
+
+int tupleLength(DataStructure ds:\map()) = 2;
+int tupleLength(DataStructure ds:\set()) = 1;
+default int tupleLength(_) { throw "Ahhh"; }
+
+
+
+
+str dsAtFunction__domain_type(DataStructure ds:\map()) = key().\type;
+str dsAtFunction__domain_type(DataStructure ds:\set()) = key().\type;
+default str dsAtFunction__domain_type(_) { throw "Ahhh"; }
+
+str dsAtFunction__range_type(DataStructure ds:\map()) = val().\type;
+str dsAtFunction__range_type(DataStructure ds:\set()) = key().\type;
+default str dsAtFunction__range_type(_) { throw "Ahhh"; }

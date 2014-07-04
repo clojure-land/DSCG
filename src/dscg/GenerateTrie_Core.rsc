@@ -11,14 +11,19 @@
  */
 module dscg::GenerateTrie_Core
 
+import List;
 import String;
 import dscg::Common;
+import dscg::GenerateTrie_Core_Common;
 
 str generateCoreClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str innerClassesString, str classNamePostfix) { 
 
 	str coreClassName = "Trie<toString(ds)><classNamePostfix>";
 	str nodeIteratorClassName = "Trie<toString(ds)><classNamePostfix>NodeIterator";
-
+	
+	str emptyCollectionConstantName = "EMPTY_<toUpperCase(toString(ds))>";
+	str emptyTrieNodeConstantName   = "EMPTY_NODE";
+	
 return 
 "/*******************************************************************************
  * Copyright (c) 2013-2014 CWI
@@ -53,7 +58,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds)><GenericsExpanded(ds)> {
 
 	@SuppressWarnings(\"unchecked\")
-	private static final <coreClassName> EMPTY_INPLACE_INDEX_MAP = new <coreClassName>(Compact<toString(ds)>Node.EMPTY_INPLACE_INDEX_NODE, 0, 0);
+	private static final <coreClassName> <emptyCollectionConstantName> = new <coreClassName>(Compact<toString(ds)>Node.<emptyTrieNodeConstantName>, 0, 0);
 
 	private static final boolean DEBUG = false;
 
@@ -66,38 +71,54 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 		this.hashCode = hashCode;
 		this.cachedSize = cachedSize;
 		if (DEBUG) {
-			assert invariant();
+			assert checkHashCodeAndSize(hashCode, cachedSize);
 		}
 	}
 
 	@SuppressWarnings(\"unchecked\")
 	public static final <Generics(ds)> Immutable<toString(ds)><GenericsExpanded(ds)> of() {
-		return <coreClassName>.EMPTY_INPLACE_INDEX_MAP;
+		return <coreClassName>.<emptyCollectionConstantName>;
 	}
 
+	<if (ds == \map()) {>
 	@SuppressWarnings(\"unchecked\")
 	public static final <Generics(ds)> Immutable<toString(ds)><GenericsExpanded(ds)> of(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
 			throw new IllegalArgumentException(\"Length of argument list is uneven: no key/value pairs.\");
 		}
 
-		Immutable<toString(ds)><GenericsExpanded(ds)> result = <coreClassName>.EMPTY_INPLACE_INDEX_MAP;
+		Immutable<toString(ds)><GenericsExpanded(ds)> result = <coreClassName>.<emptyCollectionConstantName>;
 
 		for (int i = 0; i \< keyValuePairs.length; i += 2) {
 			<dec(key())> = (<key().\type>) keyValuePairs[i];
 			<dec(val())> = (<val().\type>) keyValuePairs[i + 1];
 
-			result = result.__put(key, val);
+			result = result.<insertOrPutMethodName(ds)>(<use(payloadTuple(ts))>);
 		}
 
 		return result;
 	}
+	<}>
+	
+	<if (ds == \set()) {>
+	@SuppressWarnings(\"unchecked\")
+	public static final <Generics(ds)> Immutable<toString(ds)><GenericsExpanded(ds)> of(<key().\type>... keys) {
+		Immutable<toString(ds)><GenericsExpanded(ds)> result = <coreClassName>.<emptyCollectionConstantName>;
 
+		for (<dec(key())> : keys) {
+			result = result.<insertOrPutMethodName(ds)>(<use(key())>);
+		}
+
+		return result;
+	}
+	<}>
+	
 	@SuppressWarnings(\"unchecked\")
 	public static final <Generics(ds)> Transient<toString(ds)><GenericsExpanded(ds)> transientOf() {
-		return <coreClassName>.EMPTY_INPLACE_INDEX_MAP.asTransient();
+		return <coreClassName>.<emptyCollectionConstantName>.asTransient();
 	}
 
+	<if (ds == \map()) {>
 	@SuppressWarnings(\"unchecked\")
 	public static final <Generics(ds)> Transient<toString(ds)><GenericsExpanded(ds)> transientOf(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
@@ -105,32 +126,34 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 							\"Length of argument list is uneven: no key/value pairs.\");
 		}
 
-		final Transient<toString(ds)><GenericsExpanded(ds)> result = <coreClassName>.EMPTY_INPLACE_INDEX_MAP.asTransient();
+		final Transient<toString(ds)><GenericsExpanded(ds)> result = <coreClassName>.<emptyCollectionConstantName>.asTransient();
 
 		for (int i = 0; i \< keyValuePairs.length; i += 2) {
 			<dec(key())> = (<key().\type>) keyValuePairs[i];
 			<dec(val())> = (<val().\type>) keyValuePairs[i + 1];
 
-			result.__put(key, val);
+			result.<insertOrPutMethodName(ds)>(<use(payloadTuple(ts))>);
 		}
 
 		return result;
 	}
+	<}>
+	
+	<if (ds == \set()) {>
+	@SuppressWarnings(\"unchecked\")
+	public static final <Generics(ds)> Transient<toString(ds)><GenericsExpanded(ds)> transientOf(<key().\type>... keys) {
+		final Transient<toString(ds)><GenericsExpanded(ds)> result = <coreClassName>.<emptyCollectionConstantName>.asTransient();
 
-	private boolean invariant() {
-		int _hash = 0;
-		int _count = 0;
-
-		for (Iterator\<Map.Entry<GenericsExpanded(ds)>\> it = entryIterator(); it.hasNext();) {
-			final Map.Entry<GenericsExpanded(ds)> entry = it.next();
-
-			_hash += entry.getKey().hashCode() ^ entry.getValue().hashCode();
-			_count += 1;
+		for (<dec(key())> : keys) {
+			result.<insertOrPutMethodName(ds)>(<use(key())>);
 		}
 
-		return this.hashCode == _hash && this.cachedSize == _count;
+		return result;
 	}
+	<}>
 
+	<generate_checkHashCodeAndSize(ts, setup)>
+	
 	// returns 0 \<= mask \<= <nMax-1>
 	static byte recoverMask(<chunkSizeToPrimitive(bitPartitionSize)> map, byte i_th) {
 		assert 1 \<= i_th && i_th \<= <nMax>;
@@ -156,81 +179,121 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	}
 
 	@Override
-	public <coreClassName><Generics(ds)> __put(<dec(primitiveToClass(key()))>, <dec(primitiveToClass(val()))>) {
+	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>(<dec(mapper(payloadTuple(ts), primitiveToClass))>) {
 		final int keyHash = key.hashCode();
-		final Result<ResultGenerics(ds)> result = rootNode.updated(null, key,
-						keyHash, val, 0);
+		final Result<ResultGenerics(ds)> result = rootNode.updated(null, <use(payloadTuple(ts))>, keyHash, 0);
 
 		if (result.isModified()) {
-			if (result.hasReplacedValue()) {
-				final int valHashOld = result.getReplacedValue().hashCode();
-				final int valHashNew = <hashCode(val())>;
-
-				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHashNew)
-								- (keyHash ^ valHashOld), cachedSize);
-			}
-
-			final int valHash = <hashCode(val())>;
-			return new <coreClassName><Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHash),
-							cachedSize + 1);
+			<if (ds == \map()) {>
+				if (result.hasReplacedValue()) {
+					final int valHashOld = result.getReplacedValue().hashCode();
+					final int valHashNew = <hashCode(val())>;
+	
+					return new <coreClassName><Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHashNew)
+									- (keyHash ^ valHashOld), cachedSize);
+				}
+			<}>
+				
+			<if (ds == \map()) {>
+				final int valHash = <hashCode(val())>;
+				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHash), cachedSize + 1);
+			<} else {>
+				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode + keyHash, cachedSize + 1);			
+			<}>
 		}
 
 		return this;
 	}
 
 	@Override
-	public <coreClassName><Generics(ds)> __putEquivalent(<dec(primitiveToClass(key()))>, <dec(primitiveToClass(val()))>, Comparator\<Object\> cmp) {
+	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>Equivalent(<dec(mapper(payloadTuple(ts), primitiveToClass))>, Comparator\<Object\> cmp) {
 		final int keyHash = key.hashCode();
-		final Result<ResultGenerics(ds)> result = rootNode.updated(null, key,
-						keyHash, val, 0, cmp);
+		final Result<ResultGenerics(ds)> result = rootNode.updated(null, <use(payloadTuple(ts))>, keyHash, 0, cmp);
 
 		if (result.isModified()) {
-			if (result.hasReplacedValue()) {
-				final int valHashOld = result.getReplacedValue().hashCode();
-				final int valHashNew = <hashCode(val())>;
-
-				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHashNew)
-								- (keyHash ^ valHashOld), cachedSize);
-			}
-
-			final int valHash = <hashCode(val())>;
-			return new <coreClassName><Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHash),
-							cachedSize + 1);
+			<if (ds == \map()) {>
+				if (result.hasReplacedValue()) {
+					final int valHashOld = result.getReplacedValue().hashCode();
+					final int valHashNew = <hashCode(val())>;
+	
+					return new <coreClassName><Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHashNew)
+									- (keyHash ^ valHashOld), cachedSize);
+				}
+			<}>
+				
+			<if (ds == \map()) {>
+				final int valHash = <hashCode(val())>;
+				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode + (keyHash ^ valHash), cachedSize + 1);
+			<} else {>
+				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode + keyHash, cachedSize + 1);			
+			<}>
 		}
 
 		return this;
 	}
 
 	@Override
-	public Immutable<toString(ds)><GenericsExpanded(ds)> __putAll(<toString(ds)><GenericsExpandedUpperBounded(ds)> map) {
+	public Immutable<toString(ds)><GenericsExpanded(ds)> <insertOrPutMethodName(ds)>All(Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)> <uncapitalize(toString(ds))>) {
 		Transient<toString(ds)><GenericsExpanded(ds)> tmp = asTransient();
-		tmp.__putAll(map);
+		tmp.<insertOrPutMethodName(ds)>All(<uncapitalize(toString(ds))>);
 		return tmp.freeze();
 	}
 
 	@Override
-	public Immutable<toString(ds)><GenericsExpanded(ds)> __putAllEquivalent(<toString(ds)><GenericsExpandedUpperBounded(ds)> map,
-					Comparator\<Object\> cmp) {
+	public Immutable<toString(ds)><GenericsExpanded(ds)> <insertOrPutMethodName(ds)>AllEquivalent(Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)> <uncapitalize(toString(ds))>, Comparator\<Object\> cmp) {
 		Transient<toString(ds)><GenericsExpanded(ds)> tmp = asTransient();
-		tmp.__putAllEquivalent(map, cmp);
+		tmp.<insertOrPutMethodName(ds)>AllEquivalent(<uncapitalize(toString(ds))>, cmp);
 		return tmp.freeze();
 	}
+	
+	<if (ds == \set()) {>
+	@Override
+	public Immutable<toString(ds)><GenericsExpanded(ds)> __retainAll(Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)> <uncapitalize(toString(ds))>) {
+		Transient<toString(ds)><GenericsExpanded(ds)> tmp = asTransient();
+		tmp.__retainAll(<uncapitalize(toString(ds))>);
+		return tmp.freeze();
+	}
+
+	@Override
+	public Immutable<toString(ds)><GenericsExpanded(ds)> __retainAllEquivalent(Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)> <uncapitalize(toString(ds))>, Comparator\<Object\> cmp) {
+		Transient<toString(ds)><GenericsExpanded(ds)> tmp = asTransient();
+		tmp.__retainAllEquivalent(<uncapitalize(toString(ds))>, cmp);
+		return tmp.freeze();
+	}
+
+	@Override
+	public Immutable<toString(ds)><GenericsExpanded(ds)> __removeAll(Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)> <uncapitalize(toString(ds))>) {
+		Transient<toString(ds)><GenericsExpanded(ds)> tmp = asTransient();
+		tmp.__removeAll(<uncapitalize(toString(ds))>);
+		return tmp.freeze();
+	}
+
+	@Override
+	public Immutable<toString(ds)><GenericsExpanded(ds)> __removeAllEquivalent(Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)> <uncapitalize(toString(ds))>, Comparator\<Object\> cmp) {
+		Transient<toString(ds)><GenericsExpanded(ds)> tmp = asTransient();
+		tmp.__removeAllEquivalent(<uncapitalize(toString(ds))>, cmp);
+		return tmp.freeze();
+	}
+	<}>
+	
 
 	@Override
 	public <coreClassName><Generics(ds)> __remove(<dec(primitiveToClass(key()))>) {
 		final int keyHash = key.hashCode();
-		final Result<ResultGenerics(ds)> result = rootNode.removed(null, key,
-						keyHash, 0);
+		final Result<ResultGenerics(ds)> result = rootNode.removed(null, key, keyHash, 0);
 
 		if (result.isModified()) {
-			// TODO: carry deleted value in result
-			// assert result.hasReplacedValue();
-			// final int valHash = result.getReplacedValue().hashCode();
-
-			final int valHash = rootNode.findByKey(key, keyHash, 0).get().getValue().hashCode();
-
-			return new <coreClassName><Generics(ds)>(result.getNode(), hashCode - (keyHash ^ valHash),
-							cachedSize - 1);
+			<if (ds == \map()) {>
+				// TODO: carry deleted value in result
+				// assert result.hasReplacedValue();
+				// final int valHash = result.getReplacedValue().hashCode();
+	
+				final int valHash = rootNode.findByKey(key, keyHash, 0).get()<if(ds == \map()) {>.getValue()<}>.hashCode();
+	
+				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode - (keyHash ^ valHash), cachedSize - 1);
+			<} else {>
+				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode - keyHash, cachedSize - 1);
+			<}>
 		}
 
 		return this;
@@ -239,26 +302,27 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	@Override
 	public <coreClassName><Generics(ds)> __removeEquivalent(<dec(primitiveToClass(key()))>, Comparator\<Object\> cmp) {
 		final int keyHash = key.hashCode();
-		final Result<ResultGenerics(ds)> result = rootNode.removed(null, key,
-						keyHash, 0, cmp);
+		final Result<ResultGenerics(ds)> result = rootNode.removed(null, key, keyHash, 0, cmp);
 
 		if (result.isModified()) {
-			// TODO: carry deleted value in result
-			// assert result.hasReplacedValue();
-			// final int valHash = result.getReplacedValue().hashCode();
-
-			final int valHash = rootNode.findByKey(key, keyHash, 0, cmp).get().getValue()
-							.hashCode();
-
-			return new <coreClassName><Generics(ds)>(result.getNode(), hashCode - (keyHash ^ valHash),
-							cachedSize - 1);
+			<if (ds == \map()) {>		
+				// TODO: carry deleted value in result
+				// assert result.hasReplacedValue();
+				// final int valHash = result.getReplacedValue().hashCode();
+		
+				final int valHash = rootNode.findByKey(key, keyHash, 0, cmp).get()<if(ds == \map()) {>.getValue()<}>.hashCode();
+		
+				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode - (keyHash ^ valHash), cachedSize - 1);
+			<} else {>
+				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode - keyHash, cachedSize - 1);			
+			<}>
 		}
 
 		return this;
 	}
 
 	@Override
-	public boolean containsKey(Object o) {
+	public boolean <containsKeyMethodName(ds)>(Object o) {
 		try {
 			<dec(key())> = (<key().\type>) o;
 			return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0);			
@@ -268,7 +332,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	}
 
 	@Override
-	public boolean containsKeyEquivalent(Object o, Comparator\<Object\> cmp) {
+	public boolean <containsKeyMethodName(ds)>Equivalent(Object o, Comparator\<Object\> cmp) {
 		try {
 			<dec(key())> = (<key().\type>) o;
 			return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0, cmp);			
@@ -277,6 +341,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 		}
 	}
 
+	<if (ds == \map()) {>
 	@Override
 	public boolean containsValue(Object o) {
 		for (Iterator\<<primitiveToClass(val()).\type>\> iterator = valueIterator(); iterator.hasNext();) {
@@ -296,15 +361,17 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 		}
 		return false;
 	}
+	<}>
+	
 
 	@Override
-	public <primitiveToClass(val()).\type> get(Object o) {
+	public <dsAtFunction__range_type(ds)> get(Object o) {
 		try {
 			<dec(key())> = (<key().\type>) o;
-			final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
+			final Optional<KeyOrMapEntryGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
 	
 			if (result.isPresent()) {
-				return result.get().getValue();
+				return result.get()<if (ds == \map()) {>.getValue()<}>;
 			} else {
 				return null;
 			}			
@@ -314,13 +381,13 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	}
 
 	@Override
-	public <primitiveToClass(val()).\type> getEquivalent(Object o, Comparator\<Object\> cmp) {
+	public <dsAtFunction__range_type(ds)> getEquivalent(Object o, Comparator\<Object\> cmp) {
 		try {
 			<dec(key())> = (<key().\type>) o;
-			final Optional\<Map.Entry<GenericsExpanded(ds)>\> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
+			final Optional<KeyOrMapEntryGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
 	
 			if (result.isPresent()) {
-				return result.get().getValue();
+				return result.get()<if (ds == \map()) {>.getValue()<}>;
 			} else {
 				return null;
 			}			
@@ -334,11 +401,19 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 		return cachedSize;
 	}
 
+	<if (ds == \set()) {>
+	@Override
+	public Iterator<Generics(ds)> iterator() {
+		return keyIterator();
+	}
+	<}>
+
 	@Override
 	public SupplierIterator<SupplierIteratorGenerics(ds)> keyIterator() {
 		<generate_bodyOf_keyIterator(ds, setup)>
 	}
 
+	<if (ds == \map()) {>
 	@Override
 	public Iterator\<<primitiveToClass(val()).\type>\> valueIterator() {
 		return new <toString(ds)>ValueIterator<InferredGenerics()>(rootNode);
@@ -348,7 +423,9 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	public Iterator\<Map.Entry<GenericsExpanded(ds)>\> entryIterator() {
 		return new <toString(ds)>EntryIterator<InferredGenerics()>(rootNode);
 	}
+	<}>
 
+	<if (ds == \map()) {>
 	@Override
 	public Set\<java.util.Map.Entry<GenericsExpanded(ds)>\> entrySet() {
 		Set\<java.util.Map.Entry<GenericsExpanded(ds)>\> entrySet = null;
@@ -401,6 +478,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 		}
 		return entrySet;
 	}
+	<}>
 
 	@Override
 	public boolean isTransientSupported() {
@@ -408,7 +486,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	}
 
 	@Override
-	public TransientMap<GenericsExpanded(ds)> asTransient() {
+	public Transient<toString(ds)><GenericsExpanded(ds)> asTransient() {
 		return new Transient<coreClassName><Generics(ds)>(this);
 	}
 
@@ -554,7 +632,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 }
 
 str generate_bodyOf_keyIterator(DataStructure ds, rel[Option,bool] setup:{_*, <useFixedStackIterator(),true>}) = 
-	"return new MapKeyIterator<InferredGenerics()>(rootNode);"
+	"return new <toString(ds)>KeyIterator<InferredGenerics()>(rootNode);"
 	;
 	
 default str generate_bodyOf_keyIterator(DataStructure ds, rel[Option,bool] setup) =

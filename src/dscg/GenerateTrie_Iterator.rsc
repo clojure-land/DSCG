@@ -121,11 +121,12 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		}
 
 		@Override
-		public <primitiveToClass(val()).\type> get() {
+		public <dsAtFunction__range_type(ds)> get() {
 			throw new UnsupportedOperationException();
 		}
 	}
 
+	<if (ds == \map()) {>
 	private static final class <toString(ds)>ValueIterator<Generics(ds)> extends Abstract<toString(ds)>Iterator<Generics(ds)> implements
 					SupplierIterator<SupplierIteratorGenericsReversed(ds)> {
 
@@ -168,5 +169,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		public <primitiveToClass(key()).\type> get() {
 			throw new UnsupportedOperationException();
 		}
-	}"
+	}
+	<}>
+	"
 	;
