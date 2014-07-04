@@ -197,7 +197,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			 * Linear scan for each key, because of arbitrary element order.
 			 */
 			outerLoop: for (SupplierIterator<SupplierIteratorGenerics(ds)> it = that.payloadIterator(); it.hasNext();) {
-				<dec(key("otherKey"))> = it.next();
+				<if (ds == \map()) {><dec(key("otherKey"))> = it.next();
 				@SuppressWarnings(\"deprecation\")
 
 				<dec(val("otherVal"))> = it.get();
@@ -210,7 +210,17 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 						continue outerLoop;
 					}
 				}
+				return false;<} else {><dec(key("otherKey"))> = it.next();
+
+				for (int i = 0; i \< keys.length; i++) {
+					<dec(key())> = keys[i];
+
+					if (<equalityDefaultForArguments(key(), key("otherKey"))>) {
+						continue outerLoop;
+					}
+				}
 				return false;
+				<}>
 			}
 
 			return true;
@@ -277,7 +287,7 @@ for (int idx = 0; idx \< keys.length; idx++) {
 		<if (ds == \map()) {>	
 			<dec(val("currentVal"))> = vals[idx];
 
-			if (<eq(val("currentVal"), val())>)) {
+			if (<eq(val("currentVal"), val())>) {
 				return Result.unchanged(this);
 			}
 

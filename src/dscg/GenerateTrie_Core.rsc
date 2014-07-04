@@ -45,6 +45,7 @@ import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
@@ -233,14 +234,14 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	}
 
 	@Override
-	public Immutable<toString(ds)><GenericsExpanded(ds)> <insertOrPutMethodName(ds)>All(Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)> <uncapitalize(toString(ds))>) {
+	public Immutable<toString(ds)><GenericsExpanded(ds)> <insertOrPutMethodName(ds)>All(<if (ds == \set()) {>Immutable<}><toString(ds)><GenericsExpandedUpperBounded(ds)> <uncapitalize(toString(ds))>) {
 		Transient<toString(ds)><GenericsExpanded(ds)> tmp = asTransient();
 		tmp.<insertOrPutMethodName(ds)>All(<uncapitalize(toString(ds))>);
 		return tmp.freeze();
 	}
 
 	@Override
-	public Immutable<toString(ds)><GenericsExpanded(ds)> <insertOrPutMethodName(ds)>AllEquivalent(Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)> <uncapitalize(toString(ds))>, Comparator\<Object\> cmp) {
+	public Immutable<toString(ds)><GenericsExpanded(ds)> <insertOrPutMethodName(ds)>AllEquivalent(<if (ds == \set()) {>Immutable<}><toString(ds)><GenericsExpandedUpperBounded(ds)> <uncapitalize(toString(ds))>, Comparator\<Object\> cmp) {
 		Transient<toString(ds)><GenericsExpanded(ds)> tmp = asTransient();
 		tmp.<insertOrPutMethodName(ds)>AllEquivalent(<uncapitalize(toString(ds))>, cmp);
 		return tmp.freeze();

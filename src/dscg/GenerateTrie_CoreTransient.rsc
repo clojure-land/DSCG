@@ -97,6 +97,18 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		<insertOrPut(ts, setup, useComparator = false)>
 		<insertOrPut(ts, setup, useComparator = true )>
 
+		<if (ds == \map()) {>
+		<insertOrPutAll(ts, setup, args = [field("<toString(ds)><GenericsExpandedUpperBounded(ds)>", "<uncapitalize(toString(ds))>")], useComparator = false)>
+		<insertOrPutAll(ts, setup, args = [field("<toString(ds)><GenericsExpandedUpperBounded(ds)>", "<uncapitalize(toString(ds))>")], useComparator = true )>		
+		<}>		
+
+		<if (ds == \set()) {>
+		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "<insertOrPutMethodName(ds)>", args = [field("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>", "<uncapitalize(toString(ds))>")], useComparator = false)>
+		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "<insertOrPutMethodName(ds)>", args = [field("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>", "<uncapitalize(toString(ds))>")], useComparator = true )>
+		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "__remove", args = [field("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>", "<uncapitalize(toString(ds))>")], useComparator = false)>
+		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "__remove", args = [field("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>", "<uncapitalize(toString(ds))>")], useComparator = true )>
+		<}>
+		
 		@Override
 		public boolean __remove(<dec(primitiveToClass(key()))>) {
 			if (mutator.get() == null) {
@@ -185,15 +197,35 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 						
 		}
 
+		<if (ds == \set()) {>
 		@Override
-		public boolean <insertOrPutMethodName(ds)>All(Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)> map) {
+		public boolean containsAll(Collection\<?\> c) {
+			for (Object item : c) {
+				if (!contains(item)) {
+					return false;
+				}
+			}
+			return true;
+		}
+		
+		@Override
+		public boolean containsAllEquivalent(Collection\<?\> c, Comparator\<Object\> cmp) {
+			for (Object item : c) {
+				if (!containsEquivalent(item, cmp)) {
+					return false;
+				}
+			}
+			return true;
+		}
+		
+		@Override
+		public boolean __retainAll(ImmutableSet\<? extends K\> set) {
 			boolean modified = false;
 
-			for (Entry<GenericsExpandedUpperBounded(ds)> entry : map.entrySet()) {
-				final boolean isPresent = containsKey(entry.getKey());
-				<dec(primitiveToClass(val("replaced")))> = <insertOrPutMethodName(ds)>(entry.getKey(), entry.getValue());
-
-				if (!isPresent || replaced != null) {
+			Iterator\<K\> thisIterator = iterator();
+			while (thisIterator.hasNext()) {
+				if (!set.contains(thisIterator.next())) {
+					thisIterator.remove();
 					modified = true;
 				}
 			}
@@ -202,20 +234,20 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean <insertOrPutMethodName(ds)>AllEquivalent(Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)> map, Comparator\<Object\> cmp) {
+		public boolean __retainAllEquivalent(ImmutableSet\<? extends K\> set, Comparator\<Object\> cmp) {
 			boolean modified = false;
 
-			for (Entry<GenericsExpandedUpperBounded(ds)> entry : map.entrySet()) {
-				final boolean isPresent = containsKeyEquivalent(entry.getKey(), cmp);
-				<dec(primitiveToClass(val("replaced")))> = <insertOrPutMethodName(ds)>Equivalent(entry.getKey(), entry.getValue(), cmp);
-
-				if (!isPresent || replaced != null) {
+			Iterator\<K\> thisIterator = iterator();
+			while (thisIterator.hasNext()) {
+				if (!set.containsEquivalent(thisIterator.next(), cmp)) {
+					thisIterator.remove();
 					modified = true;
 				}
 			}
 
 			return modified;
-		}
+		}		
+		<}>
 
 		<if (ds == \map()) {>
 		@Override
@@ -389,18 +421,71 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 	}"
 	;
 }
+	
+str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts), primitiveToClass), Argument res = field("boolean", "???"), bool useComparator = false) {
+	str methodName = "<insertOrPutMethodName(ds)><if (useComparator) {>Equivalent<}>"; 
 
-
-str generate_insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
+	list[Argument] filterArgs(list[Argument] args) {
+		if (useComparator) {
+			return args + field("Comparator\<Object\>", "cmp");
+		} else {
+			return args;
+		}
+	}
+	
+	return
 	"
 	@Override
-	public <primitiveToClass(val()).\type> <insertOrPutMethodName(ds)>(<dec(mapper(payloadTuple(ts), primitiveToClass))>) {
+	public boolean <methodName>(<dec(filterArgs(args))>) {
 		if (mutator.get() == null) {
 			throw new IllegalStateException(\"Transient already frozen.\");
 		}
 
 		final int keyHash = key.hashCode();
-		final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, <use(payloadTuple(ts))>, keyHash, 0);
+		final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, <use(payloadTuple(ts))>, keyHash, 0<if (useComparator) {>, cmp<}>);
+
+		if (result.isModified()) {
+			rootNode = result.getNode();
+
+			hashCode += keyHash;
+			cachedSize += 1;
+
+			if (DEBUG) {
+				assert checkHashCodeAndSize(hashCode, cachedSize);
+			}
+			return true;
+		}
+
+		if (DEBUG) {
+			assert checkHashCodeAndSize(hashCode, cachedSize);
+		}
+		return false;
+	}
+	"
+	;		
+}
+
+str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts), primitiveToClass), Argument res = field("boolean", "???"), bool useComparator = false) {
+	str methodName = "<insertOrPutMethodName(ds)><if (useComparator) {>Equivalent<}>"; 
+	
+	list[Argument] filterArgs(list[Argument] args) {
+		if (useComparator) {
+			return args + field("Comparator\<Object\>", "cmp");
+		} else {
+			return args;
+		}
+	}	
+	
+	return
+	"
+	@Override
+	public <primitiveToClass(val()).\type> <methodName>(<dec(filterArgs(args))>) {
+		if (mutator.get() == null) {
+			throw new IllegalStateException(\"Transient already frozen.\");
+		}
+
+		final int keyHash = key.hashCode();
+		final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, <use(payloadTuple(ts))>, keyHash, 0<if (useComparator) {>, cmp<}>);
 
 		if (result.isModified()) {
 			rootNode = result.getNode();
@@ -438,11 +523,11 @@ str generate_insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize
 		return null;
 	}
 	"
-	;
+	;		
+}
 
-	
-str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts), primitiveToClass), Argument res = field("boolean", "???"), bool useComparator = false) {
-	str methodName = "<insertOrPutMethodName(ds)><if (useComparator) {>Equivalent<}>"; 
+str insertOrPutAll(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = [], Argument res = field("boolean", "???"), bool useComparator = false) {
+	str methodName = "<insertOrPutMethodName(ds)>All<if (useComparator) {>Equivalent<}>"; 
 	
 	list[Argument] filterArgs(list[Argument] args) {
 		if (useComparator) {
@@ -450,35 +535,51 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, n
 		} else {
 			return args;
 		}
-	};
+	}	
 	
 	return
 	"
 	@Override
 	public boolean <methodName>(<dec(filterArgs(args))>) {
-		if (mutator.get() == null) {
-			throw new IllegalStateException(\"Transient already frozen.\");
-		}
+		boolean modified = false;
 
-		final int keyHash = key.hashCode();
-		final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, <use(payloadTuple(ts))>, keyHash, 0<if (useComparator) {>, cmp<}>);
+		for (Entry<GenericsExpandedUpperBounded(ds)> entry : map.entrySet()) {
+			final boolean isPresent = containsKey<if (useComparator) {>Equivalent<}>(entry.getKey()<if (useComparator) {>, cmp<}>);
+			final V replaced = __put<if (useComparator) {>Equivalent<}>(entry.getKey(), entry.getValue()<if (useComparator) {>, cmp<}>);
 
-		if (result.isModified()) {
-			rootNode = result.getNode();
-
-			hashCode += keyHash;
-			cachedSize += 1;
-
-			if (DEBUG) {
-				assert checkHashCodeAndSize(hashCode, cachedSize);
+			if (!isPresent || replaced != null) {
+				modified = true;
 			}
-			return true;
 		}
 
-		if (DEBUG) {
-			assert checkHashCodeAndSize(hashCode, cachedSize);
+		return modified;
+	}
+	"
+	;		
+}
+
+str allToSingle(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str methodPrefix, list[Argument] args = [], Argument res = field("boolean", "???"), bool useComparator = false) {
+	str methodName = "<methodPrefix>All<if (useComparator) {>Equivalent<}>"; 
+
+	list[Argument] filterArgs(list[Argument] args) {
+		if (useComparator) {
+			return args + field("Comparator\<Object\>", "cmp");
+		} else {
+			return args;
 		}
-		return false;
+	}
+
+	return
+	"
+	@Override
+	public boolean <methodName>(<dec(filterArgs(args))>) {
+		boolean modified = false;
+
+		for (<dec(key())> : set) {
+			modified |= <methodPrefix><if (useComparator) {>Equivalent<}>(<use(key())><if (useComparator) {>, cmp<}>);
+		}
+
+		return modified;
 	}
 	"
 	;		

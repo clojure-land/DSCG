@@ -30,6 +30,7 @@ import dscg::GenerateTrie_HashCollisionNode;
 import dscg::GenerateTrie_Iterator;
 import dscg::GenerateTrie_EasyIterator;
 import dscg::GenerateTrie_NodeIterator;
+import dscg::GenerateTrie_Core_Common;
 import dscg::GenerateTrie_Core;
 import dscg::GenerateTrie_CoreTransient;
 
