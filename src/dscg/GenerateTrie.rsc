@@ -652,13 +652,13 @@ str generateGenericNodeClassString(int n, int m, ts:___expandedTrieSpecifics(ds,
 
 	'	@SuppressWarnings(\"unchecked\")
 	'	@Override
-	'	Optional<KeyOrMapEntryGenerics> findByKey(Object <keyName>, int <keyName>Hash, int shift) {
+	'	Optional<MapsToGenerics> findByKey(Object <keyName>, int <keyName>Hash, int shift) {
 	'		<generate_bodyOf_GenericNode_findByKey(n, m, equalityDefault)>
 	'	}
 
 	'	@SuppressWarnings(\"unchecked\")
 	'	@Override
-	'	Optional<KeyOrMapEntryGenerics> findByKey(Object <keyName>, int <keyName>Hash, int shift, Comparator\<Object\> cmp) {
+	'	Optional<MapsToGenerics> findByKey(Object <keyName>, int <keyName>Hash, int shift, Comparator\<Object\> cmp) {
 	'		<generate_bodyOf_GenericNode_findByKey(n, m, equalityComparator)>
 	'	}
 
@@ -961,7 +961,7 @@ str generateLeafNodeString() =
 		}
 
 		@Override
-		Optional<KeyOrMapEntryGenerics> findByKey(Object key, int hash, int shift, Comparator\<Object\> cmp) {
+		Optional<MapsToGenerics> findByKey(Object key, int hash, int shift, Comparator\<Object\> cmp) {
 			if (this.keyHash == hash && cmp.compare(this.key, key) == 0) {
 				return Optional.of((Map.Entry<Generics(ds)>) this); // TODO: not correct
 			} else {
@@ -1349,38 +1349,6 @@ list[Argument] generateSubnodeMembers(int n)
 	= [ *subnodePair(i)   | i <- [1..n+1]]
 	;	
 
-//str generate_valNodeOf_factoryMethod_special(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) {
-//	return 
-//	"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "final <dec(a)>"; }))>) {
-//	'	final int bitmap = 0 <intercalate(" ", mapper(bitmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
-//	'	final int valmap = 0 <intercalate(" ", mapper(valmapArgs, str(Argument a) { return "| (1 \<\< <use(a)>)"; }))> ;
-//	'	final Object[] content = new Object[<2*m + n>];
-//	'
-//	'	final java.util.SortedMap\<Byte, Map.Entry<Generics(ds)>\> sortedPayloadMasks = new java.util.TreeMap\<\>();
-//	'	<for (i <- [1..m+1]) {>
-//	'	sortedPayloadMasks.put(<use(keyPos(i))>, entryOf(<use(key(i))>, <use(val(i))>));
-//	'	<}>
-//	'	
-//	'	final java.util.SortedMap\<Byte, <CompactNode(ds)><Generics(ds)>\> sortedSubnodeMasks = new java.util.TreeMap\<\>();
-//	'	<for (i <- [1..n+1]) {>
-//	'	sortedSubnodeMasks.put(<use(nodePos(i))>, <use(\node(ds, i))>);
-//	'	<}>
-//	'
-//	'	int index = 0;			
-//	'	for (Map.Entry\<Byte, Map.Entry<Generics(ds)>\> entry : sortedPayloadMasks.entrySet()) {
-//	'		content[index++] = entry.getValue().getKey();
-//	'		content[index++] = entry.getValue().getValue();
-//	'	}
-//	'
-//	'	for (Map.Entry\<Byte, CompactMapNode<Generics(ds)>\> entry : sortedSubnodeMasks.entrySet()) {
-//	'		content[index++] = entry.getValue();
-//	'	}			
-//	'			
-//	'	return nodeOf(mutator, bitmap, valmap, content, (byte) <m>);			
-//	'}
-//	";
-//}
-
 
 str generate_valNodeOf_factoryMethod(0, 0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) { throw "TODO"; }
 		
@@ -1537,12 +1505,12 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 	'	}
 
 	'	@Override
-	'	Optional<KeyOrMapEntryGenerics> findByKey(Object key, int keyHash, int shift) {
+	'	Optional<MapsToGenerics> findByKey(Object key, int keyHash, int shift) {
 	'		<generate_bodyOf_findByKey(n, m, equalityDefault)>
 	'	}
 
 	'	@Override
-	'	Optional<KeyOrMapEntryGenerics> findByKey(Object key, int keyHash, int shift,
+	'	Optional<MapsToGenerics> findByKey(Object key, int keyHash, int shift,
 	'					Comparator\<Object\> cmp) {
 	'		<generate_bodyOf_findByKey(n, m, equalityComparator)>
 	'	}

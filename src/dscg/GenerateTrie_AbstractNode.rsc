@@ -20,9 +20,9 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 
 		abstract boolean containsKey(<dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp);
 
-		abstract Optional<KeyOrMapEntryGenerics(ds)> findByKey(<dec(key())>, int keyHash, int shift);
+		abstract Optional<MapsToGenerics(ds)> findByKey(<dec(key())>, int keyHash, int shift);
 
-		abstract Optional<KeyOrMapEntryGenerics(ds)> findByKey(<dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp);
+		abstract Optional<MapsToGenerics(ds)> findByKey(<dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp);
 
 		abstract Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts))>, int keyHash, int shift);
 

@@ -249,6 +249,9 @@ str Generics(DataStructure ds:\map()) = "\<<primitiveToClass(key()).\type>\>" wh
 str Generics(DataStructure ds:\set()) = "" when isPrimitive(key());
 str Generics(DataStructure ds:\set()) = "\<<primitiveToClass(key()).\type>\>" when !isPrimitive(key());
 /***/
+str Generics(DataStructure ds:\vector()) = "" when isPrimitive(val());
+str Generics(DataStructure ds:\vector()) = "\<<primitiveToClass(val()).\type>\>" when !isPrimitive(val());
+/***/
 default str Generics(DataStructure _) { throw "Ahhh"; }
 
 
@@ -260,6 +263,9 @@ str GenericsExpanded(DataStructure ds:\set()) = "\<<primitiveToClass(key()).\typ
 
 str UnifiedGenericsExpanded(DataStructure ds:\map()) = "\<<primitiveToClass(key()).\type>, <primitiveToClass(val()).\type>\>";
 str UnifiedGenericsExpanded(DataStructure ds:\set()) = "\<<primitiveToClass(key()).\type>, java.lang.Void\>";
+str UnifiedGenericsExpanded(DataStructure ds:\vector()) = "\<<primitiveToClass(key()).\type>, <primitiveToClass(val()).\type>\>";
+default str UnifiedGenericsExpanded(DataStructure _) { throw "Ahhh"; }
+
 
 str GenericsExpandedReversed(DataStructure ds:\map()) = "\<<primitiveToClass(val()).\type>, <primitiveToClass(key()).\type>\>";
 str GenericsExpandedReversed(DataStructure ds:\set()) = GenericsExpanded(ds);
@@ -273,13 +279,17 @@ str GenericsDecExtentionForPrimitives(Argument a) = "extends <primitiveToClass(a
 default str GenericsDecExtentionForPrimitives(Argument _) = "";
 
 str ResultGenerics(DataStructure ds:\map()) = "\<<primitiveToClass(key()).\type>, <primitiveToClass(val()).\type>, ? extends <CompactNode(ds)><Generics(ds)>\>";
+str ResultGenerics(DataStructure ds:\vector()) = "\<<primitiveToClass(key()).\type>, <primitiveToClass(val()).\type>, ? extends <CompactNode(ds)><Generics(ds)>\>";
 str ResultGenerics(DataStructure ds:\set()) = "\<<primitiveToClass(key()).\type>, Void, ? extends <CompactNode(ds)><Generics(ds)>\>";
+default str ResultGenerics(DataStructure _) { throw "Ahhh"; }
 
 str ResultGenericsDec(DataStructure ds:\map()) = "\<K <GenericsDecExtentionForPrimitives(key().\type)>, V <GenericsDecExtentionForPrimitives(val().\type)>, ? extends <CompactNode(ds)><Generics(ds)>\>";
 str ResultGenericsDec(DataStructure ds:\set()) = "\<K <GenericsDecExtentionForPrimitives(key().\type)>, Void, ? extends <CompactNode(ds)><Generics(ds)>\>";
 
-str KeyOrMapEntryGenerics(DataStructure ds:\map()) = "\<java.util.Map.Entry<GenericsExpanded(ds)>\>";
-str KeyOrMapEntryGenerics(DataStructure ds:\set()) = "\<K\>";
+str MapsToGenerics(DataStructure ds:\map()) = "\<<primitiveToClass(val()).\type>\>";
+str MapsToGenerics(DataStructure ds:\set()) = "\<<primitiveToClass(key()).\type>\>";
+str MapsToGenerics(DataStructure ds:\vector()) = "\<<primitiveToClass(val()).\type>\>";
+default str MapsToGenerics(DataStructure _) { throw "Ahhh"; }
 
 str SupplierIteratorGenerics(DataStructure ds:\map()) = GenericsExpanded(ds);
 str SupplierIteratorGenerics(DataStructure ds:\set()) = "\<K, K\>";
@@ -349,15 +359,19 @@ list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds:\se
 	+ [ \node(ds, i)   | i <- [1..n+1]]
 	;	
 
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), str name) = [ key(name), val(name) ];
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), str name) = [ key(name) ];
-	
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), int i) = [ key(i), val(i) ];
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), int i) = [ key(i) ];
-
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound)) = [ key(), val() ];
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound)) = [ key() ];
-
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\vector(),	bitPartitionSize, nMax, nBound), str name) = [ key(name), val(name) ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(),		bitPartitionSize, nMax, nBound), str name) = [ key(name), val(name) ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(),		bitPartitionSize, nMax, nBound), str name) = [ key(name) ];
+/***/
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\vector(), 	bitPartitionSize, nMax, nBound), int i) = [ key(i), val(i) ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(), 		bitPartitionSize, nMax, nBound), int i) = [ key(i), val(i) ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(), 		bitPartitionSize, nMax, nBound), int i) = [ key(i) ];
+/***/
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\vector(), 	bitPartitionSize, nMax, nBound)) = [ key(), val() ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(),		bitPartitionSize, nMax, nBound)) = [ key(), val() ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(),		bitPartitionSize, nMax, nBound)) = [ key() ];
+/***/
+default list[Argument] payloadTuple(_) { throw "Ahhh"; }
 
 str containsKeyMethodName(DataStructure ds:\map()) = "containsKey";
 str containsKeyMethodName(DataStructure ds:\set()) = "contains";

@@ -225,12 +225,12 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'	}
 
 	'	@Override
-	'	Optional<KeyOrMapEntryGenerics(ds)> findByKey(<dec(key())>, int keyHash, int shift) {
+	'	Optional<MapsToGenerics(ds)> findByKey(<dec(key())>, int keyHash, int shift) {
 	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ts, setup, equalityDefaultForArguments)>
 	'	}
 
 	'	@Override
-	'	Optional<KeyOrMapEntryGenerics(ds)> findByKey(<dec(key())>, int keyHash, int shift,
+	'	Optional<MapsToGenerics(ds)> findByKey(<dec(key())>, int keyHash, int shift,
 	'					Comparator\<Object\> cmp) {
 	'		<generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ts, setup, equalityComparatorForArguments)>
 	'	}
@@ -433,11 +433,9 @@ str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___
 
 	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
 	'	if (<eq(key("keyAt(bitpos)"), key())>) {
-	'		<dec(key("_key"))> = keyAt(bitpos);
 	'		<dec(val("_val"))> = valAt(bitpos);
 	'
-	'		final Map.Entry<GenericsExpanded(ds)> entry = (java.util.Map.Entry<GenericsExpanded(ds)>) entryOf(_key, _val);
-	'		return Optional.of(entry);
+	'		return Optional.of(<use(key("_val"))>);
 	'	}
 	'
 	'	return Optional.empty();

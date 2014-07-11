@@ -76,12 +76,12 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 	'	}
 		
 	'	@Override
-	'	Optional<KeyOrMapEntryGenerics(ds)> findByKey(<dec(key())>, int hash, int shift) {
+	'	Optional<MapsToGenerics(ds)> findByKey(<dec(key())>, int hash, int shift) {
 	'		<generate_bodyOf_HashCollisionNode_findByKey(ts, setup, equalityDefaultForArguments)>			
 	'	}
 
 	'	@Override
-	'	Optional<KeyOrMapEntryGenerics(ds)> findByKey(<dec(key())>, int hash, int shift, Comparator\<Object\> cmp) {
+	'	Optional<MapsToGenerics(ds)> findByKey(<dec(key())>, int hash, int shift, Comparator\<Object\> cmp) {
 	'		<generate_bodyOf_HashCollisionNode_findByKey(ts, setup, equalityComparatorForArguments)>
 	'	}		
 
@@ -355,7 +355,7 @@ str generate_bodyOf_HashCollisionNode_findByKey(ts:___expandedTrieSpecifics(ds:\
 		<dec(key("_key"))> = keys[i];
 		if (<eq(key(), key("_key"))>) {
 			<dec(val("_val"))> = vals[i];
-			return Optional.of(entryOf(_key, _val));
+			return Optional.of(<use(key("_val"))>);
 		}
 	}
 	return Optional.empty();

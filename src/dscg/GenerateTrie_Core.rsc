@@ -284,16 +284,16 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 		final Result<ResultGenerics(ds)> result = rootNode.removed(null, key, keyHash, 0);
 
 		if (result.isModified()) {
-			<if (ds == \map()) {>
+			<if (ds == \set()) {>
+				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode - keyHash, cachedSize - 1);
+			<} else {>
 				// TODO: carry deleted value in result
 				// assert result.hasReplacedValue();
 				// final int valHash = result.getReplacedValue().hashCode();
 	
-				final int valHash = rootNode.findByKey(key, keyHash, 0).get()<if(ds == \map()) {>.getValue()<}>.hashCode();
+				final int valHash = rootNode.findByKey(key, keyHash, 0).get().hashCode();
 	
 				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode - (keyHash ^ valHash), cachedSize - 1);
-			<} else {>
-				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode - keyHash, cachedSize - 1);
 			<}>
 		}
 
@@ -306,16 +306,16 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 		final Result<ResultGenerics(ds)> result = rootNode.removed(null, key, keyHash, 0, cmp);
 
 		if (result.isModified()) {
-			<if (ds == \map()) {>		
+			<if (ds == \set()) {>		
+				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode - keyHash, cachedSize - 1);			
+			<} else {>
 				// TODO: carry deleted value in result
 				// assert result.hasReplacedValue();
 				// final int valHash = result.getReplacedValue().hashCode();
 		
-				final int valHash = rootNode.findByKey(key, keyHash, 0, cmp).get()<if(ds == \map()) {>.getValue()<}>.hashCode();
+				final int valHash = rootNode.findByKey(key, keyHash, 0, cmp).get().hashCode();
 		
 				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode - (keyHash ^ valHash), cachedSize - 1);
-			<} else {>
-				return new <coreClassName><Generics(ds)>(result.getNode(), hashCode - keyHash, cachedSize - 1);			
 			<}>
 		}
 
@@ -369,10 +369,10 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	public <dsAtFunction__range_type(ds)> get(Object o) {
 		try {
 			<dec(key())> = (<key().\type>) o;
-			final Optional<KeyOrMapEntryGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
+			final Optional<MapsToGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
 	
 			if (result.isPresent()) {
-				return result.get()<if (ds == \map()) {>.getValue()<}>;
+				return result.get();
 			} else {
 				return null;
 			}			
@@ -385,10 +385,10 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	public <dsAtFunction__range_type(ds)> getEquivalent(Object o, Comparator\<Object\> cmp) {
 		try {
 			<dec(key())> = (<key().\type>) o;
-			final Optional<KeyOrMapEntryGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
+			final Optional<MapsToGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
 	
 			if (result.isPresent()) {
-				return result.get()<if (ds == \map()) {>.getValue()<}>;
+				return result.get();
 			} else {
 				return null;
 			}			

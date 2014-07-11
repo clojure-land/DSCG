@@ -66,10 +66,10 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		public <dsAtFunction__range_type(ds)> get(Object o) {
 			try {
 				<dec(key())> = (<key().\type>) o;
-				final Optional<KeyOrMapEntryGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
+				final Optional<MapsToGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
 		
 				if (result.isPresent()) {
-					return result.get()<if (ds == \map()) {>.getValue()<}>;
+					return result.get();
 				} else {
 					return null;
 				}			
@@ -82,10 +82,10 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		public <dsAtFunction__range_type(ds)> getEquivalent(Object o, Comparator\<Object\> cmp) {
 			try {
 				<dec(key())> = (<key().\type>) o;
-				final Optional<KeyOrMapEntryGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
+				final Optional<MapsToGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
 		
 				if (result.isPresent()) {
-					return result.get()<if (ds == \map()) {>.getValue()<}>;
+					return result.get();
 				} else {
 					return null;
 				}			
@@ -125,7 +125,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 					// assert result.hasReplacedValue();
 					// final int valHash = result.getReplacedValue().hashCode();
 	
-					final int valHash = rootNode.findByKey(key, keyHash, 0).get()<if(ds == \map()) {>.getValue()<}>.hashCode();
+					final int valHash = rootNode.findByKey(key, keyHash, 0).get().hashCode();
 	
 					rootNode = result.getNode();
 					hashCode -= keyHash ^ valHash;
@@ -168,7 +168,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 					// assert result.hasReplacedValue();
 					// final int valHash = result.getReplacedValue().hashCode();
 	
-					final int valHash = rootNode.findByKey(key, keyHash, 0, cmp).get()<if(ds == \map()) {>.getValue()<}>.hashCode();
+					final int valHash = rootNode.findByKey(key, keyHash, 0, cmp).get().hashCode();
 	
 					rootNode = result.getNode();
 					hashCode -= keyHash ^ valHash;
