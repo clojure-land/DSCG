@@ -134,11 +134,13 @@ Argument primitiveToClass(field("byte", name))  = field("java.lang.Byte", name);
 Argument primitiveToClass(field("short", name)) = field("java.lang.Short", name);
 Argument primitiveToClass(field("int", name))   = field("java.lang.Integer", name);
 Argument primitiveToClass(field("long", name))  = field("java.lang.Long", name);
+Argument primitiveToClass(field("Object", name))= field("java.lang.Object", name); // HACK!!!
 /***/
 Argument primitiveToClass(getter("byte", name))  = getter("java.lang.Byte", name);
 Argument primitiveToClass(getter("short", name)) = getter("java.lang.Short", name);
 Argument primitiveToClass(getter("int", name))   = getter("java.lang.Integer", name);
 Argument primitiveToClass(getter("long", name))  = getter("java.lang.Long", name);
+Argument primitiveToClass(getter("Object", name))= getter("java.lang.Object", name); // HACK!!!
 /***/
 default Argument primitiveToClass(Argument nonPrimitive)  = nonPrimitive;
 
@@ -148,6 +150,7 @@ bool isPrimitive("byte")  = true;
 bool isPrimitive("short") = true;
 bool isPrimitive("int")   = true;
 bool isPrimitive("long")  = true;
+bool isPrimitive("Object")= true; // HACK!!!
 default bool isPrimitive(str x) = false;
 /***/
 bool isPrimitive(Argument a) = isPrimitive(a.\type);
@@ -160,6 +163,7 @@ bool isPrimitiveArray("byte[]")  = true;
 bool isPrimitiveArray("short[]") = true;
 bool isPrimitiveArray("int[]")   = true;
 bool isPrimitiveArray("long[]")  = true;
+bool isPrimitiveArray("Object[]")= true; // HACK!!!
 default bool isPrimitiveArray(str x) = false;
 /***/
 bool isPrimitiveArray(Argument a)  = isPrimitiveArray(a.\type);

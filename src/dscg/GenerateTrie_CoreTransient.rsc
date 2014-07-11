@@ -545,7 +545,7 @@ str insertOrPutAll(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax
 
 		for (Entry<GenericsExpandedUpperBounded(ds)> entry : map.entrySet()) {
 			final boolean isPresent = containsKey<if (useComparator) {>Equivalent<}>(entry.getKey()<if (useComparator) {>, cmp<}>);
-			final V replaced = __put<if (useComparator) {>Equivalent<}>(entry.getKey(), entry.getValue()<if (useComparator) {>, cmp<}>);
+			<dec(val("replaced"))> = __put<if (useComparator) {>Equivalent<}>(entry.getKey(), entry.getValue()<if (useComparator) {>, cmp<}>);
 
 			if (!isPresent || replaced != null) {
 				modified = true;

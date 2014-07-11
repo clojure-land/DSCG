@@ -51,6 +51,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			// assert ((nodes[i] instanceof CompactNode) == true);
 
 			// assert invariant
+			assert arity() \> <nBound>;
 			assert nodeInvariant();
 		}
 		

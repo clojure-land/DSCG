@@ -21,7 +21,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 	private static abstract class Abstract<toString(ds)>Iterator<Generics(ds)> {
 		
 		// TODO: verify maximum deepness
-		private static final int MAX_DEPTH = <ceil(32/bitPartitionSize)>;
+		private static final int MAX_DEPTH = <2 + ceil(32/bitPartitionSize)>;
 		
 		protected int currentValueCursor;
 		protected int currentValueLength;
