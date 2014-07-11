@@ -258,6 +258,7 @@ default str Generics(DataStructure _) { throw "Ahhh"; }
 str InferredGenerics() = "" when isPrimitive(key()) && isPrimitive(val());
 default str InferredGenerics() = "\<\>";
 
+str GenericsExpanded(DataStructure ds:\vector()) = "\<<primitiveToClass(key()).\type>, <primitiveToClass(val()).\type>\>";
 str GenericsExpanded(DataStructure ds:\map()) = "\<<primitiveToClass(key()).\type>, <primitiveToClass(val()).\type>\>";
 str GenericsExpanded(DataStructure ds:\set()) = "\<<primitiveToClass(key()).\type>\>";
 
@@ -286,13 +287,27 @@ default str ResultGenerics(DataStructure _) { throw "Ahhh"; }
 str ResultGenericsDec(DataStructure ds:\map()) = "\<K <GenericsDecExtentionForPrimitives(key().\type)>, V <GenericsDecExtentionForPrimitives(val().\type)>, ? extends <CompactNode(ds)><Generics(ds)>\>";
 str ResultGenericsDec(DataStructure ds:\set()) = "\<K <GenericsDecExtentionForPrimitives(key().\type)>, Void, ? extends <CompactNode(ds)><Generics(ds)>\>";
 
+
 str MapsToGenerics(DataStructure ds:\map()) = "\<<primitiveToClass(val()).\type>\>";
 str MapsToGenerics(DataStructure ds:\set()) = "\<<primitiveToClass(key()).\type>\>";
 str MapsToGenerics(DataStructure ds:\vector()) = "\<<primitiveToClass(val()).\type>\>";
 default str MapsToGenerics(DataStructure _) { throw "Ahhh"; }
+/***/
+str dsAtFunction__domain_type(DataStructure ds:\map()) = key().\type;
+str dsAtFunction__domain_type(DataStructure ds:\set()) = key().\type;
+str dsAtFunction__domain_type(DataStructure ds:\vector()) = key().\type;
+default str dsAtFunction__domain_type(_) { throw "Ahhh"; }
+/***/
+str dsAtFunction__range_type(DataStructure ds:\map()) = val().\type;
+str dsAtFunction__range_type(DataStructure ds:\set()) = key().\type;
+str dsAtFunction__range_type(DataStructure ds:\vector()) = val().\type;
+default str dsAtFunction__range_type(_) { throw "Ahhh"; }
 
-str SupplierIteratorGenerics(DataStructure ds:\map()) = GenericsExpanded(ds);
-str SupplierIteratorGenerics(DataStructure ds:\set()) = "\<K, K\>";
+
+
+str SupplierIteratorGenerics(DataStructure ds:\vector())= GenericsExpanded(ds);
+str SupplierIteratorGenerics(DataStructure ds:\map())	= GenericsExpanded(ds);
+str SupplierIteratorGenerics(DataStructure ds:\set())	= "\<K, K\>";
 
 str SupplierIteratorGenericsReversed(DataStructure ds) = GenericsExpandedReversed(ds);
 
@@ -349,9 +364,10 @@ list[Argument] metadataArguments(int n, int m, ts:___expandedTrieSpecifics(ds, b
 	= [ ___bitmapField(bitPartitionSize), ___valmapField(bitPartitionSize) ]
 	;
 
-list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound)) 
+list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) 
 	= [ key(i), val(i) | i <- [1..m+1]] 
 	+ [ \node(ds, i)   | i <- [1..n+1]]
+when ds == \map() || ds == \vector()	
 	;	
 
 list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound)) 
@@ -375,23 +391,15 @@ default list[Argument] payloadTuple(_) { throw "Ahhh"; }
 
 str containsKeyMethodName(DataStructure ds:\map()) = "containsKey";
 str containsKeyMethodName(DataStructure ds:\set()) = "contains";
+str containsKeyMethodName(DataStructure ds:\vector()) = "containsKey";
 default str containsKeyMethodName(_) { throw "Ahhh"; }
 
 str insertOrPutMethodName(DataStructure ds:\map()) = "__put";
 str insertOrPutMethodName(DataStructure ds:\set()) = "__insert";
+str insertOrPutMethodName(DataStructure ds:\vector()) = "__put";
 default str insertOrPutMethodName(_) { throw "Ahhh"; }
 
 int tupleLength(DataStructure ds:\map()) = 2;
 int tupleLength(DataStructure ds:\set()) = 1;
+int tupleLength(DataStructure ds:\vector()) = 2;
 default int tupleLength(_) { throw "Ahhh"; }
-
-
-
-
-str dsAtFunction__domain_type(DataStructure ds:\map()) = key().\type;
-str dsAtFunction__domain_type(DataStructure ds:\set()) = key().\type;
-default str dsAtFunction__domain_type(_) { throw "Ahhh"; }
-
-str dsAtFunction__range_type(DataStructure ds:\map()) = val().\type;
-str dsAtFunction__range_type(DataStructure ds:\set()) = key().\type;
-default str dsAtFunction__range_type(_) { throw "Ahhh"; }

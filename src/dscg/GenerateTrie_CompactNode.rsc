@@ -427,7 +427,7 @@ str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(_, _, _, rel[Option,
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;		
 	
-str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
+str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
 
@@ -448,6 +448,7 @@ str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___
 	'}
 	'
 	'return Optional.empty();"
+when ds == \map() || ds == \vector()
 	;
 	
 str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 

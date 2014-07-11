@@ -33,7 +33,7 @@ str generate_checkHashCodeAndSize(ts:___expandedTrieSpecifics(ds:\set(), bitPart
 	"
 	;
 
-str generate_checkHashCodeAndSize(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
+str generate_checkHashCodeAndSize(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
 	"
 	private boolean checkHashCodeAndSize(final int targetHash, final int targetSize) {
 		int hash = 0;
@@ -51,4 +51,5 @@ str generate_checkHashCodeAndSize(ts:___expandedTrieSpecifics(ds:\map(), bitPart
 		return hash == targetHash && size == targetSize;
 	}
 	"
+when ds == \map() || ds == vector()	
 	;

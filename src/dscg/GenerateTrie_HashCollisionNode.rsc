@@ -16,7 +16,14 @@ import dscg::ArrayUtils;
 
 str hashCollisionClassName = "TODO: REMOVE THIS GLOBAL STATE!";
 
+str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds:\vector(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix) 
+	= "" ;
+
 str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix) {
+
+	if (!(ds == \map() || ds == vector)) {
+		fail;
+	}
 
 	hashCollisionClassName = "HashCollision<toString(ds)>Node<classNamePostfix>";
 
