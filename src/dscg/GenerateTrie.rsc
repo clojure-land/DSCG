@@ -60,7 +60,7 @@ void main() {
 			+ [ generateAbstractNodeClassString(ts, setup)]		
 			+ [ generateCompactNodeClassString(ts, setup, classNamePostfix)];
 
-		if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {
+		if (!isOptionEnabled(setup,useSpecialization()) || nBound < nMax) {
 			innerClassStrings = innerClassStrings + [ generateBitmapIndexedNodeClassString(ts, setup)];
 		}
 
@@ -788,24 +788,6 @@ default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieS
 	'	}"
 	;	
 	
-str generate_bodyOf_copyAndRemoveNode(0, _, _)
-	= "throw new IllegalStateException(\"Index out of range.\");"
-	;
-	
-default str generate_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
-	"	final int bitIndex = nodeIndex(bitpos);
-	'
-	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);
-	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)>);
-	'
-	'	switch(bitIndex) {
-	'		<for (i <- [1..n+1]) {>case <i-1>:
-	'			return <nodeOf(n-1, m, use(metadataArguments(n, m, ts) + contentArguments(n, m, ts) - [ \node(ds, i) ]))>;
-	'		<}>default:
-	'			throw new IllegalStateException(\"Index out of range.\");	
-	'	}"
-	;	
-
 str generate_bodyOf_copyAndMigrateFromInlineToNode(_, 0, _)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
@@ -1807,11 +1789,6 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'	@Override
 	'	<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
 	'		<generate_bodyOf_copyAndSetNode(n, m, ts)>
-	'	}	
-
-	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
-	'		<generate_bodyOf_copyAndRemoveNode(n, m, ts)>
 	'	}	
 
 	'	@Override

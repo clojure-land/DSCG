@@ -370,8 +370,12 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			 * TODO: test removal with iteration rigorously
 			 */
 			@Override
-			public void remove() {
-				<uncapitalize(className)>.__remove(lastKey);
+			public void remove() {				
+				boolean success = <uncapitalize(className)>.__remove(lastKey);
+				
+				if (!success) {
+					throw new IllegalStateException(\"Key from iteration couldn\'t be deleted.\"); 
+				}				
 			}
 		}
 

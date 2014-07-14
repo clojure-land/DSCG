@@ -264,11 +264,6 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
 						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
 			throw new UnsupportedOperationException();

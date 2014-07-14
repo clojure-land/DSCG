@@ -51,8 +51,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			// assert ((nodes[i] instanceof CompactNode) == true);
 
 			// assert invariant
-			assert arity() \> <nBound>;
-			assert nodeInvariant();
+			<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>assert arity() \> <nBound>;<}>assert nodeInvariant();
 		}
 		
 		<if (!isPrimitive(key())) {>@SuppressWarnings(\"unchecked\")<}>
@@ -264,16 +263,6 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			<arraycopyAndInsertTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), tupleLength(ds), payloadTuple(ts), field(primitive("int"), "idx"))>
 			
 			return nodeOf(mutator, <use(bitmapMethod)>, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(valmapMethod)> | bitpos), <use(field(asArray(object()), "dst"))>, (byte) (payloadArity + 1));
-		}
-
-		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
-			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);
-			
-			<dec(field(asArray(object()), "src"))> = this.nodes;
-			<arraycopyAndRemoveTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), 1, field(primitive("int"), "idx"))>
-			
-			return nodeOf(mutator, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(bitmapMethod)> ^ bitpos), <use(valmapMethod)>, <use(field(asArray(object()), "dst"))>, payloadArity);
 		}
 
 		@Override
