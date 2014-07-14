@@ -36,10 +36,10 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 			return x != null && y != null && (x == y || x.get() == y.get());
 		}
 
-		abstract <key().\type> getKey(int index);
+		abstract <toString(key().\type)> getKey(int index);
 
 		<if (ds == \map()) {>
-		abstract <val().\type> getValue(int index);
+		abstract <toString(val().\type)> getValue(int index);
 		<}>
 
 		<if (ds == \map()) {>

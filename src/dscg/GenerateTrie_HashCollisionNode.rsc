@@ -29,11 +29,11 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 	return  
 	"private static final class <hashCollisionClassName><Generics(ds)> extends <CompactNode(ds)><Generics(ds)> {
-		private final <key().\type>[] keys;
-		<if (ds == \map()) {>private final <val().\type>[] vals;<}>
+		private <dec(field(asArray(key().\type), "keys"))>;		
+		<if (ds == \map()) {>private <dec(field(asArray(val().\type), "vals"))>;<}>
 		private final int hash;
 
-		<hashCollisionClassName>(final int hash, final <key().\type>[] keys<if (ds == \map()) {>, <val().\type>[] vals<}>) {
+		<hashCollisionClassName>(final int hash, <dec(field(asArray(key().\type), "keys"))><if (ds == \map()) {>, <dec(field(asArray(val().\type), "vals"))><}>) {
 			this.keys = keys;
 			<if (ds == \map()) {>this.vals = vals;<}>
 			this.hash = hash;
@@ -59,14 +59,14 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 
 		@Override
-		<key().\type> headKey() {
+		<toString(key().\type)> headKey() {
 			assert hasPayload();
 			return keys[0];
 		}
 
 		<if (ds == \map()) {>
 		@Override
-		<val().\type> headVal() {
+		<toString(val().\type)> headVal() {
 			assert hasPayload();
 			return vals[0];
 		}
@@ -145,13 +145,13 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 
 		@Override
-		<key().\type> getKey(int index) {
+		<toString(key().\type)> getKey(int index) {
 			return keys[index];
 		}
 
 		<if (ds == \map()) {>
 		@Override
-		<val().\type> getValue(int index) {
+		<toString(val().\type)> getValue(int index) {
 			return vals[index];
 		}
 		<}>
@@ -298,8 +298,8 @@ for (int idx = 0; idx \< keys.length; idx++) {
 				return Result.unchanged(this);
 			}
 
-			<dec(field("<val().\type>[]", "src"))> = this.vals;
-			<arraycopyAndSetTuple(field("<val().\type>[]", "src"), field("<val().\type>[]", "dst"), 1, [val()], field("int", "idx"))>
+			<dec(field(asArray(val().\type), "src"))> = this.vals;
+			<arraycopyAndSetTuple(field(asArray(val().\type), "src"), field(asArray(val().\type), "dst"), 1, [val()], field(primitive("int"), "idx"))>
 
 			final <CompactNode(ds)><Generics(ds)> thisNew = new <hashCollisionClassName><InferredGenerics()>(this.hash, this.keys, dst);
 
@@ -310,8 +310,8 @@ for (int idx = 0; idx \< keys.length; idx++) {
 	}
 }
 
-<arraycopyAndInsertTuple(field("<key().\type>[]", "this.keys"), field("<key().\type>[]", "keysNew"), 1, [key()], field("int", "keys.length"))>
-<if (ds == \map()) {><arraycopyAndInsertTuple(field("<val().\type>[]", "this.vals"), field("<val().\type>[]", "valsNew"), 1, [val()], field("int", "vals.length"))><}>
+<arraycopyAndInsertTuple(field(asArray(key().\type), "this.keys"), field(asArray(key().\type), "keysNew"), 1, [key()], field(primitive("int"), "keys.length"))>
+<if (ds == \map()) {><arraycopyAndInsertTuple(field(asArray(val().\type), "this.vals"), field(asArray(val().\type), "valsNew"), 1, [val()], field(primitive("int"), "vals.length"))><}>
 
 return Result.modified(new <hashCollisionClassName><InferredGenerics()>(keyHash, keysNew<if (ds == \map()) {>, valsNew<}>));"; 
 
@@ -332,8 +332,8 @@ for (int idx = 0; idx \< keys.length; idx++) {
 			return <CompactNode(ds)>.<Generics(ds)> nodeOf(mutator).updated(mutator,
 							theOtherKey<if (ds == \map()) {>, theOtherVal<}>, keyHash, 0<if (!(eq == equalityDefaultForArguments)) {>, cmp<}>);
 		} else {
-			<arraycopyAndRemoveTuple(field("<key().\type>[]", "this.keys"), field("<key().\type>[]", "keysNew"), 1, field("int", "idx"))>
-			<if (ds == \map()) {><arraycopyAndRemoveTuple(field("<val().\type>[]", "this.vals"), field("<val().\type>[]", "valsNew"), 1, field("int", "idx"))><}>
+			<arraycopyAndRemoveTuple(field(asArray(key().\type), "this.keys"), field(asArray(key().\type), "keysNew"), 1, field(primitive("int"), "idx"))>
+			<if (ds == \map()) {><arraycopyAndRemoveTuple(field(asArray(val().\type), "this.vals"), field(asArray(val().\type), "valsNew"), 1, field(primitive("int"), "idx"))><}>
 
 			return Result.modified(new <hashCollisionClassName><InferredGenerics()>(keyHash, keysNew<if (ds == \map()) {>, valsNew<}>));
 		}
@@ -346,7 +346,7 @@ return Result.unchanged(this);
 str generate_bodyOf_HashCollisionNode_containsKey(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
 "
 if (this.hash == keyHash) {
-	for (<key().\type> k : keys) {
+	for (<toString(key().\type)> k : keys) {
 		if (<eq(key("k"), key())>) {
 			return true;
 		}

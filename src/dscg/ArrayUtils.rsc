@@ -15,7 +15,7 @@ import List;
 import dscg::Common;
 
 /*
- * usage: arraycopyAndInsertTuple(field("Object[]", "src"), field("Object[]", "dst"), [key("key"), val("val")], field("int", "idx"));
+ * usage: arraycopyAndInsertTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), [key("key"), val("val")], field("int", "idx"));
  */
 str arraycopyAndInsertTuple(Argument src, Argument dst, int tupleSize, list[Argument] new, Argument newAtIndex) {
 	if (tupleSize != size(new)) {
@@ -27,8 +27,8 @@ str arraycopyAndInsertTuple(Argument src, Argument dst, int tupleSize, list[Argu
 	}	
 		
 	return
-		"<if (!isPrimitiveArray(dst)) {>@SuppressWarnings(\"unchecked\")<}>
-		<dec(dst)> = <if (!isPrimitiveArray(dst)) {>(<dst.\type>)<}> new <if (isPrimitiveArray(dst.\type)) {><typeStringWithoutArray(dst)><} else {>Object<}>[<use(src)>.length + <tupleSize>];
+		"<if (!isPrimitive(dst)) {>@SuppressWarnings(\"unchecked\")<}>
+		<dec(dst)> = <if (!isPrimitive(dst)) {>(<toString(dst.\type)>)<}> new <if (isPrimitive(dst.\type)) {><typeStringWithoutArray(dst)><} else {>Object<}>[<use(src)>.length + <tupleSize>];
 
 		// copy \'<use(src)>\' and insert <tupleSize> element(s) at position \'<use(newAtIndex)>\'
 		System.arraycopy(<use(src)>, 0, <use(dst)>, 0, <use(newAtIndex)>);
@@ -43,8 +43,8 @@ str arraycopyAndRemoveTuple(Argument src, Argument dst, int tupleSize, Argument 
 	}		
 	
 	return
-		"<if (!isPrimitiveArray(dst)) {>@SuppressWarnings(\"unchecked\")<}>
-		<dec(dst)> = <if (!isPrimitiveArray(dst)) {>(<dst.\type>)<}> new <if (isPrimitiveArray(dst.\type)) {><typeStringWithoutArray(dst)><} else {>Object<}>[<use(src)>.length - <tupleSize>];
+		"<if (!isPrimitive(dst)) {>@SuppressWarnings(\"unchecked\")<}>
+		<dec(dst)> = <if (!isPrimitive(dst)) {>(<toString(dst.\type)>)<}> new <if (isPrimitive(dst.\type)) {><typeStringWithoutArray(dst)><} else {>Object<}>[<use(src)>.length - <tupleSize>];
 
 		// copy \'<use(src)>\' and remove <tupleSize> element(s) at position \'<use(newAtIndex)>\'
 		System.arraycopy(<use(src)>, 0, <use(dst)>, 0, <use(newAtIndex)>);
@@ -66,8 +66,8 @@ str arraycopyAndSetTuple(Argument src, Argument dst, int tupleSize, list[Argumen
 	} 
 	
 	return
-		"<if (!isPrimitiveArray(dst)) {>@SuppressWarnings(\"unchecked\")<}>
-		<dec(dst)> = <if (!isPrimitiveArray(dst)) {>(<dst.\type>)<}> new <if (isPrimitiveArray(dst.\type)) {><typeStringWithoutArray(dst)><} else {>Object<}>[<use(src)>.length];
+		"<if (!isPrimitive(dst)) {>@SuppressWarnings(\"unchecked\")<}>
+		<dec(dst)> = <if (!isPrimitive(dst)) {>(<toString(dst.\type)>)<}> new <if (isPrimitive(dst.\type)) {><typeStringWithoutArray(dst)><} else {>Object<}>[<use(src)>.length];
 
 		// copy \'<use(src)>\' and set <tupleSize> element(s) at position \'<use(newAtIndex)>\'
 		System.arraycopy(<use(src)>, 0, <use(dst)>, 0, <use(src)>.length);
@@ -80,7 +80,7 @@ str arraycopyAndMigrateFromDataTupleToNodeTuple(Argument src, Argument dst, int 
 		throw "Invalid arguments.";
 	}	
 
-	dst = field("Object[]", dst.name);
+	dst = field(asArray(object()), dst.name);
 
 	return
 		"<dec(dst)> = new Object[<use(src)>.length - <oldTupleSize> + <newTupleSize>];
@@ -99,7 +99,7 @@ str arraycopyAndMigrateFromNodeTupleToDataTuple(Argument src, Argument dst, int 
 		throw "Invalid arguments.";
 	}	
 
-	dst = field("Object[]", dst.name);
+	dst = field(asArray(object()), dst.name);
 
 	return
 		"<dec(dst)> = new Object[<use(src)>.length - <oldTupleSize> + <newTupleSize>];

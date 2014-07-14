@@ -112,7 +112,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		}
 
 		@Override
-		public <primitiveToClass(key()).\type> next() {
+		public <toString(primitiveToClass(key()).\type)> next() {
 			if (!hasNext()) {
 				throw new NoSuchElementException();
 			} else {
@@ -135,7 +135,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		}
 
 		@Override
-		public <primitiveToClass(val()).\type> next() {
+		public <toString(primitiveToClass(val()).\type)> next() {
 			if (!hasNext()) {
 				throw new NoSuchElementException();
 			} else {
@@ -144,13 +144,13 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		}
 
 		@Override
-		public <primitiveToClass(key()).\type> get() {
+		public <toString(primitiveToClass(key()).\type)> get() {
 			throw new UnsupportedOperationException();
 		}
 	}
 
 	private static final class <toString(ds)>EntryIterator<Generics(ds)> extends Abstract<toString(ds)>Iterator<Generics(ds)> implements
-					SupplierIterator\<Map.Entry<GenericsExpanded(ds)>, <primitiveToClass(key()).\type>\> {
+					SupplierIterator\<Map.Entry<GenericsExpanded(ds)>, <toString(primitiveToClass(key()).\type)>\> {
 
 		<toString(ds)>EntryIterator(<AbstractNode(ds)><Generics(ds)> rootNode) {
 			super(rootNode);
@@ -166,7 +166,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		}
 
 		@Override
-		public <primitiveToClass(key()).\type> get() {
+		public <toString(primitiveToClass(key()).\type)> get() {
 			throw new UnsupportedOperationException();
 		}
 	}

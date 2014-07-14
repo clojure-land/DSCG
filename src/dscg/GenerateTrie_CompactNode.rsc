@@ -25,7 +25,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	members = abstractMembers + concreteMembers;	
 	
 	constructorArgs = asFieldList(
-		  field("AtomicReference\<Thread\>", "mutator") 
+		  field(specific("AtomicReference\<Thread\>"), "mutator") 
 		+ members);
 
 	str className = "Compact<toString(ds)>Node";
@@ -54,11 +54,11 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'	protected static final int BIT_PARTITION_SIZE = <bitPartitionSize>;
 	'	protected static final int BIT_PARTITION_MASK = 0b<for (i <- [1..bitPartitionSize+1]) {>1<}>;
 	'
-		<___bitmapField(bitPartitionSize).\type> <bitmapField.name>() {
+		<toString(___bitmapField(bitPartitionSize).\type)> <bitmapField.name>() {
 			throw new UnsupportedOperationException(); 
 		}
 
-		<___valmapField(bitPartitionSize).\type> <valmapField.name>() {
+		<toString(___valmapField(bitPartitionSize).\type)> <valmapField.name>() {
 			throw new UnsupportedOperationException();
 		}
 
@@ -84,7 +84,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		 * 
 		 * @return first key
 		 */
-		abstract <key().\type> headKey();
+		abstract <toString(key().\type)> headKey();
 
 		<if (ds == \map()) {>
 		/**
@@ -92,7 +92,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		 * 
 		 * @return first value
 		 */
-		abstract <val().\type> headVal();
+		abstract <toString(val().\type)> headVal();
 		<}>
 
 		@Override
@@ -135,8 +135,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 			assert !(<equalityDefaultForArguments(key("key0"), key("key1"))>);
 
 			if (keyHash0 == keyHash1) {
-				return new <hashCollisionClassName><InferredGenerics()>(keyHash0, (<key().\type>[]) new <if (isPrimitive(key().\type)) {><key().\type><} else {>Object<}>[] { key0, key1 }
-								<if (ds == \map()) {>, (<val().\type>[]) new <if (isPrimitive(val().\type)) {><val().\type><} else {>Object<}>[] { val0, val1 }<}>);
+				return new <hashCollisionClassName><InferredGenerics()>(keyHash0, (<toString(key().\type)>[]) new <if (isPrimitive(key().\type)) {><toString(key().\type)><} else {>Object<}>[] { key0, key1 }
+								<if (ds == \map()) {>, (<toString(val().\type)>[]) new <if (isPrimitive(val().\type)) {><toString(val().\type)><} else {>Object<}>[] { val0, val1 }<}>);
 			}
 
 			final int mask0 = (keyHash0 \>\>\> shift) & BIT_PARTITION_MASK;
@@ -171,7 +171,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'	static final <CompactNode(ds)> <emptyTrieNodeConstantName>;
 
 	'	static {
-	'		<if (isOptionEnabled(setup,useSpecialization())) {><emptyTrieNodeConstantName> = new <toString(ds)>0To0Node<classNamePostfix><InferredGenerics()>(null, (<chunkSizeToPrimitive(bitPartitionSize)>) 0, (<chunkSizeToPrimitive(bitPartitionSize)>) 0);<} else {><emptyTrieNodeConstantName> = new BitmapIndexed<toString(ds)>Node<InferredGenerics()>(null, (<chunkSizeToPrimitive(bitPartitionSize)>) 0, (<chunkSizeToPrimitive(bitPartitionSize)>) 0, new Object[] {}, (byte) 0);<}>	
+	'		<if (isOptionEnabled(setup,useSpecialization())) {><emptyTrieNodeConstantName> = new <toString(ds)>0To0Node<classNamePostfix><InferredGenerics()>(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0);<} else {><emptyTrieNodeConstantName> = new BitmapIndexed<toString(ds)>Node<InferredGenerics()>(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, new Object[] {}, (byte) 0);<}>	
 	'	};
 	
 	<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>
@@ -183,7 +183,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 	'	// TODO: consolidate and remove
 	'	static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(AtomicReference\<Thread\> mutator) {
-	'		return nodeOf(mutator, (<chunkSizeToPrimitive(bitPartitionSize)>) 0, (<chunkSizeToPrimitive(bitPartitionSize)>) 0);
+	'		return nodeOf(mutator, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0);
 	'	}
 
 	<if (isOptionEnabled(setup,useSpecialization())) {>
@@ -200,12 +200,12 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'		return <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___bitmapMethod(bitPartitionSize))> & (bitpos - 1));
 	'	}
 
-		<key().\type> keyAt(<dec(___bitposField(bitPartitionSize))>) {
+		<toString(key().\type)> keyAt(<dec(___bitposField(bitPartitionSize))>) {
 			return getKey(dataIndex(bitpos)); 
 		}
 	
 		<if (ds == \map()) {>
-		<val().\type> valAt(<dec(___bitposField(bitPartitionSize))>) {
+		<toString(val().\type)> valAt(<dec(___bitposField(bitPartitionSize))>) {
 			return getValue(dataIndex(bitpos)); 
 		}
 		<}>
@@ -268,12 +268,12 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		}
 
 		@Override
-		public <___bitmapField(bitPartitionSize).\type> <bitmapField.name>() {
+		public <toString(___bitmapField(bitPartitionSize).\type)> <bitmapField.name>() {
 			return <bitmapField.name>;
 		}
 
 		@Override
-		public <___valmapField(bitPartitionSize).\type> <valmapField.name>() {
+		public <toString(___valmapField(bitPartitionSize).\type)> <valmapField.name>() {
 			return <valmapField.name>;
 		}
 
@@ -288,12 +288,12 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		}
 
 		@Override
-		public <___bitmapField(bitPartitionSize).\type> <bitmapField.name>() {
+		public <toString(___bitmapField(bitPartitionSize).\type)> <bitmapField.name>() {
 			return <bitmapField.name>;
 		}
 
 		@Override
-		public <___valmapField(bitPartitionSize).\type> <valmapField.name>() {
+		public <toString(___valmapField(bitPartitionSize).\type)> <valmapField.name>() {
 			return 0;
 		}
 
@@ -308,12 +308,12 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		}
 
 		@Override
-		public <___bitmapField(bitPartitionSize).\type> <bitmapField.name>() {
+		public <toString(___bitmapField(bitPartitionSize).\type)> <bitmapField.name>() {
 			return 0;
 		}
 
 		@Override
-		public <___valmapField(bitPartitionSize).\type> <valmapField.name>() {
+		public <toString(___valmapField(bitPartitionSize).\type)> <valmapField.name>() {
 			return <valmapField.name>;
 		}
 
@@ -325,12 +325,12 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		}
 
 		@Override
-		public <___bitmapField(bitPartitionSize).\type> <bitmapField.name>() {
+		public <toString(___bitmapField(bitPartitionSize).\type)> <bitmapField.name>() {
 			return 0;
 		}
 
 		@Override
-		public <___valmapField(bitPartitionSize).\type> <valmapField.name>() {
+		public <toString(___valmapField(bitPartitionSize).\type)> <valmapField.name>() {
 			return 0;
 		}
 
@@ -348,21 +348,21 @@ str generate_bodyOf_mergeTwoValues(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'}";
 
 str generate_bodyOf_mergeTwoValues(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionBitmap()) =
-	"<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask0 | 1L \<\< mask1);
+	"<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask0 | 1L \<\< mask1);
 	'
 	'if (mask0 \< mask1) {
-	'	return nodeOf(null, (<chunkSizeToPrimitive(bitPartitionSize)>) 0, <use(valmapField)>, <use(payloadTuple(ts, 0))>, <use(payloadTuple(ts, 1))>);
+	'	return nodeOf(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, <use(valmapField)>, <use(payloadTuple(ts, 0))>, <use(payloadTuple(ts, 1))>);
 	'} else {
-	'	return nodeOf(null, (<chunkSizeToPrimitive(bitPartitionSize)>) 0, <use(valmapField)>, <use(payloadTuple(ts, 1))>, <use(payloadTuple(ts, 0))>);
+	'	return nodeOf(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, <use(valmapField)>, <use(payloadTuple(ts, 1))>, <use(payloadTuple(ts, 0))>);
 	'}";	
 	
 str generate_bodyOf_mergeTwoValues(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),false>}, Position _) =
-	"<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask0 | 1L \<\< mask1);
+	"<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask0 | 1L \<\< mask1);
 	'
 	'if (mask0 \< mask1) {
-	'	return nodeOf(null, (<chunkSizeToPrimitive(bitPartitionSize)>) 0, <use(valmapField)>, new Object[] { <use(payloadTuple(ts, 0))>, <use(payloadTuple(ts, 1))> }, (byte) 2);
+	'	return nodeOf(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, <use(valmapField)>, new Object[] { <use(payloadTuple(ts, 0))>, <use(payloadTuple(ts, 1))> }, (byte) 2);
 	'} else {
-	'	return nodeOf(null, (<chunkSizeToPrimitive(bitPartitionSize)>) 0, <use(valmapField)>, new Object[] { <use(payloadTuple(ts, 1))>, <use(payloadTuple(ts, 0))> }, (byte) 2);
+	'	return nodeOf(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, <use(valmapField)>, new Object[] { <use(payloadTuple(ts, 1))>, <use(payloadTuple(ts, 0))> }, (byte) 2);
 	'}";	
 
 default str generate_bodyOf_mergeTwoValues(TrieSpecifics _, Option _, Position _) { throw "something went wrong"; }
@@ -371,12 +371,12 @@ str generate_bodyOf_mergeOnNextLevel(ts:___expandedTrieSpecifics(ds, bitPartitio
 	"return nodeOf(null, (byte) mask0, node);";
 
 str generate_bodyOf_mergeOnNextLevel(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionBitmap()) =
-	"<dec(___bitmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask0);
-	'return nodeOf(null, <use(bitmapField)>, (<chunkSizeToPrimitive(bitPartitionSize)>) 0, node);";		
+	"<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask0);
+	'return nodeOf(null, <use(bitmapField)>, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, node);";		
 	
 str generate_bodyOf_mergeOnNextLevel(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),false>}, Position _) =
-	"<dec(___bitmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask0);
-	'return nodeOf(null, <use(bitmapField)>, (<chunkSizeToPrimitive(bitPartitionSize)>) 0, new Object[] { node }, (byte) 0);";	
+	"<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask0);
+	'return nodeOf(null, <use(bitmapField)>, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, new Object[] { node }, (byte) 0);";	
 
 default str generate_bodyOf_mergeOnNextLevel(TrieSpecifics _, Option _, Position _) { throw "something went wrong"; }
 
@@ -385,15 +385,15 @@ str generate_bodyOf_mergeNodeAndValue(ts:___expandedTrieSpecifics(ds, bitPartiti
 	'return nodeOf(null, (byte) mask1, <use(payloadTuple(ts, 1))>, (byte) mask0, node0);";
 
 str generate_bodyOf_mergeNodeAndValue(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionBitmap()) =
-	"<dec(___bitmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask0);
-	'<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask1);
+	"<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask0);
+	'<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask1);
 	'
 	'// store values before node
 	'return nodeOf(null, <use(bitmapField)>, <use(valmapField)>, <use(payloadTuple(ts, 1))>, node0);";		
 	
 str generate_bodyOf_mergeNodeAndValue(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),false>}, Position _) =
-	"<dec(___bitmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask0);
-	'<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask1);
+	"<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask0);
+	'<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask1);
 	'
 	'// store values before node
 	'return nodeOf(null, <use(bitmapField)>, <use(valmapField)>, new Object[] { <use(payloadTuple(ts, 1))>, node0 }, (byte) 1);";			
@@ -408,7 +408,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 default str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
 	"final int mask = (<keyName>Hash \>\>\> shift) & BIT_PARTITION_MASK;
-	'<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
+	'<dec(___bitposField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask);
 	'
 	'if ((<use(valmapMethod)> & bitpos) != 0) {
 	'	return <eq(key("keyAt(bitpos)"), key())>;
@@ -429,7 +429,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
-	'<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
+	'<dec(___bitposField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask);
 
 	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
 	'	if (<eq(key("keyAt(bitpos)"), key())>) {
@@ -453,7 +453,7 @@ when ds == \map() || ds == \vector()
 	
 str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
-	'<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
+	'<dec(___bitposField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask);
 
 	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
 	'	if (<eq(key("keyAt(bitpos)"), key())>) {
@@ -483,7 +483,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
-	'<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
+	'<dec(___bitposField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask);
 	'
 	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
 	'	<dec(key("currentKey"))> = keyAt(bitpos);
@@ -553,7 +553,7 @@ default str removed_in_subnode_with_newsize0_block(ts:___expandedTrieSpecifics(d
 		
 default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) =
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
-	<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
+	<dec(___bitposField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask);
 
 	if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
 		if (<eq(key("keyAt(bitpos)"), key())>) {
@@ -647,7 +647,7 @@ default int oneShiftedLeftBy(int count) { throw "Not supported!"; }
 
 str generate_valNodeOf_factoryMethod_bitmap(n:0, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix) { 
 	// TODO: remove code duplication
-	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + metadataArguments(n, m, ts) + contentArguments(n, m, ts);
+	constructorArgs = field(specific("AtomicReference\<Thread\>"), "mutator") + metadataArguments(n, m, ts) + contentArguments(n, m, ts);
 
 	return
 	"static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
@@ -658,7 +658,7 @@ str generate_valNodeOf_factoryMethod_bitmap(n:0, m:0, ts:___expandedTrieSpecific
 
 str generate_valNodeOf_factoryMethod_bitmap(n:1, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, compactionViaFieldToMethod()}, str classNamePostfix) {
 	// TODO: remove code duplication
-	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + metadataArguments(n, m, ts) + contentArguments(n, m, ts);
+	constructorArgs = field(specific("AtomicReference\<Thread\>"), "mutator") + metadataArguments(n, m, ts) + contentArguments(n, m, ts);
 
 	specializedClassName = "<toString(ds)><m>To<n>Node<classNamePostfix>";
 
@@ -676,7 +676,7 @@ str generate_valNodeOf_factoryMethod_bitmap(n:1, m:0, ts:___expandedTrieSpecific
 
 default str generate_valNodeOf_factoryMethod_bitmap(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix) {
 	// TODO: remove code duplication
-	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + metadataArguments(n, m, ts) + contentArguments(n, m, ts);
+	constructorArgs = field(specific("AtomicReference\<Thread\>"), "mutator") + metadataArguments(n, m, ts) + contentArguments(n, m, ts);
 
 	specializedClassName = "<toString(ds)><m>To<n>Node<classNamePostfix>";
 

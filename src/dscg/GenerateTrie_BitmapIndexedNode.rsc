@@ -15,7 +15,7 @@ import List;
 import dscg::Common;
 import dscg::ArrayUtils;
 
-Argument tupleLengthConstant = field("int", "TUPLE_LENGTH");
+Argument tupleLengthConstant = field(primitive("int"), "TUPLE_LENGTH");
 
 str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) {
 
@@ -57,15 +57,15 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		
 		<if (!isPrimitive(key())) {>@SuppressWarnings(\"unchecked\")<}>
 		@Override
-		<key().\type> getKey(int index) {
-			return (<key().\type>) nodes[<use(tupleLengthConstant)> * index];
+		<toString(key().\type)> getKey(int index) {
+			return (<toString(key().\type)>) nodes[<use(tupleLengthConstant)> * index];
 		}
 	
 		<if (ds == \map()) {>
 		<if (!isPrimitive(val())) {>@SuppressWarnings(\"unchecked\")<}>
 		@Override
-		<val().\type> getValue(int index) {
-			return (<val().\type>) nodes[<use(tupleLengthConstant)> * index + 1];
+		<toString(val().\type)> getValue(int index) {
+			return (<toString(val().\type)>) nodes[<use(tupleLengthConstant)> * index + 1];
 		}
 		<}>
 
@@ -73,7 +73,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		@SuppressWarnings(\"unchecked\")
 		@Override
 		Map.Entry<GenericsExpanded(ds)> getKeyValueEntry(int index) {
-			return entryOf((<key().\type>) nodes[<use(tupleLengthConstant)> * index], (<val().\type>) nodes[<use(tupleLengthConstant)> * index + 1]);
+			return entryOf((<toString(key().\type)>) nodes[<use(tupleLengthConstant)> * index], (<toString(val().\type)>) nodes[<use(tupleLengthConstant)> * index + 1]);
 		}
 		<}>
 
@@ -103,17 +103,17 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 		<if (!isPrimitive(key())) {>@SuppressWarnings(\"unchecked\")<}>
 		@Override
-		<key().\type> headKey() {
+		<toString(key().\type)> headKey() {
 			assert hasPayload();
-			return (<key().\type>) nodes[0];
+			return (<toString(key().\type)>) nodes[0];
 		}
 
 		<if (ds == \map()) {>
 		<if (!isPrimitive(val())) {>@SuppressWarnings(\"unchecked\")<}>
 		@Override
-		<val().\type> headVal() {
+		<toString(val().\type)> headVal() {
 			assert hasPayload();
-			return (<val().\type>) nodes[1];
+			return (<toString(val().\type)>) nodes[1];
 		}
 		<}>
 
@@ -225,89 +225,89 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		<if (ds == \map()) {>
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(val())>) {
-			<dec(field("int", "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
+			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
 			
 			if (isAllowedToEdit(this.mutator, mutator)) {
 				// no copying if already editable
-				this.nodes[<use(field("int", "idx"))>] = val;
+				this.nodes[<use(field(primitive("int"), "idx"))>] = val;
 				return this;
 			} else {
-				<dec(field("Object[]", "src"))> = this.nodes;
-				<arraycopyAndSetTuple(field("Object[]", "src"), field("Object[]", "dst"), 1, [val()], field("int", "idx"))>
+				<dec(field(asArray(object()), "src"))> = this.nodes;
+				<arraycopyAndSetTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), 1, [val()], field(primitive("int"), "idx"))>
 				
-				return nodeOf(mutator, <use(bitmapMethod)>, <use(valmapMethod)>, <use(field("Object[]", "dst"))>, payloadArity);
+				return nodeOf(mutator, <use(bitmapMethod)>, <use(valmapMethod)>, <use(field(asArray(object()), "dst"))>, payloadArity);
 			}
 		}
 		<}>
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
-			<dec(field("int", "idx"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);
+			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);
 
 			if (isAllowedToEdit(this.mutator, mutator)) {
 				// no copying if already editable
-				this.nodes[<use(field("int", "idx"))>] = node;
+				this.nodes[<use(field(primitive("int"), "idx"))>] = node;
 				return this;
 			} else {
-				<dec(field("Object[]", "src"))> = this.nodes;
-				<arraycopyAndSetTuple(field("Object[]", "src"), field("Object[]", "dst"), 1, [\node(ds)], field("int", "idx"))>
+				<dec(field(asArray(object()), "src"))> = this.nodes;
+				<arraycopyAndSetTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), 1, [\node(ds)], field(primitive("int"), "idx"))>
 				
-				return nodeOf(mutator, <use(bitmapMethod)>, <use(valmapMethod)>, <use(field("Object[]", "dst"))>, payloadArity);
+				return nodeOf(mutator, <use(bitmapMethod)>, <use(valmapMethod)>, <use(field(asArray(object()), "dst"))>, payloadArity);
 			}
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(payloadTuple(ts))>) {
-			<dec(field("int", "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
+			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			
-			<dec(field("Object[]", "src"))> = this.nodes;
-			<arraycopyAndInsertTuple(field("Object[]", "src"), field("Object[]", "dst"), tupleLength(ds), payloadTuple(ts), field("int", "idx"))>
+			<dec(field(asArray(object()), "src"))> = this.nodes;
+			<arraycopyAndInsertTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), tupleLength(ds), payloadTuple(ts), field(primitive("int"), "idx"))>
 			
-			return nodeOf(mutator, <use(bitmapMethod)>, (<chunkSizeToPrimitive(bitPartitionSize)>) (<use(valmapMethod)> | bitpos), <use(field("Object[]", "dst"))>, (byte) (payloadArity + 1));
+			return nodeOf(mutator, <use(bitmapMethod)>, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(valmapMethod)> | bitpos), <use(field(asArray(object()), "dst"))>, (byte) (payloadArity + 1));
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
-			<dec(field("int", "idx"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);
+			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);
 			
-			<dec(field("Object[]", "src"))> = this.nodes;
-			<arraycopyAndRemoveTuple(field("Object[]", "src"), field("Object[]", "dst"), 1, field("int", "idx"))>
+			<dec(field(asArray(object()), "src"))> = this.nodes;
+			<arraycopyAndRemoveTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), 1, field(primitive("int"), "idx"))>
 			
-			return nodeOf(mutator, (<chunkSizeToPrimitive(bitPartitionSize)>) (<use(bitmapMethod)> ^ bitpos), <use(valmapMethod)>, <use(field("Object[]", "dst"))>, payloadArity);
+			return nodeOf(mutator, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(bitmapMethod)> ^ bitpos), <use(valmapMethod)>, <use(field(asArray(object()), "dst"))>, payloadArity);
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
-			<dec(field("int", "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
+			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			
-			<dec(field("Object[]", "src"))> = this.nodes;
-			<arraycopyAndRemoveTuple(field("Object[]", "src"), field("Object[]", "dst"), tupleLength(ds), field("int", "idx"))>
+			<dec(field(asArray(object()), "src"))> = this.nodes;
+			<arraycopyAndRemoveTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), tupleLength(ds), field(primitive("int"), "idx"))>
 
-			return nodeOf(mutator, <use(bitmapMethod)>, (<chunkSizeToPrimitive(bitPartitionSize)>) (<use(valmapMethod)> ^ bitpos), <use(field("Object[]", "dst"))>, (byte) (payloadArity - 1));
+			return nodeOf(mutator, <use(bitmapMethod)>, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(valmapMethod)> ^ bitpos), <use(field(asArray(object()), "dst"))>, (byte) (payloadArity - 1));
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
 						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
-			<dec(field("int", "idxOld"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
-			<dec(field("int", "idxNew"))> = <use(tupleLengthConstant)> * (payloadArity - 1) + nodeIndex(bitpos);
+			<dec(field(primitive("int"), "idxOld"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
+			<dec(field(primitive("int"), "idxNew"))> = <use(tupleLengthConstant)> * (payloadArity - 1) + nodeIndex(bitpos);
 			
-			<dec(field("Object[]", "src"))> = this.nodes;
-			<arraycopyAndMigrateFromDataTupleToNodeTuple(field("Object[]", "src"), field("Object[]", "dst"), tupleLength(ds), field("int", "idxOld"), 1, field("int", "idxNew"), [ \node(ds) ])>
+			<dec(field(asArray(object()), "src"))> = this.nodes;
+			<arraycopyAndMigrateFromDataTupleToNodeTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), tupleLength(ds), field(primitive("int"), "idxOld"), 1, field(primitive("int"), "idxNew"), [ \node(ds) ])>
 
-			return nodeOf(mutator, (<chunkSizeToPrimitive(bitPartitionSize)>) (<use(bitmapMethod)> | bitpos), (<chunkSizeToPrimitive(bitPartitionSize)>) (<use(valmapMethod)> ^ bitpos), <use(field("Object[]", "dst"))>, (byte) (payloadArity - 1));
+			return nodeOf(mutator, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(bitmapMethod)> | bitpos), (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(valmapMethod)> ^ bitpos), <use(field(asArray(object()), "dst"))>, (byte) (payloadArity - 1));
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
 						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
-			<dec(field("int", "idxOld"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);
-			<dec(field("int", "idxNew"))> = dataIndex(bitpos);
+			<dec(field(primitive("int"), "idxOld"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);
+			<dec(field(primitive("int"), "idxNew"))> = dataIndex(bitpos);
 
-			<dec(field("Object[]", "src"))> = this.nodes;
-			<arraycopyAndMigrateFromNodeTupleToDataTuple(field("Object[]", "src"), field("Object[]", "dst"), 1, field("int", "idxOld"), tupleLength(ds), field("int", "idxNew"), headPayloadTuple(ts, \node(ds, "node")))>
+			<dec(field(asArray(object()), "src"))> = this.nodes;
+			<arraycopyAndMigrateFromNodeTupleToDataTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), 1, field(primitive("int"), "idxOld"), tupleLength(ds), field(primitive("int"), "idxNew"), headPayloadTuple(ts, \node(ds, "node")))>
 
-			return nodeOf(mutator, (<chunkSizeToPrimitive(bitPartitionSize)>) (<use(bitmapMethod)> ^ bitpos), (<chunkSizeToPrimitive(bitPartitionSize)>) (<use(valmapMethod)> | bitpos), <use(field("Object[]", "dst"))>, (byte) (payloadArity + 1));
+			return nodeOf(mutator, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(bitmapMethod)> ^ bitpos), (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(valmapMethod)> | bitpos), <use(field(asArray(object()), "dst"))>, (byte) (payloadArity + 1));
 		}
 	'}";
 }

@@ -35,7 +35,7 @@ import dscg::GenerateTrie_Core;
 import dscg::GenerateTrie_CoreTransient;
 
 void main() {
-	TrieSpecifics ts = trieSpecifics(\map(), 3, 8);	
+	TrieSpecifics ts = trieSpecifics(\map(), 5, 8);	
 	if(___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound) := ts) {
 
 		rel[Option,bool] setup = { 
@@ -757,8 +757,8 @@ when (n + m) == nMax && (n + m) == nBound;
 default str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int valIndex = dataIndex(bitpos);
 	'
-	'	<dec(___bitmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(bitmapMethod)>);
-	'	<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(valmapMethod)> | bitpos);
+	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)>);
+	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
@@ -777,8 +777,8 @@ str generate_bodyOf_copyAndRemoveValue(_, 0, _)
 default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int valIndex = dataIndex(bitpos);
 	'
-	'	<dec(___bitmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(bitmapMethod)>);
-	'	<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(valmapMethod)> ^ bitpos);
+	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)>);
+	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
@@ -795,8 +795,8 @@ str generate_bodyOf_copyAndRemoveNode(0, _, _)
 default str generate_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 	
 	"	final int bitIndex = nodeIndex(bitpos);
 	'
-	'	<dec(___bitmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(bitmapMethod)> ^ bitpos);
-	'	<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(valmapMethod)>);
+	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);
+	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)>);
 	'
 	'	switch(bitIndex) {
 	'		<for (i <- [1..n+1]) {>case <i-1>:
@@ -814,8 +814,8 @@ default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___e
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
 	'
-	'	<dec(___bitmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(bitmapMethod)> | bitpos);
-	'	<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(valmapMethod)> ^ bitpos);
+	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
+	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
@@ -840,8 +840,8 @@ default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___e
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
 	'	
-	'	<dec(___bitmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(bitmapMethod)> ^ bitpos);	
-	'	<dec(___valmapField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (this.<use(valmapMethod)> | bitpos);
+	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
+	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
 	'
 	'	<dec(key())> = <nodeName>.headKey();
 	'	<if (ds == \map()) {><dec(val())> = <nodeName>.headVal();<}>	
@@ -1079,7 +1079,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 default str generate_bodyOf_GenericNode_containsKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (<keyName>Hash \>\>\> shift) & BIT_PARTITION_MASK;
-	'<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
+	'<dec(___bitposField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask);
 	'
 	'if ((valmap & bitpos) != 0) {
 	'	return <eq("nodes[dataIndex(bitpos)]", keyName)>;
@@ -1099,7 +1099,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 default str generate_bodyOf_GenericNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
-	'<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
+	'<dec(___bitposField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask);
 
 	'if ((valmap & bitpos) != 0) { // inplace value
 	'	final int valIndex = dataIndex(bitpos);
@@ -1131,7 +1131,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
-	'<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
+	'<dec(___bitposField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask);
 	'
 	'if ((valmap & bitpos) != 0) { // inplace value
 	'	final int valIndex = dataIndex(bitpos);
@@ -1217,7 +1217,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 		
 default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) =
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
-	<dec(___bitposField(bitPartitionSize))> = (<chunkSizeToPrimitive(bitPartitionSize)>) (1L \<\< mask);
+	<dec(___bitposField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask);
 
 	if ((valmap & bitpos) != 0) { // inplace value
 		final int valIndex = dataIndex(bitpos);
@@ -1357,7 +1357,7 @@ str generate_valNodeOf_factoryMethod(1, 0, ts:___expandedTrieSpecifics(ds, bitPa
 str generate_valNodeOf_factoryMethod(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) {
 	// TODO: remove code duplication
 	members = generateMembers(n, m);
-	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
+	constructorArgs = field(specific("AtomicReference\<Thread\>"), "mutator") + members;
 
 	className = "<toString(ds)><m>To<n>Node";
 
@@ -1424,7 +1424,7 @@ str generate_valNodeOf_factoryMethod(int n, int m, ts:___expandedTrieSpecifics(d
 	
 str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) {
 	members = generateMembers(n, m);
-	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + members;
+	constructorArgs = field(specific("AtomicReference\<Thread\>"), "mutator") + members;
 
 	className = "<toString(ds)><m>To<n>Node";
 
@@ -1554,13 +1554,13 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 	'	}
 	
 	'	@Override
-	'	<key().\type> headKey() {
+	'	<toString(key().\type)> headKey() {
 	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a key.\")<} else {>return key1<}>;
 	'	}
 
 	<if (ds == \map()) {>
 	'	@Override
-	'	<val().\type> headVal() {
+	'	<toString(val().\type)> headVal() {
 	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a value.\")<} else {>return val1<}>;
 	'	}	
 	<}>
@@ -1683,7 +1683,7 @@ default str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
 	;
 
 str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix) {
-	constructorArgs = field("AtomicReference\<Thread\>", "mutator") + metadataArguments(n, m, ts) + contentArguments(n, m, ts);
+	constructorArgs = field(specific("AtomicReference\<Thread\>"), "mutator") + metadataArguments(n, m, ts) + contentArguments(n, m, ts);
 
 	specializedClassName = "<toString(ds)><m>To<n>Node<classNamePostfix>";
 
@@ -1752,13 +1752,13 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'	}
 	
 	'	@Override
-	'	<key().\type> headKey() {
+	'	<toString(key().\type)> headKey() {
 	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a key.\")<} else {>return key1<}>;
 	'	}
 
 	<if (ds == \map()) {>
 	'	@Override
-	'	<val().\type> headVal() {
+	'	<toString(val().\type)> headVal() {
 	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a value.\")<} else {>return val1<}>;
 	'	}	
 	<}>
@@ -1769,13 +1769,13 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'	}
 	
 	'	@Override
-	'	<key().\type> getKey(int index) {
+	'	<toString(key().\type)> getKey(int index) {
 	'		<generate_bodyOf_getKey(m)>
 	'	}
 
 	<if (ds == \map()) {>
 	'	@Override
-	'	<val().\type> getValue(int index) {
+	'	<toString(val().\type)> getValue(int index) {
 	'		<generate_bodyOf_getValue(m)>
 	'	}
 	<}>

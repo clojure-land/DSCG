@@ -7,7 +7,7 @@
  *
  * Contributors:
  *
- *   * Michael Steindorfer - Michael.Steindorfer@cwi.nl - CWI  
+ *   * Michael Steindorfer - Michael.Steindorfer@cwi.nl - CWI
  */
 module dscg::GenerateTrie_CoreTransient
 
@@ -44,7 +44,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		@Override
 		public boolean <containsKeyMethodName(ds)>(Object o) {
 			try {
-				<dec(key())> = (<key().\type>) o;
+				<dec(key())> = (<toString(key().\type)>) o;
 				return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0);			
 			} catch (ClassCastException unused) {
 				return false;
@@ -54,7 +54,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		@Override
 		public boolean <containsKeyMethodName(ds)>Equivalent(Object o, Comparator\<Object\> cmp) {
 			try {
-				<dec(key())> = (<key().\type>) o;
+				<dec(key())> = (<toString(key().\type)>) o;
 				return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0, cmp);			
 			} catch (ClassCastException unused) {
 				return false;
@@ -65,7 +65,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		@Override
 		public <dsAtFunction__range_type(ds)> get(Object o) {
 			try {
-				<dec(key())> = (<key().\type>) o;
+				<dec(key())> = (<toString(key().\type)>) o;
 				final Optional<MapsToGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
 		
 				if (result.isPresent()) {
@@ -81,7 +81,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		@Override
 		public <dsAtFunction__range_type(ds)> getEquivalent(Object o, Comparator\<Object\> cmp) {
 			try {
-				<dec(key())> = (<key().\type>) o;
+				<dec(key())> = (<toString(key().\type)>) o;
 				final Optional<MapsToGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
 		
 				if (result.isPresent()) {
@@ -98,15 +98,15 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		<insertOrPut(ts, setup, useComparator = true )>
 
 		<if (ds == \map()) {>
-		<insertOrPutAll(ts, setup, args = [field("<toString(ds)><GenericsExpandedUpperBounded(ds)>", "<uncapitalize(toString(ds))>")], useComparator = false)>
-		<insertOrPutAll(ts, setup, args = [field("<toString(ds)><GenericsExpandedUpperBounded(ds)>", "<uncapitalize(toString(ds))>")], useComparator = true )>		
+		<insertOrPutAll(ts, setup, args = [field(specific("<toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>")], useComparator = false)>
+		<insertOrPutAll(ts, setup, args = [field(specific("<toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>")], useComparator = true )>		
 		<}>		
 
 		<if (ds == \set()) {>
-		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "<insertOrPutMethodName(ds)>", args = [field("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>", "<uncapitalize(toString(ds))>")], useComparator = false)>
-		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "<insertOrPutMethodName(ds)>", args = [field("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>", "<uncapitalize(toString(ds))>")], useComparator = true )>
-		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "__remove", args = [field("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>", "<uncapitalize(toString(ds))>")], useComparator = false)>
-		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "__remove", args = [field("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>", "<uncapitalize(toString(ds))>")], useComparator = true )>
+		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "<insertOrPutMethodName(ds)>", args = [field(specific("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>")], useComparator = false)>
+		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "<insertOrPutMethodName(ds)>", args = [field(specific("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>")], useComparator = true )>
+		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "__remove", args = [field(specific("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>")], useComparator = false)>
+		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "__remove", args = [field(specific("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>")], useComparator = true )>
 		<}>
 		
 		@Override
@@ -322,7 +322,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 
 		<if (ds == \map()) {>
 		@Override
-		public Iterator\<<primitiveToClass(val()).\type>\> valueIterator() {
+		public Iterator\<<toString(primitiveToClass(val()).\type)>\> valueIterator() {
 			// return new Trie<toString(ds)>ValueIterator<InferredGenerics()>(keyIterator());
 			return new <toString(ds)>ValueIterator<InferredGenerics()>(rootNode); // TODO: iterator does not
 														// support removal
@@ -344,7 +344,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 						implements SupplierIterator<SupplierIteratorGenerics(ds)> {
 
 			final <className><Generics(ds)> <uncapitalize(className)>;
-			<primitiveToClass(key()).\type> lastKey;
+			<toString(primitiveToClass(key()).\type)> lastKey;
 
 			Transient<toString(ds)>KeyIterator(<className><Generics(ds)> <uncapitalize(className)>) {
 				super(<uncapitalize(className)>.rootNode);
@@ -352,7 +352,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 
 			@Override
-			public <primitiveToClass(key()).\type> next() {
+			public <toString(primitiveToClass(key()).\type)> next() {
 				if (!hasNext()) {
 					throw new NoSuchElementException();
 				} else {
@@ -422,12 +422,12 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 	;
 }
 	
-str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts), primitiveToClass), Argument res = field("boolean", "???"), bool useComparator = false) {
+str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts), primitiveToClass), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
 	str methodName = "<insertOrPutMethodName(ds)><if (useComparator) {>Equivalent<}>"; 
 
 	list[Argument] filterArgs(list[Argument] args) {
 		if (useComparator) {
-			return args + field("Comparator\<Object\>", "cmp");
+			return args + field(specific("Comparator\<Object\>"), "cmp");
 		} else {
 			return args;
 		}
@@ -465,12 +465,12 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, n
 	;		
 }
 
-str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts), primitiveToClass), Argument res = field("boolean", "???"), bool useComparator = false) {
+str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts), primitiveToClass), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
 	str methodName = "<insertOrPutMethodName(ds)><if (useComparator) {>Equivalent<}>"; 
 	
 	list[Argument] filterArgs(list[Argument] args) {
 		if (useComparator) {
-			return args + field("Comparator\<Object\>", "cmp");
+			return args + field(specific("Comparator\<Object\>"), "cmp");
 		} else {
 			return args;
 		}
@@ -479,7 +479,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, n
 	return
 	"
 	@Override
-	public <primitiveToClass(val()).\type> <methodName>(<dec(filterArgs(args))>) {
+	public <toString(primitiveToClass(val()).\type)> <methodName>(<dec(filterArgs(args))>) {
 		if (mutator.get() == null) {
 			throw new IllegalStateException(\"Transient already frozen.\");
 		}
@@ -526,12 +526,12 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, n
 	;		
 }
 
-str insertOrPutAll(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = [], Argument res = field("boolean", "???"), bool useComparator = false) {
+str insertOrPutAll(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = [], Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
 	str methodName = "<insertOrPutMethodName(ds)>All<if (useComparator) {>Equivalent<}>"; 
 	
 	list[Argument] filterArgs(list[Argument] args) {
 		if (useComparator) {
-			return args + field("Comparator\<Object\>", "cmp");
+			return args + field(specific("Comparator\<Object\>"), "cmp");
 		} else {
 			return args;
 		}
@@ -558,12 +558,12 @@ str insertOrPutAll(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax
 	;		
 }
 
-str allToSingle(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str methodPrefix, list[Argument] args = [], Argument res = field("boolean", "???"), bool useComparator = false) {
+str allToSingle(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str methodPrefix, list[Argument] args = [], Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
 	str methodName = "<methodPrefix>All<if (useComparator) {>Equivalent<}>"; 
 
 	list[Argument] filterArgs(list[Argument] args) {
 		if (useComparator) {
-			return args + field("Comparator\<Object\>", "cmp");
+			return args + field(specific("Comparator\<Object\>"), "cmp");
 		} else {
 			return args;
 		}
