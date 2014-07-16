@@ -46,11 +46,11 @@ void main() {
 		}; // { compactionViaFieldToMethod() };
 
 		str classNamePostfix = "";
-		if (isPrimitive(key())) {
-			classNamePostfix = classNamePostfix + "_<capitalize(key().\type)>Key";
+		if (!isGeneric(key())) {
+			classNamePostfix = classNamePostfix + "_<capitalize(toString(key().\type))>Key";
 		}	
-		if (isPrimitive(val())) {
-			classNamePostfix = classNamePostfix + "_<capitalize(val().\type)>Value";
+		if (!isGeneric(val())) {
+			classNamePostfix = classNamePostfix + "_<capitalize(toString(val().\type))>Value";
 		}
 	
 		list[str] innerClassStrings 
