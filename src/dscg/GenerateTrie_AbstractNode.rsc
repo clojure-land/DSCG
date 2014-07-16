@@ -16,6 +16,8 @@ import dscg::Common;
 str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
 	"protected static abstract class <AbstractNode(ds)><Generics(ds)> extends AbstractNode<UnifiedGenericsExpanded(ds)> {
 
+		static final int TUPLE_LENGTH = <tupleLength(ds)>;
+
 		abstract boolean containsKey(<dec(key())>, int keyHash, int shift);
 
 		abstract boolean containsKey(<dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp);
@@ -24,9 +26,9 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 
 		abstract Optional<MapsToGenerics(ds)> findByKey(<dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp);
 
-		abstract Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts))>, int keyHash, int shift);
+		abstract Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts, setup))>, int keyHash, int shift);
 
-		abstract Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts))>, int keyHash, int shift, Comparator\<Object\> cmp);
+		abstract Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts, setup))>, int keyHash, int shift, Comparator\<Object\> cmp);
 
 		abstract Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, <dec(key())>, int keyHash, int shift);
 

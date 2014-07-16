@@ -94,7 +94,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 			<dec(key())> = (<toString(key().\type)>) keyValuePairs[i];
 			<dec(val())> = (<toString(val().\type)>) keyValuePairs[i + 1];
 
-			result = result.<insertOrPutMethodName(ds)>(<use(payloadTuple(ts))>);
+			result = result.<insertOrPutMethodName(ds)>(<use(payloadTuple(ts, setup))>);
 		}
 
 		return result;
@@ -133,7 +133,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 			<dec(key())> = (<toString(key().\type)>) keyValuePairs[i];
 			<dec(val())> = (<toString(val().\type)>) keyValuePairs[i + 1];
 
-			result.<insertOrPutMethodName(ds)>(<use(payloadTuple(ts))>);
+			result.<insertOrPutMethodName(ds)>(<use(payloadTuple(ts, setup))>);
 		}
 
 		return result;
@@ -180,9 +180,9 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	}
 
 	@Override
-	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>(<dec(mapper(payloadTuple(ts), primitiveToClass))>) {
+	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>(<dec(mapper(payloadTuple(ts, setup), primitiveToClass))>) {
 		final int keyHash = key.hashCode();
-		final Result<ResultGenerics(ds)> result = rootNode.updated(null, <use(payloadTuple(ts))>, keyHash, 0);
+		final Result<ResultGenerics(ds)> result = rootNode.updated(null, <use(payloadTuple(ts, setup))>, keyHash, 0);
 
 		if (result.isModified()) {
 			<if (ds == \map()) {>
@@ -207,9 +207,9 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	}
 
 	@Override
-	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>Equivalent(<dec(mapper(payloadTuple(ts), primitiveToClass))>, Comparator\<Object\> cmp) {
+	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>Equivalent(<dec(mapper(payloadTuple(ts, setup), primitiveToClass))>, Comparator\<Object\> cmp) {
 		final int keyHash = key.hashCode();
-		final Result<ResultGenerics(ds)> result = rootNode.updated(null, <use(payloadTuple(ts))>, keyHash, 0, cmp);
+		final Result<ResultGenerics(ds)> result = rootNode.updated(null, <use(payloadTuple(ts, setup))>, keyHash, 0, cmp);
 
 		if (result.isModified()) {
 			<if (ds == \map()) {>

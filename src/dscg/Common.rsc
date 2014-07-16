@@ -48,6 +48,7 @@ data Argument
 
 data Option // TODO: finish!
 	= useSpecialization()
+	| useUntypedVariables() // dependent on useSpecialization() 
 	| useFixedStackIterator()
 	| useStructuralEquality()	
 	| methodsWithComparator()
@@ -110,10 +111,14 @@ Argument getter(str name) = getter(unknown(), name);
 Argument keyPos(int i) 		= field(primitive("byte"), "<keyPosName><i>");
 Argument key()				= key("<keyName>");
 Argument key(int i) 		= key("<keyName><i>");
-Argument key(str name) 		= field(object(), "<name>");
+Argument key(str name) 		= field(generic("K"), "<name>");
 Argument val()				= val("<valName>");
 Argument val(int i) 		= val("<valName><i>");
-Argument val(str name) 		= field(object(), "<name>");
+Argument val(str name) 		= field(generic("V"), "<name>");
+
+Argument slot() 			= slot("<slotName>");
+Argument slot(int i) 		= slot("<slotName><i>");
+Argument slot(str name)		= field(object(), "<name>");
 
 Argument nodePos(int i) = field("byte", "<nodePosName><i>");
 Argument \node(DataStructure ds)			= field(specific("<CompactNode(ds)><Generics(ds)>"), "<nodeName>");
@@ -360,6 +365,8 @@ public str keyName = "key";
 public str valName = "val";
 public str cmpName = "cmp"; 
 
+public str slotName = "slot";
+
 public str nodeName = "node";
 public str nodePosName = "npos";
 
@@ -393,34 +400,59 @@ str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax
 str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:false, bool values:false) = "CompactEmpty<toString(ds)>Node";
 default str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes, bool values) { throw "Ahhh"; }
 
-list[Argument] metadataArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) 
+list[Argument] metadataArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
 	= [ ___bitmapField(bitPartitionSize), ___valmapField(bitPartitionSize) ]
 	;
 
-list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) 
+list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
 	= [ key(i), val(i) | i <- [1..m+1]] 
 	+ [ \node(ds, i)   | i <- [1..n+1]]
-when ds == \map() || ds == \vector()	
-	;	
+when (ds == \map() || ds == \vector()) 
+		&& !isOptionEnabled(setup,useUntypedVariables());	
 
-list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound)) 
+list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
+	= [ slot(i) | i <- [0..2*m + n]]
+when (ds == \map() || ds == \vector()) 
+		&& isOptionEnabled(setup,useUntypedVariables());
+
+list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
 	= [ key(i)         | i <- [1..m+1]] 
 	+ [ \node(ds, i)   | i <- [1..n+1]]
-	;	
+when (ds == \set()) 
+		&& !isOptionEnabled(setup,useUntypedVariables());	
 
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\vector(),	bitPartitionSize, nMax, nBound), str name) = [ key(name), val(name) ];
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(),		bitPartitionSize, nMax, nBound), str name) = [ key(name), val(name) ];
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(),		bitPartitionSize, nMax, nBound), str name) = [ key(name) ];
+list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
+	= [ slot(i) | i <- [0..1*m + n]]
+when (ds == \set()) 
+		&& isOptionEnabled(setup,useUntypedVariables());
+
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\vector(),	bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str name) = [ key(name), val(name) ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(),		bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str name) = [ key(name), val(name) ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(),		bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str name) = [ key(name) ];
 /***/
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\vector(), 	bitPartitionSize, nMax, nBound), int i) = [ key(i), val(i) ];
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(), 		bitPartitionSize, nMax, nBound), int i) = [ key(i), val(i) ];
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(), 		bitPartitionSize, nMax, nBound), int i) = [ key(i) ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\vector(), 	bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int i) = [ key(i), val(i) ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(), 		bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int i) = [ key(i), val(i) ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(), 		bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int i) = [ key(i) ];
 /***/
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\vector(), 	bitPartitionSize, nMax, nBound)) = [ key(), val() ];
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(),		bitPartitionSize, nMax, nBound)) = [ key(), val() ];
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(),		bitPartitionSize, nMax, nBound)) = [ key() ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\vector(), 	bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = [ key(), val() ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(),		bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = [ key(), val() ];
+list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(),		bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = [ key() ];
 /***/
-default list[Argument] payloadTuple(_) { throw "Ahhh"; }
+default list[Argument] payloadTuple(_, _) { throw "Ahhh"; }
+
+//list[Argument] untypedPayloadTuple(ts:___expandedTrieSpecifics(ds:\vector(),	bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str name) = [ key(name), val(name) ];
+//list[Argument] untypedPayloadTuple(ts:___expandedTrieSpecifics(ds:\map(),		bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str name) = [ key(name), val(name) ];
+//list[Argument] untypedPayloadTuple(ts:___expandedTrieSpecifics(ds:\set(),		bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str name) = [ key(name) ];
+/***/
+list[Argument] untypedPayloadTuple(ts:___expandedTrieSpecifics(ds:\vector(), 	bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int i) = [ slot(i), slot(i+1) ];
+list[Argument] untypedPayloadTuple(ts:___expandedTrieSpecifics(ds:\map(), 		bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int i) = [ slot(i), slot(i+1) ];
+list[Argument] untypedPayloadTuple(ts:___expandedTrieSpecifics(ds:\set(), 		bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int i) = [ slot(i) ];
+/***/
+//list[Argument] untypedPayloadTuple(ts:___expandedTrieSpecifics(ds:\vector(), 	bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = [ key(), val() ];
+//list[Argument] untypedPayloadTuple(ts:___expandedTrieSpecifics(ds:\map(),		bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = [ key(), val() ];
+//list[Argument] untypedPayloadTuple(ts:___expandedTrieSpecifics(ds:\set(),		bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = [ key() ];
+/***/
+default list[Argument] untypedPayloadTuple(_, _) { throw "Ahhh"; }
 
 str containsKeyMethodName(DataStructure ds:\map()) = "containsKey";
 str containsKeyMethodName(DataStructure ds:\set()) = "contains";
@@ -436,3 +468,5 @@ int tupleLength(DataStructure ds:\map()) = 2;
 int tupleLength(DataStructure ds:\set()) = 1;
 int tupleLength(DataStructure ds:\vector()) = 2;
 default int tupleLength(_) { throw "Ahhh"; }
+
+public Argument tupleLengthConstant = field(primitive("int"), "TUPLE_LENGTH"); // TODO: get rid of public state

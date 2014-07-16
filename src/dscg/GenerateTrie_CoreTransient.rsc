@@ -426,7 +426,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 	;
 }
 	
-str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts), primitiveToClass), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
+str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts, setup), primitiveToClass), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
 	str methodName = "<insertOrPutMethodName(ds)><if (useComparator) {>Equivalent<}>"; 
 
 	list[Argument] filterArgs(list[Argument] args) {
@@ -446,7 +446,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, n
 		}
 
 		final int keyHash = key.hashCode();
-		final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, <use(payloadTuple(ts))>, keyHash, 0<if (useComparator) {>, cmp<}>);
+		final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, <use(payloadTuple(ts, setup))>, keyHash, 0<if (useComparator) {>, cmp<}>);
 
 		if (result.isModified()) {
 			rootNode = result.getNode();
@@ -469,7 +469,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, n
 	;		
 }
 
-str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts), primitiveToClass), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
+str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts, setup), primitiveToClass), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
 	str methodName = "<insertOrPutMethodName(ds)><if (useComparator) {>Equivalent<}>"; 
 	
 	list[Argument] filterArgs(list[Argument] args) {
@@ -489,7 +489,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, n
 		}
 
 		final int keyHash = key.hashCode();
-		final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, <use(payloadTuple(ts))>, keyHash, 0<if (useComparator) {>, cmp<}>);
+		final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, <use(payloadTuple(ts, setup))>, keyHash, 0<if (useComparator) {>, cmp<}>);
 
 		if (result.isModified()) {
 			rootNode = result.getNode();

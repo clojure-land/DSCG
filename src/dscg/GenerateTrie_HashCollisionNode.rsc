@@ -93,12 +93,12 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 	'	}		
 
 	'	@Override
-	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts))>, int keyHash, int shift) {
+	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts, setup))>, int keyHash, int shift) {
 	'		<generate_bodyOf_HashCollisionNode_updated(ts, setup, equalityDefaultForArguments)>
 	'	}
 
 	'	@Override
-	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts))>, int keyHash, int shift, Comparator\<Object\> cmp) {
+	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts, setup))>, int keyHash, int shift, Comparator\<Object\> cmp) {
 	'		<generate_bodyOf_HashCollisionNode_updated(ts, setup, equalityComparatorForArguments)>
 	'	}
 
@@ -249,7 +249,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		<}>
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(payloadTuple(ts))>) {
+		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(payloadTuple(ts, setup))>) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -280,7 +280,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 str generate_bodyOf_HashCollisionNode_updated(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) =
 "if (this.hash != keyHash) {
-	return Result.modified(mergeNodes(this, this.hash, <use(payloadTuple(ts))>, keyHash, shift));
+	return Result.modified(mergeNodes(this, this.hash, <use(payloadTuple(ts, setup))>, keyHash, shift));
 }
 
 for (int idx = 0; idx \< keys.length; idx++) {
