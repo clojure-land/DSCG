@@ -35,7 +35,7 @@ import dscg::GenerateTrie_Core;
 import dscg::GenerateTrie_CoreTransient;
 
 void main() {
-	TrieSpecifics ts = trieSpecifics(\map(), 4, 16);	
+	TrieSpecifics ts = trieSpecifics(\set(), 5, 32);	
 	if(___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound) := ts) {
 
 		rel[Option,bool] setup = { 
@@ -1977,9 +1977,9 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 			final int offset = <use(tupleLengthConstant)> * payloadArity();
 			final Object[] nodes = new Object[<mn> - offset];
 
-			for (int i = offset; i \< <mn> - offset; i++) {
-				// assert ((getSlot(i) instanceof <AbstractNode(ds)>) == true);
-				nodes[i - offset] = getSlot(i);
+			for (int i = 0; i \< <mn> - offset; i++) {
+				// assert ((getSlot(offset + i) instanceof <AbstractNode(ds)>) == true);
+				nodes[i] = getSlot(offset + i);
 			}
 
 			return (Iterator) ArrayIterator.of(nodes);
