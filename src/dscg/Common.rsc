@@ -104,6 +104,15 @@ Type asArray(primitive(\type, isArray = false)) = primitive(\type, isArray = tru
 Type asArray(___primitive(\type, isArray = false)) = ___primitive(\type, isArray = true);
 default Type asArray(Type \type) { throw "Ahhh"; }
 
+Type asSingle(unknown(isArray = true)) = unknown(isArray = false);
+Type asSingle(object(isArray = true)) = object(isArray = false);
+Type asSingle(generic(\type, isArray = true)) = generic(\type, isArray = false);
+Type asSingle(specific(\type, isArray = true)) = specific(\type, isArray = false);
+Type asSingle(primitive(\type, isArray = true)) = primitive(\type, isArray = false);
+Type asSingle(primitive(\type, isArray = true)) = primitive(\type, isArray = false);
+Type asSingle(___primitive(\type, isArray = true)) = ___primitive(\type, isArray = false);
+default Type asSingle(Type \type) { throw "Ahhh"; }
+
 Argument getter(str name) = getter(unknown(), name); 
 Argument field (str name) = field (unknown(), name);
 Argument getter(str name) = getter(unknown(), name);
@@ -111,10 +120,10 @@ Argument getter(str name) = getter(unknown(), name);
 Argument keyPos(int i) 		= field(primitive("byte"), "<keyPosName><i>");
 Argument key()				= key("<keyName>");
 Argument key(int i) 		= key("<keyName><i>");
-Argument key(str name) 		= field(generic("K"), "<name>");
+Argument key(str name) 		= field(primitive("int"), "<name>");
 Argument val()				= val("<valName>");
 Argument val(int i) 		= val("<valName><i>");
-Argument val(str name) 		= field(generic("V"), "<name>");
+Argument val(str name) 		= field(primitive("int"), "<name>");
 
 Argument slot() 			= slot("<slotName>");
 Argument slot(int i) 		= slot("<slotName><i>");
@@ -171,19 +180,17 @@ default str primitiveHashCode(Argument a) = "(int) <use(a)>";
 
 
 
-Argument primitiveToClass(field("byte", name))  = field("java.lang.Byte", name);
-Argument primitiveToClass(field("short", name)) = field("java.lang.Short", name);
-Argument primitiveToClass(field("int", name))   = field("java.lang.Integer", name);
-Argument primitiveToClass(field("long", name))  = field("java.lang.Long", name);
-Argument primitiveToClass(field("Object", name))= field("java.lang.Object", name); // HACK!!!
+Type primitiveToClass(Type \type) = specific("java.lang.Byte") when ___primitive("byte") := \type;
+Type primitiveToClass(Type \type) = specific("java.lang.Short") when ___primitive("short") := \type;
+Type primitiveToClass(Type \type) = specific("java.lang.Integer") when ___primitive("int") := \type;
+Type primitiveToClass(Type \type) = specific("java.lang.Long") when ___primitive("long") := \type;
 /***/
-Argument primitiveToClass(getter("byte", name))  = getter("java.lang.Byte", name);
-Argument primitiveToClass(getter("short", name)) = getter("java.lang.Short", name);
-Argument primitiveToClass(getter("int", name))   = getter("java.lang.Integer", name);
-Argument primitiveToClass(getter("long", name))  = getter("java.lang.Long", name);
-Argument primitiveToClass(getter("Object", name))= getter("java.lang.Object", name); // HACK!!!
+default Type primitiveToClass(Type \type) = \type;
 /***/
-default Argument primitiveToClass(Argument nonPrimitive)  = nonPrimitive;
+Argument primitiveToClassArguments(field (\type, name))  = field (primitiveToClass(\type), name);
+Argument primitiveToClassArguments(getter(\type, name))  = getter(primitiveToClass(\type), name);
+/***/
+default Argument primitiveToClassArguments(Argument nonPrimitive) = nonPrimitive;
 
 bool isPrimitive(Type \type) = true when ___primitive(_) := \type;
 default bool isPrimitive(Type _) = false;
@@ -201,7 +208,6 @@ bool isPrimitiveArray("byte[]")  = true;
 bool isPrimitiveArray("short[]") = true;
 bool isPrimitiveArray("int[]")   = true;
 bool isPrimitiveArray("long[]")  = true;
-bool isPrimitiveArray("Object[]")= true; // HACK!!!
 default bool isPrimitiveArray(str x) = false;
 /***/
 bool isPrimitiveArray(Argument a)  = isPrimitiveArray(a.\type);
@@ -280,15 +286,15 @@ str CompactNode(DataStructure ds) = "Compact<toString(ds)>Node";
 
 
 str Generics(DataStructure ds:\map()) = "" when !isGeneric(key()) && !isGeneric(val());
-str Generics(DataStructure ds:\map()) = "\<<toString(primitiveToClass(key()).\type)>, <toString(primitiveToClass(val()).\type)>\>" when !!isGeneric(key()) && !!isGeneric(val());
-str Generics(DataStructure ds:\map()) = "\<<toString(primitiveToClass(val()).\type)>\>" when  !isGeneric(key()) && !!isGeneric(val());
-str Generics(DataStructure ds:\map()) = "\<<toString(primitiveToClass(key()).\type)>\>" when !!isGeneric(key()) &&  !isGeneric(val());
+str Generics(DataStructure ds:\map()) = "\<<toString(primitiveToClass(key().\type))>, <toString(primitiveToClass(val().\type))>\>" when isGeneric(key()) && isGeneric(val());
+str Generics(DataStructure ds:\map()) = "\<<toString(primitiveToClass(val().\type))>\>" when  !isGeneric(key()) && isGeneric(val());
+str Generics(DataStructure ds:\map()) = "\<<toString(primitiveToClass(key().\type))>\>" when isGeneric(key()) &&  !isGeneric(val());
 /***/
 str Generics(DataStructure ds:\set()) = "" when !isGeneric(key());
-str Generics(DataStructure ds:\set()) = "\<<toString(primitiveToClass(key()).\type)>\>" when !!isGeneric(key());
+str Generics(DataStructure ds:\set()) = "\<<toString(primitiveToClass(key().\type))>\>" when isGeneric(key());
 /***/
 str Generics(DataStructure ds:\vector()) = "" when !isGeneric(val());
-str Generics(DataStructure ds:\vector()) = "\<<toString(primitiveToClass(val()).\type)>\>" when !!isGeneric(val());
+str Generics(DataStructure ds:\vector()) = "\<<toString(primitiveToClass(val().\type))>\>" when isGeneric(val());
 /***/
 default str Generics(DataStructure _) { throw "Ahhh"; }
 
@@ -296,39 +302,42 @@ default str Generics(DataStructure _) { throw "Ahhh"; }
 str InferredGenerics() = "" when !isGeneric(key()) && !isGeneric(val());
 default str InferredGenerics() = "\<\>";
 
-str GenericsExpanded(DataStructure ds:\vector()) = "\<<toString(primitiveToClass(key()).\type)>, <toString(primitiveToClass(val()).\type)>\>";
-str GenericsExpanded(DataStructure ds:\map()) = "\<<toString(primitiveToClass(key()).\type)>, <toString(primitiveToClass(val()).\type)>\>";
-str GenericsExpanded(DataStructure ds:\set()) = "\<<toString(primitiveToClass(key()).\type)>\>";
+/*
+ * Expansion to the maximal length of generics for a data type.
+ */
+str GenericsExpanded(DataStructure ds:\vector()) = "\<<toString(primitiveToClass(key().\type))>, <toString(primitiveToClass(val().\type))>\>";
+str GenericsExpanded(DataStructure ds:\map()) = "\<<toString(primitiveToClass(key().\type))>, <toString(primitiveToClass(val().\type))>\>";
+str GenericsExpanded(DataStructure ds:\set()) = "\<<toString(primitiveToClass(key().\type))>\>";
 
-str UnifiedGenericsExpanded(DataStructure ds:\map()) = "\<<toString(primitiveToClass(key()).\type)>, <toString(primitiveToClass(val()).\type)>\>";
-str UnifiedGenericsExpanded(DataStructure ds:\set()) = "\<<toString(primitiveToClass(key()).\type)>, java.lang.Void\>";
-str UnifiedGenericsExpanded(DataStructure ds:\vector()) = "\<<toString(primitiveToClass(key()).\type)>, <toString(primitiveToClass(val()).\type)>\>";
+str UnifiedGenericsExpanded(DataStructure ds:\map()) = "\<<toString(primitiveToClass(key().\type))>, <toString(primitiveToClass(val().\type))>\>";
+str UnifiedGenericsExpanded(DataStructure ds:\set()) = "\<<toString(primitiveToClass(key().\type))>, java.lang.Void\>";
+str UnifiedGenericsExpanded(DataStructure ds:\vector()) = "\<<toString(primitiveToClass(key().\type))>, <toString(primitiveToClass(val().\type))>\>";
 default str UnifiedGenericsExpanded(DataStructure _) { throw "Ahhh"; }
 
 
-str GenericsExpandedReversed(DataStructure ds:\map()) = "\<<toString(primitiveToClass(val()).\type)>, <toString(primitiveToClass(key()).\type)>\>";
+str GenericsExpandedReversed(DataStructure ds:\map()) = "\<<toString(primitiveToClass(val().\type))>, <toString(primitiveToClass(key().\type))>\>";
 str GenericsExpandedReversed(DataStructure ds:\set()) = GenericsExpanded(ds);
 
-str GenericsExpandedUpperBounded(DataStructure ds:\map()) = "\<? extends <toString(primitiveToClass(key()).\type)>, ? extends <toString(primitiveToClass(val()).\type)>\>";
-str GenericsExpandedUpperBounded(DataStructure ds:\set()) = "\<? extends <toString(primitiveToClass(key()).\type)>\>";
+str GenericsExpandedUpperBounded(DataStructure ds:\map()) = "\<? extends <toString(primitiveToClass(key().\type))>, ? extends <toString(primitiveToClass(val().\type))>\>";
+str GenericsExpandedUpperBounded(DataStructure ds:\set()) = "\<? extends <toString(primitiveToClass(key().\type))>\>";
 
 str GenericsDec(DataStructure ds:\map()) = "\<K <GenericsDecExtentionForPrimitives(key())>, V <GenericsDecExtentionForPrimitives(val())>\>";
 str GenericsDec(DataStructure ds:\set()) = "\<K <GenericsDecExtentionForPrimitives(key())>\>";
 str GenericsDecExtentionForPrimitives(Argument a) = "extends <primitiveToClass(a)>" when !isGeneric(a);
 default str GenericsDecExtentionForPrimitives(Argument _) = "";
 
-str ResultGenerics(DataStructure ds:\map()) = "\<<toString(primitiveToClass(key()).\type)>, <toString(primitiveToClass(val()).\type)>, ? extends <CompactNode(ds)><Generics(ds)>\>";
-str ResultGenerics(DataStructure ds:\vector()) = "\<<toString(primitiveToClass(key()).\type)>, <toString(primitiveToClass(val()).\type)>, ? extends <CompactNode(ds)><Generics(ds)>\>";
-str ResultGenerics(DataStructure ds:\set()) = "\<<toString(primitiveToClass(key()).\type)>, Void, ? extends <CompactNode(ds)><Generics(ds)>\>";
+str ResultGenerics(DataStructure ds:\map()) = "\<<toString(primitiveToClass(key().\type))>, <toString(primitiveToClass(val().\type))>, ? extends <CompactNode(ds)><Generics(ds)>\>";
+str ResultGenerics(DataStructure ds:\vector()) = "\<<toString(primitiveToClass(key().\type))>, <toString(primitiveToClass(val().\type))>, ? extends <CompactNode(ds)><Generics(ds)>\>";
+str ResultGenerics(DataStructure ds:\set()) = "\<<toString(primitiveToClass(key().\type))>, Void, ? extends <CompactNode(ds)><Generics(ds)>\>";
 default str ResultGenerics(DataStructure _) { throw "Ahhh"; }
 
 str ResultGenericsDec(DataStructure ds:\map()) = "\<K <GenericsDecExtentionForPrimitives(key().\type)>, V <GenericsDecExtentionForPrimitives(val().\type)>, ? extends <CompactNode(ds)><Generics(ds)>\>";
 str ResultGenericsDec(DataStructure ds:\set()) = "\<K <GenericsDecExtentionForPrimitives(key().\type)>, Void, ? extends <CompactNode(ds)><Generics(ds)>\>";
 
 
-str MapsToGenerics(DataStructure ds:\map())    = "\<<toString(primitiveToClass(val()).\type)>\>";
-str MapsToGenerics(DataStructure ds:\set())    = "\<<toString(primitiveToClass(key()).\type)>\>";
-str MapsToGenerics(DataStructure ds:\vector()) = "\<<toString(primitiveToClass(val()).\type)>\>";
+str MapsToGenerics(DataStructure ds:\map())    = "\<<toString(primitiveToClass(val().\type))>\>";
+str MapsToGenerics(DataStructure ds:\set())    = "\<<toString(primitiveToClass(key().\type))>\>";
+str MapsToGenerics(DataStructure ds:\vector()) = "\<<toString(primitiveToClass(val().\type))>\>";
 default str MapsToGenerics(DataStructure _) { throw "Ahhh"; }
 /***/
 str dsAtFunction__domain_type(DataStructure ds:\map())    = toString(key().\type);
@@ -336,26 +345,27 @@ str dsAtFunction__domain_type(DataStructure ds:\set())    = toString(key().\type
 str dsAtFunction__domain_type(DataStructure ds:\vector()) = toString(key().\type);
 default str dsAtFunction__domain_type(_) { throw "Ahhh"; }
 /***/
-str dsAtFunction__range_type(DataStructure ds:\map())    = toString(val().\type);
-str dsAtFunction__range_type(DataStructure ds:\set())    = toString(key().\type);
-str dsAtFunction__range_type(DataStructure ds:\vector()) = toString(val().\type);
-default str dsAtFunction__range_type(_) { throw "Ahhh"; }
+Type dsAtFunction__range_type(DataStructure ds:\map())    = val().\type;
+Type dsAtFunction__range_type(DataStructure ds:\set())    = key().\type;
+Type dsAtFunction__range_type(DataStructure ds:\vector()) = val().\type;
+default Type dsAtFunction__range_type(_) { throw "Ahhh"; }
 
 
 
 str SupplierIteratorGenerics(DataStructure ds:\vector())= GenericsExpanded(ds);
 str SupplierIteratorGenerics(DataStructure ds:\map())	= GenericsExpanded(ds);
-str SupplierIteratorGenerics(DataStructure ds:\set())	= "\<K, K\>";
+str SupplierIteratorGenerics(DataStructure ds:\set())	= "\<<toString(primitiveToClass(key().\type))>, <toString(primitiveToClass(key().\type))>\>";
 
 str SupplierIteratorGenericsReversed(DataStructure ds) = GenericsExpandedReversed(ds);
 
 str QuestionMarkGenerics(DataStructure ds:\map()) = "" when !isGeneric(key().\type) && !isGeneric(val().\type);
-str QuestionMarkGenerics(DataStructure ds:\map()) = "\<?, ?\>" when !!isGeneric(key().\type) && !!isGeneric(val().\type);
-str QuestionMarkGenerics(DataStructure ds:\map()) = "\<?\>" when !!isGeneric(key().\type) && !isGeneric(val().\type);
-str QuestionMarkGenerics(DataStructure ds:\map()) = "\<?\>" when !isGeneric(key().\type) && !!isGeneric(val().\type);
+str QuestionMarkGenerics(DataStructure ds:\map()) = "\<?, ?\>" when isGeneric(key().\type) && isGeneric(val().\type);
+str QuestionMarkGenerics(DataStructure ds:\map()) = "\<?\>" when isGeneric(key().\type) && !isGeneric(val().\type);
+str QuestionMarkGenerics(DataStructure ds:\map()) = "\<?\>" when !isGeneric(key().\type) && isGeneric(val().\type);
 default str QuestionMarkGenerics(DataStructure ds:\map()) = "\<\>";
 
-str QuestionMarkGenerics(DataStructure ds:\set()) = "\<?\>";
+str QuestionMarkGenerics(DataStructure ds:\set()) = "" when !isGeneric(key().\type);
+default str QuestionMarkGenerics(DataStructure ds:\set()) = "\<?\>";
 
 
 /* 

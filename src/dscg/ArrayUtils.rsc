@@ -28,7 +28,7 @@ str arraycopyAndInsertTuple(Argument src, Argument dst, int tupleSize, list[Argu
 		
 	return
 		"<if (!isPrimitive(dst)) {>@SuppressWarnings(\"unchecked\")<}>
-		<dec(dst)> = <if (!isPrimitive(dst)) {>(<toString(dst.\type)>)<}> new <if (isPrimitive(dst.\type)) {><typeStringWithoutArray(dst)><} else {>Object<}>[<use(src)>.length + <tupleSize>];
+		<dec(dst)> = <if (!isPrimitive(dst)) {>(<toString(dst.\type)>)<}> new <if (isPrimitive(dst.\type)) {><toString(asSingle(dst.\type))><} else {>Object<}>[<use(src)>.length + <tupleSize>];
 
 		// copy \'<use(src)>\' and insert <tupleSize> element(s) at position \'<use(newAtIndex)>\'
 		System.arraycopy(<use(src)>, 0, <use(dst)>, 0, <use(newAtIndex)>);
@@ -44,17 +44,13 @@ str arraycopyAndRemoveTuple(Argument src, Argument dst, int tupleSize, Argument 
 	
 	return
 		"<if (!isPrimitive(dst)) {>@SuppressWarnings(\"unchecked\")<}>
-		<dec(dst)> = <if (!isPrimitive(dst)) {>(<toString(dst.\type)>)<}> new <if (isPrimitive(dst.\type)) {><typeStringWithoutArray(dst)><} else {>Object<}>[<use(src)>.length - <tupleSize>];
+		<dec(dst)> = <if (!isPrimitive(dst)) {>(<toString(dst.\type)>)<}> new <if (isPrimitive(dst.\type)) {><toString(asSingle(dst.\type))><} else {>Object<}>[<use(src)>.length - <tupleSize>];
 
 		// copy \'<use(src)>\' and remove <tupleSize> element(s) at position \'<use(newAtIndex)>\'
 		System.arraycopy(<use(src)>, 0, <use(dst)>, 0, <use(newAtIndex)>);
 		System.arraycopy(<use(src)>, <use(newAtIndex)> + <tupleSize>, <use(dst)>, <use(newAtIndex)>, <use(src)>.length - <use(newAtIndex)> - <tupleSize>);
 		";
 }
-
-// TODO: move to Common.rsc?
-str typeStringWithoutArray(field(/^<t:.*>\[\]$/, name)) = t; // TODO file bug report: doesn't work if I use \type instead of t
-//default str typeStringWithoutArray(Argument a) = a.\type;
 
 str arraycopyAndSetTuple(Argument src, Argument dst, int tupleSize, list[Argument] new, Argument newAtIndex) {
 	if (tupleSize != size(new)) {
@@ -67,7 +63,7 @@ str arraycopyAndSetTuple(Argument src, Argument dst, int tupleSize, list[Argumen
 	
 	return
 		"<if (!isPrimitive(dst)) {>@SuppressWarnings(\"unchecked\")<}>
-		<dec(dst)> = <if (!isPrimitive(dst)) {>(<toString(dst.\type)>)<}> new <if (isPrimitive(dst.\type)) {><typeStringWithoutArray(dst)><} else {>Object<}>[<use(src)>.length];
+		<dec(dst)> = <if (!isPrimitive(dst)) {>(<toString(dst.\type)>)<}> new <if (isPrimitive(dst.\type)) {><toString(asSingle(dst.\type))><} else {>Object<}>[<use(src)>.length];
 
 		// copy \'<use(src)>\' and set <tupleSize> element(s) at position \'<use(newAtIndex)>\'
 		System.arraycopy(<use(src)>, 0, <use(dst)>, 0, <use(src)>.length);

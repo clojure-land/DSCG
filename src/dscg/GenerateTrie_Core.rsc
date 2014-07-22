@@ -156,7 +156,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	<generate_checkHashCodeAndSize(ts, setup)>
 	
 	@Override
-	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>(<dec(mapper(payloadTuple(ts, setup), primitiveToClass))>) {
+	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>(<dec(mapper(payloadTuple(ts, setup), primitiveToClassArguments))>) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.updated(null, <use(payloadTuple(ts, setup))>, keyHash, 0);
 
@@ -183,7 +183,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	}
 
 	@Override
-	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>Equivalent(<dec(mapper(payloadTuple(ts, setup), primitiveToClass))>, Comparator\<Object\> cmp) {
+	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>Equivalent(<dec(mapper(payloadTuple(ts, setup), primitiveToClassArguments))>, Comparator\<Object\> cmp) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.updated(null, <use(payloadTuple(ts, setup))>, keyHash, 0, cmp);
 
@@ -255,7 +255,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	
 
 	@Override
-	public <coreClassName><Generics(ds)> __remove(<dec(primitiveToClass(key()))>) {
+	public <coreClassName><Generics(ds)> __remove(<dec(primitiveToClassArguments(key()))>) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.removed(null, key, keyHash, 0);
 
@@ -277,7 +277,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	}
 
 	@Override
-	public <coreClassName><Generics(ds)> __removeEquivalent(<dec(primitiveToClass(key()))>, Comparator\<Object\> cmp) {
+	public <coreClassName><Generics(ds)> __removeEquivalent(<dec(primitiveToClassArguments(key()))>, Comparator\<Object\> cmp) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.removed(null, key, keyHash, 0, cmp);
 
@@ -321,7 +321,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	<if (ds == \map()) {>
 	@Override
 	public boolean containsValue(Object o) {
-		for (Iterator\<<toString(primitiveToClass(val()).\type)>\> iterator = valueIterator(); iterator.hasNext();) {
+		for (Iterator\<<toString(primitiveToClass(val().\type))>\> iterator = valueIterator(); iterator.hasNext();) {
 			if (iterator.next().equals(o)) {
 				return true;
 			}
@@ -331,7 +331,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 
 	@Override
 	public boolean containsValueEquivalent(Object o, Comparator\<Object\> cmp) {
-		for (Iterator\<<toString(primitiveToClass(val()).\type)>\> iterator = valueIterator(); iterator.hasNext();) {
+		for (Iterator\<<toString(primitiveToClass(val().\type))>\> iterator = valueIterator(); iterator.hasNext();) {
 			if (cmp.compare(iterator.next(), o) == 0) {
 				return true;
 			}
@@ -342,7 +342,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	
 
 	@Override
-	public <dsAtFunction__range_type(ds)> get(Object o) {
+	public <toString(primitiveToClass(dsAtFunction__range_type(ds)))> get(Object o) {
 		try {
 			<dec(key())> = (<toString(key().\type)>) o;
 			final Optional<MapsToGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
@@ -358,7 +358,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	}
 
 	@Override
-	public <dsAtFunction__range_type(ds)> getEquivalent(Object o, Comparator\<Object\> cmp) {
+	public <toString(primitiveToClass(dsAtFunction__range_type(ds)))> getEquivalent(Object o, Comparator\<Object\> cmp) {
 		try {
 			<dec(key())> = (<toString(key().\type)>) o;
 			final Optional<MapsToGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
@@ -392,7 +392,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 
 	<if (ds == \map()) {>
 	@Override
-	public Iterator\<<toString(primitiveToClass(val()).\type)>\> valueIterator() {
+	public Iterator\<<toString(primitiveToClass(val().\type))>\> valueIterator() {
 		return new <toString(ds)>ValueIterator<InferredGenerics()>(rootNode);
 	}
 

@@ -35,12 +35,12 @@ import dscg::GenerateTrie_Core;
 import dscg::GenerateTrie_CoreTransient;
 
 void main() {
-	TrieSpecifics ts = trieSpecifics(\set(), 5, 32);	
+	TrieSpecifics ts = trieSpecifics(\set(), 3, 8);	
 	if(___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound) := ts) {
 
 		rel[Option,bool] setup = { 
 			<useSpecialization(),true>,
-			<useUntypedVariables(),true>,
+			<useUntypedVariables(),false>,
 			<useFixedStackIterator(),true>,
 			<useStructuralEquality(),true>,
 			<methodsWithComparator(),true>
@@ -840,7 +840,11 @@ default str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieS
 	'	}"	
 	;
 	
-	
+
+str generate_bodyOf_copyAndInsertNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+when !isOptionEnabled(setup,useUntypedVariables())
+	;	
 	
 str generate_bodyOf_copyAndInsertNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n)
 	= "throw new IllegalStateException(\"Index out of range.\");"
@@ -861,6 +865,12 @@ str generate_bodyOf_copyAndInsertNode(int n, int m, ts:___expandedTrieSpecifics(
 	'	}"
 when isOptionEnabled(setup,useUntypedVariables()) && (mn < tupleLength(ds) * nMax)
 	;
+	
+	
+str generate_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+when !isOptionEnabled(setup,useUntypedVariables())
+	;	
 	
 str generate_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity() + nodeIndex(bitpos);
@@ -911,7 +921,7 @@ default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieS
 	'	}"
 	;	
 	
-str generate_copyAndMigrateFromInlineToNode(_, 0, _, setup) =
+str generate_copyAndMigrateFromInlineToNode(n, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
 	"@Override
 	'<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
 	'	throw new IllegalStateException(\"Index out of range.\");

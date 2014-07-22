@@ -63,7 +63,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		
 		
 		@Override
-		public <dsAtFunction__range_type(ds)> get(Object o) {
+		public <toString(primitiveToClass(dsAtFunction__range_type(ds)))> get(Object o) {
 			try {
 				<dec(key())> = (<toString(key().\type)>) o;
 				final Optional<MapsToGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
@@ -79,7 +79,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}		
 			
 		@Override
-		public <dsAtFunction__range_type(ds)> getEquivalent(Object o, Comparator\<Object\> cmp) {
+		public <toString(primitiveToClass(dsAtFunction__range_type(ds)))> getEquivalent(Object o, Comparator\<Object\> cmp) {
 			try {
 				<dec(key())> = (<toString(key().\type)>) o;
 				final Optional<MapsToGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
@@ -110,7 +110,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		<}>
 		
 		@Override
-		public boolean __remove(<dec(primitiveToClass(key()))>) {
+		public boolean __remove(<dec(primitiveToClassArguments(key()))>) {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 
@@ -154,7 +154,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean __removeEquivalent(<dec(primitiveToClass(key()))>, Comparator\<Object\> cmp) {
+		public boolean __removeEquivalent(<dec(primitiveToClassArguments(key()))>, Comparator\<Object\> cmp) {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 			}
@@ -219,10 +219,10 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 		
 		@Override
-		public boolean __retainAll(ImmutableSet\<? extends K\> set) {
+		public boolean __retainAll(ImmutableSet<GenericsExpandedUpperBounded(ds)> set) {
 			boolean modified = false;
 
-			Iterator\<K\> thisIterator = iterator();
+			Iterator<GenericsExpanded(ds)> thisIterator = iterator();
 			while (thisIterator.hasNext()) {
 				if (!set.contains(thisIterator.next())) {
 					thisIterator.remove();
@@ -234,10 +234,10 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean __retainAllEquivalent(ImmutableSet\<? extends K\> set, Comparator\<Object\> cmp) {
+		public boolean __retainAllEquivalent(ImmutableSet<GenericsExpandedUpperBounded(ds)> set, Comparator\<Object\> cmp) {
 			boolean modified = false;
 
-			Iterator\<K\> thisIterator = iterator();
+			Iterator<GenericsExpanded(ds)> thisIterator = iterator();
 			while (thisIterator.hasNext()) {
 				if (!set.containsEquivalent(thisIterator.next(), cmp)) {
 					thisIterator.remove();
@@ -322,7 +322,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 
 		<if (ds == \map()) {>
 		@Override
-		public Iterator\<<toString(primitiveToClass(val()).\type)>\> valueIterator() {
+		public Iterator\<<toString(primitiveToClass(val().\type))>\> valueIterator() {
 			// return new Trie<toString(ds)>ValueIterator<InferredGenerics()>(keyIterator());
 			return new <toString(ds)>ValueIterator<InferredGenerics()>(rootNode); // TODO: iterator does not
 														// support removal
@@ -344,7 +344,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 						implements SupplierIterator<SupplierIteratorGenerics(ds)> {
 
 			final <className><Generics(ds)> <uncapitalize(className)>;
-			<toString(primitiveToClass(key()).\type)> lastKey;
+			<toString(primitiveToClass(key().\type))> lastKey;
 
 			Transient<toString(ds)>KeyIterator(<className><Generics(ds)> <uncapitalize(className)>) {
 				super(<uncapitalize(className)>.rootNode);
@@ -352,7 +352,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 
 			@Override
-			public <toString(primitiveToClass(key()).\type)> next() {
+			public <toString(primitiveToClass(key().\type))> next() {
 				if (!hasNext()) {
 					throw new NoSuchElementException();
 				} else {
@@ -362,7 +362,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 
 			@Override
-			public <dsAtFunction__range_type(ds)> get() {
+			public <toString(primitiveToClass(dsAtFunction__range_type(ds)))> get() {
 				throw new UnsupportedOperationException();
 			}
 
@@ -421,7 +421,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 	;
 }
 	
-str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts, setup), primitiveToClass), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
+str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts, setup), primitiveToClassArguments), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
 	str methodName = "<insertOrPutMethodName(ds)><if (useComparator) {>Equivalent<}>"; 
 
 	list[Argument] filterArgs(list[Argument] args) {
@@ -464,7 +464,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, n
 	;		
 }
 
-str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts, setup), primitiveToClass), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
+str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts, setup), primitiveToClassArguments), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
 	str methodName = "<insertOrPutMethodName(ds)><if (useComparator) {>Equivalent<}>"; 
 	
 	list[Argument] filterArgs(list[Argument] args) {
@@ -478,7 +478,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, n
 	return
 	"
 	@Override
-	public <toString(primitiveToClass(val()).\type)> <methodName>(<dec(filterArgs(args))>) {
+	public <toString(primitiveToClass(val().\type))> <methodName>(<dec(filterArgs(args))>) {
 		if (mutator.get() == null) {
 			throw new IllegalStateException(\"Transient already frozen.\");
 		}

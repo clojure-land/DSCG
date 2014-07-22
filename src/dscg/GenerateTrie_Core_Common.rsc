@@ -21,7 +21,7 @@ str generate_checkHashCodeAndSize(ts:___expandedTrieSpecifics(ds:\set(), bitPart
 		int hash = 0;
 		int size = 0;
 	
-		for (Iterator<Generics(ds)> it = keyIterator(); it.hasNext();) {
+		for (Iterator<GenericsExpanded(ds)> it = keyIterator(); it.hasNext();) {
 			<dec(key())> = it.next();
 	
 			hash += <hashCode(key())>;
