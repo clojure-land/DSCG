@@ -124,6 +124,14 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 	'	abstract <CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>);
 
+	'	<CompactNode(ds)><Generics(ds)> copyAndInsertNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'		throw new UnsupportedOperationException();	
+	'	}
+	
+	'	<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {	
+	'		throw new UnsupportedOperationException();	
+	'	}
+
 	'	abstract <CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>);
 	
 	'	abstract <CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>);
@@ -510,7 +518,8 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'	} else {
 	'		final <CompactNode(ds)><Generics(ds)> nodeNew = mergeNodes(keyAt(bitpos), <if (ds == \map()) {> valAt(bitpos),<}><hashCode(key("keyAt(bitpos)"))>, key, <if (ds == \map()) {> val,<}> keyHash, shift + BIT_PARTITION_SIZE);
 	'
-	'		final <CompactNode(ds)><Generics(ds)> thisNew = copyAndMigrateFromInlineToNode(mutator, bitpos, nodeNew);
+	'		// final <CompactNode(ds)><Generics(ds)> thisNew = copyAndMigrateFromInlineToNode(mutator, bitpos, nodeNew);
+	'		final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveValue(mutator, bitpos).copyAndInsertNode(mutator, bitpos, nodeNew);
 	'
 	'		return Result.modified(thisNew);
 	'	}
@@ -578,14 +587,16 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 		switch (subNodeNew.sizePredicate()) {
 		case 1: {
 			<if (isOptionEnabled(setup,useSpecialization())) {>// inline value (move to front)
-				final <CompactNode(ds)><Generics(ds)> thisNew = copyAndMigrateFromNodeToInline(mutator, bitpos, subNodeNew);
+				// final <CompactNode(ds)><Generics(ds)> thisNew = copyAndMigrateFromNodeToInline(mutator, bitpos, subNodeNew);
+				final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveNode(mutator, bitpos).copyAndInsertValue(mutator, bitpos, subNodeNew.getKey(0)<if (ds == \map()) {>, subNodeNew.getValue(0)<}>);	
 	
 				return Result.modified(thisNew);<} else {>if (this.payloadArity() == 0 && this.nodeArity() == 1) {
 				// escalate (singleton or empty) result
 				return <nestedResult>;
 			} else {
 				// inline value (move to front)
-				final <CompactNode(ds)><Generics(ds)> thisNew = copyAndMigrateFromNodeToInline(mutator, bitpos, subNodeNew);
+				// final <CompactNode(ds)><Generics(ds)> thisNew = copyAndMigrateFromNodeToInline(mutator, bitpos, subNodeNew);
+				final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveNode(mutator, bitpos).copyAndInsertValue(mutator, bitpos, subNodeNew.getKey(0)<if (ds == \map()) {>, subNodeNew.getValue(0)<}>);
 	
 				return Result.modified(thisNew);
 			}<}>
