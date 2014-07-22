@@ -81,9 +81,15 @@ void main() {
 			+ [ generateCoreTransientClassString(ts, setup, classNamePostfix)]		
 			;
 			
-		if (isOptionEnabled(setup,useSpecialization())) {
+		if (isOptionEnabled(setup,useSpecialization()) && !isOptionEnabled(setup,useUntypedVariables())) {
 			innerClassStrings = innerClassStrings + 
 			[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ts, setup, classNamePostfix) | m <- [0..nMax+1], n <- [0..nMax+1], (n + m) <= nBound ];
+		}
+
+		// TODO: fix correct creation of mn instead of m and n		
+		if (isOptionEnabled(setup,useSpecialization()) && isOptionEnabled(setup,useUntypedVariables())) {
+			innerClassStrings = innerClassStrings + 
+			[ generateSpecializedNodeWithBitmapPositionsClassString(mn, 0, ts, setup, classNamePostfix) | mn <- [0.. tupleLength(ds) * nMax + 1], mn <= tupleLength(ds) * nBound ];
 		}
 			
 		list[str] classStrings = [ generateCoreClassString(ts, setup, intercalate("\n", innerClassStrings), classNamePostfix)];			
@@ -675,6 +681,19 @@ str generateGenericNodeClassString(int n, int m, ts:___expandedTrieSpecifics(ds,
 	}
 	";
 	
+str generate_bodyOf_getSlot(0)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+	;
+	
+default str generate_bodyOf_getSlot(int mn) = 	
+	"		switch(index) {
+	'			<for (i <- [0..mn]) {>case <i>:
+	'				return <slotName><i>;
+	'			<}>default:
+	'				throw new IllegalStateException(\"Index out of range.\");
+	'			}"
+	;
+	
 str generate_bodyOf_getNode(0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
@@ -686,7 +705,7 @@ default str generate_bodyOf_getNode(int n) =
 	'			<}>default:
 	'				throw new IllegalStateException(\"Index out of range.\");
 	'			}"
-	;
+	;	
 	
 str generate_bodyOf_getKey(0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
@@ -714,8 +733,9 @@ default str generate_bodyOf_getValue(int m) =
 	'			}"
 	;
 
-str generate_bodyOf_copyAndSetValue(_, 0, _, _)
+str generate_bodyOf_copyAndSetValue(_, 0, _, setup)
 	= "throw new IllegalStateException(\"Index out of range.\");"
+when !isOptionEnabled(setup,useUntypedVariables())
 	;
 
 str generate_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
@@ -724,7 +744,7 @@ str generate_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpecifics(ds
 	'	<dec(___bitmapField(bitPartitionSize))> = this.<use(bitmapMethod)>;
 	'	<dec(___valmapField(bitPartitionSize))> = this.<use(valmapMethod)>;
 	'	
-	'	switch(index) {
+	'	switch(idx) {
 	'		<for (i <- [0..mn/2]) {>case <i>:
 	'			return <nodeOf(n, m, use(replace(metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup), [ slot(tupleLength(ds)*i+1) ], [ field(valName) ])))>;
 	'		<}>default:
@@ -734,12 +754,12 @@ when isOptionEnabled(setup,useUntypedVariables())
 	;
 	
 default str generate_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
-	"	final int index = dataIndex(bitpos);
+	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
 	'	
 	'	<dec(___bitmapField(bitPartitionSize))> = this.<use(bitmapMethod)>;
 	'	<dec(___valmapField(bitPartitionSize))> = this.<use(valmapMethod)>;
 	'	
-	'	switch(index) {
+	'	switch(idx) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
 	'			return <nodeOf(n, m, use(replace(metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup), [ val(i) ], [ field(valName) ])))>;
 	'		<}>default:
@@ -747,8 +767,9 @@ default str generate_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpec
 	'	}"
 	;
 	
-str generate_bodyOf_copyAndSetNode(0, _, _, _)
+str generate_bodyOf_copyAndSetNode(0, _, _, setup)
 	= "throw new IllegalStateException(\"Index out of range.\");"
+when !isOptionEnabled(setup,useUntypedVariables())
 	;
 	
 str generate_bodyOf_copyAndSetNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 
@@ -780,10 +801,12 @@ default str generate_bodyOf_copyAndSetNode(int n, int m, ts:___expandedTrieSpeci
 	'	}"	
 	;
 
-str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
+// TODO: check condition carefully
+str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
 	"throw new IllegalStateException();"
-when (n + m) == nMax && (n + m) == nBound;
-	
+when !isOptionEnabled(setup,useUntypedVariables()) && ((n + m) == nMax) ||
+		isOptionEnabled(setup,useUntypedVariables()) && (mn > tupleLength(ds) * (nMax - 1));
+		
 str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
 	'
@@ -800,7 +823,7 @@ str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics
 	'	}"
 when isOptionEnabled(setup,useUntypedVariables())	
 	;	
-	
+
 default str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
 	"	final int valIndex = dataIndex(bitpos);
 	'
@@ -817,8 +840,9 @@ default str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieS
 	'	}"
 	;
 	
-str generate_bodyOf_copyAndRemoveValue(_, 0, _, _)
+str generate_bodyOf_copyAndRemoveValue(_, 0, _, setup)
 	= "throw new IllegalStateException(\"Index out of range.\");"
+when !isOptionEnabled(setup,useUntypedVariables())
 	;
 	
 default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
@@ -835,8 +859,9 @@ default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieS
 	'	}"
 	;	
 	
-str generate_bodyOf_copyAndMigrateFromInlineToNode(_, 0, _, _)
+str generate_bodyOf_copyAndMigrateFromInlineToNode(_, 0, _, setup)
 	= "throw new IllegalStateException(\"Index out of range.\");"
+when !isOptionEnabled(setup,useUntypedVariables())
 	;
 
 str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
@@ -884,24 +909,16 @@ default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___e
 	'	}"
 	;
 
-str generate_bodyOf_copyAndMigrateFromNodeToInline(0, _, _, _)
+str generate_bodyOf_copyAndMigrateFromNodeToInline(n:0, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n)
 	= "throw new IllegalStateException(\"Index out of range.\");"
+when !isOptionEnabled(setup,useUntypedVariables())
 	;
-	
-			//	}
-			//case 2:
-			//	switch (valIndex) {
-			//	case 0:
-			//		return nodeOf(mutator, nodeMap, dataMap, key, val, slot0, slot1, slot3, slot4,
-			//						slot5);
-			//	case 1:
-			//		return nodeOf(mutator, nodeMap, dataMap, key, val, slot0, slot1, slot3, slot4,
-			//						slot5);
-			//	default:
-			//		throw new IllegalStateException("Index out of range.");
-			//	}	
-	
-	
+
+str generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+when isOptionEnabled(setup,useUntypedVariables()) && (mn == tupleLength(ds) * nMax)
+	;
+		
 str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
@@ -1788,13 +1805,15 @@ default str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
 	'}"
 	;
 
-str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix) {
+str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix, int mn = tupleLength(ds)*m+n) {
 	constructorArgs = field(specific("AtomicReference\<Thread\>"), "mutator") + metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup);
 
 	specializedClassName = "<toString(ds)><m>To<n>Node<classNamePostfix>";
 
+	extendsClassName = "<if (isOptionEnabled(setup,useUntypedVariables())) {><className_compactNode(ts, setup, true, true)><} else {><className_compactNode(ts, setup, n != 0, m != 0)><}>";
+
 	return
-	"private static final class <specializedClassName><Generics(ds)> extends <className_compactNode(ts, setup, n != 0, m != 0)><Generics(ds)> {
+	"private static final class <specializedClassName><Generics(ds)> extends <extendsClassName><Generics(ds)> {
 	
 	'	<intercalate("\n", mapper(contentArguments(n, m, ts, setup), str(Argument a) { 
 			str dec = "private <dec(a)>;";
@@ -1821,21 +1840,6 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'		<}>assert nodeInvariant();
 	'	}
 	
-	'	@Override
-	'	Iterator\<<CompactNode(ds)><Generics(ds)>\> nodeIterator() {
-	'		<if (n > 0) {>return ArrayIterator.of(<intercalate(", ", ["<nodeName><i>" | i <- [1..n+1]])>);<} else {>return Collections.\<<CompactNode(ds)><Generics(ds)>\>emptyIterator();<}>
-	'	}
-
-	'	@Override
-	'	boolean hasNodes() {
-	'		return <if (n > 0) {>true<} else {>false<}>;
-	'	}
-
-	'	@Override
-	'	int nodeArity() {
-	'		return <n>;
-	'	}	
-
 	<if (ds == \map()) {>
 	'	@Override
 	'	SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator() {
@@ -1847,16 +1851,6 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'		<if (m > 0) {>return ArrayKeyValueIterator.of(new Object[] { <intercalate(", ", ["<keyName><i>, <keyName><i>"  | i <- [1..m+1]])> });<} else {>return EmptySupplierIterator.emptyIterator();<}>
 	'	}	
 	<}>
-
-	'	@Override
-	'	boolean hasPayload() {
-	'		return <if (m > 0) {>true<} else {>false<}>;
-	'	}
-
-	'	@Override
-	'	int payloadArity() {
-	'		return <m>;
-	'	}
 	
 	'	@Override
 	'	<toString(key().\type)> headKey() {
@@ -1869,7 +1863,87 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a value.\")<} else {>return val1<}>;
 	'	}	
 	<}>
+
+	<if (isOptionEnabled(setup,useUntypedVariables())) {>
+	'	@Override
+	'	<toString(object())> getSlot(int index) {
+	'		<generate_bodyOf_getSlot(mn)>
+	'	}	
+
+		<if (!isPrimitive(key())) {>@SuppressWarnings(\"unchecked\")<}>
+		@Override
+		<toString(key().\type)> getKey(int index) {
+			return (<toString(key().\type)>) getSlot(<use(tupleLengthConstant)> * index);
+		}
 	
+		<if (ds == \map()) {>
+		<if (!isPrimitive(val())) {>@SuppressWarnings(\"unchecked\")<}>
+		@Override
+		<toString(val().\type)> getValue(int index) {
+			return (<toString(val().\type)>) getSlot(<use(tupleLengthConstant)> * index + 1);
+		}
+		<}>
+
+		<if (ds == \map()) {>
+		@SuppressWarnings(\"unchecked\")
+		@Override
+		Map.Entry<GenericsExpanded(ds)> getKeyValueEntry(int index) {
+			return entryOf((<toString(key().\type)>) getSlot(<use(tupleLengthConstant)> * index), (<toString(val().\type)>) getSlot(<use(tupleLengthConstant)> * index + 1));
+		}
+		<}>
+
+		@SuppressWarnings(\"unchecked\")
+		@Override
+		public <CompactNode(ds)><Generics(ds)> getNode(int index) {
+			final int offset = <use(tupleLengthConstant)> * payloadArity();
+			return (<CompactNode(ds)><Generics(ds)>) getSlot(offset + index);
+		}
+		
+		@SuppressWarnings(\"unchecked\")
+		@Override
+		Iterator\<<CompactNode(ds)><Generics(ds)>\> nodeIterator() {
+			final int offset = <use(tupleLengthConstant)> * payloadArity();
+			final Object[] nodes = new Object[<mn> - offset];
+
+			for (int i = offset; i \< <mn> - offset; i++) {
+				// assert ((getSlot(i) instanceof <AbstractNode(ds)>) == true);
+				nodes[i - offset] = getSlot(i);
+			}
+
+			return (Iterator) ArrayIterator.of(nodes);
+		}		
+		
+		@Override
+		boolean hasNodes() {
+			return <use(tupleLengthConstant)> * payloadArity() != <mn>;
+		}
+
+		@Override
+		int nodeArity() {
+			return <mn> - <use(tupleLengthConstant)> * payloadArity();
+		}
+		
+		@Override
+		boolean hasPayload() {
+			return payloadArity() != 0;
+		}
+
+		@Override
+		int payloadArity() {
+			return <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(bitPartitionSize))>);
+		}
+		
+		@Override
+		byte sizePredicate() {
+			if (this.nodeArity() == 0 && this.payloadArity() == 0) {
+				return SIZE_EMPTY;
+			} else if (this.nodeArity() == 0 && this.payloadArity() == 1) {
+				return SIZE_ONE;
+			} else {
+				return SIZE_MORE_THAN_ONE;
+			}
+		}		
+	<} else {>
 	'	@Override
 	'	<CompactNode(ds)><Generics(ds)> getNode(int index) {
 	'		<generate_bodyOf_getNode(n)>
@@ -1892,7 +1966,38 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'	Map.Entry<GenericsExpanded(ds)> getKeyValueEntry(int index) {
 	'		<generate_bodyOf_getKeyValueEntry(ds, m)>
 	'	}
-	<}>		
+	<}>	
+	
+	'	@Override
+	'	Iterator\<<CompactNode(ds)><Generics(ds)>\> nodeIterator() {
+	'		<if (n > 0) {>return ArrayIterator.of(<intercalate(", ", ["<nodeName><i>" | i <- [1..n+1]])>);<} else {>return Collections.\<<CompactNode(ds)><Generics(ds)>\>emptyIterator();<}>
+	'	}
+
+	'	@Override
+	'	boolean hasNodes() {
+	'		return <if (n > 0) {>true<} else {>false<}>;
+	'	}
+
+	'	@Override
+	'	int nodeArity() {
+	'		return <n>;
+	'	}
+	
+	'	@Override
+	'	boolean hasPayload() {
+	'		return <if (m > 0) {>true<} else {>false<}>;
+	'	}
+
+	'	@Override
+	'	int payloadArity() {
+	'		return <m>;
+	'	}	
+	
+	'	@Override
+	'	byte sizePredicate() {
+	'		return <generate_bodyOf_sizePredicate(n, m, ts)>;
+	'	}	
+	<}>
 
 	<if (ds == \map()) {>
 	'	@Override
@@ -1933,22 +2038,10 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'	}
 	<}>	
 	
-	'	@Override
-	'	byte sizePredicate() {
-	'		return <generate_bodyOf_sizePredicate(n, m, ts)>;
-	'	}
-
 	<if (isOptionEnabled(setup, useStructuralEquality())) {>
 	'	@Override
 	'	public int hashCode() {
-	'		<if ((n + m) > 0) {>final int prime = 31; int result = 1; result = prime * result + (<primitiveHashCode(___bitmapMethod(bitPartitionSize))>); result = prime * result + (<primitiveHashCode(___valmapMethod(bitPartitionSize))>);<} else {>int result = 1;<}>	
-	'		<for (i <- [1..m+1]) {>		
-	'		result = prime * result + <hashCode(key(i))>;
-	'		<if (ds == \map()) {>result = prime * result + <hashCode(val(i))>;<}>
-	'		<}><for (i <- [1..n+1]) {>
-	'		result = prime * result + <hashCode(\node(ds, i))>;
-	'		<}>	
-	'		return result;
+	'		<generate_bodyOf_hashCode(n, m, ts, setup)>
 	'	}
 
 	'	@Override
@@ -1981,10 +2074,28 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	
 }
 
+str generate_bodyOf_hashCode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
+"		<if ((n + m) > 0) {>final int prime = 31; int result = 1; result = prime * result + (<primitiveHashCode(___bitmapMethod(bitPartitionSize))>); result = prime * result + (<primitiveHashCode(___valmapMethod(bitPartitionSize))>);<} else {>int result = 1;<}>	
+'		<for (i <- [0..mn]) {>result = prime * result + <hashCode(slot(i))>;<}>	
+'		return result;"
+when isOptionEnabled(setup,useUntypedVariables())	
+	;
+
+default str generate_bodyOf_hashCode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
+"		<if ((n + m) > 0) {>final int prime = 31; int result = 1; result = prime * result + (<primitiveHashCode(___bitmapMethod(bitPartitionSize))>); result = prime * result + (<primitiveHashCode(___valmapMethod(bitPartitionSize))>);<} else {>int result = 1;<}>	
+'		<for (i <- [1..m+1]) {>		
+'		result = prime * result + <hashCode(key(i))>;
+'		<if (ds == \map()) {>result = prime * result + <hashCode(val(i))>;<}>
+'		<}><for (i <- [1..n+1]) {>
+'		result = prime * result + <hashCode(\node(ds, i))>;
+'		<}>	
+'		return result;"
+;
+
 str generate_bodyOf_toString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
 	"return \"\"; // TODO"
 when isOptionEnabled(setup,useUntypedVariables())	
 	;
 
-str generate_bodyOf_toString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
+default str generate_bodyOf_toString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
 	"<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (ds == \map()) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(<use(valmapMethod)>, (byte) <i>)"), *payloadTuple(ts, setup, i) | i <- [1..m+1]] + [ field("recoverMask(<use(bitmapMethod)>, (byte) <i>)"), \node(ds, i)	| i <- [1..n+1]])>);<}>";

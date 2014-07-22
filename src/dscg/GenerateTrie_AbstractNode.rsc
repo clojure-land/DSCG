@@ -62,6 +62,10 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 
 		abstract int payloadArity();
 
+		<if (isOptionEnabled(setup,useUntypedVariables())) {>
+		abstract <toString(object())> getSlot(int index);
+		<}>
+
 		/**
 		 * The arity of this trie node (i.e. number of values and nodes stored
 		 * on this level).

@@ -132,6 +132,13 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			return nodes.length - <use(tupleLengthConstant)> * payloadArity;
 		}
 
+		<if (isOptionEnabled(setup,useUntypedVariables())) {>
+		@Override
+		<toString(object())> getSlot(int index) {
+			throw new UnsupportedOperationException();
+		}
+		<}>
+
 		<if (isOptionEnabled(setup, useStructuralEquality())) {>
 		@Override
 		public int hashCode() {

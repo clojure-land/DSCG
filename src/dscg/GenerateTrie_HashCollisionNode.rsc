@@ -168,6 +168,13 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			throw new IllegalStateException(\"Is leaf node.\");
 		}
 
+		<if (isOptionEnabled(setup,useUntypedVariables())) {>
+		@Override
+		<toString(object())> getSlot(int index) {
+			throw new UnsupportedOperationException();
+		}
+		<}>
+
 		<if (isOptionEnabled(setup, useStructuralEquality())) {>
 		@Override
 		public int hashCode() {
