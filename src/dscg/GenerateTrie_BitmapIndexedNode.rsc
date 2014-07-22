@@ -176,37 +176,6 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		<}>
 
 		@Override
-		public String toString() {
-			final StringBuilder bldr = new StringBuilder();
-			bldr.append(\'[\');
-
-			for (byte i = 0; i \< payloadArity(); i++) {
-				final byte pos = recoverMask(<use(valmapMethod)>, (byte) (i + 1));
-				bldr.append(String.format(\"@%d: <intercalate("=", times("%s", size(payloadTuple(ts, setup))))>\", pos, <use(invoke_get_for_payloadTuple(ts, setup, field("i")))>));
-
-				if (!((i + 1) == payloadArity())) {
-					bldr.append(\", \");
-				}
-			}
-
-			if (payloadArity() \> 0 && nodeArity() \> 0) {
-				bldr.append(\", \");
-			}
-
-			for (byte i = 0; i \< nodeArity(); i++) {
-				final byte pos = recoverMask(<use(bitmapMethod)>, (byte) (i + 1));
-				bldr.append(String.format(\"@%d: %s\", pos, getNode(i)));
-
-				if (!((i + 1) == nodeArity())) {
-					bldr.append(\", \");
-				}
-			}
-
-			bldr.append(\']\');
-			return bldr.toString();
-		}
-
-		@Override
 		byte sizePredicate() {
 			<if (isOptionEnabled(setup,useSpecialization())) {>return SIZE_MORE_THAN_ONE;<} else {>if (this.nodeArity() == 0 && this.payloadArity == 0) {
 				return SIZE_EMPTY;
@@ -303,13 +272,6 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 	'}";
 }
-
-// TODO: move to List.rsc?
-list[&T] times(&T template, int count) 
-	= [ template | i <- [1..count]];
 	
-list[Argument] invoke_get_for_payloadTuple(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, Argument idx) = [ key("getKey(<use(idx)>)"), val("getValue(<use(idx)>)") ];
-list[Argument] invoke_get_for_payloadTuple(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, Argument idx) = [ key("getKey(<use(idx)>)") ];
-
 list[Argument] headPayloadTuple(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, Argument \node) = [ key("<use(\node)>.headKey()"), val("<use(\node)>.headVal()") ];
 list[Argument] headPayloadTuple(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, Argument \node) = [ key("<use(\node)>.headKey()") ];	

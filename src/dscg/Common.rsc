@@ -470,3 +470,7 @@ int tupleLength(DataStructure ds:\vector()) = 2;
 default int tupleLength(_) { throw "Ahhh"; }
 
 public Argument tupleLengthConstant = field(primitive("int"), "TUPLE_LENGTH"); // TODO: get rid of public state
+
+// TODO: move to List.rsc?
+list[&T] times(&T template, int count) 
+	= [ template | i <- [1..count]];

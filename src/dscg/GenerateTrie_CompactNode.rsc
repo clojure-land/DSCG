@@ -132,9 +132,13 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'		throw new UnsupportedOperationException();	
 	'	}
 
-	'	abstract <CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>);
-	
-	'	abstract <CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>);
+	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'		throw new UnsupportedOperationException();	
+	'	}
+		
+	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'		throw new UnsupportedOperationException();	
+	'	}	
 
 		@SuppressWarnings(\"unchecked\")
 		static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> mergeNodes(<dec(payloadTuple(ts, setup, 0))>, int keyHash0, <dec(payloadTuple(ts, setup, 1))>, int keyHash1, int shift) {
@@ -267,6 +271,38 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'	@Override
 	'	Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, <dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp) {
 	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, setup, equalityComparatorForArguments)>
+	'	}
+
+
+	'	@Override
+	'	public String toString() {
+	'		final StringBuilder bldr = new StringBuilder();
+	'		bldr.append(\'[\');
+	'
+	'		for (byte i = 0; i \< payloadArity(); i++) {
+	'			final byte pos = recoverMask(<use(valmapMethod)>, (byte) (i + 1));
+	'			bldr.append(String.format(\"@%d: <intercalate("=", times("%s", size(payloadTuple(ts, setup))))>\", pos, <use(invoke_get_for_payloadTuple(ts, setup, field("i")))>));
+	'
+	'			if (!((i + 1) == payloadArity())) {
+	'				bldr.append(\", \");
+	'			}
+	'		}
+	'
+	'		if (payloadArity() \> 0 && nodeArity() \> 0) {
+	'			bldr.append(\", \");
+	'		}
+	'
+	'		for (byte i = 0; i \< nodeArity(); i++) {
+	'			final byte pos = recoverMask(<use(bitmapMethod)>, (byte) (i + 1));
+	'			bldr.append(String.format(\"@%d: %s\", pos, getNode(i)));
+	'
+	'			if (!((i + 1) == nodeArity())) {
+	'				bldr.append(\", \");
+	'			}
+	'		}
+	'
+	'		bldr.append(\']\');
+	'		return bldr.toString();
 	'	}
 	
 	'}
@@ -786,3 +822,12 @@ when isOptionEnabled(setup,useSpecialization()) && isOptionEnabled(setup,useUnty
 	;
 		
 default str generate_specializationFactoryMethods(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix) = "";
+
+
+
+
+
+list[Argument] invoke_get_for_payloadTuple(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, Argument idx) = [ key("getKey(<use(idx)>)"), val("getValue(<use(idx)>)") ];
+list[Argument] invoke_get_for_payloadTuple(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, Argument idx) = [ key("getKey(<use(idx)>)") ];
+
+

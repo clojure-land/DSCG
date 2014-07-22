@@ -409,11 +409,6 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public String toString() {
-			return rootNode.toString();
-		}
-
-		@Override
 		public Immutable<toString(ds)><GenericsExpanded(ds)> freeze() {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
