@@ -191,7 +191,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'	}
 	<}>
 	
-	<if (!isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>
+	<if (!isOptionEnabled(setup,useSpecialization()) || nBound < nMax) {>
 	'	@SuppressWarnings(\"unchecked\")
 	'	static final <Generics(ds)> <CompactNode(ds)><Generics(ds)> nodeOf(AtomicReference\<Thread\> mutator) {
 	'		return <emptyTrieNodeConstantName>;
@@ -273,6 +273,31 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'		<generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, setup, equalityComparatorForArguments)>
 	'	}
 
+	'	/**
+	'	 * @return 0 \<= mask \<= 2^BIT_PARTITION_SIZE - 1
+	'	 */
+	'	static byte recoverMask(<toString(chunkSizeToPrimitive(bitPartitionSize))> map, byte i_th) {
+	'		assert 1 \<= i_th && i_th \<= <nMax>;
+	'		
+	'		byte cnt1 = 0;
+	'		byte mask = 0;
+	'		
+	'		while (mask \< <nMax>) {
+	'			if ((map & 0x01) == 0x01) {
+	'				cnt1 += 1;
+	'		
+	'				if (cnt1 == i_th) {
+	'					return mask;
+	'				}
+	'			}
+	'		
+	'			map = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (map \>\> 1);
+	'			mask += 1;
+	'		}
+	'			
+	'		assert cnt1 != i_th;
+	'		throw new RuntimeException(\"Called with invalid arguments.\");
+	'	}
 
 	'	@Override
 	'	public String toString() {
@@ -554,8 +579,11 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'	} else {
 	'		final <CompactNode(ds)><Generics(ds)> nodeNew = mergeNodes(keyAt(bitpos), <if (ds == \map()) {> valAt(bitpos),<}><hashCode(key("keyAt(bitpos)"))>, key, <if (ds == \map()) {> val,<}> keyHash, shift + BIT_PARTITION_SIZE);
 	'
-	'		// final <CompactNode(ds)><Generics(ds)> thisNew = copyAndMigrateFromInlineToNode(mutator, bitpos, nodeNew);
+	'		<if (isOptionEnabled(setup,useSpecialization())) {>
 	'		final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveValue(mutator, bitpos).copyAndInsertNode(mutator, bitpos, nodeNew);
+	'		<} else {>
+	'		final <CompactNode(ds)><Generics(ds)> thisNew = copyAndMigrateFromInlineToNode(mutator, bitpos, nodeNew);
+	'		<}>
 	'
 	'		return Result.modified(thisNew);
 	'	}
@@ -631,8 +659,8 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 				return <nestedResult>;
 			} else {
 				// inline value (move to front)
-				// final <CompactNode(ds)><Generics(ds)> thisNew = copyAndMigrateFromNodeToInline(mutator, bitpos, subNodeNew);
-				final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveNode(mutator, bitpos).copyAndInsertValue(mutator, bitpos, subNodeNew.getKey(0)<if (ds == \map()) {>, subNodeNew.getValue(0)<}>);
+				final <CompactNode(ds)><Generics(ds)> thisNew = copyAndMigrateFromNodeToInline(mutator, bitpos, subNodeNew);
+				// final <CompactNode(ds)><Generics(ds)> thisNew = copyAndRemoveNode(mutator, bitpos).copyAndInsertValue(mutator, bitpos, subNodeNew.getKey(0)<if (ds == \map()) {>, subNodeNew.getValue(0)<}>);
 	
 				return Result.modified(thisNew);
 			}<}>

@@ -155,30 +155,6 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 
 	<generate_checkHashCodeAndSize(ts, setup)>
 	
-	// returns 0 \<= mask \<= <nMax-1>
-	static byte recoverMask(<toString(chunkSizeToPrimitive(bitPartitionSize))> map, byte i_th) {
-		assert 1 \<= i_th && i_th \<= <nMax>;
-
-		byte cnt1 = 0;
-		byte mask = 0;
-
-		while (mask \< <nMax>) {
-			if ((map & 0x01) == 0x01) {
-				cnt1 += 1;
-
-				if (cnt1 == i_th) {
-					return mask;
-				}
-			}
-
-			map = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (map \>\> 1);
-			mask += 1;
-		}
-
-		assert cnt1 != i_th;
-		throw new RuntimeException(\"Called with invalid arguments.\");
-	}
-
 	@Override
 	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>(<dec(mapper(payloadTuple(ts, setup), primitiveToClass))>) {
 		final int keyHash = key.hashCode();
