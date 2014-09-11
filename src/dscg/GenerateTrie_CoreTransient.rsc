@@ -110,7 +110,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		<}>
 		
 		@Override
-		public boolean __remove(<dec(primitiveToClassArguments(key()))>) {
+		public boolean __remove(<dec(primitiveToClassArgument(key()))>) {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 
@@ -154,7 +154,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean __removeEquivalent(<dec(primitiveToClassArguments(key()))>, Comparator\<Object\> cmp) {
+		public boolean __removeEquivalent(<dec(primitiveToClassArgument(key()))>, Comparator\<Object\> cmp) {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 			}
@@ -310,7 +310,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 
 		<if (ds == \set()) {>
 		@Override
-		public Iterator<Generics(ds)> iterator() {
+		public Iterator<GenericsExpanded(ds)> iterator() {
 			return keyIterator();
 		}
 		<}>
@@ -421,7 +421,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 	;
 }
 	
-str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts, setup), primitiveToClassArguments), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
+str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts, setup), primitiveToClassArgument), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
 	str methodName = "<insertOrPutMethodName(ds)><if (useComparator) {>Equivalent<}>"; 
 
 	list[Argument] filterArgs(list[Argument] args) {
@@ -464,7 +464,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, n
 	;		
 }
 
-str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts, setup), primitiveToClassArguments), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
+str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts, setup), primitiveToClassArgument), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
 	str methodName = "<insertOrPutMethodName(ds)><if (useComparator) {>Equivalent<}>"; 
 	
 	list[Argument] filterArgs(list[Argument] args) {
@@ -544,7 +544,7 @@ str insertOrPutAll(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax
 
 		for (Entry<GenericsExpandedUpperBounded(ds)> entry : map.entrySet()) {
 			final boolean isPresent = containsKey<if (useComparator) {>Equivalent<}>(entry.getKey()<if (useComparator) {>, cmp<}>);
-			<dec(val("replaced"))> = __put<if (useComparator) {>Equivalent<}>(entry.getKey(), entry.getValue()<if (useComparator) {>, cmp<}>);
+			<dec(primitiveToClassArgument(val("replaced")))> = __put<if (useComparator) {>Equivalent<}>(entry.getKey(), entry.getValue()<if (useComparator) {>, cmp<}>);
 
 			if (!isPresent || replaced != null) {
 				modified = true;

@@ -84,7 +84,10 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		 * 
 		 * @return first key
 		 */
-		abstract <toString(key().\type)> headKey();
+		@Deprecated
+		<toString(key().\type)> headKey() {
+			return getKey(0);
+		}
 
 		<if (ds == \map()) {>
 		/**
@@ -92,14 +95,20 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		 * 
 		 * @return first value
 		 */
-		abstract <toString(val().\type)> headVal();
+		@Deprecated 
+		<toString(val().\type)> headVal() {
+			return getValue(0);
+		}
 		<}>
 
 		@Override
 		abstract <CompactNode(ds)><Generics(ds)> getNode(int index);
 
-		@Override
-		abstract Iterator\<? extends <CompactNode(ds)><Generics(ds)>\> nodeIterator();
+	'	@Deprecated
+	'	@Override
+	'	Iterator\<? extends <CompactNode(ds)><Generics(ds)>\> nodeIterator() {
+	'		throw new UnsupportedOperationException();	
+	'	}
 
 		boolean nodeInvariant() {
 			boolean inv1 = (size() - payloadArity() \>= 2 * (arity() - payloadArity()));

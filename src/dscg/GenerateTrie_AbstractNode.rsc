@@ -52,13 +52,68 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 
 		abstract boolean hasNodes();
 
-		abstract Iterator\<? extends <AbstractNode(ds)><Generics(ds)>\> nodeIterator();
+	'	@Deprecated
+	'	Iterator\<? extends <AbstractNode(ds)><Generics(ds)>\> nodeIterator() {
+			return new Iterator\<<AbstractNode(ds)><Generics(ds)>\>() {
 
+				int nextIndex = 0;
+
+				@Override
+				public void remove() {
+					throw new UnsupportedOperationException();
+				}
+
+				@Override
+				public <AbstractNode(ds)><Generics(ds)> next() {
+					if (!hasNext())
+						throw new NoSuchElementException();
+					return <AbstractNode(ds)>.this.getNode(nextIndex++);
+				}
+
+				@Override
+				public boolean hasNext() {
+					return nextIndex \< <AbstractNode(ds)>.this.nodeArity();
+				}
+			};	
+	'	}
+	
 		abstract int nodeArity();
 
 		abstract boolean hasPayload();
 
-		abstract SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator();
+	'	@Deprecated
+	'	SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator() {
+			return new SupplierIterator<SupplierIteratorGenerics(ds)>() {
+
+				int nextIndex = 0;
+
+				@Override
+				public <toString(primitiveToClass(dsAtFunction__range_type(ds)))> get() {
+					if (nextIndex == 0 || nextIndex \> <AbstractNode(ds)>.this.payloadArity()) {
+						throw new NoSuchElementException();
+					}
+
+					return <AbstractNode(ds)>.this.<dsAtFunction__range_getter_name(ds)>(nextIndex - 1);
+				}
+
+				@Override
+				public void remove() {
+					throw new UnsupportedOperationException();
+				}
+
+				@Override
+				public <toString(primitiveToClass(key().\type))> next() {
+					if (!hasNext())
+						throw new NoSuchElementException();
+					return <AbstractNode(ds)>.this.getKey(nextIndex++);
+				}
+
+				@Override
+				public boolean hasNext() {
+					return nextIndex \< <AbstractNode(ds)>.this.payloadArity();
+				}
+			};	
+	'	}
 
 		abstract int payloadArity();
 

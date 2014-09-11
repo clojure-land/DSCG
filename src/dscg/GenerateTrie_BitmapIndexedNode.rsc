@@ -81,7 +81,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 		@Override
 		SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator() {
-			return ArrayKeyValueIterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity);
+			return ArrayKeyValueSupplierIterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity);
 		}
 
 		@SuppressWarnings(\"unchecked\")

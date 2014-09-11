@@ -156,7 +156,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	<generate_checkHashCodeAndSize(ts, setup)>
 	
 	@Override
-	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>(<dec(mapper(payloadTuple(ts, setup), primitiveToClassArguments))>) {
+	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>(<dec(mapper(payloadTuple(ts, setup), primitiveToClassArgument))>) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.updated(null, <use(payloadTuple(ts, setup))>, keyHash, 0);
 
@@ -183,7 +183,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	}
 
 	@Override
-	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>Equivalent(<dec(mapper(payloadTuple(ts, setup), primitiveToClassArguments))>, Comparator\<Object\> cmp) {
+	public <coreClassName><Generics(ds)> <insertOrPutMethodName(ds)>Equivalent(<dec(mapper(payloadTuple(ts, setup), primitiveToClassArgument))>, Comparator\<Object\> cmp) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.updated(null, <use(payloadTuple(ts, setup))>, keyHash, 0, cmp);
 
@@ -255,7 +255,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	
 
 	@Override
-	public <coreClassName><Generics(ds)> __remove(<dec(primitiveToClassArguments(key()))>) {
+	public <coreClassName><Generics(ds)> __remove(<dec(primitiveToClassArgument(key()))>) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.removed(null, key, keyHash, 0);
 
@@ -277,7 +277,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 	}
 
 	@Override
-	public <coreClassName><Generics(ds)> __removeEquivalent(<dec(primitiveToClassArguments(key()))>, Comparator\<Object\> cmp) {
+	public <coreClassName><Generics(ds)> __removeEquivalent(<dec(primitiveToClassArgument(key()))>, Comparator\<Object\> cmp) {
 		final int keyHash = key.hashCode();
 		final Result<ResultGenerics(ds)> result = rootNode.removed(null, key, keyHash, 0, cmp);
 
@@ -380,7 +380,7 @@ public class <coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds
 
 	<if (ds == \set()) {>
 	@Override
-	public Iterator<Generics(ds)> iterator() {
+	public Iterator<GenericsExpanded(ds)> iterator() {
 		return keyIterator();
 	}
 	<}>

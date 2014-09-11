@@ -120,10 +120,10 @@ Argument getter(str name) = getter(unknown(), name);
 Argument keyPos(int i) 		= field(primitive("byte"), "<keyPosName><i>");
 Argument key()				= key("<keyName>");
 Argument key(int i) 		= key("<keyName><i>");
-Argument key(str name) 		= field(primitive("int"), "<name>");
+Argument key(str name) 		= field(generic("K"), "<name>");
 Argument val()				= val("<valName>");
 Argument val(int i) 		= val("<valName><i>");
-Argument val(str name) 		= field(primitive("int"), "<name>");
+Argument val(str name) 		= field(generic("V"), "<name>");
 
 Argument slot() 			= slot("<slotName>");
 Argument slot(int i) 		= slot("<slotName><i>");
@@ -187,10 +187,10 @@ Type primitiveToClass(Type \type) = specific("java.lang.Long") when ___primitive
 /***/
 default Type primitiveToClass(Type \type) = \type;
 /***/
-Argument primitiveToClassArguments(field (\type, name))  = field (primitiveToClass(\type), name);
-Argument primitiveToClassArguments(getter(\type, name))  = getter(primitiveToClass(\type), name);
+Argument primitiveToClassArgument(field (\type, name))  = field (primitiveToClass(\type), name);
+Argument primitiveToClassArgument(getter(\type, name))  = getter(primitiveToClass(\type), name);
 /***/
-default Argument primitiveToClassArguments(Argument nonPrimitive) = nonPrimitive;
+default Argument primitiveToClassArgument(Argument nonPrimitive) = nonPrimitive;
 
 bool isPrimitive(Type \type) = true when ___primitive(_) := \type;
 default bool isPrimitive(Type _) = false;
@@ -219,14 +219,31 @@ default bool isPrimitiveArray(_) { throw "aahh"; }
 /*
  * Functions
  */
+/*
 str use(field(_, name)) = name;
 str use(getter(_, name)) = "<name>()";
 default str use(Argument a) { throw "You forgot <a>!"; }
 /***/
 str use(list[Argument] xs) = intercalate(", ", mapper(xs, use));
 
-str dec(field(\type, name)) = "final <toString(\type)> <name>";
-str dec(getter(\type, name)) = "abstract <toString(\type)> <name>()";
+str use(Argument a) {
+	switch (a) {
+		case field (tp, nm): return "<nm>";
+		case getter(tp, nm): return  "<nm>()";
+		default: throw "WHAT?";
+	}
+}
+
+str dec(Argument a) {
+	switch (a) {
+		case field (tp, nm): return "final <toString(tp)> <nm>";
+		case getter(tp, nm): return  "abstract <toString(tp)> <nm>()";
+		default: throw "WHAT?";
+	}
+}
+/*
+str dec(Argument::field (_, _)) = "final  _";
+str dec(Argument::getter(\type, name)) = "abstract <toString(\type)> <name>()";
 default str dec(Argument a) { throw "You forgot <a>!"; }
 /***/
 str dec(list[Argument] xs) = intercalate(", ", mapper(xs, dec));
@@ -350,7 +367,9 @@ Type dsAtFunction__range_type(DataStructure ds:\set())    = key().\type;
 Type dsAtFunction__range_type(DataStructure ds:\vector()) = val().\type;
 default Type dsAtFunction__range_type(_) { throw "Ahhh"; }
 
-
+str dsAtFunction__range_getter_name(DataStructure ds:\map()) = "getValue";
+str dsAtFunction__range_getter_name(DataStructure ds:\set()) = "getKey";
+default str dsAtFunction__range_getter_name(_) { throw "Ahhh"; }
 
 str SupplierIteratorGenerics(DataStructure ds:\vector())= GenericsExpanded(ds);
 str SupplierIteratorGenerics(DataStructure ds:\map())	= GenericsExpanded(ds);

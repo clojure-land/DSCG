@@ -43,6 +43,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 		<generate_payloadIterator(ts, setup)>
 
+		<if (false) {>
 		@Override
 		public String toString() {			
 			<if (ds == \map()) {>final Object[] keysAndVals = new Object[keys.length + vals.length];
@@ -71,6 +72,20 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			return vals[0];
 		}
 		<}>
+		
+		@Override
+		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
+						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
+						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
+			throw new UnsupportedOperationException();
+		}		
+		<}>
+		
 
 	'	@Override
 	'	public boolean containsKey(<dec(key())>, int keyHash, int shift) {
@@ -269,18 +284,6 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
 			throw new UnsupportedOperationException();
 		}
-
-		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
-						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
-						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
-			throw new UnsupportedOperationException();
-		}
 	}"
 	;
 }
@@ -398,7 +401,7 @@ str generate_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPartition
 			keysAndVals[2 * i + 1] = vals[i];
 		}
 	
-		return ArrayKeyValueIterator.of(keysAndVals);
+		return ArrayKeyValueSupplierIterator.of(keysAndVals);
 	}
 	"
 	;
@@ -413,7 +416,7 @@ str generate_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPartition
 			keysAndVals[2 * i + 1] = keys[i];
 		}
 	
-		return ArrayKeyValueIterator.of(keysAndVals);
+		return ArrayKeyValueSupplierIterator.of(keysAndVals);
 	}
 	"
 	;	
