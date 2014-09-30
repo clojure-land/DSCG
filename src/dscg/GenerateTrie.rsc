@@ -35,11 +35,11 @@ import dscg::GenerateTrie_Core;
 import dscg::GenerateTrie_CoreTransient;
 
 void main() {
-	TrieSpecifics ts = trieSpecifics(\set(), 6, 64);
+	TrieSpecifics ts = trieSpecifics(\map(), 5, 2);
 	if(___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound) := ts) {
 
 		rel[Option,bool] setup = { 
-			<useSpecialization(),false>,
+			<useSpecialization(),true>,
 			<useUntypedVariables(),false>,
 			<useFixedStackIterator(),true>,
 			<useStructuralEquality(),true>,
@@ -345,15 +345,6 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,b
 	'		
 	'return result;";	
 }	
-
-
-str nodeOf(int n, int m, "")
-	= "<CompactNode(ds)>.<Generics(ds)> nodeOf(mutator)"
-	;
-
-default str nodeOf(int n, int m, str args)
-	= "nodeOf(mutator, <args>)" 	//= "new Value<m>Index<n>Node(<args>)"
-	;
 
 str generate_bodyOf_removed(0, 0, _, _, str(str, str) eq)
 	= "return Result.unchanged(this);"
@@ -951,152 +942,164 @@ default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieS
 	'	}"
 	;	
 
-default str generate_copyAndMigrateFromInlineToNode(_, _, _, _)
-	= "" // i.e. not override
+//default str generate_copyAndMigrateFromInlineToNode(_, _, _, _)
+//	= "" // i.e. not override
+//	;
+	
+str generate_copyAndMigrateFromInlineToNode(n, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
+	"@Override
+	'<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'	throw new IllegalStateException(\"Index out of range.\");
+	'}"
+when !isOptionEnabled(setup,useUntypedVariables())
 	;
 	
-//str generate_copyAndMigrateFromInlineToNode(n, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
-//	"@Override
-//	'<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-//	'	throw new IllegalStateException(\"Index out of range.\");
-//	'}"
-//when !isOptionEnabled(setup,useUntypedVariables())
-//	;
-//	
-//str generate_copyAndMigrateFromInlineToNode(_, _, _, setup)
-//	= "" // i.e. not override
-//when isOptionEnabled(setup,useUntypedVariables())
-//	;	
-//
-//str generate_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
-//	"@Override
-//	'<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-//	'	<dec(field(primitive("int"), "bitIndex"))> = <use(tupleLengthConstant)> * (payloadArity() - 1) + nodeIndex(bitpos);
-//	'	<dec(field(primitive("int"), "valIndex"))> = dataIndex(bitpos);
-//	'
-//	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
-//	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
-//	'
-//	'	switch(valIndex) {
-//	'		<for (i <- [0..mn/tupleLength(ds)]) {>case <i>:
-//	'			switch(bitIndex) {
-//	'				<for (j <- [tupleLength(ds)*(i+1)..mn]) {>case <j-tupleLength(ds)>:
-//	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup) - untypedPayloadTuple(ts, setup, tupleLength(ds)*i), [ slot(j) ], [ field(nodeName), slot(j) ])))>;
-//	'				<}>case <mn-tupleLength(ds)>:
-//	'					return <nodeOf(n+1, m-1, use(metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup) - untypedPayloadTuple(ts, setup, tupleLength(ds)*i) + [ field(nodeName) ]))>;
-//	'				default:
-//	'					throw new IllegalStateException(\"Index out of range.\");	
-//	'			}
-//	'		<}>default:
-//	'			throw new IllegalStateException(\"Index out of range.\");	
-//	'	}
-//	'}"
-//when isOptionEnabled(setup,useUntypedVariables())
-//	;
-//	
-//default str generate_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
-//	"@Override
-//	'<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-//	'	final int bitIndex = nodeIndex(bitpos);
-//	'	final int valIndex = dataIndex(bitpos);
-//	'
-//	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
-//	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
-//	'
-//	'	switch(valIndex) {
-//	'		<for (i <- [1..m+1]) {>case <i-1>:
-//	'			switch(bitIndex) {
-//	'				<for (j <- [1..n+1]) {>case <j-1>:
-//	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup) - payloadTuple(ts, setup, i), [ \node(ds, j) ], [ field(nodeName), \node(ds, j) ])))>;
-//	'				<}>case <n>:
-//	'					return <nodeOf(n+1, m-1, use(metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup) - payloadTuple(ts, setup, i) + [ field(nodeName) ]))>;
-//	'				default:
-//	'					throw new IllegalStateException(\"Index out of range.\");	
-//	'			}
-//	'		<}>default:
-//	'			throw new IllegalStateException(\"Index out of range.\");	
-//	'	}
-//	'}"
-//	;
-
-
-
-/*
-	TODO: incorporate method declaration in the functions below
-	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-	'		<generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts, setup)>
-	'	}
- */
-default str generate_copyAndMigrateFromNodeToInline(_, _, _, _)
+str generate_copyAndMigrateFromInlineToNode(_, _, _, setup)
 	= "" // i.e. not override
+when isOptionEnabled(setup,useUntypedVariables())
+	;	
+
+str generate_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
+	"@Override
+	'<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'	<dec(field(primitive("int"), "bitIndex"))> = <use(tupleLengthConstant)> * (payloadArity() - 1) + nodeIndex(bitpos);
+	'	<dec(field(primitive("int"), "valIndex"))> = dataIndex(bitpos);
+	'
+	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
+	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
+	'
+	'	switch(valIndex) {
+	'		<for (i <- [0..mn/tupleLength(ds)]) {>case <i>:
+	'			switch(bitIndex) {
+	'				<for (j <- [tupleLength(ds)*(i+1)..mn]) {>case <j-tupleLength(ds)>:
+	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup) - untypedPayloadTuple(ts, setup, tupleLength(ds)*i), [ slot(j) ], [ field(nodeName), slot(j) ])))>;
+	'				<}>case <mn-tupleLength(ds)>:
+	'					return <nodeOf(n+1, m-1, use(metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup) - untypedPayloadTuple(ts, setup, tupleLength(ds)*i) + [ field(nodeName) ]))>;
+	'				default:
+	'					throw new IllegalStateException(\"Index out of range.\");	
+	'			}
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}
+	'}"
+when isOptionEnabled(setup,useUntypedVariables())
+	;
+	
+default str generate_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
+	"@Override
+	'<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'	final int bitIndex = nodeIndex(bitpos);
+	'	final int valIndex = dataIndex(bitpos);
+	'
+	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
+	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
+	'
+	'	switch(valIndex) {
+	'		<for (i <- [1..m+1]) {>case <i-1>:
+	'			switch(bitIndex) {
+	'				<for (j <- [1..n+1]) {>case <j-1>:
+	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup) - payloadTuple(ts, setup, i), [ \node(ds, j) ], [ field(nodeName), \node(ds, j) ])))>;
+	'				<}>case <n>:
+	'					return <nodeOf(n+1, m-1, use(metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup) - payloadTuple(ts, setup, i) + [ field(nodeName) ]))>;
+	'				default:
+	'					throw new IllegalStateException(\"Index out of range.\");	
+	'			}
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}
+	'}"
 	;
 
-//str generate_bodyOf_copyAndMigrateFromNodeToInline(n:0, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n)
-//	= "throw new IllegalStateException(\"Index out of range.\");"
-//when !isOptionEnabled(setup,useUntypedVariables())
+
+//default str generate_copyAndMigrateFromNodeToInline(_, _, _, _)
+//	= "" // i.e. not override
 //	;
-//	
-//str generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n)
-//	= "throw new IllegalStateException(\"Index out of range.\");"
-//when isOptionEnabled(setup,useUntypedVariables())
-//	;	
-//
-//str generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n)
-//	= "throw new IllegalStateException(\"Index out of range.\");"
-//when isOptionEnabled(setup,useUntypedVariables()) && (mn == tupleLength(ds) * nMax)
-//	;
-//		
-//str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
-//	"	final int bitIndex = nodeIndex(bitpos);
-//	'	final int valIndex = dataIndex(bitpos);
-//	'	
-//	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
-//	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
-//	'
-//	'	<dec(key())> = <nodeName>.headKey();
-//	'	<if (ds == \map()) {><dec(val())> = <nodeName>.headVal();<}>	
-//	'
-//	'	switch(bitIndex) {
-//	'		<for (i <- [0..mn]) {>case <i>:
-//	'			switch(valIndex) {
-//	'				<for (j <- [0..i/2]) {>case <j>:
-//	'					return <nodeOf(n-1, m+1, use(replace(metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup) - [ slot(i) ], untypedPayloadTuple(ts, setup, tupleLength(ds)*j), payloadTuple(ts, setup) + untypedPayloadTuple(ts, setup, tupleLength(ds)*j))))>;
-//	'				<}>case <i/2>:
-//	'					return <nodeOf(n-1, m+1, use([ bitmapField, valmapField ] + insertAfterOrDefaultAtFront(contentArguments(n, m, ts, setup) - [ slot(i) ], untypedPayloadTuple(ts, setup, tupleLength(ds)*(i/2-1)), payloadTuple(ts, setup))))>;
-//	'				default:
-//	'					throw new IllegalStateException(\"Index out of range.\");	
-//	'			}
-//	'		<}>default:
-//	'			throw new IllegalStateException(\"Index out of range.\");	
-//	'	}"
-//when isOptionEnabled(setup,useUntypedVariables())	
-//	;	
-//	
-//default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
-//	"	final int bitIndex = nodeIndex(bitpos);
-//	'	final int valIndex = dataIndex(bitpos);
-//	'	
-//	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
-//	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
-//	'
-//	'	<dec(key())> = <nodeName>.headKey();
-//	'	<if (ds == \map()) {><dec(val())> = <nodeName>.headVal();<}>	
-//	'
-//	'	switch(bitIndex) {
-//	'		<for (i <- [1..n+1]) {>case <i-1>:
-//	'			switch(valIndex) {
-//	'				<for (j <- [1..m+1]) {>case <j-1>:
-//	'					return <nodeOf(n-1, m+1, use(replace(metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup) - [ \node(ds, i) ], payloadTuple(ts, setup, j), payloadTuple(ts, setup) + payloadTuple(ts, setup, j))))>;
-//	'				<}>case <m>:
-//	'					return <nodeOf(n-1, m+1, use([ bitmapField, valmapField ] + insertAfterOrDefaultAtFront(contentArguments(n, m, ts, setup) - [ \node(ds, i) ], payloadTuple(ts, setup, m), payloadTuple(ts, setup))))>;
-//	'				default:
-//	'					throw new IllegalStateException(\"Index out of range.\");	
-//	'			}
-//	'		<}>default:
-//	'			throw new IllegalStateException(\"Index out of range.\");	
-//	'	}"
-//	;
+
+str generate_copyAndMigrateFromNodeToInline(n:0, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =	
+	"	@Override
+	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'		throw new IllegalStateException(\"Index out of range.\");
+	'	}
+	"
+when !isOptionEnabled(setup,useUntypedVariables())
+	;
+	
+str generate_copyAndMigrateFromNodeToInline(n, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 
+	"	@Override
+	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'		throw new IllegalStateException(\"Index out of range.\");
+	'	}
+	"
+when isOptionEnabled(setup,useUntypedVariables())
+	;	
+
+str generate_copyAndMigrateFromNodeToInline(n, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
+	"	@Override
+	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'		throw new IllegalStateException(\"Index out of range.\");
+	'	}
+	"
+when isOptionEnabled(setup,useUntypedVariables()) && (mn == tupleLength(ds) * nMax)
+	;
+				
+str generate_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
+	"@Override
+	'<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'
+	'	final int bitIndex = nodeIndex(bitpos);
+	'	final int valIndex = dataIndex(bitpos);
+	'	
+	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
+	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
+	'
+	'	<dec(key())> = <nodeName>.headKey();
+	'	<if (ds == \map()) {><dec(val())> = <nodeName>.headVal();<}>	
+	'
+	'	switch(bitIndex) {
+	'		<for (i <- [0..mn]) {>case <i>:
+	'			switch(valIndex) {
+	'				<for (j <- [0..i/2]) {>case <j>:
+	'					return <nodeOf(n-1, m+1, use(replace(metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup) - [ slot(i) ], untypedPayloadTuple(ts, setup, tupleLength(ds)*j), payloadTuple(ts, setup) + untypedPayloadTuple(ts, setup, tupleLength(ds)*j))))>;
+	'				<}>case <i/2>:
+	'					return <nodeOf(n-1, m+1, use([ bitmapField, valmapField ] + insertAfterOrDefaultAtFront(contentArguments(n, m, ts, setup) - [ slot(i) ], untypedPayloadTuple(ts, setup, tupleLength(ds)*(i/2-1)), payloadTuple(ts, setup))))>;
+	'				default:
+	'					throw new IllegalStateException(\"Index out of range.\");	
+	'			}
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}
+	'}"
+when isOptionEnabled(setup,useUntypedVariables())	
+	;	
+	
+default str generate_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
+	"@Override
+	'<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
+	'	final int bitIndex = nodeIndex(bitpos);
+	'	final int valIndex = dataIndex(bitpos);
+	'	
+	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
+	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
+	'
+	'	<dec(key())> = <nodeName>.headKey();
+	'	<if (ds == \map()) {><dec(val())> = <nodeName>.headVal();<}>	
+	'
+	'	switch(bitIndex) {
+	'		<for (i <- [1..n+1]) {>case <i-1>:
+	'			switch(valIndex) {
+	'				<for (j <- [1..m+1]) {>case <j-1>:
+	'					return <nodeOf(n-1, m+1, use(replace(metadataArguments(n, m, ts, setup) + contentArguments(n, m, ts, setup) - [ \node(ds, i) ], payloadTuple(ts, setup, j), payloadTuple(ts, setup) + payloadTuple(ts, setup, j))))>;
+	'				<}>case <m>:
+	'					return <nodeOf(n-1, m+1, use([ bitmapField, valmapField ] + insertAfterOrDefaultAtFront(contentArguments(n, m, ts, setup) - [ \node(ds, i) ], payloadTuple(ts, setup, m), payloadTuple(ts, setup))))>;
+	'				default:
+	'					throw new IllegalStateException(\"Index out of range.\");	
+	'			}
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}
+	'}"
+	;
+
 	
 str generate_bodyOf_getKeyValueEntry(DataStructure ds, 0)
 	= "throw new IllegalStateException(\"Index out of range.\");"

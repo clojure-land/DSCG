@@ -234,9 +234,9 @@ str use(Argument a) {
 	}
 }
 
-str dec(Argument a) {
+str dec(Argument a, bool isFinal = true) {
 	switch (a) {
-		case field (tp, nm): return "final <toString(tp)> <nm>";
+		case field (tp, nm): return "<if (isFinal) {>final <}><toString(tp)> <nm>";
 		case getter(tp, nm): return  "abstract <toString(tp)> <nm>()";
 		default: throw "WHAT?";
 	}
@@ -503,3 +503,11 @@ public Argument tupleLengthConstant = field(primitive("int"), "TUPLE_LENGTH"); /
 // TODO: move to List.rsc?
 list[&T] times(&T template, int count) 
 	= [ template | i <- [1..count]];
+	
+str nodeOf(int n, int m, "")
+	= "<CompactNode(ds)>.<Generics(ds)> nodeOf(mutator)"
+	;
+
+default str nodeOf(int n, int m, str args)
+	= "nodeOf(mutator, <args>)" 	//= "new Value<m>Index<n>Node(<args>)"
+	;	

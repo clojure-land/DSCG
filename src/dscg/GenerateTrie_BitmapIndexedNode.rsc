@@ -270,8 +270,43 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 			return nodeOf(mutator, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(bitmapMethod)> ^ bitpos), (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(valmapMethod)> | bitpos), <use(field(asArray(object()), "dst"))>, (byte) (payloadArity + 1));
 		}
+		
+		<generate_removeInplaceValueAndConvertToSpecializedNode(ts, setup)>
 	'}";
 }
 	
 list[Argument] headPayloadTuple(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, Argument \node) = [ key("<use(\node)>.headKey()"), val("<use(\node)>.headVal()") ];
 list[Argument] headPayloadTuple(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, Argument \node) = [ key("<use(\node)>.headKey()") ];	
+
+default str generate_removeInplaceValueAndConvertToSpecializedNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
+	"@Override
+	'<CompactNode(ds)><Generics(ds)> removeInplaceValueAndConvertToSpecializedNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
+	'	final int valIndex = dataIndex(bitpos);
+	'
+	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)>);
+	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
+	'
+	'	switch(payloadArity()) { // 0 \<= payloadArity \<= <nBound+1> // or nMax
+	'	<for (m <- [1..nBound+2], m <= nMax, n <- [nBound+1-m]) {>case <m>: {
+	'		<for (i <- [1..m]) {><dec(key(i), isFinal = false)>; <dec(val(i), isFinal = false)>;<}>
+	'
+	'		switch(valIndex) {
+	'		<for (i <- [1..m+1]) {>case <i-1>: {
+				<for (<j,k> <- zip([1..m], [0..m] - [i-1])) {>
+				<use(key(j))> = getKey(<k>);
+				<use(val(j))> = getValue(<k>);<}>
+				break;
+	'		}<}>default:
+	'				throw new IllegalStateException(\"Index out of range.\");
+	'		}
+	
+	'		<for (i <- [1..n+1]) {><dec(\node(ds, i))> = getNode(<i-1>);<}>
+	
+	'		return <nodeOf(n, m-1, use(metadataArguments(n, m-1, ts, setup) + contentArguments(n, m-1, ts, setup)))>;
+			
+	
+	'	}<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");
+	'	}	
+	'}"
+	;
