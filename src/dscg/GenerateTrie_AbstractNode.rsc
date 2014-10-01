@@ -13,27 +13,23 @@ module dscg::GenerateTrie_AbstractNode
 
 import dscg::Common;
 
-str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
+str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) { 
+	return 
 	"protected static abstract class <AbstractNode(ds)><Generics(ds)> extends AbstractNode<UnifiedGenericsExpanded(ds)> {
 
 		static final int TUPLE_LENGTH = <tupleLength(ds)>;
 
-		abstract boolean containsKey(<dec(key())>, int keyHash, int shift);
+		<dec(ts.AbstractNode_containsKey)>
+		<dec(ts.AbstractNode_containsKeyEquiv)>
+	
+		<dec(ts.AbstractNode_findByKey)>
+		<dec(ts.AbstractNode_findByKeyEquiv)>
 
-		abstract boolean containsKey(<dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp);
-
-		abstract Optional<MapsToGenerics(ds)> findByKey(<dec(key())>, int keyHash, int shift);
-
-		abstract Optional<MapsToGenerics(ds)> findByKey(<dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp);
-
-		abstract Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts, setup))>, int keyHash, int shift);
-
-		abstract Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts, setup))>, int keyHash, int shift, Comparator\<Object\> cmp);
-
-		abstract Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, <dec(key())>, int keyHash, int shift);
-
-		abstract Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, <dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp);
-
+		<dec(ts.AbstractNode_updated)>
+		<dec(ts.AbstractNode_updatedEquiv)>
+		<dec(ts.AbstractNode_removed)>
+		<dec(ts.AbstractNode_removedEquiv)>
+		
 		static final boolean isAllowedToEdit(AtomicReference\<Thread\> x, AtomicReference\<Thread\> y) {
 			return x != null && y != null && (x == y || x.get() == y.get());
 		}
@@ -142,5 +138,5 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 
 			return size;
 		}
-	}"
-	;
+	}";
+}

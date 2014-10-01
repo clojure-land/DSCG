@@ -12,6 +12,7 @@
 module dscg::Common
 
 import List;
+import String;
 import util::Math;
 
 
@@ -44,7 +45,11 @@ default str toString(Type _) { throw "Ahhh"; }
 data Argument
 	= field (Type \type, str name)
 	| getter(Type \type, str name)
+	| \return(Type \type)
 	;
+	
+data Method
+	= method(Argument returnArg, str name, list[Argument] args, str visibility = "", bool isActive = true);
 
 data Option // TODO: finish!
 	= useSpecialization()
@@ -56,10 +61,78 @@ data Option // TODO: finish!
 	;
 
 data TrieSpecifics 
-	= ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound)
-	;
+	= ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound, str classNamePostfix = "",
+		Argument bitposField = ___bitposField(bitPartitionSize),
+		Argument bitmapField = ___bitmapField(bitPartitionSize),
+		Argument valmapField = ___valmapField(bitPartitionSize),
+		
+		Argument mutator = field(specific("AtomicReference\<Thread\>"), "mutator"),
+		list[Argument] payloadTuple = __payloadTuple(ds),
+		Argument keyHash = field(primitive("int"), "keyHash"),
+		Argument mask = field(primitive("int"), "mask"),
+		Argument shift = field(primitive("int"), "shift"),
+		Argument details = field(generic("Result<Generics(ds)>"), "details"),
+		Argument comparator = field(specific("Comparator\<Object\>"), "cmp"),
+
+		Argument compactNodeReturn = \return(generic("<CompactNode(ds)><Generics(ds)>")),
+		Argument optionalRangeReturn = \return(generic("Optional<MapsToGenerics(ds)>")),
+				
+		Method AbstractNode_containsKey 		= method(\return(primitive("boolean")), "containsKey", [key(), keyHash, shift]),
+		Method AbstractNode_containsKeyEquiv 	= method(\return(primitive("boolean")), "containsKey", [key(), keyHash, shift, comparator]),		
 	
-TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound) {
+		Method AbstractNode_findByKey 		= method(optionalRangeReturn, "findByKey", [key(), keyHash, shift]),
+		Method AbstractNode_findByKeyEquiv 	= method(optionalRangeReturn, "findByKey", [key(), keyHash, shift, comparator]),		
+		
+		Method AbstractNode_updated 		= method(compactNodeReturn, "updated", [mutator, *payloadTuple, keyHash, shift, details]),
+		Method AbstractNode_updatedEquiv 	= method(compactNodeReturn, "updated", [mutator, *payloadTuple, keyHash, shift, details, comparator]),		
+	
+		Method AbstractNode_removed 		= method(compactNodeReturn, "removed", [mutator, key(), keyHash, shift, details]),
+		Method AbstractNode_removedEquiv 	= method(compactNodeReturn, "removed", [mutator, key(), keyHash, shift, details, comparator]),
+				
+		str GenericsStr    = "<Generics(ds)>",
+		str CompactNodeStr = "<CompactNode(ds)>",
+				
+		/* GENERATE_TRIE_CORE */
+		str coreClassName = "Trie<toString(ds)><classNamePostfix>",
+		str coreInterfaceName = "Immutable<toString(ds)>",
+		str nodeIteratorClassName = "Trie<toString(ds)><classNamePostfix>NodeIterator",	
+				
+		Argument coreClassReturn = \return(generic("<coreClassName><Generics(ds)>")),
+		Argument coreInterfaceReturn = \return(generic("<coreInterfaceName><Generics(ds)>")),
+	
+		Method Core_updated 		= method(coreClassReturn, "<insertOrPutMethodName(ds)>",  			[*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public"),
+		Method Core_updatedEquiv 	= method(coreClassReturn, "<insertOrPutMethodName(ds)>Equivalent", 	[*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public"),
+
+		//Method CoreTransient_updated 		= method(\return(primitive("boolean"), "<insertOrPutMethodName(ds)>",  			[*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public"),
+		//Method CoreTransient_updatedEquiv 	= method(\return(primitive("boolean"), "<insertOrPutMethodName(ds)>Equivalent", [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public"),
+
+		Argument __weirdArgument = field(generic("<if (ds == \set()) {>Immutable<}><toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>"),
+		Argument __anotherWeirdArgument = field(generic("<toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>"),
+
+		Method Core_insertOrPutAll 			= method(coreInterfaceReturn, "<insertOrPutMethodName(ds)>All",  			[__weirdArgument], 				visibility = "public"),
+		Method Core_insertOrPutAllEquiv 	= method(coreInterfaceReturn, "<insertOrPutMethodName(ds)>AllEquivalent", 	[__weirdArgument, comparator], 	visibility = "public"),
+		
+		Method Core_removed 		= method(coreClassReturn, "__remove",  			[primitiveToClassArgument(key())], 				visibility = "public"),
+		Method Core_removedEquiv 	= method(coreClassReturn, "__removeEquivalent", [primitiveToClassArgument(key()), comparator], 	visibility = "public"),														
+
+		Method Core_containsKey 		= method(\return(primitive("boolean")), "<containsKeyMethodName(ds)>",  			[primitiveToClassArgument(field(object(), "o"))], 				visibility = "public"),
+		Method Core_containsKeyEquiv 	= method(\return(primitive("boolean")), "<containsKeyMethodName(ds)>Equivalent", 	[primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public"),
+
+		Method Core_get 		= method(\return(primitiveToClass(dsAtFunction__range_type(ds))), "get",  			[primitiveToClassArgument(field(object(), "o"))], 				visibility = "public"),
+		Method Core_getEquiv 	= method(\return(primitiveToClass(dsAtFunction__range_type(ds))), "getEquivalent", 	[primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public"),
+
+		Method Core_containsValue 		= method(\return(primitive("boolean")), "containsValue",  			[primitiveToClassArgument(field(object(), "o"))], 				visibility = "public", isActive = ds == \map()),
+		Method Core_containsValueEquiv 	= method(\return(primitive("boolean")), "containsValueEquivalent", 	[primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = ds == \map()),													
+
+		Method Core_retainAll 		= method(coreInterfaceReturn, "__retainAll",  			[__weirdArgument], 				visibility = "public", isActive = ds == \set()),
+		Method Core_retainAllEquiv 	= method(coreInterfaceReturn, "__retainAllEquivalent", 	[__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set()),
+		
+		Method Core_removeAll 		= method(coreInterfaceReturn, "__removeAll",  			[__weirdArgument], 				visibility = "public", isActive = ds == \set()),
+		Method Core_removeAllEquiv 	= method(coreInterfaceReturn, "__removeAllEquivalent", 	[__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set())		
+		)
+	;	
+	
+TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound, str __classNamePostfix) {
 	if (bitPartitionSize < 1 || bitPartitionSize > 6) {
 		throw "Unsupported bit partition size of <bitPartitionSize>.";
 	}
@@ -70,7 +143,7 @@ TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound) 
 		throw "Specialization bound (<nBound>) must be smaller than the number of buckets (<nMax>)";
 	}
 	
-	return ___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound);
+	return ___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound, classNamePostfix = __classNamePostfix);
 }
 
 data Position // TODO: finish!
@@ -237,10 +310,12 @@ str use(Argument a) {
 str dec(Argument a, bool isFinal = true) {
 	switch (a) {
 		case field (tp, nm): return "<if (isFinal) {>final <}><toString(tp)> <nm>";
-		case getter(tp, nm): return  "abstract <toString(tp)> <nm>()";
+		case getter(tp, nm): return  "abstract <toString(tp)> <nm>()";		
+		case \return(tp): return  "<toString(tp)>";
 		default: throw "WHAT?";
 	}
 }
+
 /*
 str dec(Argument::field (_, _)) = "final  _";
 str dec(Argument::getter(\type, name)) = "abstract <toString(\type)> <name>()";
@@ -260,6 +335,20 @@ str toString(\set()) = "Set";
 str toString(\vector()) = "Vector";
 default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 
+str dec(Method m:method) = "abstract <dec(m.returnArg)> <m.name>(<dec(m.args)>);" when m.isActive; 
+default str dec(Method m:method) = "";
+
+str implOrOverride(Method m:method, str bodyStr) = 
+	"
+	@Override
+	<m.visibility> <dec(m.returnArg)> <m.name>(<dec(m.args)>) {
+		<bodyStr>
+	}
+	"
+when m.isActive
+	;
+
+default str implOrOverride(Method m:method, str bodyStr) = "";
 
 /*
  * Convenience Functions [TODO: remove global state dependency!]
@@ -463,9 +552,9 @@ list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\vector(), 	bitPartit
 list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(), 		bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int i) = [ key(i), val(i) ];
 list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(), 		bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int i) = [ key(i) ];
 /***/
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\vector(), 	bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = [ key(), val() ];
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\map(),		bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = [ key(), val() ];
-list[Argument] payloadTuple(ts:___expandedTrieSpecifics(ds:\set(),		bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = [ key() ];
+list[Argument] __payloadTuple(ds:\vector()) 	= [ key(), val() ];
+list[Argument] __payloadTuple(ds:\map()) 		= [ key(), val() ];
+list[Argument] __payloadTuple(ds:\set()) 		= [ key() ];
 /***/
 default list[Argument] payloadTuple(_, _) { throw "Ahhh"; }
 

@@ -75,59 +75,30 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
-						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
+						<dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> node) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
-						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
+						<dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> node) {
 			throw new UnsupportedOperationException();
 		}		
 		<}>
-		
 
-	'	@Override
-	'	public boolean containsKey(<dec(key())>, int keyHash, int shift) {
-	'		<generate_bodyOf_HashCollisionNode_containsKey(ts, setup, equalityDefaultForArguments)>			
-	'	}
+	<implOrOverride(ts.AbstractNode_containsKey, 		generate_bodyOf_HashCollisionNode_containsKey(ts, setup, equalityDefaultForArguments	))>
+	<implOrOverride(ts.AbstractNode_containsKeyEquiv,	generate_bodyOf_HashCollisionNode_containsKey(ts, setup, equalityComparatorForArguments	))>
 
-	'	@Override
-	'	public boolean containsKey(<dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_HashCollisionNode_containsKey(ts, setup, equalityComparatorForArguments)>
-	'	}
-		
-	'	@Override
-	'	Optional<MapsToGenerics(ds)> findByKey(<dec(key())>, int hash, int shift) {
-	'		<generate_bodyOf_HashCollisionNode_findByKey(ts, setup, equalityDefaultForArguments)>			
-	'	}
+	<implOrOverride(ts.AbstractNode_findByKey, 		generate_bodyOf_HashCollisionNode_findByKey(ts, setup, equalityDefaultForArguments		))>
+	<implOrOverride(ts.AbstractNode_findByKeyEquiv,	generate_bodyOf_HashCollisionNode_findByKey(ts, setup, equalityComparatorForArguments	))>
 
-	'	@Override
-	'	Optional<MapsToGenerics(ds)> findByKey(<dec(key())>, int hash, int shift, Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_HashCollisionNode_findByKey(ts, setup, equalityComparatorForArguments)>
-	'	}		
+	<implOrOverride(ts.AbstractNode_updated, 		generate_bodyOf_HashCollisionNode_updated(ts, setup, equalityDefaultForArguments	))>
+	<implOrOverride(ts.AbstractNode_updatedEquiv,	generate_bodyOf_HashCollisionNode_updated(ts, setup, equalityComparatorForArguments	))>
 
-	'	@Override
-	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts, setup))>, int keyHash, int shift) {
-	'		<generate_bodyOf_HashCollisionNode_updated(ts, setup, equalityDefaultForArguments)>
-	'	}
-
-	'	@Override
-	'	Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, <dec(payloadTuple(ts, setup))>, int keyHash, int shift, Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_HashCollisionNode_updated(ts, setup, equalityComparatorForArguments)>
-	'	}
-
-	'	@SuppressWarnings(\"unchecked\")
-	'	@Override
-	'	Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, <dec(key())>, int keyHash, int shift) {
-	'		<generate_bodyOf_HashCollisionNode_removed(ts, setup, equalityDefaultForArguments)>
-	'	}
-
-	'	@SuppressWarnings(\"unchecked\")
-	'	@Override
-	'	Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, <dec(key())>, int keyHash, int shift, Comparator\<Object\> cmp) {
-	'		<generate_bodyOf_HashCollisionNode_removed(ts, setup, equalityComparatorForArguments)>
-	'	}
+	@SuppressWarnings(\"unchecked\")
+	<implOrOverride(ts.AbstractNode_removed, 		generate_bodyOf_HashCollisionNode_removed(ts, setup, equalityDefaultForArguments	))>
+	@SuppressWarnings(\"unchecked\")
+	<implOrOverride(ts.AbstractNode_removedEquiv,	generate_bodyOf_HashCollisionNode_removed(ts, setup, equalityComparatorForArguments	))>		
 
 		@Override
 		boolean hasPayload() {
@@ -265,23 +236,23 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 		<if (ds == \map()) {>
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(val())>) {
+		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <dec(val())>) {
 			throw new UnsupportedOperationException();
 		}
 		<}>
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(payloadTuple(ts, setup))>) {
+		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <dec(ts.payloadTuple)>) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
+		<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
+		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> node) {
 			throw new UnsupportedOperationException();
 		}
 	}"
@@ -290,7 +261,8 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 str generate_bodyOf_HashCollisionNode_updated(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) =
 "if (this.hash != keyHash) {
-	return Result.modified(mergeNodes(this, this.hash, <use(payloadTuple(ts, setup))>, keyHash, shift));
+	details.modified();
+	return mergeNodes(this, this.hash, <use(ts.payloadTuple)>, keyHash, shift);
 }
 
 for (int idx = 0; idx \< keys.length; idx++) {
@@ -300,7 +272,7 @@ for (int idx = 0; idx \< keys.length; idx++) {
 			<dec(val("currentVal"))> = vals[idx];
 
 			if (<eq(val("currentVal"), val())>) {
-				return Result.unchanged(this);
+				return this;
 			}
 
 			<dec(field(asArray(val().\type), "src"))> = this.vals;
@@ -308,9 +280,10 @@ for (int idx = 0; idx \< keys.length; idx++) {
 
 			final <CompactNode(ds)><Generics(ds)> thisNew = new <hashCollisionClassName><InferredGenerics()>(this.hash, this.keys, dst);
 
-			return Result.updated(thisNew, currentVal);
+			details.updated(currentVal);
+			return thisNew;
 		<} else {>
-			return Result.unchanged(this);
+			return this;
 		<}>
 	}
 }
@@ -318,14 +291,17 @@ for (int idx = 0; idx \< keys.length; idx++) {
 <arraycopyAndInsertTuple(field(asArray(key().\type), "this.keys"), field(asArray(key().\type), "keysNew"), 1, [key()], field(primitive("int"), "keys.length"))>
 <if (ds == \map()) {><arraycopyAndInsertTuple(field(asArray(val().\type), "this.vals"), field(asArray(val().\type), "valsNew"), 1, [val()], field(primitive("int"), "vals.length"))><}>
 
-return Result.modified(new <hashCollisionClassName><InferredGenerics()>(keyHash, keysNew<if (ds == \map()) {>, valsNew<}>));"; 
+details.modified();
+return new <hashCollisionClassName><InferredGenerics()>(keyHash, keysNew<if (ds == \map()) {>, valsNew<}>);"; 
 
 
 str generate_bodyOf_HashCollisionNode_removed(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = "
 for (int idx = 0; idx \< keys.length; idx++) {
 	if (<eq(key("keys[idx]"), key())>) {
-		if (this.arity() == 1) {
-			return Result.modified(<CompactNode(ds)>.<Generics(ds)> nodeOf(mutator));
+		<if (ds == \map()) {>final V currentVal = vals[idx]; details.updated(currentVal);<}>
+		
+		if (this.arity() == 1) {			
+			return nodeOf(mutator);
 		} else if (this.arity() == 2) {
 			/*
 			 * Create root node with singleton element. This node
@@ -335,16 +311,16 @@ for (int idx = 0; idx \< keys.length; idx++) {
 			<dec(key("theOtherKey"))> = (idx == 0) ? keys[1] : keys[0];
 			<if (ds == \map()) {><dec(val("theOtherVal"))> = (idx == 0) ? vals[1] : vals[0];<}>
 			return <CompactNode(ds)>.<Generics(ds)> nodeOf(mutator).updated(mutator,
-							theOtherKey<if (ds == \map()) {>, theOtherVal<}>, keyHash, 0<if (!(eq == equalityDefaultForArguments)) {>, cmp<}>);
+							theOtherKey<if (ds == \map()) {>, theOtherVal<}>, keyHash, 0, details<if (!(eq == equalityDefaultForArguments)) {>, cmp<}>);
 		} else {
 			<arraycopyAndRemoveTuple(field(asArray(key().\type), "this.keys"), field(asArray(key().\type), "keysNew"), 1, field(primitive("int"), "idx"))>
 			<if (ds == \map()) {><arraycopyAndRemoveTuple(field(asArray(val().\type), "this.vals"), field(asArray(val().\type), "valsNew"), 1, field(primitive("int"), "idx"))><}>
 
-			return Result.modified(new <hashCollisionClassName><InferredGenerics()>(keyHash, keysNew<if (ds == \map()) {>, valsNew<}>));
+			return new <hashCollisionClassName><InferredGenerics()>(keyHash, keysNew<if (ds == \map()) {>, valsNew<}>);
 		}
 	}
 }
-return Result.unchanged(this);
+return this;
 ";
 
 

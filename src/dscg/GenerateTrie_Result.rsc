@@ -11,42 +11,36 @@
  */
 module dscg::GenerateTrie_Result
 
+import dscg::Common;
 import dscg::GenerateTrie;
 
-str generateResultClassString() {
+str generateResultClassString(TrieSpecifics ts, rel[Option,bool] setup) {
 
 	className = "Result";
 
 	return
-	"static final class <className>\<T1, T2, N extends AbstractNode\<T1, T2\>\> {
-		private final N result;
-		private final T2 replacedValue;
-		private final boolean isModified;
+	"static final class <className><ts.GenericsStr> {
+		private <toString(dsAtFunction__range_type(ts.ds))> replacedValue;
+		private boolean isModified;
 
 		// update: inserted/removed single element, element count changed
-		public static \<T1, T2, N extends AbstractNode\<T1, T2\>\> Result\<T1, T2, N\> modified(N node) {
-			return new Result\<\>(node, null, true);
+		public void modified() {
+			this.isModified = true;
 		}
 
-		// update: replaced single mapping, but element count unchanged
-		public static \<T1, T2, N extends AbstractNode\<T1, T2\>\> Result\<T1, T2, N\> updated(N node,
-						T2 replacedValue) {
-			return new Result\<\>(node, replacedValue, true);
+		public void updated(<toString(dsAtFunction__range_type(ts.ds))> replacedValue) {
+			this.replacedValue = replacedValue;
+			this.isModified = true;
 		}
 
 		// update: neither element, nor element count changed
-		public static \<T1, T2, N extends AbstractNode\<T1, T2\>\> Result\<T1, T2, N\> unchanged(N node) {
-			return new Result\<\>(node, null, false);
+		public static <ts.GenericsStr> Result<ts.GenericsStr> unchanged() {
+			return new Result\<\>(null, false);
 		}
 
-		private Result(N node, T2 replacedValue, boolean isMutated) {
-			this.result = node;
+		private Result(<toString(dsAtFunction__range_type(ts.ds))> replacedValue, boolean isMutated) {
 			this.replacedValue = replacedValue;
 			this.isModified = isMutated;
-		}
-
-		public N getNode() {
-			return result;
 		}
 
 		public boolean isModified() {
@@ -57,7 +51,7 @@ str generateResultClassString() {
 			return replacedValue != null;
 		}
 
-		public T2 getReplacedValue() {
+		public <toString(dsAtFunction__range_type(ts.ds))> getReplacedValue() {
 			return replacedValue;
 		}
 	}";

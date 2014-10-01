@@ -195,7 +195,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 		<if (ds == \map()) {>
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(val())>) {
+		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <dec(val())>) {
 			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
 			
 			if (isAllowedToEdit(this.mutator, mutator)) {
@@ -212,7 +212,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		<}>
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
+		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> node) {
 			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);
 
 			if (isAllowedToEdit(this.mutator, mutator)) {
@@ -228,17 +228,17 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>, <dec(payloadTuple(ts, setup))>) {
+		<CompactNode(ds)><Generics(ds)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <dec(ts.payloadTuple)>) {
 			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			
 			<dec(field(asArray(object()), "src"))> = this.nodes;
-			<arraycopyAndInsertTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), tupleLength(ds), payloadTuple(ts, setup), field(primitive("int"), "idx"))>
+			<arraycopyAndInsertTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), tupleLength(ds), ts.payloadTuple, field(primitive("int"), "idx"))>
 			
 			return nodeOf(mutator, <use(bitmapMethod)>, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(valmapMethod)> | bitpos), <use(field(asArray(object()), "dst"))>, (byte) (payloadArity + 1));
 		}
 
 		@Override
-		<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
+		<CompactNode(ds)><Generics(ds)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>) {
 			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			
 			<dec(field(asArray(object()), "src"))> = this.nodes;
@@ -249,7 +249,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
-						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
+						<dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> node) {
 			<dec(field(primitive("int"), "idxOld"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			<dec(field(primitive("int"), "idxNew"))> = <use(tupleLengthConstant)> * (payloadArity - 1) + nodeIndex(bitpos);
 			
@@ -261,7 +261,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
-						<dec(___bitposField(bitPartitionSize))>, <CompactNode(ds)><Generics(ds)> node) {
+						<dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> node) {
 			<dec(field(primitive("int"), "idxOld"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);
 			<dec(field(primitive("int"), "idxNew"))> = dataIndex(bitpos);
 
@@ -278,9 +278,9 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 list[Argument] headPayloadTuple(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, Argument \node) = [ key("<use(\node)>.headKey()"), val("<use(\node)>.headVal()") ];
 list[Argument] headPayloadTuple(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, Argument \node) = [ key("<use(\node)>.headKey()") ];	
 
-default str generate_removeInplaceValueAndConvertToSpecializedNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
+str generate_removeInplaceValueAndConvertToSpecializedNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
 	"@Override
-	'<CompactNode(ds)><Generics(ds)> removeInplaceValueAndConvertToSpecializedNode(AtomicReference\<Thread\> mutator, <dec(___bitposField(bitPartitionSize))>) {
+	'<CompactNode(ds)><Generics(ds)> removeInplaceValueAndConvertToSpecializedNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>) {
 	'	final int valIndex = dataIndex(bitpos);
 	'
 	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)>);
@@ -309,4 +309,11 @@ default str generate_removeInplaceValueAndConvertToSpecializedNode(ts:___expande
 	'			throw new IllegalStateException(\"Index out of range.\");
 	'	}	
 	'}"
+when isOptionEnabled(setup,useSpecialization())
 	;
+
+default str generate_removeInplaceValueAndConvertToSpecializedNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
+	"@Override
+	'<CompactNode(ds)><Generics(ds)> removeInplaceValueAndConvertToSpecializedNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>) {
+	'	throw new UnsupportedOperationException();
+	'}";

@@ -117,17 +117,16 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 
 			final int keyHash = key.hashCode();
-			final Result<ResultGenerics(ds)> result = rootNode.removed(mutator, key, keyHash, 0);
+			<dec(ts.details)> = Result.unchanged();
+		
+			<dec(\node(ds, "newRootNode"))> = rootNode.removed(mutator, key, keyHash, 0, <use(ts.details)>);
 
-			if (result.isModified()) {
-				<if (ds == \map()) {>
-					// TODO: carry deleted value in result
-					// assert result.hasReplacedValue();
-					// final int valHash = result.getReplacedValue().hashCode();
+			if (<use(ts.details)>.isModified()) {
+				<if (ds == \map()) {>				
+					assert <use(ts.details)>.hasReplacedValue();
+					final int valHash = <use(ts.details)>.getReplacedValue().hashCode();
 	
-					final int valHash = rootNode.findByKey(key, keyHash, 0).get().hashCode();
-	
-					rootNode = result.getNode();
+					rootNode = newRootNode;
 					hashCode -= keyHash ^ valHash;
 					cachedSize -= 1;
 	
@@ -136,7 +135,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 					}
 					return true;
 				<} else {>
-					rootNode = result.getNode();
+					rootNode = newRootNode;
 					hashCode -= keyHash;
 					cachedSize -= 1;
 	
@@ -160,17 +159,16 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 
 			final int keyHash = key.hashCode();
-			final Result<ResultGenerics(ds)> result = rootNode.removed(mutator, key, keyHash, 0, cmp);
+			<dec(ts.details)> = Result.unchanged();
+		
+			<dec(\node(ds, "newRootNode"))> = rootNode.removed(mutator, key, keyHash, 0, <use(ts.details)>, cmp);
 
-			if (result.isModified()) {
-				<if (ds == \map()) {>			
-					// TODO: carry deleted value in result
-					// assert result.hasReplacedValue();
-					// final int valHash = result.getReplacedValue().hashCode();
+			if (<use(ts.details)>.isModified()) {
+				<if (ds == \map()) {>				
+					assert <use(ts.details)>.hasReplacedValue();
+					final int valHash = <use(ts.details)>.getReplacedValue().hashCode();
 	
-					final int valHash = rootNode.findByKey(key, keyHash, 0, cmp).get().hashCode();
-	
-					rootNode = result.getNode();
+					rootNode = newRootNode;
 					hashCode -= keyHash ^ valHash;
 					cachedSize -= 1;
 	
@@ -179,7 +177,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 					}
 					return true;
 				<} else {>
-					rootNode = result.getNode();
+					rootNode = newRootNode;
 					hashCode -= keyHash;
 					cachedSize -= 1;
 	
@@ -193,8 +191,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			if (DEBUG) {
 				assert checkHashCodeAndSize(hashCode, cachedSize);
 			}
-			return false;
-						
+			return false;						
 		}
 
 		<if (ds == \set()) {>
@@ -421,7 +418,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 	;
 }
 	
-str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts, setup), primitiveToClassArgument), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
+str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(ts.payloadTuple, primitiveToClassArgument), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
 	str methodName = "<insertOrPutMethodName(ds)><if (useComparator) {>Equivalent<}>"; 
 
 	list[Argument] filterArgs(list[Argument] args) {
@@ -441,10 +438,12 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, n
 		}
 
 		final int keyHash = key.hashCode();
-		final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, <use(payloadTuple(ts, setup))>, keyHash, 0<if (useComparator) {>, cmp<}>);
+		<dec(ts.details)>= Result.unchanged();
+		
+		<dec(\node(ds, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, keyHash, 0, details<if (useComparator) {>, cmp<}>);
 
-		if (result.isModified()) {
-			rootNode = result.getNode();
+		if (<use(ts.details)>.isModified()) {
+			rootNode = newRootNode;
 
 			hashCode += keyHash;
 			cachedSize += 1;
@@ -464,7 +463,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, n
 	;		
 }
 
-str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(payloadTuple(ts, setup), primitiveToClassArgument), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
+str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(ts.payloadTuple, primitiveToClassArgument), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
 	str methodName = "<insertOrPutMethodName(ds)><if (useComparator) {>Equivalent<}>"; 
 	
 	list[Argument] filterArgs(list[Argument] args) {
@@ -484,13 +483,15 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, n
 		}
 
 		final int keyHash = key.hashCode();
-		final Result<ResultGenerics(ds)> result = rootNode.updated(mutator, <use(payloadTuple(ts, setup))>, keyHash, 0<if (useComparator) {>, cmp<}>);
+		<dec(ts.details)>= Result.unchanged();
+		
+		<dec(\node(ds, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, keyHash, 0, details<if (useComparator) {>, cmp<}>);
 
-		if (result.isModified()) {
-			rootNode = result.getNode();
+		if (<use(ts.details)>.isModified()) {
+			rootNode = newRootNode;
 
-			if (result.hasReplacedValue()) {
-				<dec(val("old"))> = result.getReplacedValue();
+			if (<use(ts.details)>.hasReplacedValue()) {
+				<dec(val("old"))> = <use(ts.details)>.getReplacedValue();
 
 				final int valHashOld = <hashCode(val("old"))>;
 				final int valHashNew = <hashCode(val())>;
