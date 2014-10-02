@@ -288,13 +288,13 @@ str generate_removeInplaceValueAndConvertToSpecializedNode(ts:___expandedTrieSpe
 	'
 	'	switch(payloadArity()) { // 0 \<= payloadArity \<= <nBound+1> // or nMax
 	'	<for (m <- [1..nBound+2], m <= nMax, n <- [nBound+1-m]) {>case <m>: {
-	'		<for (i <- [1..m]) {><dec(key(i), isFinal = false)>; <dec(val(i), isFinal = false)>;<}>
+	'		<for (i <- [1..m]) {><dec(key(i), isFinal = false)>; <if(ds == \map()){><dec(val(i), isFinal = false)>;<}><}>
 	'
 	'		switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>: {
 				<for (<j,k> <- zip([1..m], [0..m] - [i-1])) {>
 				<use(key(j))> = getKey(<k>);
-				<use(val(j))> = getValue(<k>);<}>
+				<if(ds == \map()){><use(val(j))> = getValue(<k>);<}><}>
 				break;
 	'		}<}>default:
 	'				throw new IllegalStateException(\"Index out of range.\");
