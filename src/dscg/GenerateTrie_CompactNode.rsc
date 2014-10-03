@@ -36,35 +36,18 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	int n = 0; // TODO: remove
 	int m = 0; // TODO: remove
 
-//		@Override
-//		abstract Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, K key, int keyHash, V val, int shift);
-//
-//		@Override
-//		abstract Result<ResultGenerics(ds)> updated(AtomicReference\<Thread\> mutator, K key, int keyHash, V val, int shift, Comparator\<Object\> cmp);
-//
-//		@Override
-//		abstract Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, K key, int hash, int shift);
-//
-//		@Override
-//		abstract Result<ResultGenerics(ds)> removed(AtomicReference\<Thread\> mutator, K key, int hash, int shift, Comparator\<Object\> cmp);
-
 	return
 	"private static abstract class <className><ts.GenericsStr> extends Abstract<toString(ds)>Node<ts.GenericsStr> {
-	'
-	'	protected static final int BIT_PARTITION_SIZE = <bitPartitionSize>;
-	'	protected static final int BIT_PARTITION_MASK = 0b<for (i <- [1..bitPartitionSize+1]) {>1<}>;
-	'
-		<toString(ts.bitmapField.\type)> <bitmapField.name>() {
-			throw new UnsupportedOperationException(); 
-		}
-
-		<toString(ts.valmapField.\type)> <valmapField.name>() {
-			throw new UnsupportedOperationException();
-		}
-
-		static final byte SIZE_EMPTY = 0b00;
-		static final byte SIZE_ONE = 0b01;
-		static final byte SIZE_MORE_THAN_ONE = 0b10;
+	
+		<dec(field(primitive("int"), "BIT_PARTITION_SIZE", isStatic = true, init = constant(primitive("int"), <bitPartitionSize>)))>
+		<dec(field(primitive("int"), "BIT_PARTITION_MASK", isStatic = true, init = constant(primitive("int"), "0b<for (i <- [1..bitPartitionSize+1]) {>1<}>")))>
+		
+		<impl(CompactNode_nodeMap, UNSUPPORTED_OPERATION_EXCEPTION)>
+		<impl(CompactNode_dataMap, UNSUPPORTED_OPERATION_EXCEPTION)>
+		
+		<dec(field(primitive("byte"), "SIZE_EMPTY", 		isStatic = true, init = constant(primitive("byte"), "0b00")))>
+		<dec(field(primitive("byte"), "SIZE_ONE", 			isStatic = true, init = constant(primitive("byte"), "0b01")))>
+		<dec(field(primitive("byte"), "SIZE_MORE_THAN_ONE",	isStatic = true, init = constant(primitive("byte"), "0b10")))>
 
 		<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>
 		abstract <ts.CompactNodeStr><ts.GenericsStr> convertToGenericNode();

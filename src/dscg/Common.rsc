@@ -49,7 +49,7 @@ data Argument
 	;
 	
 data Method
-	= method(Argument returnArg, str name, list[Argument] args, str visibility = "", bool isActive = true);
+	= method(Argument returnArg, str name, list[Argument] args = [], str visibility = "", bool isActive = true);
 
 data Option // TODO: finish!
 	= useSpecialization()
@@ -77,17 +77,17 @@ data TrieSpecifics
 		Argument compactNodeReturn = \return(generic("<CompactNode(ds)><Generics(ds)>")),
 		Argument optionalRangeReturn = \return(generic("Optional<MapsToGenerics(ds)>")),
 				
-		Method AbstractNode_containsKey 		= method(\return(primitive("boolean")), "containsKey", [key(), keyHash, shift]),
-		Method AbstractNode_containsKeyEquiv 	= method(\return(primitive("boolean")), "containsKey", [key(), keyHash, shift, comparator]),		
+		Method AbstractNode_containsKey 		= method(\return(primitive("boolean")), "containsKey", args = [key(), keyHash, shift]),
+		Method AbstractNode_containsKeyEquiv 	= method(\return(primitive("boolean")), "containsKey", args = [key(), keyHash, shift, comparator]),		
 	
-		Method AbstractNode_findByKey 		= method(optionalRangeReturn, "findByKey", [key(), keyHash, shift]),
-		Method AbstractNode_findByKeyEquiv 	= method(optionalRangeReturn, "findByKey", [key(), keyHash, shift, comparator]),		
+		Method AbstractNode_findByKey 		= method(optionalRangeReturn, "findByKey", args = [key(), keyHash, shift]),
+		Method AbstractNode_findByKeyEquiv 	= method(optionalRangeReturn, "findByKey", args = [key(), keyHash, shift, comparator]),		
 		
-		Method AbstractNode_updated 		= method(compactNodeReturn, "updated", [mutator, *payloadTuple, keyHash, shift, details]),
-		Method AbstractNode_updatedEquiv 	= method(compactNodeReturn, "updated", [mutator, *payloadTuple, keyHash, shift, details, comparator]),		
+		Method AbstractNode_updated 		= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details]),
+		Method AbstractNode_updatedEquiv 	= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details, comparator]),		
 	
-		Method AbstractNode_removed 		= method(compactNodeReturn, "removed", [mutator, key(), keyHash, shift, details]),
-		Method AbstractNode_removedEquiv 	= method(compactNodeReturn, "removed", [mutator, key(), keyHash, shift, details, comparator]),
+		Method AbstractNode_removed 		= method(compactNodeReturn, "removed", args = [mutator, key(), keyHash, shift, details]),
+		Method AbstractNode_removedEquiv 	= method(compactNodeReturn, "removed", args = [mutator, key(), keyHash, shift, details, comparator]),
 				
 		str GenericsStr    = "<Generics(ds)>",
 		str CompactNodeStr = "<CompactNode(ds)>",
@@ -100,8 +100,8 @@ data TrieSpecifics
 		Argument coreClassReturn = \return(generic("<coreClassName><Generics(ds)>")),
 		Argument coreInterfaceReturn = \return(generic("<coreInterfaceName><Generics(ds)>")),
 	
-		Method Core_updated 		= method(coreClassReturn, "<insertOrPutMethodName(ds)>",  			[*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public"),
-		Method Core_updatedEquiv 	= method(coreClassReturn, "<insertOrPutMethodName(ds)>Equivalent", 	[*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public"),
+		Method Core_updated 		= method(coreClassReturn, "<insertOrPutMethodName(ds)>",  			args = [*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public"),
+		Method Core_updatedEquiv 	= method(coreClassReturn, "<insertOrPutMethodName(ds)>Equivalent", 	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public"),
 
 		//Method CoreTransient_updated 		= method(\return(primitive("boolean"), "<insertOrPutMethodName(ds)>",  			[*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public"),
 		//Method CoreTransient_updatedEquiv 	= method(\return(primitive("boolean"), "<insertOrPutMethodName(ds)>Equivalent", [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public"),
@@ -109,28 +109,33 @@ data TrieSpecifics
 		Argument __weirdArgument = field(generic("<if (ds == \set()) {>Immutable<}><toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>"),
 		Argument __anotherWeirdArgument = field(generic("<toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>"),
 
-		Method Core_insertOrPutAll 			= method(coreInterfaceReturn, "<insertOrPutMethodName(ds)>All",  			[__weirdArgument], 				visibility = "public"),
-		Method Core_insertOrPutAllEquiv 	= method(coreInterfaceReturn, "<insertOrPutMethodName(ds)>AllEquivalent", 	[__weirdArgument, comparator], 	visibility = "public"),
+		Method Core_insertOrPutAll 			= method(coreInterfaceReturn, "<insertOrPutMethodName(ds)>All",  			args = [__weirdArgument], 				visibility = "public"),
+		Method Core_insertOrPutAllEquiv 	= method(coreInterfaceReturn, "<insertOrPutMethodName(ds)>AllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public"),
 		
-		Method Core_removed 		= method(coreClassReturn, "__remove",  			[primitiveToClassArgument(key())], 				visibility = "public"),
-		Method Core_removedEquiv 	= method(coreClassReturn, "__removeEquivalent", [primitiveToClassArgument(key()), comparator], 	visibility = "public"),														
+		Method Core_removed 		= method(coreClassReturn, "__remove",  			args = [primitiveToClassArgument(key())], 				visibility = "public"),
+		Method Core_removedEquiv 	= method(coreClassReturn, "__removeEquivalent", args = [primitiveToClassArgument(key()), comparator], 	visibility = "public"),														
 
-		Method Core_containsKey 		= method(\return(primitive("boolean")), "<containsKeyMethodName(ds)>",  			[primitiveToClassArgument(field(object(), "o"))], 				visibility = "public"),
-		Method Core_containsKeyEquiv 	= method(\return(primitive("boolean")), "<containsKeyMethodName(ds)>Equivalent", 	[primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public"),
+		Method Core_containsKey 		= method(\return(primitive("boolean")), "<containsKeyMethodName(ds)>",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public"),
+		Method Core_containsKeyEquiv 	= method(\return(primitive("boolean")), "<containsKeyMethodName(ds)>Equivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public"),
 
-		Method Core_get 		= method(\return(primitiveToClass(dsAtFunction__range_type(ds))), "get",  			[primitiveToClassArgument(field(object(), "o"))], 				visibility = "public"),
-		Method Core_getEquiv 	= method(\return(primitiveToClass(dsAtFunction__range_type(ds))), "getEquivalent", 	[primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public"),
+		Method Core_get 		= method(\return(primitiveToClass(dsAtFunction__range_type(ds))), "get",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public"),
+		Method Core_getEquiv 	= method(\return(primitiveToClass(dsAtFunction__range_type(ds))), "getEquivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public"),
 
-		Method Core_containsValue 		= method(\return(primitive("boolean")), "containsValue",  			[primitiveToClassArgument(field(object(), "o"))], 				visibility = "public", isActive = ds == \map()),
-		Method Core_containsValueEquiv 	= method(\return(primitive("boolean")), "containsValueEquivalent", 	[primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = ds == \map()),													
+		Method Core_containsValue 		= method(\return(primitive("boolean")), "containsValue",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public", isActive = ds == \map()),
+		Method Core_containsValueEquiv 	= method(\return(primitive("boolean")), "containsValueEquivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = ds == \map()),													
 
-		Method Core_retainAll 		= method(coreInterfaceReturn, "__retainAll",  			[__weirdArgument], 				visibility = "public", isActive = ds == \set()),
-		Method Core_retainAllEquiv 	= method(coreInterfaceReturn, "__retainAllEquivalent", 	[__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set()),
+		Method Core_retainAll 		= method(coreInterfaceReturn, "__retainAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
+		Method Core_retainAllEquiv 	= method(coreInterfaceReturn, "__retainAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set()),
 		
-		Method Core_removeAll 		= method(coreInterfaceReturn, "__removeAll",  			[__weirdArgument], 				visibility = "public", isActive = ds == \set()),
-		Method Core_removeAllEquiv 	= method(coreInterfaceReturn, "__removeAllEquivalent", 	[__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set())		
+		Method Core_removeAll 		= method(coreInterfaceReturn, "__removeAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
+		Method Core_removeAllEquiv 	= method(coreInterfaceReturn, "__removeAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set()),		
+		
+		Method CompactNode_nodeMap 	= method(bitmapField, bitmapField.name),
+		Method CompactNode_dataMap 	= method(valmapField, valmapField.name)		
 		)
 	;	
+
+Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");	
 	
 TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound, str __classNamePostfix) {
 	if (bitPartitionSize < 1 || bitPartitionSize > 6) {
@@ -335,8 +340,9 @@ str toString(\set()) = "Set";
 str toString(\vector()) = "Vector";
 default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 
-str dec(Method m:method) = "abstract <dec(m.returnArg)> <m.name>(<dec(m.args)>);" when m.isActive; 
-default str dec(Method m:method) = "";
+str dec(Method m:method) = "abstract <dec(\return(m.returnArg.\type))> <m.name>(<dec(m.args)>);" when m.isActive; 
+str dec(Method m:method) = "" when !m.isActive;
+default str dec(Method m) { throw "You forgot <m>!"; }
 
 str implOrOverride(Method m:method, str bodyStr) = 
 	"
@@ -348,7 +354,8 @@ str implOrOverride(Method m:method, str bodyStr) =
 when m.isActive
 	;
 
-default str implOrOverride(Method m:method, str bodyStr) = "";
+str implOrOverride(Method m:method, str bodyStr) = "" when !m.isActive;
+default str implOrOverride(Method m, _) { throw "You forgot <m>!"; }
 
 /*
  * Convenience Functions [TODO: remove global state dependency!]
