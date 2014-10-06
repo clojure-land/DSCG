@@ -30,7 +30,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		private int currentStackLevel;
 		private final int[] nodeCursorsAndLengths = new int[MAX_DEPTH * 2];
 
-		@SuppressWarnings(\"unchecked\")
+		<toString(UNCHECKED_ANNOTATION)>
 		Abstract<toString(ds)>Node<Generics(ds)>[] nodes = new Abstract<toString(ds)>Node[MAX_DEPTH];
 
 		Abstract<toString(ds)>Iterator(Abstract<toString(ds)>Node<Generics(ds)> rootNode) {

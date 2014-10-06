@@ -15,7 +15,12 @@ import List;
 import String;
 import util::Math;
 
+/* PUBLIC CONSTANTS */
+public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");	
 
+public Annotation UNCHECKED_ANNOTATION = uncheckedStringAnnotation("@SuppressWarnings(\"unchecked\")"); 
+
+/* DATA SECTION */
 data DataStructure
 	= \map()
 	| \set()
@@ -48,6 +53,29 @@ data Argument
 	| \return(Type \type)
 	;
 	
+data Statement
+	= uncheckedStringStatement(str statementStr)
+	;
+
+str toString(Statement:uncheckedStringStatement(statementStr)) = statementStr;
+default str toString(Statement _) { throw "Ahhh"; }
+	
+data Annotation
+	= uncheckedStringAnnotation(str annotationStr)
+	;	
+
+str toString(Annotation:uncheckedStringAnnotation(annotationStr)) = annotationStr;
+default str toString(Annotation _) { throw "Ahhh"; }
+
+	
+data Expression
+	= emptyExpression()
+	| constant(Type \type, str constantString)
+	;	
+
+str toString(Expression:constant(_, constantString)) = constantString; 
+default str toString(Expression _) { throw "Ahhh"; }	
+	
 data Method
 	= method(Argument returnArg, str name, list[Argument] args = [], str visibility = "", bool isActive = true);
 
@@ -61,7 +89,7 @@ data Option // TODO: finish!
 	;
 
 data TrieSpecifics 
-	= ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound, str classNamePostfix = "",
+	= ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound, str classNamePostfix = "", rel[Option,bool] setup = {},
 		Argument bitposField = ___bitposField(bitPartitionSize),
 		Argument bitmapField = ___bitmapField(bitPartitionSize),
 		Argument valmapField = ___valmapField(bitPartitionSize),
@@ -99,6 +127,7 @@ data TrieSpecifics
 				
 		Argument coreClassReturn = \return(generic("<coreClassName><Generics(ds)>")),
 		Argument coreInterfaceReturn = \return(generic("<coreInterfaceName><Generics(ds)>")),
+		Argument compactNodeClassReturn = \return(generic("<CompactNodeStr><GenericsStr>")),
 	
 		Method Core_updated 		= method(coreClassReturn, "<insertOrPutMethodName(ds)>",  			args = [*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public"),
 		Method Core_updatedEquiv 	= method(coreClassReturn, "<insertOrPutMethodName(ds)>Equivalent", 	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public"),
@@ -131,13 +160,19 @@ data TrieSpecifics
 		Method Core_removeAllEquiv 	= method(coreInterfaceReturn, "__removeAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set()),		
 		
 		Method CompactNode_nodeMap 	= method(bitmapField, bitmapField.name),
-		Method CompactNode_dataMap 	= method(valmapField, valmapField.name)		
+		Method CompactNode_dataMap 	= method(valmapField, valmapField.name),
+		
+		Method CompactNode_copyAndInsertNode = method(compactNodeClassReturn, "copyAndInsertNode", args = [mutator, bitposField, \node(ds)], isActive = false),
+		Method CompactNode_copyAndMigrateFromInlineToNode = method(compactNodeClassReturn, "copyAndMigrateFromInlineToNode", args = [mutator, bitposField, \node(ds)]),
+		Method CompactNode_copyAndMigrateFromNodeToInline = method(compactNodeClassReturn, "copyAndMigrateFromNodeToInline", args = [mutator, bitposField, \node(ds)]),
+		Method CompactNode_copyAndRemoveNode = method(compactNodeClassReturn, "copyAndInsertNode", args = [mutator, bitposField], isActive = false),				
+		Method CompactNode_removeInplaceValueAndConvertToSpecializedNode = method(compactNodeClassReturn, "removeInplaceValueAndConvertToSpecializedNode", args = [mutator, bitposField], isActive = isOptionEnabled(setup, useSpecialization())),				
+
+		Method CompactNode_convertToGenericNode	= method(compactNodeClassReturn, bitmapField.name, isActive = false) // if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax
 		)
 	;	
-
-Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");	
 	
-TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound, str __classNamePostfix) {
+TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound, str __classNamePostfix, rel[Option,bool] __setup) {
 	if (bitPartitionSize < 1 || bitPartitionSize > 6) {
 		throw "Unsupported bit partition size of <bitPartitionSize>.";
 	}
@@ -148,7 +183,7 @@ TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound, 
 		throw "Specialization bound (<nBound>) must be smaller than the number of buckets (<nMax>)";
 	}
 	
-	return ___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound, classNamePostfix = __classNamePostfix);
+	return ___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound, classNamePostfix = __classNamePostfix, setup = __setup);
 }
 
 data Position // TODO: finish!
@@ -321,6 +356,9 @@ str dec(Argument a, bool isFinal = true) {
 	}
 }
 
+str dec(Argument a:field(tp, nm), Expression init, bool isFinal = true, bool isStatic = false) =
+	"<if (isStatic) {>static <}><if (isFinal) {>final <}><toString(tp)> <nm> = <toString(init)>";
+
 /*
 str dec(Argument::field (_, _)) = "final  _";
 str dec(Argument::getter(\type, name)) = "abstract <toString(\type)> <name>()";
@@ -340,22 +378,28 @@ str toString(\set()) = "Set";
 str toString(\vector()) = "Vector";
 default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 
-str dec(Method m:method) = "abstract <dec(\return(m.returnArg.\type))> <m.name>(<dec(m.args)>);" when m.isActive; 
+str dec(Method m:method) = "abstract <toString(m.returnArg.\type)> <m.name>(<dec(m.args)>);" when m.isActive; 
 str dec(Method m:method) = "" when !m.isActive;
 default str dec(Method m) { throw "You forgot <m>!"; }
 
-str implOrOverride(Method m:method, str bodyStr) = 
+
+
+str implOrOverride(Method m:method, Statement bodyStatement, bool doOverride = true) = implOrOverride(m, toString(bodyStatement), doOverride = doOverride);
+
+str implOrOverride(Method m:method, str bodyStr, bool doOverride = true) = 
 	"
-	@Override
-	<m.visibility> <dec(m.returnArg)> <m.name>(<dec(m.args)>) {
+	<if (doOverride) {>@Override<}>
+	<m.visibility> <toString(m.returnArg.\type)> <m.name>(<dec(m.args)>) {
 		<bodyStr>
 	}
 	"
 when m.isActive
 	;
 
-str implOrOverride(Method m:method, str bodyStr) = "" when !m.isActive;
-default str implOrOverride(Method m, _) { throw "You forgot <m>!"; }
+str implOrOverride(Method m:method, str bodyStr, bool doOverride = true) = "" when !m.isActive;
+default str implOrOverride(Method m, str bodyStr, bool doOverride = true) { throw "You forgot <m>!"; }
+
+
 
 /*
  * Convenience Functions [TODO: remove global state dependency!]

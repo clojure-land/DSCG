@@ -11,6 +11,7 @@
  */
 module dscg::GenerateTrie_Optional
 
+import dscg::Common;
 import dscg::GenerateTrie;
 
 str generateOptionalClassString() {
@@ -31,7 +32,7 @@ str generateOptionalClassString() {
 			}
 		};
 
-		@SuppressWarnings(\"unchecked\")
+		<toString(UNCHECKED_ANNOTATION)>
 		static \<T\> Optional\<T\> empty() {
 			return EMPTY;
 		}

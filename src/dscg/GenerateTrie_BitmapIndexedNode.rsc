@@ -50,14 +50,14 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>assert arity() \> <nBound>;<}>assert nodeInvariant();
 		}
 		
-		<if (!isPrimitive(key())) {>@SuppressWarnings(\"unchecked\")<}>
+		<if (!isPrimitive(key())) {><toString(UNCHECKED_ANNOTATION)><}>
 		@Override
 		<toString(key().\type)> getKey(int index) {
 			return (<toString(key().\type)>) nodes[<use(tupleLengthConstant)> * index];
 		}
 	
 		<if (ds == \map()) {>
-		<if (!isPrimitive(val())) {>@SuppressWarnings(\"unchecked\")<}>
+		<if (!isPrimitive(val())) {><toString(UNCHECKED_ANNOTATION)><}>
 		@Override
 		<toString(val().\type)> getValue(int index) {
 			return (<toString(val().\type)>) nodes[<use(tupleLengthConstant)> * index + 1];
@@ -65,14 +65,14 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		<}>
 
 		<if (ds == \map()) {>
-		@SuppressWarnings(\"unchecked\")
+		<toString(UNCHECKED_ANNOTATION)>
 		@Override
 		Map.Entry<GenericsExpanded(ds)> getKeyValueEntry(int index) {
 			return entryOf((<toString(key().\type)>) nodes[<use(tupleLengthConstant)> * index], (<toString(val().\type)>) nodes[<use(tupleLengthConstant)> * index + 1]);
 		}
 		<}>
 
-		@SuppressWarnings(\"unchecked\")
+		<toString(UNCHECKED_ANNOTATION)>
 		@Override
 		public <CompactNode(ds)><Generics(ds)> getNode(int index) {
 			final int offset = <use(tupleLengthConstant)> * payloadArity;
@@ -84,7 +84,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			return ArrayKeyValueSupplierIterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity);
 		}
 
-		@SuppressWarnings(\"unchecked\")
+		<toString(UNCHECKED_ANNOTATION)>
 		@Override
 		Iterator\<<CompactNode(ds)><Generics(ds)>\> nodeIterator() {
 			final int offset = <use(tupleLengthConstant)> * payloadArity;
@@ -95,22 +95,6 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 			return (Iterator) ArrayIterator.of(nodes, offset, nodes.length - offset);
 		}
-
-		<if (!isPrimitive(key())) {>@SuppressWarnings(\"unchecked\")<}>
-		@Override
-		<toString(key().\type)> headKey() {
-			assert hasPayload();
-			return (<toString(key().\type)>) nodes[0];
-		}
-
-		<if (ds == \map()) {>
-		<if (!isPrimitive(val())) {>@SuppressWarnings(\"unchecked\")<}>
-		@Override
-		<toString(val().\type)> headVal() {
-			assert hasPayload();
-			return (<toString(val().\type)>) nodes[1];
-		}
-		<}>
 
 		@Override
 		boolean hasPayload() {
@@ -186,12 +170,7 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			}<}>
 		}
 
-		<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>
-		@Override
-		<CompactNode(ds)><Generics(ds)> convertToGenericNode() {
-			return this;
-		}
-		<}>
+		<implOrOverride(ts.CompactNode_convertToGenericNode, "return this;")>
 
 		<if (ds == \map()) {>
 		@Override
@@ -271,17 +250,15 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			return nodeOf(mutator, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(bitmapMethod)> ^ bitpos), (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(valmapMethod)> | bitpos), <use(field(asArray(object()), "dst"))>, (byte) (payloadArity + 1));
 		}
 		
-		<generate_removeInplaceValueAndConvertToSpecializedNode(ts, setup)>
+		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, generate_removeInplaceValueAndConvertToSpecializedNode(ts, setup))>		
 	'}";
 }
 	
-list[Argument] headPayloadTuple(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, Argument \node) = [ key("<use(\node)>.headKey()"), val("<use(\node)>.headVal()") ];
-list[Argument] headPayloadTuple(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, Argument \node) = [ key("<use(\node)>.headKey()") ];	
+list[Argument] headPayloadTuple(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, Argument \node) = [ key("<use(\node)>.getKey(0)"), val("<use(\node)>.getValue(0)") ];
+list[Argument] headPayloadTuple(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, Argument \node) = [ key("<use(\node)>.getKey(0)") ];	
 
-str generate_removeInplaceValueAndConvertToSpecializedNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
-	"@Override
-	'<CompactNode(ds)><Generics(ds)> removeInplaceValueAndConvertToSpecializedNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>) {
-	'	final int valIndex = dataIndex(bitpos);
+default str generate_removeInplaceValueAndConvertToSpecializedNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
+	"	final int valIndex = dataIndex(bitpos);
 	'
 	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)>);
 	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
@@ -307,13 +284,5 @@ str generate_removeInplaceValueAndConvertToSpecializedNode(ts:___expandedTrieSpe
 	
 	'	}<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");
-	'	}	
-	'}"
-when isOptionEnabled(setup,useSpecialization())
+	'	}"
 	;
-
-default str generate_removeInplaceValueAndConvertToSpecializedNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
-	"@Override
-	'<CompactNode(ds)><Generics(ds)> removeInplaceValueAndConvertToSpecializedNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>) {
-	'	throw new UnsupportedOperationException();
-	'}";

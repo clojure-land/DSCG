@@ -43,16 +43,16 @@ void main() {
 		classNamePostfix = classNamePostfix + "_<capitalize(toString(val().\type))>Value";
 	}
 
-	TrieSpecifics ts = trieSpecifics(\map(), 5, 2, classNamePostfix);
-	if(___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound) := ts) {
+	rel[Option,bool] setup = { 
+		<useSpecialization(),false>,
+		<useUntypedVariables(),false>,
+		<useFixedStackIterator(),true>,
+		<useStructuralEquality(),true>,
+		<methodsWithComparator(),true>
+	}; // { compactionViaFieldToMethod() };
 
-		rel[Option,bool] setup = { 
-			<useSpecialization(),false>,
-			<useUntypedVariables(),false>,
-			<useFixedStackIterator(),true>,
-			<useStructuralEquality(),true>,
-			<methodsWithComparator(),true>
-		}; // { compactionViaFieldToMethod() };
+	TrieSpecifics ts = trieSpecifics(\set(), 5, 2, classNamePostfix, setup);
+	if(___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound) := ts) {
 	
 		list[str] innerClassStrings 
 			= [ generateOptionalClassString() ]
@@ -411,7 +411,7 @@ default str generate_bodyOf_removed(int n, int m, DataStructure ds, rel[Option,b
 					result = <nestedResult>;
 					break;< } else {> case SIZE_ONE:
 					// inline sub-node value
-					<if (isOptionEnabled(setup, useStructuralEquality())) {>result = Result.modified(removeNode<i>AndInlineValue(mutator, <use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()"))>));<} else {>result = Result.modified(<nodeOf(n-1, m+1, use(payloadTriple("mask", "updatedNode.headKey()", "updatedNode.headVal()") + generateMembers(n, m) - subnodePair(i)))>);<}>
+					<if (isOptionEnabled(setup, useStructuralEquality())) {>result = Result.modified(removeNode<i>AndInlineValue(mutator, <use(payloadTriple("mask", "updatedNode.getKey(0)", "updatedNode.getValue(0)"))>));<} else {>result = Result.modified(<nodeOf(n-1, m+1, use(payloadTriple("mask", "updatedNode.getKey(0)", "updatedNode.getValue(0)") + generateMembers(n, m) - subnodePair(i)))>);<}>
 					break;<}>
 					
 				case SIZE_MORE_THAN_ONE:
@@ -613,49 +613,49 @@ str generateGenericNodeClassString(int n, int m, ts:___expandedTrieSpecifics(ds,
 	'		<intercalate("\n\n", ["this.<nodePosName><i> = <nodePosName><i>; this.<nodeName><i> = <nodeName><i>;" | i <- [1..n+1]])>
 	'	}
 	
-	'	@SuppressWarnings(\"unchecked\")	
+	'	<toString(UNCHECKED_ANNOTATION)>	
 	'	@Override
 	'	Result<ResultGenerics> updated(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, V <valName>, int shift) {
 	'		<generate_bodyOf_GenericNode_updated(n, m, equalityDefault)>
 	'	}
 
-	'	@SuppressWarnings(\"unchecked\")	
+	'	<toString(UNCHECKED_ANNOTATION)>	
 	'	@Override
 	'	Result<ResultGenerics> updated(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, V <valName>, int shift, Comparator\<Object\> <cmpName>) {
 	'		<generate_bodyOf_GenericNode_updated(n, m, equalityComparator)>
 	'	}
 
-	'	@SuppressWarnings(\"unchecked\")	
+	'	<toString(UNCHECKED_ANNOTATION)>	
 	'	@Override
 	'	Result<ResultGenerics> removed(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, int shift) {
 	'		<generate_bodyOf_GenericNode_removed(n, m, equalityDefault)>
 	'	}
 
-	'	@SuppressWarnings(\"unchecked\")	
+	'	<toString(UNCHECKED_ANNOTATION)>	
 	'	@Override
 	'	Result<ResultGenerics> removed(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, int shift, Comparator\<Object\> <cmpName>) {
 	'		<generate_bodyOf_GenericNode_removed(n, m, equalityComparator)>
 	'	}
 	
-	'	@SuppressWarnings(\"unchecked\")
+	'	<toString(UNCHECKED_ANNOTATION)>
 	'	@Override
 	'	boolean <containsKeyMethodName(ds)>(Object <keyName>, int <keyName>Hash, int shift) {
 	'		<generate_bodyOf_GenericNode_containsKey(n, m, equalityDefault)>
 	'	}
 
-	'	@SuppressWarnings(\"unchecked\")
+	'	<toString(UNCHECKED_ANNOTATION)>
 	'	@Override
 	'	boolean <containsKeyMethodName(ds)>(Object <keyName>, int <keyName>Hash, int shift, Comparator\<Object\> <cmpName>) {
 	'		<generate_bodyOf_GenericNode_containsKey(n, m, equalityComparator)>
 	'	}
 
-	'	@SuppressWarnings(\"unchecked\")
+	'	<toString(UNCHECKED_ANNOTATION)>
 	'	@Override
 	'	Optional<MapsToGenerics> findByKey(Object <keyName>, int <keyName>Hash, int shift) {
 	'		<generate_bodyOf_GenericNode_findByKey(n, m, equalityDefault)>
 	'	}
 
-	'	@SuppressWarnings(\"unchecked\")
+	'	<toString(UNCHECKED_ANNOTATION)>
 	'	@Override
 	'	Optional<MapsToGenerics> findByKey(Object <keyName>, int <keyName>Hash, int shift, Comparator\<Object\> cmp) {
 	'		<generate_bodyOf_GenericNode_findByKey(n, m, equalityComparator)>
@@ -1053,8 +1053,8 @@ str generate_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpec
 	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
 	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
 	'
-	'	<dec(key())> = <nodeName>.headKey();
-	'	<if (ds == \map()) {><dec(val())> = <nodeName>.headVal();<}>	
+	'	<dec(key())> = <nodeName>.getKey(0);
+	'	<if (ds == \map()) {><dec(val())> = <nodeName>.getValue(0);<}>	
 	'
 	'	switch(bitIndex) {
 	'		<for (i <- [0..mn]) {>case <i>:
@@ -1082,8 +1082,8 @@ default str generate_copyAndMigrateFromNodeToInline(int n, int m, ts:___expanded
 	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
 	'	<dec(___valmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
 	'
-	'	<dec(key())> = <nodeName>.headKey();
-	'	<if (ds == \map()) {><dec(val())> = <nodeName>.headVal();<}>	
+	'	<dec(key())> = <nodeName>.getKey(0);
+	'	<if (ds == \map()) {><dec(val())> = <nodeName>.getValue(0);<}>	
 	'
 	'	switch(bitIndex) {
 	'		<for (i <- [1..n+1]) {>case <i-1>:
@@ -1118,10 +1118,10 @@ default str generate_bodyOf_getKeyValueEntry(DataStructure ds, int m) =
 str generateCompactNodeString() = 
 	"private static abstract class <CompactNode(ds)><Generics(ds)> extends <AbstractNode(ds)><Generics(ds)> {
 
-		@SuppressWarnings(\"unchecked\")
+		<toString(UNCHECKED_ANNOTATION)>
 		static final AbstractNode EMPTY_INDEX_NODE = new IndexNode(0, new AbstractNode[0], 0);
 
-		@SuppressWarnings(\"unchecked\")
+		<toString(UNCHECKED_ANNOTATION)>
 		static <Generics(ds)> <CompactNode(ds)><Generics(ds)> mergeNodes(<CompactNode(ds)><Generics(ds)> node0, int hash0,
 						<CompactNode(ds)><Generics(ds)> node1, int hash1, int shift) {
 			final int mask0 = (hash0 \>\>\> shift) & BIT_PARTITION_MASK;
@@ -1549,7 +1549,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 				final int valIndexNew = Integer.bitCount((valmap | bitpos) & (bitpos - 1));
 	
 				final Object[] editableNodes = copyAndMoveToFront<if (ds == \map()) {>Pair<}>(this.nodes, bitIndex,
-								valIndexNew, subNodeNew.headKey()<if (ds == \map()) {>, subNodeNew.headVal()<}>);
+								valIndexNew, subNodeNew.getKey(0)<if (ds == \map()) {>, subNodeNew.getValue(0)<}>);
 	
 				final <CompactNode(ds)><Generics(ds)> thisNew = <CompactNode(ds)>.<Generics(ds)> nodeOf(mutator, bitmap,
 								valmap | bitpos, editableNodes, (byte) (payloadArity + 1));
@@ -1756,7 +1756,7 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 	'		<generate_bodyOf_findByKey(n, m, equalityComparator)>
 	'	}
 	
-	'	@SuppressWarnings(\"unchecked\")
+	'	<toString(UNCHECKED_ANNOTATION)>
 	'	@Override
 	'	Iterator\<<CompactNode(ds)><Generics(ds)>\> nodeIterator() {
 	'		<if (n > 0) {>return ArrayIterator.\<<CompactNode(ds)><Generics(ds)>\> of(new <CompactNode(ds)>[] { <intercalate(", ", ["<nodeName><i>" | i <- [1..n+1]])> });<} else {>return Collections.emptyIterator();<}>
@@ -2004,14 +2004,14 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'		<generate_bodyOf_getSlot(mn)>
 	'	}	
 
-		<if (!isPrimitive(key())) {>@SuppressWarnings(\"unchecked\")<}>
+		<if (!isPrimitive(key())) {><toString(UNCHECKED_ANNOTATION)><}>
 		@Override
 		<toString(key().\type)> getKey(int index) {
 			return (<toString(key().\type)>) getSlot(<use(tupleLengthConstant)> * index);
 		}
 	
 		<if (ds == \map()) {>
-		<if (!isPrimitive(val())) {>@SuppressWarnings(\"unchecked\")<}>
+		<if (!isPrimitive(val())) {><toString(UNCHECKED_ANNOTATION)><}>
 		@Override
 		<toString(val().\type)> getValue(int index) {
 			return (<toString(val().\type)>) getSlot(<use(tupleLengthConstant)> * index + 1);
@@ -2019,21 +2019,21 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 		<}>
 
 		<if (ds == \map()) {>
-		@SuppressWarnings(\"unchecked\")
+		<toString(UNCHECKED_ANNOTATION)>
 		@Override
 		Map.Entry<GenericsExpanded(ds)> getKeyValueEntry(int index) {
 			return entryOf((<toString(key().\type)>) getSlot(<use(tupleLengthConstant)> * index), (<toString(val().\type)>) getSlot(<use(tupleLengthConstant)> * index + 1));
 		}
 		<}>
 
-		@SuppressWarnings(\"unchecked\")
+		<toString(UNCHECKED_ANNOTATION)>
 		@Override
 		public <CompactNode(ds)><Generics(ds)> getNode(int index) {
 			final int offset = <use(tupleLengthConstant)> * payloadArity();
 			return (<CompactNode(ds)><Generics(ds)>) getSlot(offset + index);
 		}
 		
-		@SuppressWarnings(\"unchecked\")
+		<toString(UNCHECKED_ANNOTATION)>
 		@Override
 		Iterator\<<CompactNode(ds)><Generics(ds)>\> nodeIterator() {
 			final int offset = <use(tupleLengthConstant)> * payloadArity();
@@ -2157,27 +2157,22 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'		<generate_bodyOf_copyAndSetNode(n, m, ts, setup)>
 	'	}	
 
-	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndInsertNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-	'		<generate_bodyOf_copyAndInsertNode(n, m, ts, setup)>
-	'	}	
 
-	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndRemoveNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>) {
-	'		<generate_bodyOf_copyAndRemoveNode(n, m, ts, setup)>
-	'	}
-
+	<implOrOverride(ts.CompactNode_copyAndInsertNode, generate_bodyOf_copyAndInsertNode(n, m, ts, setup))>
+	
+	<implOrOverride(ts.CompactNode_copyAndRemoveNode, generate_bodyOf_copyAndRemoveNode(n, m, ts, setup))>	
+	
 	<generate_copyAndMigrateFromInlineToNode(n, m, ts, setup)>	
 	
 	<generate_copyAndMigrateFromNodeToInline(n, m, ts, setup)>
 	
-	<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>
-	'	@Override
-	'	<CompactNode(ds)><Generics(ds)> convertToGenericNode() {
-	'		return nodeOf(<use(thisMutator)>, <use(bitmapMethod)>, <use(valmapMethod)>, new Object[] { <use(contentArguments(n, m, ts, setup))> }, (byte) <m>);
-	'	}
-	<}>	
-	
+	<implOrOverride(ts.CompactNode_convertToGenericNode, 
+		"	@Override
+		'	<CompactNode(ds)><Generics(ds)> convertToGenericNode() {
+		'		return nodeOf(<use(thisMutator)>, <use(bitmapMethod)>, <use(valmapMethod)>, new Object[] { <use(contentArguments(n, m, ts, setup))> }, (byte) <m>);
+		'	}"
+		)>
+		
 	<if (isOptionEnabled(setup, useStructuralEquality())) {>
 	'	@Override
 	'	public int hashCode() {

@@ -60,20 +60,6 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 
 		@Override
-		<toString(key().\type)> headKey() {
-			assert hasPayload();
-			return keys[0];
-		}
-
-		<if (ds == \map()) {>
-		@Override
-		<toString(val().\type)> headVal() {
-			assert hasPayload();
-			return vals[0];
-		}
-		<}>
-		
-		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
 						<dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> node) {
 			throw new UnsupportedOperationException();
@@ -95,9 +81,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 	<implOrOverride(ts.AbstractNode_updated, 		generate_bodyOf_HashCollisionNode_updated(ts, setup, equalityDefaultForArguments	))>
 	<implOrOverride(ts.AbstractNode_updatedEquiv,	generate_bodyOf_HashCollisionNode_updated(ts, setup, equalityComparatorForArguments	))>
 
-	@SuppressWarnings(\"unchecked\")
 	<implOrOverride(ts.AbstractNode_removed, 		generate_bodyOf_HashCollisionNode_removed(ts, setup, equalityDefaultForArguments	))>
-	@SuppressWarnings(\"unchecked\")
 	<implOrOverride(ts.AbstractNode_removedEquiv,	generate_bodyOf_HashCollisionNode_removed(ts, setup, equalityComparatorForArguments	))>		
 
 		@Override
@@ -227,13 +211,8 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 		<}>
 
-		<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>
-		@Override
-		<CompactNode(ds)><Generics(ds)> convertToGenericNode() {
-			return this;
-		}
-		<}>
-
+		<implOrOverride(ts.CompactNode_convertToGenericNode, "return this;")>
+		
 		<if (ds == \map()) {>
 		@Override
 		<CompactNode(ds)><Generics(ds)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <dec(val())>) {
@@ -255,6 +234,13 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		<CompactNode(ds)><Generics(ds)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> node) {
 			throw new UnsupportedOperationException();
 		}
+		
+		<implOrOverride(ts.CompactNode_copyAndMigrateFromInlineToNode, UNSUPPORTED_OPERATION_EXCEPTION)>
+		
+		<implOrOverride(ts.CompactNode_copyAndMigrateFromNodeToInline, UNSUPPORTED_OPERATION_EXCEPTION)>
+		
+		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, UNSUPPORTED_OPERATION_EXCEPTION)>	
+			
 	}"
 	;
 }

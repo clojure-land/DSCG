@@ -38,20 +38,18 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 	return
 	"private static abstract class <className><ts.GenericsStr> extends Abstract<toString(ds)>Node<ts.GenericsStr> {
-	
-		<dec(field(primitive("int"), "BIT_PARTITION_SIZE", isStatic = true, init = constant(primitive("int"), <bitPartitionSize>)))>
-		<dec(field(primitive("int"), "BIT_PARTITION_MASK", isStatic = true, init = constant(primitive("int"), "0b<for (i <- [1..bitPartitionSize+1]) {>1<}>")))>
 		
-		<impl(CompactNode_nodeMap, UNSUPPORTED_OPERATION_EXCEPTION)>
-		<impl(CompactNode_dataMap, UNSUPPORTED_OPERATION_EXCEPTION)>
+		<dec(field(primitive("int"), "BIT_PARTITION_SIZE"), constant(primitive("int"), "<bitPartitionSize>"), isStatic = true, isFinal = true)>;
+		<dec(field(primitive("int"), "BIT_PARTITION_MASK"), constant(primitive("int"), "0b<for (i <- [1..bitPartitionSize+1]) {>1<}>"), isStatic = true, isFinal = true)>;
 		
-		<dec(field(primitive("byte"), "SIZE_EMPTY", 		isStatic = true, init = constant(primitive("byte"), "0b00")))>
-		<dec(field(primitive("byte"), "SIZE_ONE", 			isStatic = true, init = constant(primitive("byte"), "0b01")))>
-		<dec(field(primitive("byte"), "SIZE_MORE_THAN_ONE",	isStatic = true, init = constant(primitive("byte"), "0b10")))>
+		<implOrOverride(ts.CompactNode_nodeMap, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = false)>
+		<implOrOverride(ts.CompactNode_dataMap, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = false)>
+		
+		<dec(field(primitive("byte"), "SIZE_EMPTY"), 		constant(primitive("byte"), "0b00"), isStatic = true)>;
+		<dec(field(primitive("byte"), "SIZE_ONE"), 			constant(primitive("byte"), "0b01"), isStatic = true)>;
+		<dec(field(primitive("byte"), "SIZE_MORE_THAN_ONE"),constant(primitive("byte"), "0b10"), isStatic = true)>;
 
-		<if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax) {>
-		abstract <ts.CompactNodeStr><ts.GenericsStr> convertToGenericNode();
-		<}>
+		<dec(ts.CompactNode_convertToGenericNode)>
 
 		/**
 		 * Abstract predicate over a node\'s size. Value can be either
@@ -61,28 +59,6 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		 * @return size predicate
 		 */
 		abstract byte sizePredicate();
-
-		/**
-		 * Returns the first key stored within this node.
-		 * 
-		 * @return first key
-		 */
-		@Deprecated
-		<toString(key().\type)> headKey() {
-			return getKey(0);
-		}
-
-		<if (ds == \map()) {>
-		/**
-		 * Returns the first value stored within this node.
-		 * 
-		 * @return first value
-		 */
-		@Deprecated 
-		<toString(val().\type)> headVal() {
-			return getValue(0);
-		}
-		<}>
 
 		@Override
 		abstract <ts.CompactNodeStr><ts.GenericsStr> getNode(int index);
@@ -116,27 +92,18 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 	'	abstract <ts.CompactNodeStr><ts.GenericsStr> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <ts.CompactNodeStr><ts.GenericsStr> <nodeName>);
 
-	'	<ts.CompactNodeStr><ts.GenericsStr> copyAndInsertNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <ts.CompactNodeStr><ts.GenericsStr> <nodeName>) {
-	'		throw new UnsupportedOperationException();	
-	'	}
-	
-	'	<ts.CompactNodeStr><ts.GenericsStr> copyAndRemoveNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>) {	
-	'		throw new UnsupportedOperationException();	
-	'	}
-
-	'	<ts.CompactNodeStr><ts.GenericsStr> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <ts.CompactNodeStr><ts.GenericsStr> <nodeName>) {
-	'		throw new UnsupportedOperationException();	
-	'	}
+		<implOrOverride(ts.CompactNode_copyAndInsertNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = false)>
 		
-	'	<ts.CompactNodeStr><ts.GenericsStr> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <ts.CompactNodeStr><ts.GenericsStr> <nodeName>) {
-	'		throw new UnsupportedOperationException();	
-	'	}
+		<implOrOverride(ts.CompactNode_copyAndRemoveNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = false)>
 	
-	'	<ts.CompactNodeStr><ts.GenericsStr> removeInplaceValueAndConvertToSpecializedNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>) {
-	'			throw new UnsupportedOperationException();
-	'	}
+		<dec(ts.CompactNode_copyAndMigrateFromInlineToNode)>
+		
+		<dec(ts.CompactNode_copyAndMigrateFromNodeToInline)>
+		
+		/* TODO: specialize removed(..) to remove this method from this interface */
+		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = false)>
 
-		@SuppressWarnings(\"unchecked\")
+		<toString(UNCHECKED_ANNOTATION)>
 		static final <ts.GenericsStr> <ts.CompactNodeStr><ts.GenericsStr> mergeNodes(<dec(payloadTuple(ts, setup, 0))>, int keyHash0, <dec(payloadTuple(ts, setup, 1))>, int keyHash1, int shift) {
 			assert !(<equalityDefaultForArguments(key("key0"), key("key1"))>);
 
@@ -188,7 +155,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	<}>
 	
 	<if (!isOptionEnabled(setup,useSpecialization()) || nBound < nMax) {>
-	'	@SuppressWarnings(\"unchecked\")
+	'	<toString(UNCHECKED_ANNOTATION)>
 	'	static final <ts.GenericsStr> <ts.CompactNodeStr><ts.GenericsStr> nodeOf(AtomicReference\<Thread\> mutator) {
 	'		return <emptyTrieNodeConstantName>;
 	'	}

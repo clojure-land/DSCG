@@ -44,6 +44,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		@Override
 		public boolean <containsKeyMethodName(ds)>(Object o) {
 			try {
+				<toString(UNCHECKED_ANNOTATION)>
 				<dec(key())> = (<toString(key().\type)>) o;
 				return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0);			
 			} catch (ClassCastException unused) {
@@ -54,6 +55,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		@Override
 		public boolean <containsKeyMethodName(ds)>Equivalent(Object o, Comparator\<Object\> cmp) {
 			try {
+				<toString(UNCHECKED_ANNOTATION)>
 				<dec(key())> = (<toString(key().\type)>) o;
 				return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0, cmp);			
 			} catch (ClassCastException unused) {
@@ -65,6 +67,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		@Override
 		public <toString(primitiveToClass(dsAtFunction__range_type(ds)))> get(Object o) {
 			try {
+				<toString(UNCHECKED_ANNOTATION)>
 				<dec(key())> = (<toString(key().\type)>) o;
 				final Optional<MapsToGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
 		
@@ -81,6 +84,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		@Override
 		public <toString(primitiveToClass(dsAtFunction__range_type(ds)))> getEquivalent(Object o, Comparator\<Object\> cmp) {
 			try {
+				<toString(UNCHECKED_ANNOTATION)>
 				<dec(key())> = (<toString(key().\type)>) o;
 				final Optional<MapsToGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
 		

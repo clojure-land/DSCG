@@ -55,7 +55,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @SuppressWarnings(\"rawtypes\")
 public class <ts.coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds)><GenericsExpanded(ds)> {
 
-	@SuppressWarnings(\"unchecked\")
+	<toString(UNCHECKED_ANNOTATION)>
 	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(Compact<toString(ds)>Node.<emptyTrieNodeConstantName>, 0, 0);
 
 	private static final boolean DEBUG = false;
@@ -73,13 +73,13 @@ public class <ts.coreClassName><Generics(ds)> extends AbstractImmutable<toString
 		}
 	}
 
-	@SuppressWarnings(\"unchecked\")
+	<toString(UNCHECKED_ANNOTATION)>
 	public static final <Generics(ds)> Immutable<toString(ds)><GenericsExpanded(ds)> of() {
 		return <ts.coreClassName>.<emptyCollectionConstantName>;
 	}
 
 	<if (ds == \map()) {>
-	@SuppressWarnings(\"unchecked\")
+	<toString(UNCHECKED_ANNOTATION)>
 	public static final <Generics(ds)> Immutable<toString(ds)><GenericsExpanded(ds)> of(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
 			throw new IllegalArgumentException(\"Length of argument list is uneven: no key/value pairs.\");
@@ -99,7 +99,7 @@ public class <ts.coreClassName><Generics(ds)> extends AbstractImmutable<toString
 	<}>
 	
 	<if (ds == \set()) {>
-	@SuppressWarnings(\"unchecked\")
+	<toString(UNCHECKED_ANNOTATION)>
 	public static final <Generics(ds)> Immutable<toString(ds)><GenericsExpanded(ds)> of(<toString(key().\type)>... keys) {
 		Immutable<toString(ds)><GenericsExpanded(ds)> result = <ts.coreClassName>.<emptyCollectionConstantName>;
 
@@ -111,13 +111,13 @@ public class <ts.coreClassName><Generics(ds)> extends AbstractImmutable<toString
 	}
 	<}>
 	
-	@SuppressWarnings(\"unchecked\")
+	<toString(UNCHECKED_ANNOTATION)>
 	public static final <Generics(ds)> Transient<toString(ds)><GenericsExpanded(ds)> transientOf() {
 		return <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 	}
 
 	<if (ds == \map()) {>
-	@SuppressWarnings(\"unchecked\")
+	<toString(UNCHECKED_ANNOTATION)>
 	public static final <Generics(ds)> Transient<toString(ds)><GenericsExpanded(ds)> transientOf(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
 			throw new IllegalArgumentException(
@@ -138,7 +138,7 @@ public class <ts.coreClassName><Generics(ds)> extends AbstractImmutable<toString
 	<}>
 	
 	<if (ds == \set()) {>
-	@SuppressWarnings(\"unchecked\")
+	<toString(UNCHECKED_ANNOTATION)>
 	public static final <Generics(ds)> Transient<toString(ds)><GenericsExpanded(ds)> transientOf(<toString(key().\type)>... keys) {
 		final Transient<toString(ds)><GenericsExpanded(ds)> result = <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 
@@ -480,6 +480,7 @@ default str generate_bodyOf_Core_containsKey(TrieSpecifics ts, rel[Option,bool] 
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
 	"
 		try {
+			<toString(UNCHECKED_ANNOTATION)>
 			<dec(key())> = (<toString(key().\type)>) o;
 			return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0<optionalComparatorArgument>);			
 		} catch (ClassCastException unused) {
@@ -505,6 +506,7 @@ default str generate_bodyOf_Core_get(TrieSpecifics ts, rel[Option,bool] setup, s
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
 	"
 		try {
+			<toString(UNCHECKED_ANNOTATION)>
 			<dec(key())> = (<toString(key().\type)>) o;
 			final Optional<MapsToGenerics(ts.ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0<optionalComparatorArgument>);
 	
