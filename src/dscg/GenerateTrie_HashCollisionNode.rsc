@@ -41,7 +41,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			assert payloadArity() \>= 2;
 		}
 
-		<generate_payloadIterator(ts, setup)>
+		<implOrOverride(ts.AbstractNode_payloadIterator, generate_bodyOf_payloadIterator(ts, setup))>
 
 		<if (false) {>
 		@Override
@@ -167,7 +167,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 				return false;
 			}
 
-			<hashCollisionClassName><Generics(ds)> that = (<hashCollisionClassName><Generics(ds)>) other;
+			<hashCollisionClassName><QuestionMarkGenerics(ds)> that = (<hashCollisionClassName><QuestionMarkGenerics(ds)>) other;
 
 			if (hash != that.hash) {
 				return false;
@@ -180,24 +180,22 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			/*
 			 * Linear scan for each key, because of arbitrary element order.
 			 */
-			outerLoop: for (SupplierIterator<SupplierIteratorGenerics(ds)> it = that.payloadIterator(); it.hasNext();) {
-				<if (ds == \map()) {><dec(key("otherKey"))> = it.next();
-				@SuppressWarnings(\"deprecation\")
+			outerLoop: for (int i = 0; i \< that.payloadArity(); i++) {
+				<if (ds == \map()) {><dec(field(object(), "otherKey"))> = that.getKey(i);
+				<dec(field(object(), "otherVal"))> = that.getValue(i);
 
-				<dec(val("otherVal"))> = it.get();
-
-				for (int i = 0; i \< keys.length; i++) {
-					<dec(key())> = keys[i];
-					<dec(val())> = vals[i];
+				for (int j = 0; j \< keys.length; j++) {
+					<dec(key())> = keys[j];
+					<dec(val())> = vals[j];
 
 					if (<equalityDefaultForArguments(key(), key("otherKey"))> && <equalityDefaultForArguments(val(), val("otherVal"))>) {
 						continue outerLoop;
 					}
 				}
-				return false;<} else {><dec(key("otherKey"))> = it.next();
+				return false;<} else {><dec(field(object(), "otherKey"))> = that.getKey(i);
 
-				for (int i = 0; i \< keys.length; i++) {
-					<dec(key())> = keys[i];
+				for (int j = 0; j \< keys.length; j++) {
+					<dec(key())> = keys[j];
 
 					if (<equalityDefaultForArguments(key(), key("otherKey"))>) {
 						continue outerLoop;
@@ -350,10 +348,8 @@ str generate_bodyOf_HashCollisionNode_findByKey(ts:___expandedTrieSpecifics(ds:\
 	;
 
 
-str generate_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
+str generate_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
 	"
-	@Override
-	SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator() {			
 		// TODO: change representation of keys and values
 		assert keys.length == vals.length;
 	
@@ -364,14 +360,11 @@ str generate_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPartition
 		}
 	
 		return ArrayKeyValueSupplierIterator.of(keysAndVals);
-	}
 	"
 	;
 	
-str generate_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
+str generate_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
 	"
-	@Override
-	SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator() {			
 		final Object[] keysAndVals = new Object[2 * keys.length];
 		for (int i = 0; i \< keys.length; i++) {
 			keysAndVals[2 * i] = keys[i];
@@ -379,6 +372,5 @@ str generate_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPartition
 		}
 	
 		return ArrayKeyValueSupplierIterator.of(keysAndVals);
-	}
 	"
 	;	

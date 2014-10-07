@@ -79,10 +79,8 @@ str generateBitmapIndexedNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			return (<CompactNode(ds)><Generics(ds)>) nodes[offset + index];
 		}
 
-		@Override
-		SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator() {
-			return ArrayKeyValueSupplierIterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity);
-		}
+		<implOrOverride(ts.AbstractNode_payloadIterator, 
+			"return ArrayKeyValueSupplierIterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity);")>
 
 		<toString(UNCHECKED_ANNOTATION)>
 		@Override
@@ -279,7 +277,7 @@ default str generate_removeInplaceValueAndConvertToSpecializedNode(ts:___expande
 	
 	'		<for (i <- [1..n+1]) {><dec(\node(ds, i))> = getNode(<i-1>);<}>
 	
-	'		return <nodeOf(n, m-1, use(metadataArguments(n, m-1, ts, setup) + contentArguments(n, m-1, ts, setup)))>;
+	'		return <nodeOf(n, m-1, use(metadataArguments(n, m-1, ts, setup) + typedContentArguments(n, m-1, ts, setup)))>;
 			
 	
 	'	}<}>default:

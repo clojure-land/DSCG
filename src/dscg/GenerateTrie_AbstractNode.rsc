@@ -33,24 +33,15 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 		static final boolean isAllowedToEdit(AtomicReference\<Thread\> x, AtomicReference\<Thread\> y) {
 			return x != null && y != null && (x == y || x.get() == y.get());
 		}
+						
+		<dec(ts.AbstractNode_getNode)>
+		
+		<dec(ts.AbstractNode_hasNodes)>
+		<dec(ts.AbstractNode_nodeArity)>
 
-		abstract <toString(key().\type)> getKey(int index);
-
-		<if (ds == \map()) {>
-		abstract <toString(val().\type)> getValue(int index);
-		<}>
-
-		<if (ds == \map()) {>
-		abstract java.util.Map.Entry<GenericsExpanded(ds)> getKeyValueEntry(int index);
-		<}>
-
-		abstract <AbstractNode(ds)><Generics(ds)> getNode(int index);
-
-		abstract boolean hasNodes();
-
-	'	@Deprecated
-	'	Iterator\<? extends <AbstractNode(ds)><Generics(ds)>\> nodeIterator() {
-			return new Iterator\<<AbstractNode(ds)><Generics(ds)>\>() {
+		@Deprecated
+		<implOrOverride(ts.AbstractNode_nodeIterator, 
+			"return new Iterator\<<AbstractNode(ds)><Generics(ds)>\>() {
 
 				int nextIndex = 0;
 
@@ -70,16 +61,19 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 				public boolean hasNext() {
 					return nextIndex \< <AbstractNode(ds)>.this.nodeArity();
 				}
-			};	
-	'	}
+			};", doOverride = false)>
 	
-		abstract int nodeArity();
+	
+		<dec(ts.AbstractNode_getKey)>
+		<dec(ts.AbstractNode_getValue)>				
+		<dec(ts.AbstractNode_getKeyValueEntry)>	
+	
+		<dec(ts.AbstractNode_hasPayload)>
+		<dec(ts.AbstractNode_payloadArity)>
 
-		abstract boolean hasPayload();
-
-	'	@Deprecated
-	'	SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator() {
-			return new SupplierIterator<SupplierIteratorGenerics(ds)>() {
+		@Deprecated
+		<implOrOverride(ts.AbstractNode_payloadIterator, 
+			"return new SupplierIterator<SupplierIteratorGenerics(ds)>() {
 
 				int nextIndex = 0;
 
@@ -108,27 +102,20 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 				public boolean hasNext() {
 					return nextIndex \< <AbstractNode(ds)>.this.payloadArity();
 				}
-			};	
-	'	}
+			};", doOverride = false)>
 
-		abstract int payloadArity();
-
-		<if (isOptionEnabled(setup,useUntypedVariables())) {>
-		abstract <toString(object())> getSlot(int index);
-		<}>
-
+		<dec(ts.AbstractNode_getSlot)>
+	
 		/**
 		 * The arity of this trie node (i.e. number of values and nodes stored
 		 * on this level).
 		 * 
 		 * @return sum of nodes and values stored within
 		 */
-		int arity() {
-			return payloadArity() + nodeArity();
-		}
+		<implOrOverride(ts.AbstractNode_arity, "return payloadArity() + nodeArity();", doOverride = false)>
 
-		int size() {
-			final SupplierIterator<SupplierIteratorGenerics(ds)> it = new <toString(ds)>KeyIterator<InferredGenerics()>(this);
+		<implOrOverride(ts.AbstractNode_size, 
+			"final SupplierIterator<SupplierIteratorGenerics(ds)> it = new <toString(ds)>KeyIterator<InferredGenerics()>(this);
 
 			int size = 0;
 			while (it.hasNext()) {
@@ -136,7 +123,6 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 				it.next();
 			}
 
-			return size;
-		}
+			return size;", doOverride = false)>
 	}";
 }

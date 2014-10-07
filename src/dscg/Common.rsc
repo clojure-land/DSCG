@@ -29,6 +29,7 @@ data DataStructure
 
 data Type 
 	= unknown  (bool isArray = false)
+	| \void    (bool isArray = false)
 	| object   (bool isArray = false)
 	| generic  (str \type, bool isArray = false)
 	| specific (str \type, bool isArray = false)
@@ -40,6 +41,7 @@ data Type
 	| ___primitive(str \type, bool isArray = false)
 	;
 
+str toString(t:\void()) = "void<if (t.isArray) {>[]<}>";
 str toString(t:object()) = "java.lang.Object<if (t.isArray) {>[]<}>";
 str toString(t:generic  (str \type)) = "<\type><if (t.isArray) {>[]<}>";
 str toString(t:specific (str \type)) = "<\type><if (t.isArray) {>[]<}>";
@@ -89,7 +91,8 @@ data Option // TODO: finish!
 	;
 
 data TrieSpecifics 
-	= ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound, str classNamePostfix = "", rel[Option,bool] setup = {},
+	= ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound, Type keyType = generic("K"), Type valType = generic("V"), str classNamePostfix = "", rel[Option,bool] setup = {},
+				
 		Argument bitposField = ___bitposField(bitPartitionSize),
 		Argument bitmapField = ___bitmapField(bitPartitionSize),
 		Argument valmapField = ___valmapField(bitPartitionSize),
@@ -101,6 +104,7 @@ data TrieSpecifics
 		Argument shift = field(primitive("int"), "shift"),
 		Argument details = field(generic("Result<Generics(ds)>"), "details"),
 		Argument comparator = field(specific("Comparator\<Object\>"), "cmp"),
+		Argument index = field(primitive("int"), "index"),
 
 		Argument compactNodeReturn = \return(generic("<CompactNode(ds)><Generics(ds)>")),
 		Argument optionalRangeReturn = \return(generic("Optional<MapsToGenerics(ds)>")),
@@ -117,9 +121,6 @@ data TrieSpecifics
 		Method AbstractNode_removed 		= method(compactNodeReturn, "removed", args = [mutator, key(), keyHash, shift, details]),
 		Method AbstractNode_removedEquiv 	= method(compactNodeReturn, "removed", args = [mutator, key(), keyHash, shift, details, comparator]),
 				
-		str GenericsStr    = "<Generics(ds)>",
-		str CompactNodeStr = "<CompactNode(ds)>",
-				
 		/* GENERATE_TRIE_CORE */
 		str coreClassName = "Trie<toString(ds)><classNamePostfix>",
 		str coreInterfaceName = "Immutable<toString(ds)>",
@@ -127,7 +128,8 @@ data TrieSpecifics
 				
 		Argument coreClassReturn = \return(generic("<coreClassName><Generics(ds)>")),
 		Argument coreInterfaceReturn = \return(generic("<coreInterfaceName><Generics(ds)>")),
-		Argument compactNodeClassReturn = \return(generic("<CompactNodeStr><GenericsStr>")),
+		Argument compactNodeClassReturn = \return(generic("<CompactNode(ds)><Generics(ds)>")),
+		Argument abstractNodeClassReturn = \return(generic("<AbstractNode(ds)><Generics(ds)>")),
 	
 		Method Core_updated 		= method(coreClassReturn, "<insertOrPutMethodName(ds)>",  			args = [*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public"),
 		Method Core_updatedEquiv 	= method(coreClassReturn, "<insertOrPutMethodName(ds)>Equivalent", 	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public"),
@@ -168,11 +170,59 @@ data TrieSpecifics
 		Method CompactNode_copyAndRemoveNode = method(compactNodeClassReturn, "copyAndInsertNode", args = [mutator, bitposField], isActive = false),				
 		Method CompactNode_removeInplaceValueAndConvertToSpecializedNode = method(compactNodeClassReturn, "removeInplaceValueAndConvertToSpecializedNode", args = [mutator, bitposField], isActive = isOptionEnabled(setup, useSpecialization())),				
 
-		Method CompactNode_convertToGenericNode	= method(compactNodeClassReturn, bitmapField.name, isActive = false) // if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax
-		)
-	;	
+		Method CompactNode_convertToGenericNode	= method(compactNodeClassReturn, bitmapField.name, isActive = false), // if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax
+
+		// TODO: improve overriding of methods
+		Method AbstractNode_getNode = method(abstractNodeClassReturn, "getNode", args = [index]),
+		Method CompactNode_getNode = method(compactNodeClassReturn, "getNode", args = [index]),	
+		
+		Method CompactNode_sizePredicate = method(\return(primitive("byte")), "sizePredicate"),
+		
+		Method AbstractNode_arity = method(\return(primitive("int")), "arity"),
+		Method AbstractNode_size = method(\return(primitive("int")), "size"),		
+		
+		Method CompactNode_getNode = method(compactNodeClassReturn, "getNode", args = [index]),
+		/***/
+		Method AbstractNode_hasNodes = method(\return(primitive("boolean")), "hasNodes"),
+		Method AbstractNode_nodeArity = method(\return(primitive("int")), "nodeArity"),
+		/***/
+		Method AbstractNode_nodeIterator = method(\return(generic("Iterator\<? extends <AbstractNode(ds)><Generics(ds)>\>")), "nodeIterator"),
+
+		Method AbstractNode_getKey = method(\return(keyType), "getKey", args = [index]),
+		Method AbstractNode_getValue = method(\return(valType), "getValue", args = [index], isActive = ds == \map()),		
+		Method AbstractNode_getKeyValueEntry = method(\return(generic("java.util.Map.Entry<GenericsExpanded(ds)>")), "getKeyValueEntry", args = [index], isActive = ds == \map()),
 	
-TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound, str __classNamePostfix, rel[Option,bool] __setup) {
+		/***/
+		Method AbstractNode_hasPayload = method(\return(primitive("boolean")), "hasPayload"),
+		Method AbstractNode_payloadArity = method(\return(primitive("int")), "payloadArity"),
+		/***/
+		Method AbstractNode_payloadIterator = method(\return(generic("SupplierIterator<SupplierIteratorGenerics(ds)>")), "payloadIterator", isActive = false),	
+
+		//Method AbstractNode_hasSlots = method(\return(primitive("boolean")), "hasSlots", isActive = isOptionEnabled(setup,useUntypedVariables())),
+		//Method AbstractNode_slotArity = method(\return(primitive("int")), "slotArity", isActive = isOptionEnabled(setup,useUntypedVariables())),		
+		Method AbstractNode_getSlot = method(\return(object()), "getSlot", args = [index], isActive = isOptionEnabled(setup,useUntypedVariables())),
+		
+		Method jul_Map_put = method(\return(valType), "put", args = [ key(), val() ], visibility = "public", isActive = ds == \map()),		
+		Method jul_Map_remove = method(\return(valType), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = ds == \map()),
+		Method jul_Map_clear = method(\return(\void()), "clear", visibility = "public", isActive = ds == \map()),		
+		Method jul_Map_putAll = method(\return(\void()), "putAll", args = [ field(generic("Map\<? extends K, ? extends V\>"), "m") ], visibility = "public", isActive = ds == \map()),	
+
+		Method jul_Set_add = method(\return(primitive("boolean")), "add", args = [ key() ], visibility = "public", isActive = ds == \set()),		
+		Method jul_Set_remove = method(\return(primitive("boolean")), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = ds == \set()),
+		Method jul_Set_clear = method(\return(\void()), "clear", visibility = "public", isActive = ds == \set()),		
+		Method jul_Set_addAll = method(\return(primitive("boolean")), "addAll", args = [ field(generic("Collection\<? extends K\>"), "c") ], visibility = "public", isActive = ds == \set()),
+		Method jul_Set_removeAll = method(\return(primitive("boolean")), "removeAll", args = [ field(generic("Collection\<?\>"), "c") ], visibility = "public", isActive = ds == \set()),
+		Method jul_Set_retainAll = method(\return(primitive("boolean")), "retainAll", args = [ field(generic("Collection\<?\>"), "c") ], visibility = "public", isActive = ds == \set()),		
+
+		Method jul_Set_containsAll = method(\return(primitive("boolean")), "containsAll", args = [ field(generic("Collection\<?\>"), "c") ], visibility = "public", isActive = ds == \set()),		
+		Method jul_Set_containsAllEquivalent = method(\return(primitive("boolean")), "containsAllEquivalent", args = [ field(generic("Collection\<?\>"), "c"), comparator ], visibility = "public", isActive = ds == \set()),		
+
+		Method CompactNode_equals = method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
+		Method CompactNode_hashCode = method(\return(primitive("int")), "hashCode", visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality()))
+		)
+	;		
+	
+TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound, Type __keyType, Type __valType, str __classNamePostfix, rel[Option,bool] __setup) {
 	if (bitPartitionSize < 1 || bitPartitionSize > 6) {
 		throw "Unsupported bit partition size of <bitPartitionSize>.";
 	}
@@ -183,7 +233,7 @@ TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound, 
 		throw "Specialization bound (<nBound>) must be smaller than the number of buckets (<nMax>)";
 	}
 	
-	return ___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound, classNamePostfix = __classNamePostfix, setup = __setup);
+	return ___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound, keyType = __keyType, valType = __valType, classNamePostfix = __classNamePostfix, setup = __setup);
 }
 
 data Position // TODO: finish!
@@ -438,9 +488,8 @@ list[Argument] payloadTriple(str posName, str keyName, str valName) {
 
 list[Argument] subnodePair(int i) = [ nodePos(i), \node(ds, i) ];
 
-str AbstractNode(DataStructure ds) = "Abstract<toString(ds)>Node";
-str CompactNode(DataStructure ds) = "Compact<toString(ds)>Node";
-
+@memo str AbstractNode(DataStructure ds) = "Abstract<toString(ds)>Node";
+@memo str CompactNode(DataStructure ds) = "Compact<toString(ds)>Node";
 
 str Generics(DataStructure ds:\map()) = "" when !isGeneric(key()) && !isGeneric(val());
 str Generics(DataStructure ds:\map()) = "\<<toString(primitiveToClass(key().\type))>, <toString(primitiveToClass(val().\type))>\>" when isGeneric(key()) && isGeneric(val());
@@ -573,11 +622,16 @@ list[Argument] metadataArguments(int n, int m, ts:___expandedTrieSpecifics(ds, b
 	= [ ___bitmapField(bitPartitionSize), ___valmapField(bitPartitionSize) ]
 	;
 
+list[Argument] typedContentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup)
+	= [ *payloadTuple(ts, setup, i) | i <- [1..m+1]] 
+	+ [ \node(ds, i) | i <- [1..n+1]]
+	;
+
 list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
 	= [ key(i), val(i) | i <- [1..m+1]] 
 	+ [ \node(ds, i)   | i <- [1..n+1]]
 when (ds == \map() || ds == \vector()) 
-		&& !isOptionEnabled(setup,useUntypedVariables());	
+		&& !isOptionEnabled(setup,useUntypedVariables());
 
 list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
 	= [ slot(i) | i <- [0..2*m + n]]

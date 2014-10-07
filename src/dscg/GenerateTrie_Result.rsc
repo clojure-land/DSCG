@@ -19,7 +19,7 @@ str generateResultClassString(TrieSpecifics ts, rel[Option,bool] setup) {
 	className = "Result";
 
 	return
-	"static final class <className><ts.GenericsStr> {
+	"static final class <className><Generics(ts.ds)> {
 		private <toString(dsAtFunction__range_type(ts.ds))> replacedValue;
 		private boolean isModified;
 
@@ -34,7 +34,7 @@ str generateResultClassString(TrieSpecifics ts, rel[Option,bool] setup) {
 		}
 
 		// update: neither element, nor element count changed
-		public static <ts.GenericsStr> Result<ts.GenericsStr> unchanged() {
+		public static <Generics(ts.ds)> Result<Generics(ts.ds)> unchanged() {
 			return new Result\<\>(null, false);
 		}
 

@@ -53,7 +53,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 @SuppressWarnings(\"rawtypes\")
-public class <ts.coreClassName><Generics(ds)> extends AbstractImmutable<toString(ds)><GenericsExpanded(ds)> {
+public class <ts.coreClassName><Generics(ds)> extends Abstract<toString(ds)><GenericsExpanded(ds)> implements Immutable<toString(ds)><GenericsExpanded(ds)> {
 
 	<toString(UNCHECKED_ANNOTATION)>
 	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(Compact<toString(ds)>Node.<emptyTrieNodeConstantName>, 0, 0);
@@ -176,6 +176,36 @@ public class <ts.coreClassName><Generics(ds)> extends AbstractImmutable<toString
 	<implOrOverride(ts.Core_removeAll, 		generate_bodyOf_Core_removeAll(ts, setup, equalityDefaultForArguments		))>
 	<implOrOverride(ts.Core_removeAllEquiv,	generate_bodyOf_Core_removeAll(ts, setup, equalityComparatorForArguments	))>
 
+
+
+	<implOrOverride(ts.jul_Map_put, UNSUPPORTED_OPERATION_EXCEPTION)>	
+	<implOrOverride(ts.jul_Map_clear, UNSUPPORTED_OPERATION_EXCEPTION)>
+	<implOrOverride(ts.jul_Map_remove, UNSUPPORTED_OPERATION_EXCEPTION)>
+	<implOrOverride(ts.jul_Map_putAll, UNSUPPORTED_OPERATION_EXCEPTION)>
+	
+	<implOrOverride(ts.jul_Set_add, UNSUPPORTED_OPERATION_EXCEPTION)>	
+	<implOrOverride(ts.jul_Set_clear, UNSUPPORTED_OPERATION_EXCEPTION)>
+	<implOrOverride(ts.jul_Set_remove, UNSUPPORTED_OPERATION_EXCEPTION)>
+	<implOrOverride(ts.jul_Set_addAll, UNSUPPORTED_OPERATION_EXCEPTION)>
+	<implOrOverride(ts.jul_Set_removeAll, UNSUPPORTED_OPERATION_EXCEPTION)>
+	<implOrOverride(ts.jul_Set_retainAll, UNSUPPORTED_OPERATION_EXCEPTION)>
+
+	<implOrOverride(ts.jul_Set_containsAll, 	
+		"for (Object item : c) {
+			if (!contains(item)) {
+				return false;
+			}
+		}
+		return true;")>
+
+	<implOrOverride(ts.jul_Set_containsAllEquivalent,	
+		"for (Object item : c) {
+			if (!containsEquivalent(item, cmp)) {
+				return false;
+			}
+		}
+		return true;")>
+
 	@Override
 	public int size() {
 		return cachedSize;
@@ -244,7 +274,6 @@ public class <ts.coreClassName><Generics(ds)> extends AbstractImmutable<toString
 					return <ts.coreClassName>.this.isEmpty();
 				}
 
-				@SuppressWarnings(\"deprecation\")
 				@Override
 				public void clear() {
 					<ts.coreClassName>.this.clear();

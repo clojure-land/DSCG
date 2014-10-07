@@ -35,23 +35,26 @@ import dscg::GenerateTrie_Core;
 import dscg::GenerateTrie_CoreTransient;
 
 void main() {
+	Type keyType = generic("K");
+	Type valType = generic("V");
 	str classNamePostfix = "";
-	if (!isGeneric(key())) {
-		classNamePostfix = classNamePostfix + "_<capitalize(toString(key().\type))>Key";
+	
+	if (!isGeneric(keyType)) {
+		classNamePostfix = classNamePostfix + "_<capitalize(toString(keyType))>Key";
 	}	
-	if (!isGeneric(val())) {
-		classNamePostfix = classNamePostfix + "_<capitalize(toString(val().\type))>Value";
+	if (!isGeneric(valType)) {
+		classNamePostfix = classNamePostfix + "_<capitalize(toString(valType))>Value";
 	}
 
 	rel[Option,bool] setup = { 
-		<useSpecialization(),false>,
-		<useUntypedVariables(),false>,
+		<useSpecialization(),true>,
+		<useUntypedVariables(),true>,
 		<useFixedStackIterator(),true>,
 		<useStructuralEquality(),true>,
 		<methodsWithComparator(),true>
 	}; // { compactionViaFieldToMethod() };
 
-	TrieSpecifics ts = trieSpecifics(\set(), 5, 2, classNamePostfix, setup);
+	TrieSpecifics ts = trieSpecifics(\set(), 5, 8, keyType, valType, classNamePostfix, setup);
 	if(___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound) := ts) {
 	
 		list[str] innerClassStrings 
@@ -942,28 +945,14 @@ default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieS
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"
 	;	
-
-//default str generate_copyAndMigrateFromInlineToNode(_, _, _, _)
-//	= "" // i.e. not override
-//	;
 	
-str generate_copyAndMigrateFromInlineToNode(n, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
-	"@Override
-	'<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-	'	throw new IllegalStateException(\"Index out of range.\");
-	'}"
+str generate_bodyOf_copyAndMigrateFromInlineToNode(n, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
+	"throw new IllegalStateException(\"Index out of range.\");"
 when !isOptionEnabled(setup,useUntypedVariables())
 	;
 	
-str generate_copyAndMigrateFromInlineToNode(_, _, _, setup)
-	= "" // i.e. not override
-when isOptionEnabled(setup,useUntypedVariables())
-	;	
-
-str generate_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
-	"@Override
-	'<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-	'	<dec(field(primitive("int"), "bitIndex"))> = <use(tupleLengthConstant)> * (payloadArity() - 1) + nodeIndex(bitpos);
+str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
+	"	<dec(field(primitive("int"), "bitIndex"))> = <use(tupleLengthConstant)> * (payloadArity() - 1) + nodeIndex(bitpos);
 	'	<dec(field(primitive("int"), "valIndex"))> = dataIndex(bitpos);
 	'
 	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
@@ -981,15 +970,12 @@ str generate_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpec
 	'			}
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
-	'	}
-	'}"
+	'	}"
 when isOptionEnabled(setup,useUntypedVariables())
 	;
 	
-default str generate_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
-	"@Override
-	'<CompactNode(ds)><Generics(ds)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-	'	final int bitIndex = nodeIndex(bitpos);
+default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
+	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
 	'
 	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
@@ -1007,47 +993,27 @@ default str generate_copyAndMigrateFromInlineToNode(int n, int m, ts:___expanded
 	'			}
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
-	'	}
-	'}"
+	'	}"
 	;
 
 
-//default str generate_copyAndMigrateFromNodeToInline(_, _, _, _)
-//	= "" // i.e. not override
-//	;
-
-str generate_copyAndMigrateFromNodeToInline(n:0, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =	
-	"	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-	'		throw new IllegalStateException(\"Index out of range.\");
-	'	}
-	"
+str generate_bodyOf_copyAndMigrateFromNodeToInline(n:0, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =	
+	"throw new IllegalStateException(\"Index out of range.\");"
 when !isOptionEnabled(setup,useUntypedVariables())
 	;
 	
-str generate_copyAndMigrateFromNodeToInline(n, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 
-	"	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-	'		throw new IllegalStateException(\"Index out of range.\");
-	'	}
-	"
-when isOptionEnabled(setup,useUntypedVariables())
-	;	
+//str generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 
+//	"throw new IllegalStateException(\"Index out of range.\");"
+//when isOptionEnabled(setup,useUntypedVariables())
+//	;	
 
-str generate_copyAndMigrateFromNodeToInline(n, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
-	"	@Override
-	'	<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-	'		throw new IllegalStateException(\"Index out of range.\");
-	'	}
-	"
+str generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
+	"throw new IllegalStateException(\"Index out of range.\");"
 when isOptionEnabled(setup,useUntypedVariables()) && (mn == tupleLength(ds) * nMax)
 	;
 				
-str generate_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
-	"@Override
-	'<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-	'
-	'	final int bitIndex = nodeIndex(bitpos);
+str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
+	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
 	'	
 	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
@@ -1068,15 +1034,12 @@ str generate_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpec
 	'			}
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
-	'	}
-	'}"
+	'	}"
 when isOptionEnabled(setup,useUntypedVariables())	
 	;	
 	
-default str generate_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
-	"@Override
-	'<CompactNode(ds)><Generics(ds)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ds)><Generics(ds)> <nodeName>) {
-	'	final int bitIndex = nodeIndex(bitpos);
+default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
+	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
 	'	
 	'	<dec(___bitmapField(bitPartitionSize))> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
@@ -1097,8 +1060,7 @@ default str generate_copyAndMigrateFromNodeToInline(int n, int m, ts:___expanded
 	'			}
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
-	'	}
-	'}"
+	'	}"
 	;
 
 	
@@ -2162,9 +2124,9 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	
 	<implOrOverride(ts.CompactNode_copyAndRemoveNode, generate_bodyOf_copyAndRemoveNode(n, m, ts, setup))>	
 	
-	<generate_copyAndMigrateFromInlineToNode(n, m, ts, setup)>	
+	<implOrOverride(ts.CompactNode_copyAndMigrateFromInlineToNode, generate_bodyOf_copyAndMigrateFromInlineToNode(n, m, ts, setup))>	
 	
-	<generate_copyAndMigrateFromNodeToInline(n, m, ts, setup)>
+	<implOrOverride(ts.CompactNode_copyAndMigrateFromNodeToInline, generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts, setup))>
 	
 	<implOrOverride(ts.CompactNode_convertToGenericNode, 
 		"	@Override
@@ -2173,15 +2135,11 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 		'	}"
 		)>
 		
-	<if (isOptionEnabled(setup, useStructuralEquality())) {>
-	'	@Override
-	'	public int hashCode() {
-	'		<generate_bodyOf_hashCode(n, m, ts, setup)>
-	'	}
+			
+	<implOrOverride(ts.CompactNode_hashCode, generate_bodyOf_hashCode(n, m, ts, setup))>	
 
-	'	@Override
-	'	public boolean equals(Object other) {
-	'		if (null == other) {
+	<implOrOverride(ts.CompactNode_equals, 	
+	"		if (null == other) {
 	'			return false;
 	'		}
 	'		if (this == other) {
@@ -2194,11 +2152,10 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'
 	'		<generate_equalityComparisons(n, m, ts, setup, equalityDefaultForArguments)><}>
 	'
-	'		return true;
-	'	}
-	<}>	
+	'		return true;")>
+		
 	
-		<generate_toString(n, m, ts, setup)>
+	<generate_toString(n, m, ts, setup)>
 		
 	'}
 	"
