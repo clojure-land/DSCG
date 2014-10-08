@@ -42,8 +42,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		<dec(field(primitive("int"), "BIT_PARTITION_SIZE"), constant(primitive("int"), "<bitPartitionSize>"), isStatic = true, isFinal = true)>;
 		<dec(field(primitive("int"), "BIT_PARTITION_MASK"), constant(primitive("int"), "0b<for (i <- [1..bitPartitionSize+1]) {>1<}>"), isStatic = true, isFinal = true)>;
 		
-		<implOrOverride(ts.CompactNode_nodeMap, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = false)>
-		<implOrOverride(ts.CompactNode_dataMap, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = false)>
+		<dec(ts.CompactNode_nodeMap)>
+		<dec(ts.CompactNode_dataMap)>
 		
 		<dec(field(primitive("byte"), "SIZE_EMPTY"), 		constant(primitive("byte"), "0b00"), isStatic = true)>;
 		<dec(field(primitive("byte"), "SIZE_ONE"), 			constant(primitive("byte"), "0b01"), isStatic = true)>;

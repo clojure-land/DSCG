@@ -484,8 +484,7 @@ default str generate_bodyOf_Core_updated(TrieSpecifics ts, rel[Option,bool] setu
 
 default str generate_bodyOf_Core_removed(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq, 
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
-	"
-	final int keyHash = key.hashCode();
+	"final int keyHash = key.hashCode();
 	<dec(ts.details)> = Result.unchanged();
 	
 	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(null, key, keyHash, 0, <use(ts.details)><optionalComparatorArgument>);
@@ -501,40 +500,33 @@ default str generate_bodyOf_Core_removed(TrieSpecifics ts, rel[Option,bool] setu
 		<}>
 	}
 
-	return this;
-	"
+	return this;"
 	;
 
 default str generate_bodyOf_Core_containsKey(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
-	"
-		try {
-			<toString(UNCHECKED_ANNOTATION)>
-			<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
-			return rootNode.containsKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0<optionalComparatorArgument>);			
-		} catch (ClassCastException unused) {
-			return false;
-		}
-
-	"
+	"try {
+		<toString(UNCHECKED_ANNOTATION)>
+		<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
+		return rootNode.containsKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0<optionalComparatorArgument>);			
+	} catch (ClassCastException unused) {
+		return false;
+	}"
 	;
 
 default str generate_bodyOf_Core_containsValue(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
-	"
-		for (Iterator\<<toString(primitiveToClass(ts.valType))>\> iterator = valueIterator(); iterator.hasNext();) {
+	"	for (Iterator\<<toString(primitiveToClass(ts.valType))>\> iterator = valueIterator(); iterator.hasNext();) {
 			if (iterator.next().equals(o)) {
 				return true;
 			}
 		}
-		return false;
-	"
+		return false;"
 	;
 
 default str generate_bodyOf_Core_get(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
-	"
-		try {
+	"	try {
 			<toString(UNCHECKED_ANNOTATION)>
 			<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
 			final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0<optionalComparatorArgument>);
@@ -546,8 +538,7 @@ default str generate_bodyOf_Core_get(TrieSpecifics ts, rel[Option,bool] setup, s
 			}			
 		} catch (ClassCastException unused) {
 			return null;
-		}
-	"
+		}"
 	;	
 	
 default str generate_bodyOf_Core_insertOrPutAll(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,

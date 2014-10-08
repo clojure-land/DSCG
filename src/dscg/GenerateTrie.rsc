@@ -64,6 +64,11 @@ void main() {
 	}
 }
 
+void doGenerateCurrent() {
+	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()));
+	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()));	
+}
+
 void doGenerate(TrieConfig cfg:hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes:[keyType, valType, *_], SpecializationConfig specializationConfig)) {
 	bool flagSpecialization = false;
 	int specializeTo = 0;
