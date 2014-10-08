@@ -13,11 +13,11 @@ module dscg::GenerateTrie_AbstractNode
 
 import dscg::Common;
 
-str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) { 
+str generateAbstractNodeClassString(TrieSpecifics ts) { 
 	return 
-	"protected static abstract class <AbstractNode(ds)><Generics(ds)> extends AbstractNode<UnifiedGenericsExpanded(ds)> {
+	"protected static abstract class <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> extends AbstractNode<UnifiedGenericsExpanded(ts.ds, ts.tupleTypes)> {
 
-		static final int TUPLE_LENGTH = <tupleLength(ds)>;
+		static final int TUPLE_LENGTH = <tupleLength(ts.ds)>;
 
 		<dec(ts.AbstractNode_containsKey)>
 		<dec(ts.AbstractNode_containsKeyEquiv)>
@@ -41,7 +41,7 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 
 		@Deprecated
 		<implOrOverride(ts.AbstractNode_nodeIterator, 
-			"return new Iterator\<<AbstractNode(ds)><Generics(ds)>\>() {
+			"return new Iterator\<<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>\>() {
 
 				int nextIndex = 0;
 
@@ -51,15 +51,15 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 				}
 
 				@Override
-				public <AbstractNode(ds)><Generics(ds)> next() {
+				public <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> next() {
 					if (!hasNext())
 						throw new NoSuchElementException();
-					return <AbstractNode(ds)>.this.getNode(nextIndex++);
+					return <AbstractNode(ts.ds)>.this.getNode(nextIndex++);
 				}
 
 				@Override
 				public boolean hasNext() {
-					return nextIndex \< <AbstractNode(ds)>.this.nodeArity();
+					return nextIndex \< <AbstractNode(ts.ds)>.this.nodeArity();
 				}
 			};", doOverride = false)>
 	
@@ -73,17 +73,17 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 
 		@Deprecated
 		<implOrOverride(ts.AbstractNode_payloadIterator, 
-			"return new SupplierIterator<SupplierIteratorGenerics(ds)>() {
+			"return new SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>() {
 
 				int nextIndex = 0;
 
 				@Override
-				public <toString(primitiveToClass(dsAtFunction__range_type(ds)))> get() {
-					if (nextIndex == 0 || nextIndex \> <AbstractNode(ds)>.this.payloadArity()) {
+				public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
+					if (nextIndex == 0 || nextIndex \> <AbstractNode(ts.ds)>.this.payloadArity()) {
 						throw new NoSuchElementException();
 					}
 
-					return <AbstractNode(ds)>.this.<dsAtFunction__range_getter_name(ds)>(nextIndex - 1);
+					return <AbstractNode(ts.ds)>.this.<dsAtFunction__range_getter_name(ts.ds)>(nextIndex - 1);
 				}
 
 				@Override
@@ -92,15 +92,15 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 				}
 
 				@Override
-				public <toString(primitiveToClass(key().\type))> next() {
+				public <toString(primitiveToClass(ts.keyType))> next() {
 					if (!hasNext())
 						throw new NoSuchElementException();
-					return <AbstractNode(ds)>.this.getKey(nextIndex++);
+					return <AbstractNode(ts.ds)>.this.getKey(nextIndex++);
 				}
 
 				@Override
 				public boolean hasNext() {
-					return nextIndex \< <AbstractNode(ds)>.this.payloadArity();
+					return nextIndex \< <AbstractNode(ts.ds)>.this.payloadArity();
 				}
 			};", doOverride = false)>
 
@@ -115,7 +115,7 @@ str generateAbstractNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 		<implOrOverride(ts.AbstractNode_arity, "return payloadArity() + nodeArity();", doOverride = false)>
 
 		<implOrOverride(ts.AbstractNode_size, 
-			"final SupplierIterator<SupplierIteratorGenerics(ds)> it = new <toString(ds)>KeyIterator<InferredGenerics()>(this);
+			"final SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> it = new <toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(this);
 
 			int size = 0;
 			while (it.hasNext()) {

@@ -18,7 +18,7 @@ import dscg::GenerateTrie_Core_Common;
 
 str generateCoreClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str innerClassesString) {
 	
-	str emptyCollectionConstantName = "EMPTY_<toUpperCase(toString(ds))>";
+	str emptyCollectionConstantName = "EMPTY_<toUpperCase(toString(ts.ds))>";
 	str emptyTrieNodeConstantName   = "EMPTY_NODE";
 	
 return 
@@ -53,18 +53,18 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 @SuppressWarnings(\"rawtypes\")
-public class <ts.coreClassName><Generics(ds)> extends Abstract<toString(ds)><GenericsExpanded(ds)> implements Immutable<toString(ds)><GenericsExpanded(ds)> {
+public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> implements Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
 
 	<toString(UNCHECKED_ANNOTATION)>
-	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(Compact<toString(ds)>Node.<emptyTrieNodeConstantName>, 0, 0);
+	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(Compact<toString(ts.ds)>Node.<emptyTrieNodeConstantName>, 0, 0);
 
 	private static final boolean DEBUG = false;
 
-	private final <AbstractNode(ds)><Generics(ds)> rootNode;
+	private final <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> rootNode;
 	private final int hashCode;
 	private final int cachedSize;
 
-	<ts.coreClassName>(<AbstractNode(ds)><Generics(ds)> rootNode, int hashCode, int cachedSize) {
+	<ts.coreClassName>(<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> rootNode, int hashCode, int cachedSize) {
 		this.rootNode = rootNode;
 		this.hashCode = hashCode;
 		this.cachedSize = cachedSize;
@@ -74,24 +74,24 @@ public class <ts.coreClassName><Generics(ds)> extends Abstract<toString(ds)><Gen
 	}
 
 	<toString(UNCHECKED_ANNOTATION)>
-	public static final <Generics(ds)> Immutable<toString(ds)><GenericsExpanded(ds)> of() {
+	public static final <Generics(ts.ds, ts.tupleTypes)> Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> of() {
 		return <ts.coreClassName>.<emptyCollectionConstantName>;
 	}
 
 	<if (ds == \map()) {>
 	<toString(UNCHECKED_ANNOTATION)>
-	public static final <Generics(ds)> Immutable<toString(ds)><GenericsExpanded(ds)> of(Object... keyValuePairs) {
+	public static final <Generics(ts.ds, ts.tupleTypes)> Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> of(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
 			throw new IllegalArgumentException(\"Length of argument list is uneven: no key/value pairs.\");
 		}
 
-		Immutable<toString(ds)><GenericsExpanded(ds)> result = <ts.coreClassName>.<emptyCollectionConstantName>;
+		Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>;
 
 		for (int i = 0; i \< keyValuePairs.length; i += 2) {
-			<dec(key())> = (<toString(key().\type)>) keyValuePairs[i];
-			<dec(val())> = (<toString(val().\type)>) keyValuePairs[i + 1];
+			<dec(key(ts.keyType))> = (<toString(ts.keyType)>) keyValuePairs[i];
+			<dec(val(ts.valType))> = (<toString(ts.valType)>) keyValuePairs[i + 1];
 
-			result = result.<insertOrPutMethodName(ds)>(<use(ts.payloadTuple)>);
+			result = result.<insertOrPutMethodName(ts.ds)>(<use(ts.payloadTuple)>);
 		}
 
 		return result;
@@ -100,11 +100,11 @@ public class <ts.coreClassName><Generics(ds)> extends Abstract<toString(ds)><Gen
 	
 	<if (ds == \set()) {>
 	<toString(UNCHECKED_ANNOTATION)>
-	public static final <Generics(ds)> Immutable<toString(ds)><GenericsExpanded(ds)> of(<toString(key().\type)>... keys) {
-		Immutable<toString(ds)><GenericsExpanded(ds)> result = <ts.coreClassName>.<emptyCollectionConstantName>;
+	public static final <Generics(ts.ds, ts.tupleTypes)> Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> of(<toString(ts.keyType)>... keys) {
+		Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>;
 
-		for (<dec(key())> : keys) {
-			result = result.<insertOrPutMethodName(ds)>(<use(key())>);
+		for (<dec(key(ts.keyType))> : keys) {
+			result = result.<insertOrPutMethodName(ts.ds)>(<use(key(ts.keyType))>);
 		}
 
 		return result;
@@ -112,25 +112,25 @@ public class <ts.coreClassName><Generics(ds)> extends Abstract<toString(ds)><Gen
 	<}>
 	
 	<toString(UNCHECKED_ANNOTATION)>
-	public static final <Generics(ds)> Transient<toString(ds)><GenericsExpanded(ds)> transientOf() {
+	public static final <Generics(ts.ds, ts.tupleTypes)> Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> transientOf() {
 		return <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 	}
 
 	<if (ds == \map()) {>
 	<toString(UNCHECKED_ANNOTATION)>
-	public static final <Generics(ds)> Transient<toString(ds)><GenericsExpanded(ds)> transientOf(Object... keyValuePairs) {
+	public static final <Generics(ts.ds, ts.tupleTypes)> Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> transientOf(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
 			throw new IllegalArgumentException(
 							\"Length of argument list is uneven: no key/value pairs.\");
 		}
 
-		final Transient<toString(ds)><GenericsExpanded(ds)> result = <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
+		final Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 
 		for (int i = 0; i \< keyValuePairs.length; i += 2) {
-			<dec(key())> = (<toString(key().\type)>) keyValuePairs[i];
-			<dec(val())> = (<toString(val().\type)>) keyValuePairs[i + 1];
+			<dec(key(ts.keyType))> = (<toString(ts.keyType)>) keyValuePairs[i];
+			<dec(val(ts.valType))> = (<toString(ts.valType)>) keyValuePairs[i + 1];
 
-			result.<insertOrPutMethodName(ds)>(<use(ts.payloadTuple)>);
+			result.<insertOrPutMethodName(ts.ds)>(<use(ts.payloadTuple)>);
 		}
 
 		return result;
@@ -139,11 +139,11 @@ public class <ts.coreClassName><Generics(ds)> extends Abstract<toString(ds)><Gen
 	
 	<if (ds == \set()) {>
 	<toString(UNCHECKED_ANNOTATION)>
-	public static final <Generics(ds)> Transient<toString(ds)><GenericsExpanded(ds)> transientOf(<toString(key().\type)>... keys) {
-		final Transient<toString(ds)><GenericsExpanded(ds)> result = <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
+	public static final <Generics(ts.ds, ts.tupleTypes)> Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> transientOf(<toString(ts.keyType)>... keys) {
+		final Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 
-		for (<dec(key())> : keys) {
-			result.<insertOrPutMethodName(ds)>(<use(key())>);
+		for (<dec(key(ts.keyType))> : keys) {
+			result.<insertOrPutMethodName(ts.ds)>(<use(key(ts.keyType))>);
 		}
 
 		return result;
@@ -213,39 +213,39 @@ public class <ts.coreClassName><Generics(ds)> extends Abstract<toString(ds)><Gen
 
 	<if (ds == \set()) {>
 	@Override
-	public Iterator<GenericsExpanded(ds)> iterator() {
+	public Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)> iterator() {
 		return keyIterator();
 	}
 	<}>
 
 	@Override
-	public SupplierIterator<SupplierIteratorGenerics(ds)> keyIterator() {
-		<generate_bodyOf_keyIterator(ds, setup)>
+	public SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> keyIterator() {
+		<generate_bodyOf_keyIterator(ts, ts.setup)>
 	}
 
 	<if (ds == \map()) {>
 	@Override
-	public Iterator\<<toString(primitiveToClass(val().\type))>\> valueIterator() {
-		return new <toString(ds)>ValueIterator<InferredGenerics()>(rootNode);
+	public Iterator\<<toString(primitiveToClass(ts.valType))>\> valueIterator() {
+		return new <toString(ts.ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);
 	}
 
 	@Override
-	public Iterator\<Map.Entry<GenericsExpanded(ds)>\> entryIterator() {
-		return new <toString(ds)>EntryIterator<InferredGenerics()>(rootNode);
+	public Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entryIterator() {
+		return new <toString(ts.ds)>EntryIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);
 	}
 	<}>
 
 	<if (ds == \map()) {>
 	@Override
-	public Set\<java.util.Map.Entry<GenericsExpanded(ds)>\> entrySet() {
-		Set\<java.util.Map.Entry<GenericsExpanded(ds)>\> entrySet = null;
+	public Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet() {
+		Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet = null;
 
 		if (entrySet == null) {
-			entrySet = new AbstractSet\<java.util.Map.Entry<GenericsExpanded(ds)>\>() {
+			entrySet = new AbstractSet\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
 				@Override
-				public Iterator\<java.util.Map.Entry<GenericsExpanded(ds)>\> iterator() {
-					return new Iterator\<Entry<GenericsExpanded(ds)>\>() {
-						private final Iterator\<Entry<GenericsExpanded(ds)>\> i = entryIterator();
+				public Iterator\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> iterator() {
+					return new Iterator\<Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
+						private final Iterator\<Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> i = entryIterator();
 
 						@Override
 						public boolean hasNext() {
@@ -253,7 +253,7 @@ public class <ts.coreClassName><Generics(ds)> extends Abstract<toString(ds)><Gen
 						}
 
 						@Override
-						public Entry<GenericsExpanded(ds)> next() {
+						public Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> next() {
 							return i.next();
 						}
 
@@ -295,8 +295,8 @@ public class <ts.coreClassName><Generics(ds)> extends Abstract<toString(ds)><Gen
 	}
 
 	@Override
-	public Transient<toString(ds)><GenericsExpanded(ds)> asTransient() {
-		return new Transient<ts.coreClassName><Generics(ds)>(this);
+	public Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> asTransient() {
+		return new Transient<ts.coreClassName><Generics(ts.ds, ts.tupleTypes)>(this);
 	}
 
 	@Override
@@ -315,7 +315,7 @@ public class <ts.coreClassName><Generics(ds)> extends Abstract<toString(ds)><Gen
 		}
 
 		if (other instanceof <ts.coreClassName>) {
-			<ts.coreClassName><QuestionMarkGenerics(ds)> that = (<ts.coreClassName><QuestionMarkGenerics(ds)>) other;
+			<ts.coreClassName><QuestionMarkGenerics(ts.ds, ts.tupleTypes)> that = (<ts.coreClassName><QuestionMarkGenerics(ts.ds, ts.tupleTypes)>) other;
 
 			if (this.size() != that.size()) {
 				return false;
@@ -331,22 +331,22 @@ public class <ts.coreClassName><Generics(ds)> extends Abstract<toString(ds)><Gen
 	/*
 	 * For analysis purposes only.
 	 */
-	protected <AbstractNode(ds)><Generics(ds)> getRootNode() {
+	protected <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> getRootNode() {
 		return rootNode;
 	}
 
 	/*
 	 * For analysis purposes only.
 	 */
-	protected Iterator\<<AbstractNode(ds)><Generics(ds)>\> nodeIterator() {
-		return new <ts.nodeIteratorClassName><InferredGenerics()>(rootNode);
+	protected Iterator\<<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>\> nodeIterator() {
+		return new <ts.nodeIteratorClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);
 	}
 
 	/*
 	 * For analysis purposes only.
 	 */
 	protected int getNodeCount() {
-		final Iterator\<<AbstractNode(ds)><Generics(ds)>\> it = nodeIterator();
+		final Iterator\<<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>\> it = nodeIterator();
 		int sumNodes = 0;
 
 		for (; it.hasNext(); it.next()) {
@@ -360,11 +360,11 @@ public class <ts.coreClassName><Generics(ds)> extends Abstract<toString(ds)><Gen
 	 * For analysis purposes only. Payload X Node
 	 */
 	protected int[][] arityCombinationsHistogram() {
-		final Iterator\<<AbstractNode(ds)><Generics(ds)>\> it = nodeIterator();
+		final Iterator\<<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>\> it = nodeIterator();
 		final int[][] sumArityCombinations = new int[<nMax+1>][<nMax+1>];
 
 		while (it.hasNext()) {
-			final <AbstractNode(ds)><Generics(ds)> node = it.next();
+			final <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node = it.next();
 			sumArityCombinations[node.payloadArity()][node.nodeArity()] += 1;
 		}
 
@@ -440,12 +440,12 @@ public class <ts.coreClassName><Generics(ds)> extends Abstract<toString(ds)><Gen
 }";
 }
 
-str generate_bodyOf_keyIterator(DataStructure ds, rel[Option,bool] setup:{_*, <useFixedStackIterator(),true>}) = 
-	"return new <toString(ds)>KeyIterator<InferredGenerics()>(rootNode);"
+str generate_bodyOf_keyIterator(TrieSpecifics ts, rel[Option,bool] setup:{_*, <useFixedStackIterator(),true>}) = 
+	"return new <toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);"
 	;
 	
-default str generate_bodyOf_keyIterator(DataStructure ds, rel[Option,bool] setup) =
-	"return new <ts.coreClassName>Iterator<InferredGenerics()>((Compact<toString(ds)>Node<Generics(ds)>) rootNode);"
+default str generate_bodyOf_keyIterator(TrieSpecifics ts, rel[Option,bool] setup) =
+	"return new <ts.coreClassName>Iterator<InferredGenerics(ts.ds, ts.tupleTypes)>((Compact<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)>) rootNode);"
 	;
 	
 	
@@ -457,24 +457,24 @@ default str generate_bodyOf_Core_updated(TrieSpecifics ts, rel[Option,bool] setu
 	"	final int keyHash = key.hashCode();
 		<dec(ts.details)> = Result.unchanged();
 		
-		<dec(\node(ts.ds, "newRootNode"))> = rootNode.updated(null, <use(ts.payloadTuple)>, keyHash, 0, <use(ts.details)><optionalComparatorArgument>);
+		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(null, <use(ts.payloadTuple)>, keyHash, 0, <use(ts.details)><optionalComparatorArgument>);
 
 		if (<use(ts.details)>.isModified()) {
 			<if (ts.ds == \map()) {>
 				if (<use(ts.details)>.hasReplacedValue()) {
-					final int valHashOld = <use(ts.details)>.getReplacedValue().hashCode();
-					final int valHashNew = <hashCode(val())>;
+					final int valHashOld = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
+					final int valHashNew = <hashCode(val(ts.valType))>;
 	
-					return new <ts.coreClassName><Generics(ts.ds)>(newRootNode, hashCode + (keyHash ^ valHashNew)
+					return new <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)>(newRootNode, hashCode + (keyHash ^ valHashNew)
 									- (keyHash ^ valHashOld), cachedSize);
 				}
 			<}>
 				
 			<if (ts.ds == \map()) {>
-				final int valHash = <hashCode(val())>;
-				return new <ts.coreClassName><Generics(ts.ds)>(newRootNode, hashCode + (keyHash ^ valHash), cachedSize + 1);
+				final int valHash = <hashCode(val(ts.valType))>;
+				return new <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)>(newRootNode, hashCode + (keyHash ^ valHash), cachedSize + 1);
 			<} else {>
-				return new <ts.coreClassName><Generics(ts.ds)>(newRootNode, hashCode + keyHash, cachedSize + 1);			
+				return new <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)>(newRootNode, hashCode + keyHash, cachedSize + 1);			
 			<}>
 		}
 
@@ -488,16 +488,16 @@ default str generate_bodyOf_Core_removed(TrieSpecifics ts, rel[Option,bool] setu
 	final int keyHash = key.hashCode();
 	<dec(ts.details)> = Result.unchanged();
 	
-	<dec(\node(ts.ds, "newRootNode"))> = rootNode.removed(null, key, keyHash, 0, <use(ts.details)><optionalComparatorArgument>);
+	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(null, key, keyHash, 0, <use(ts.details)><optionalComparatorArgument>);
 
 	if (<use(ts.details)>.isModified()) {
 		<if (ts.ds == \set()) {>
-			return new <ts.coreClassName><Generics(ts.ds)>(newRootNode, hashCode - keyHash, cachedSize - 1);
+			return new <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)>(newRootNode, hashCode - keyHash, cachedSize - 1);
 		<} else {>
 			assert <use(ts.details)>.hasReplacedValue();
-			final int valHash = <use(ts.details)>.getReplacedValue().hashCode();
+			final int valHash = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
 
-			return new <ts.coreClassName><Generics(ts.ds)>(newRootNode, hashCode - (keyHash ^ valHash), cachedSize - 1);
+			return new <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)>(newRootNode, hashCode - (keyHash ^ valHash), cachedSize - 1);
 		<}>
 	}
 
@@ -510,8 +510,8 @@ default str generate_bodyOf_Core_containsKey(TrieSpecifics ts, rel[Option,bool] 
 	"
 		try {
 			<toString(UNCHECKED_ANNOTATION)>
-			<dec(key())> = (<toString(key().\type)>) o;
-			return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0<optionalComparatorArgument>);			
+			<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
+			return rootNode.containsKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0<optionalComparatorArgument>);			
 		} catch (ClassCastException unused) {
 			return false;
 		}
@@ -522,7 +522,7 @@ default str generate_bodyOf_Core_containsKey(TrieSpecifics ts, rel[Option,bool] 
 default str generate_bodyOf_Core_containsValue(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
 	"
-		for (Iterator\<<toString(primitiveToClass(val().\type))>\> iterator = valueIterator(); iterator.hasNext();) {
+		for (Iterator\<<toString(primitiveToClass(ts.valType))>\> iterator = valueIterator(); iterator.hasNext();) {
 			if (iterator.next().equals(o)) {
 				return true;
 			}
@@ -536,8 +536,8 @@ default str generate_bodyOf_Core_get(TrieSpecifics ts, rel[Option,bool] setup, s
 	"
 		try {
 			<toString(UNCHECKED_ANNOTATION)>
-			<dec(key())> = (<toString(key().\type)>) o;
-			final Optional<MapsToGenerics(ts.ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0<optionalComparatorArgument>);
+			<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
+			final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0<optionalComparatorArgument>);
 	
 			if (result.isPresent()) {
 				return result.get();
@@ -554,7 +554,7 @@ default str generate_bodyOf_Core_insertOrPutAll(TrieSpecifics ts, rel[Option,boo
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>",
 				str optionalEquivalentPostfix = "<if (!(eq == equalityDefaultForArguments)) {>Equivalent<}>") =
 
-	"	Transient<toString(ts.ds)><GenericsExpanded(ts.ds)> tmp = asTransient();
+	"	Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> tmp = asTransient();
 		tmp.<insertOrPutMethodName(ts.ds)>All<optionalEquivalentPostfix>(<uncapitalize(toString(ts.ds))><optionalComparatorArgument>);
 		return tmp.freeze();"
 	;		
@@ -563,7 +563,7 @@ default str generate_bodyOf_Core_retainAll(TrieSpecifics ts, rel[Option,bool] se
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>",
 				str optionalEquivalentPostfix = "<if (!(eq == equalityDefaultForArguments)) {>Equivalent<}>") =
 
-	"	Transient<toString(ts.ds)><GenericsExpanded(ts.ds)> tmp = asTransient();
+	"	Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> tmp = asTransient();
 		tmp.__retainAll<optionalEquivalentPostfix>(<uncapitalize(toString(ts.ds))><optionalComparatorArgument>);
 		return tmp.freeze();"
 	;		
@@ -572,7 +572,7 @@ default str generate_bodyOf_Core_removeAll(TrieSpecifics ts, rel[Option,bool] se
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>",
 				str optionalEquivalentPostfix = "<if (!(eq == equalityDefaultForArguments)) {>Equivalent<}>") =
 
-	"	Transient<toString(ts.ds)><GenericsExpanded(ts.ds)> tmp = asTransient();
+	"	Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> tmp = asTransient();
 		tmp.__removeAll<optionalEquivalentPostfix>(<uncapitalize(toString(ts.ds))><optionalComparatorArgument>);
 		return tmp.freeze();"
 	;		

@@ -22,14 +22,14 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 	str persistentClassName = "Trie<toString(ds)><classNamePostfix>";
 	
 	return
-	"static final class <className><Generics(ds)> extends Abstract<toString(ds)><GenericsExpanded(ds)> implements
-					Transient<toString(ds)><GenericsExpanded(ds)> {
+	"static final class <className><Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> implements
+					Transient<toString(ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
 		final private AtomicReference\<Thread\> mutator;
-		private <AbstractNode(ds)><Generics(ds)> rootNode;
+		private <AbstractNode(ds)><Generics(ts.ds, ts.tupleTypes)> rootNode;
 		private int hashCode;
 		private int cachedSize;
 
-		<className>(<persistentClassName><Generics(ds)> <uncapitalize(persistentClassName)>) {
+		<className>(<persistentClassName><Generics(ts.ds, ts.tupleTypes)> <uncapitalize(persistentClassName)>) {
 			this.mutator    = new AtomicReference\<Thread\>(Thread.currentThread());
 			this.rootNode   = <uncapitalize(persistentClassName)>.rootNode;
 			this.hashCode   = <uncapitalize(persistentClassName)>.hashCode;
@@ -45,8 +45,8 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		public boolean <containsKeyMethodName(ds)>(Object o) {
 			try {
 				<toString(UNCHECKED_ANNOTATION)>
-				<dec(key())> = (<toString(key().\type)>) o;
-				return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0);			
+				<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
+				return rootNode.containsKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0);			
 			} catch (ClassCastException unused) {
 				return false;
 			}
@@ -56,8 +56,8 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		public boolean <containsKeyMethodName(ds)>Equivalent(Object o, Comparator\<Object\> cmp) {
 			try {
 				<toString(UNCHECKED_ANNOTATION)>
-				<dec(key())> = (<toString(key().\type)>) o;
-				return rootNode.containsKey(<use(key())>, <hashCode(key())>, 0, cmp);			
+				<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
+				return rootNode.containsKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0, cmp);			
 			} catch (ClassCastException unused) {
 				return false;
 			}
@@ -65,11 +65,11 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		
 		
 		@Override
-		public <toString(primitiveToClass(dsAtFunction__range_type(ds)))> get(Object o) {
+		public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get(Object o) {
 			try {
 				<toString(UNCHECKED_ANNOTATION)>
-				<dec(key())> = (<toString(key().\type)>) o;
-				final Optional<MapsToGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0);
+				<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
+				final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0);
 		
 				if (result.isPresent()) {
 					return result.get();
@@ -82,11 +82,11 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}		
 			
 		@Override
-		public <toString(primitiveToClass(dsAtFunction__range_type(ds)))> getEquivalent(Object o, Comparator\<Object\> cmp) {
+		public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> getEquivalent(Object o, Comparator\<Object\> cmp) {
 			try {
 				<toString(UNCHECKED_ANNOTATION)>
-				<dec(key())> = (<toString(key().\type)>) o;
-				final Optional<MapsToGenerics(ds)> result = rootNode.findByKey(<use(key())>, <hashCode(key())>, 0, cmp);
+				<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
+				final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0, cmp);
 		
 				if (result.isPresent()) {
 					return result.get();
@@ -102,19 +102,19 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		<insertOrPut(ts, setup, useComparator = true )>
 
 		<if (ds == \map()) {>
-		<insertOrPutAll(ts, setup, args = [field(specific("<toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>")], useComparator = false)>
-		<insertOrPutAll(ts, setup, args = [field(specific("<toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>")], useComparator = true )>		
+		<insertOrPutAll(ts, setup, args = [field(specific("<toString(ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ds))>")], useComparator = false)>
+		<insertOrPutAll(ts, setup, args = [field(specific("<toString(ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ds))>")], useComparator = true )>		
 		<}>		
 
 		<if (ds == \set()) {>
-		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "<insertOrPutMethodName(ds)>", args = [field(specific("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>")], useComparator = false)>
-		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "<insertOrPutMethodName(ds)>", args = [field(specific("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>")], useComparator = true )>
-		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "__remove", args = [field(specific("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>")], useComparator = false)>
-		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "__remove", args = [field(specific("Immutable<toString(ds)><GenericsExpandedUpperBounded(ds)>"), "<uncapitalize(toString(ds))>")], useComparator = true )>
+		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "<insertOrPutMethodName(ds)>", args = [field(specific("Immutable<toString(ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ds))>")], useComparator = false)>
+		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "<insertOrPutMethodName(ds)>", args = [field(specific("Immutable<toString(ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ds))>")], useComparator = true )>
+		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "__remove", args = [field(specific("Immutable<toString(ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ds))>")], useComparator = false)>
+		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "__remove", args = [field(specific("Immutable<toString(ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ds))>")], useComparator = true )>
 		<}>
 		
 		@Override
-		public boolean __remove(<dec(primitiveToClassArgument(key()))>) {
+		public boolean __remove(<dec(primitiveToClassArgument(key(ts.keyType)))>) {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 
@@ -123,12 +123,12 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			final int keyHash = key.hashCode();
 			<dec(ts.details)> = Result.unchanged();
 		
-			<dec(\node(ds, "newRootNode"))> = rootNode.removed(mutator, key, keyHash, 0, <use(ts.details)>);
+			<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(mutator, key, keyHash, 0, <use(ts.details)>);
 
 			if (<use(ts.details)>.isModified()) {
 				<if (ds == \map()) {>				
 					assert <use(ts.details)>.hasReplacedValue();
-					final int valHash = <use(ts.details)>.getReplacedValue().hashCode();
+					final int valHash = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
 	
 					rootNode = newRootNode;
 					hashCode -= keyHash ^ valHash;
@@ -157,7 +157,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean __removeEquivalent(<dec(primitiveToClassArgument(key()))>, Comparator\<Object\> cmp) {
+		public boolean __removeEquivalent(<dec(primitiveToClassArgument(key(ts.keyType)))>, Comparator\<Object\> cmp) {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 			}
@@ -165,12 +165,12 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			final int keyHash = key.hashCode();
 			<dec(ts.details)> = Result.unchanged();
 		
-			<dec(\node(ds, "newRootNode"))> = rootNode.removed(mutator, key, keyHash, 0, <use(ts.details)>, cmp);
+			<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(mutator, key, keyHash, 0, <use(ts.details)>, cmp);
 
 			if (<use(ts.details)>.isModified()) {
 				<if (ds == \map()) {>				
 					assert <use(ts.details)>.hasReplacedValue();
-					final int valHash = <use(ts.details)>.getReplacedValue().hashCode();
+					final int valHash = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
 	
 					rootNode = newRootNode;
 					hashCode -= keyHash ^ valHash;
@@ -220,10 +220,10 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 		
 		@Override
-		public boolean __retainAll(ImmutableSet<GenericsExpandedUpperBounded(ds)> set) {
+		public boolean __retainAll(ImmutableSet<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)> set) {
 			boolean modified = false;
 
-			Iterator<GenericsExpanded(ds)> thisIterator = iterator();
+			Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)> thisIterator = iterator();
 			while (thisIterator.hasNext()) {
 				if (!set.contains(thisIterator.next())) {
 					thisIterator.remove();
@@ -235,10 +235,10 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public boolean __retainAllEquivalent(ImmutableSet<GenericsExpandedUpperBounded(ds)> set, Comparator\<Object\> cmp) {
+		public boolean __retainAllEquivalent(ImmutableSet<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)> set, Comparator\<Object\> cmp) {
 			boolean modified = false;
 
-			Iterator<GenericsExpanded(ds)> thisIterator = iterator();
+			Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)> thisIterator = iterator();
 			while (thisIterator.hasNext()) {
 				if (!set.containsEquivalent(thisIterator.next(), cmp)) {
 					thisIterator.remove();
@@ -252,15 +252,15 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 
 		<if (ds == \map()) {>
 		@Override
-		public Set\<java.util.Map.Entry<GenericsExpanded(ds)>\> entrySet() {
-			Set\<java.util.Map.Entry<GenericsExpanded(ds)>\> entrySet = null;
+		public Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet() {
+			Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet = null;
 
 			if (entrySet == null) {
-				entrySet = new AbstractSet\<java.util.Map.Entry<GenericsExpanded(ds)>\>() {
+				entrySet = new AbstractSet\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
 					@Override
-					public Iterator\<java.util.Map.Entry<GenericsExpanded(ds)>\> iterator() {
-						return new Iterator\<Entry<GenericsExpanded(ds)>\>() {
-							private final Iterator\<Entry<GenericsExpanded(ds)>\> i = entryIterator();
+					public Iterator\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> iterator() {
+						return new Iterator\<Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
+							private final Iterator\<Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> i = entryIterator();
 
 							@Override
 							public boolean hasNext() {
@@ -268,7 +268,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 							}
 
 							@Override
-							public Entry<GenericsExpanded(ds)> next() {
+							public Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> next() {
 								return i.next();
 							}
 
@@ -311,28 +311,28 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 
 		<if (ds == \set()) {>
 		@Override
-		public Iterator<GenericsExpanded(ds)> iterator() {
+		public Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)> iterator() {
 			return keyIterator();
 		}
 		<}>
 
 		@Override
-		public SupplierIterator<SupplierIteratorGenerics(ds)> keyIterator() {
-			return new Transient<toString(ds)>KeyIterator<InferredGenerics()>(this);
+		public SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> keyIterator() {
+			return new Transient<toString(ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(this);
 		}
 
 		<if (ds == \map()) {>
 		@Override
-		public Iterator\<<toString(primitiveToClass(val().\type))>\> valueIterator() {
-			// return new Trie<toString(ds)>ValueIterator<InferredGenerics()>(keyIterator());
-			return new <toString(ds)>ValueIterator<InferredGenerics()>(rootNode); // TODO: iterator does not
+		public Iterator\<<toString(primitiveToClass(ts.valType))>\> valueIterator() {
+			// return new Trie<toString(ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(keyIterator());
+			return new <toString(ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode); // TODO: iterator does not
 														// support removal
 		}
 
 		@Override
-		public Iterator\<Map.Entry<GenericsExpanded(ds)>\> entryIterator() {
-			// return new TrieMapEntryIterator<InferredGenerics()>(keyIterator());
-			return new <toString(ds)>EntryIterator<InferredGenerics()>(rootNode); // TODO: iterator does not
+		public Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entryIterator() {
+			// return new TrieMapEntryIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(keyIterator());
+			return new <toString(ds)>EntryIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode); // TODO: iterator does not
 														// support removal
 		}
 		<}>
@@ -341,19 +341,19 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		 * Iterator that first iterates over inlined-values and then continues
 		 * depth first recursively.
 		 */
-		private static class Transient<toString(ds)>KeyIterator<Generics(ds)> extends Abstract<toString(ds)>Iterator<Generics(ds)>
-						implements SupplierIterator<SupplierIteratorGenerics(ds)> {
+		private static class Transient<toString(ds)>KeyIterator<Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ds)>Iterator<Generics(ts.ds, ts.tupleTypes)>
+						implements SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> {
 
-			final <className><Generics(ds)> <uncapitalize(className)>;
-			<toString(primitiveToClass(key().\type))> lastKey;
+			final <className><Generics(ts.ds, ts.tupleTypes)> <uncapitalize(className)>;
+			<toString(primitiveToClass(ts.keyType))> lastKey;
 
-			Transient<toString(ds)>KeyIterator(<className><Generics(ds)> <uncapitalize(className)>) {
+			Transient<toString(ds)>KeyIterator(<className><Generics(ts.ds, ts.tupleTypes)> <uncapitalize(className)>) {
 				super(<uncapitalize(className)>.rootNode);
 				this.<uncapitalize(className)> = <uncapitalize(className)>;
 			}
 
 			@Override
-			public <toString(primitiveToClass(key().\type))> next() {
+			public <toString(primitiveToClass(ts.keyType))> next() {
 				if (!hasNext()) {
 					throw new NoSuchElementException();
 				} else {
@@ -363,7 +363,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 
 			@Override
-			public <toString(primitiveToClass(dsAtFunction__range_type(ds)))> get() {
+			public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
 				throw new UnsupportedOperationException();
 			}
 
@@ -391,7 +391,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 	
 			if (other instanceof <className>) {
-				<className><QuestionMarkGenerics(ds)> that = (<className><QuestionMarkGenerics(ds)>) other;
+				<className><QuestionMarkGenerics(ts.ds, ts.tupleTypes)> that = (<className><QuestionMarkGenerics(ts.ds, ts.tupleTypes)>) other;
 	
 				if (this.size() != that.size()) {
 					return false;
@@ -410,13 +410,13 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 
 		@Override
-		public Immutable<toString(ds)><GenericsExpanded(ds)> freeze() {
+		public Immutable<toString(ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> freeze() {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 			}
 
 			mutator.set(null);
-			return new <persistentClassName><Generics(ds)>(rootNode, hashCode, cachedSize);
+			return new <persistentClassName><Generics(ts.ds, ts.tupleTypes)>(rootNode, hashCode, cachedSize);
 		}
 	}"
 	;
@@ -444,7 +444,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, n
 		final int keyHash = key.hashCode();
 		<dec(ts.details)>= Result.unchanged();
 		
-		<dec(\node(ds, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, keyHash, 0, details<if (useComparator) {>, cmp<}>);
+		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, keyHash, 0, details<if (useComparator) {>, cmp<}>);
 
 		if (<use(ts.details)>.isModified()) {
 			rootNode = newRootNode;
@@ -481,7 +481,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, n
 	return
 	"
 	@Override
-	public <toString(primitiveToClass(val().\type))> <methodName>(<dec(filterArgs(args))>) {
+	public <toString(primitiveToClass(ts.valType))> <methodName>(<dec(filterArgs(args))>) {
 		if (mutator.get() == null) {
 			throw new IllegalStateException(\"Transient already frozen.\");
 		}
@@ -489,16 +489,16 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, n
 		final int keyHash = key.hashCode();
 		<dec(ts.details)>= Result.unchanged();
 		
-		<dec(\node(ds, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, keyHash, 0, details<if (useComparator) {>, cmp<}>);
+		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, keyHash, 0, details<if (useComparator) {>, cmp<}>);
 
 		if (<use(ts.details)>.isModified()) {
 			rootNode = newRootNode;
 
 			if (<use(ts.details)>.hasReplacedValue()) {
-				<dec(val("old"))> = <use(ts.details)>.getReplacedValue();
+				<dec(val(ts.valType, "old"))> = <use(ts.details)>.getReplacedValue();
 
-				final int valHashOld = <hashCode(val("old"))>;
-				final int valHashNew = <hashCode(val())>;
+				final int valHashOld = <hashCode(val(ts.valType, "old"))>;
+				final int valHashNew = <hashCode(val(ts.valType))>;
 
 				hashCode += keyHash ^ valHashNew;
 				hashCode -= keyHash ^ valHashOld;
@@ -509,7 +509,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, n
 				}
 				return old;
 			} else {
-				final int valHashNew = <hashCode(val())>;
+				final int valHashNew = <hashCode(val(ts.valType))>;
 
 				hashCode += keyHash ^ valHashNew;
 				cachedSize += 1;
@@ -547,9 +547,9 @@ str insertOrPutAll(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax
 	public boolean <methodName>(<dec(filterArgs(args))>) {
 		boolean modified = false;
 
-		for (Entry<GenericsExpandedUpperBounded(ds)> entry : map.entrySet()) {
+		for (Entry<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)> entry : map.entrySet()) {
 			final boolean isPresent = containsKey<if (useComparator) {>Equivalent<}>(entry.getKey()<if (useComparator) {>, cmp<}>);
-			<dec(primitiveToClassArgument(val("replaced")))> = __put<if (useComparator) {>Equivalent<}>(entry.getKey(), entry.getValue()<if (useComparator) {>, cmp<}>);
+			<dec(primitiveToClassArgument(val(ts.valType, "replaced")))> = __put<if (useComparator) {>Equivalent<}>(entry.getKey(), entry.getValue()<if (useComparator) {>, cmp<}>);
 
 			if (!isPresent || replaced != null) {
 				modified = true;
@@ -579,8 +579,8 @@ str allToSingle(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound),
 	public boolean <methodName>(<dec(filterArgs(args))>) {
 		boolean modified = false;
 
-		for (<dec(key())> : set) {
-			modified |= <methodPrefix><if (useComparator) {>Equivalent<}>(<use(key())><if (useComparator) {>, cmp<}>);
+		for (<dec(key(ts.keyType))> : set) {
+			modified |= <methodPrefix><if (useComparator) {>Equivalent<}>(<use(key(ts.keyType))><if (useComparator) {>, cmp<}>);
 		}
 
 		return modified;

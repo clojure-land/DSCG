@@ -21,10 +21,10 @@ str generate_checkHashCodeAndSize(ts:___expandedTrieSpecifics(ds:\set(), bitPart
 		int hash = 0;
 		int size = 0;
 	
-		for (Iterator<GenericsExpanded(ds)> it = keyIterator(); it.hasNext();) {
-			<dec(key())> = it.next();
+		for (Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)> it = keyIterator(); it.hasNext();) {
+			<dec(key(ts.keyType))> = it.next();
 	
-			hash += <hashCode(key())>;
+			hash += <hashCode(key(ts.keyType))>;
 			size += 1;
 		}
 	
@@ -39,12 +39,12 @@ str generate_checkHashCodeAndSize(ts:___expandedTrieSpecifics(ds, bitPartitionSi
 		int hash = 0;
 		int size = 0;
 		
-		for (Iterator\<Map.Entry<GenericsExpanded(ds)>\> it = entryIterator(); it.hasNext();) {
-			final Map.Entry<GenericsExpanded(ds)> entry = it.next();			
-			<dec(key())> = entry.getKey();
-			<dec(val())> = entry.getValue();
+		for (Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> it = entryIterator(); it.hasNext();) {
+			final Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> entry = it.next();			
+			<dec(key(ts.keyType))> = entry.getKey();
+			<dec(val(ts.valType))> = entry.getValue();
 	
-			hash += <hashCode(key())> ^ <hashCode(val())>;
+			hash += <hashCode(key(ts.keyType))> ^ <hashCode(val(ts.valType))>;
 			size += 1;
 		}
 	

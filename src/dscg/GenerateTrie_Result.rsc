@@ -19,28 +19,28 @@ str generateResultClassString(TrieSpecifics ts, rel[Option,bool] setup) {
 	className = "Result";
 
 	return
-	"static final class <className><Generics(ts.ds)> {
-		private <toString(dsAtFunction__range_type(ts.ds))> replacedValue;
+	"static final class <className><Generics(ts.ds, ts.tupleTypes)> {
+		private <toString(dsAtFunction__range_type(ts.ds, ts.tupleTypes))> replacedValue;
 		private boolean isModified;
+		private boolean isReplaced;
 
 		// update: inserted/removed single element, element count changed
 		public void modified() {
 			this.isModified = true;
 		}
 
-		public void updated(<toString(dsAtFunction__range_type(ts.ds))> replacedValue) {
+		public void updated(<toString(dsAtFunction__range_type(ts.ds, ts.tupleTypes))> replacedValue) {
 			this.replacedValue = replacedValue;
 			this.isModified = true;
+			this.isReplaced = true;
 		}
 
 		// update: neither element, nor element count changed
-		public static <Generics(ts.ds)> Result<Generics(ts.ds)> unchanged() {
-			return new Result\<\>(null, false);
+		public static <Generics(ts.ds, ts.tupleTypes)> Result<Generics(ts.ds, ts.tupleTypes)> unchanged() {
+			return new Result<InferredGenerics(ts.ds, ts.tupleTypes)>();
 		}
 
-		private Result(<toString(dsAtFunction__range_type(ts.ds))> replacedValue, boolean isMutated) {
-			this.replacedValue = replacedValue;
-			this.isModified = isMutated;
+		private Result() {
 		}
 
 		public boolean isModified() {
@@ -48,10 +48,10 @@ str generateResultClassString(TrieSpecifics ts, rel[Option,bool] setup) {
 		}
 
 		public boolean hasReplacedValue() {
-			return replacedValue != null;
+			return isReplaced;
 		}
 
-		public <toString(dsAtFunction__range_type(ts.ds))> getReplacedValue() {
+		public <toString(dsAtFunction__range_type(ts.ds, ts.tupleTypes))> getReplacedValue() {
 			return replacedValue;
 		}
 	}";
