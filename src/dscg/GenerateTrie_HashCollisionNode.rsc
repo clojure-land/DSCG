@@ -192,7 +192,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 						continue outerLoop;
 					}
 				}
-				return false;<} else {><dec(field(object(), "otherKey"))> = that.getKey(i);
+				return false;<} else {><if (isPrimitive(ts.keyType)) {><dec(field(ts.keyType, "otherKey"))><} else {><dec(field(object(), "otherKey"))><}> = that.getKey(i);
 
 				for (int j = 0; j \< keys.length; j++) {
 					<dec(key(ts.keyType))> = keys[j];

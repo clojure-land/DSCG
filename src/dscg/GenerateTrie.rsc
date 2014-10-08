@@ -34,81 +34,117 @@ import dscg::GenerateTrie_Core_Common;
 import dscg::GenerateTrie_Core;
 import dscg::GenerateTrie_CoreTransient;
 
+data TrieConfig 
+	= hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes, SpecializationConfig specializationConfig);
+
+data SpecializationConfig 
+	= withoutSpecialization()
+	| specializationConfig(int specializeTo, bool flagUntypedVariables);
+
 void main() {
-	Type keyType = generic("K");
-	Type valType = generic("V");
-	//Type keyType = primitive("int");
-	//Type valType = primitive("int");
-	bool flagUntypedVariables = false;
+	dataStructures = { \set(), \map() };
+	bitPartitionSizes = { 5 };
+	typeCombGenInt = { generic("K"), primitive("int") } * { primitive("int"), generic("V") };
 	
-	str classNamePostfix = "";
+	specializeToBounds = { 8 };
+	booleanOptions = { true, false };
+				
+	set[SpecializationConfig] specializationConfigs 
+		= { specializationConfig(specializeTo, flagUntypedVariables) | 
+				<int specializeTo, bool flagUntypedVariables> <- specializeToBounds * booleanOptions } 
+		+ withoutSpecialization();
+			
+	set[TrieConfig] trieConfigs 
+		= { hashTrieConfig(d,b,[keyType,valType],s) | 
+				d <- dataStructures, b <- bitPartitionSizes, t:<keyType,valType> <- typeCombGenInt, s <- specializationConfigs,
+					(specializationConfig(_,true) := s) ==> (isGeneric(keyType) && isGeneric(valType)) };					
+				
+	for (TrieConfig cfg <- trieConfigs) {
+		doGenerate(cfg);
+	}
+}
+
+void doGenerate(TrieConfig cfg:hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes:[keyType, valType, *_], SpecializationConfig specializationConfig)) {
+	bool flagSpecialization = false;
+	int specializeTo = 0;
+	bool flagUntypedVariables = false;	
+
+	if (specializationConfig(__specializeTo, __flagUntypedVariables) := specializationConfig) {
+		flagSpecialization = true;
+		specializeTo = __specializeTo;
+		flagUntypedVariables = __flagUntypedVariables;		
+	}
+		
+	str classNamePostfix = "_<bitPartitionSize>Bits";
 	
 	if (flagUntypedVariables) {
 		classNamePostfix = classNamePostfix + "_Untyped";
 	}
 	
+	if (flagSpecialization) {
+		classNamePostfix = classNamePostfix + "_Spec0To<specializeTo>";
+	}	
+	
 	if (!isGeneric(keyType)) {
 		classNamePostfix = classNamePostfix + "_<capitalize(toString(keyType))>Key";
 	}	
-	if (!isGeneric(valType)) {
+	if (!isGeneric(valType) && ds == \map()) {
 		classNamePostfix = classNamePostfix + "_<capitalize(toString(valType))>Value";
 	}
 
 	rel[Option,bool] setup = { 
-		<useSpecialization(),false>,
+		<useSpecialization(),flagSpecialization>,
 		<useUntypedVariables(),flagUntypedVariables>,
 		<useFixedStackIterator(),true>,
 		<useStructuralEquality(),true>,
 		<methodsWithComparator(),true>
 	}; // { compactionViaFieldToMethod() };
 
-	TrieSpecifics ts = trieSpecifics(\map(), 5, 8, keyType, valType, classNamePostfix, setup);
-	if(___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound) := ts) {
+	TrieSpecifics ts = trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup);
 	
-		list[str] innerClassStrings 
-			= [ generateOptionalClassString() ]
-			+ [ generateResultClassString(ts, setup) ]
-			+ [ generateAbstractAnyNodeClassString(ts, setup)]
-			+ [ generateAbstractNodeClassString(ts)]		
-			+ [ generateCompactNodeClassString(ts, setup)];
+	list[str] innerClassStrings 
+		= [ generateOptionalClassString() ]
+		+ [ generateResultClassString(ts, setup) ]
+		+ [ generateAbstractAnyNodeClassString(ts, setup)]
+		+ [ generateAbstractNodeClassString(ts)]		
+		+ [ generateCompactNodeClassString(ts, setup)];
 
-		if (!isOptionEnabled(setup,useSpecialization()) || nBound < nMax) {
-			innerClassStrings = innerClassStrings + [ generateBitmapIndexedNodeClassString(ts)];
-		}
-
-		innerClassStrings 
-			= innerClassStrings
-			+ [ generateHashCollisionNodeClassString(ts, setup, classNamePostfix)]
-			+ [ generateIteratorClassString(ts, setup)] // , classNamePostfix
-			;
-		
-		if (!isOptionEnabled(setup,useFixedStackIterator())) {
-			innerClassStrings = innerClassStrings + [ generateEasyIteratorClassString(ts, setup)];
-		}
-		
-		innerClassStrings 
-			= innerClassStrings
-			+ [ generateNodeIteratorClassString(ts, setup, classNamePostfix)]
-			+ [ generateCoreTransientClassString(ts, setup, classNamePostfix)]		
-			;
-			
-		if (isOptionEnabled(setup,useSpecialization()) && !isOptionEnabled(setup,useUntypedVariables())) {
-			innerClassStrings = innerClassStrings + 
-			[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ts, setup, classNamePostfix) | m <- [0..nMax+1], n <- [0..nMax+1], (n + m) <= nBound ];
-		}
-
-		// TODO: fix correct creation of mn instead of m and n		
-		if (isOptionEnabled(setup,useSpecialization()) && isOptionEnabled(setup,useUntypedVariables())) {
-			innerClassStrings = innerClassStrings + 
-			[ generateSpecializedNodeWithBitmapPositionsClassString(mn, 0, ts, setup, classNamePostfix) | mn <- [0.. tupleLength(ds) * nMax + 1], mn <= tupleLength(ds) * nBound ];
-		}
-			
-		list[str] classStrings = [ generateCoreClassString(ts, setup, intercalate("\n", innerClassStrings))];			
-			
-		// writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
-	
-		writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/Trie<toString(ds)><classNamePostfix>.java|, classStrings);
+	if (!isOptionEnabled(setup,useSpecialization()) || ts.nBound < ts.nMax) {
+		innerClassStrings = innerClassStrings + [ generateBitmapIndexedNodeClassString(ts)];
 	}
+
+	innerClassStrings 
+		= innerClassStrings
+		+ [ generateHashCollisionNodeClassString(ts, setup, classNamePostfix)]
+		+ [ generateIteratorClassString(ts, setup)] // , classNamePostfix
+		;
+	
+	if (!isOptionEnabled(setup,useFixedStackIterator())) {
+		innerClassStrings = innerClassStrings + [ generateEasyIteratorClassString(ts, setup)];
+	}
+	
+	innerClassStrings 
+		= innerClassStrings
+		+ [ generateNodeIteratorClassString(ts, setup, classNamePostfix)]
+		+ [ generateCoreTransientClassString(ts, setup, classNamePostfix)]		
+		;
+		
+	if (isOptionEnabled(setup,useSpecialization()) && !isOptionEnabled(setup,useUntypedVariables())) {
+		innerClassStrings = innerClassStrings + 
+		[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ts, setup, classNamePostfix) | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound ];
+	}
+
+	// TODO: fix correct creation of mn instead of m and n		
+	if (isOptionEnabled(setup,useSpecialization()) && isOptionEnabled(setup,useUntypedVariables())) {
+		innerClassStrings = innerClassStrings + 
+		[ generateSpecializedNodeWithBitmapPositionsClassString(mn, 0, ts, setup, classNamePostfix) | mn <- [0.. tupleLength(ds) * ts.nMax + 1], mn <= tupleLength(ds) * ts.nBound ];
+	}
+		
+	list[str] classStrings = [ generateCoreClassString(ts, setup, intercalate("\n", innerClassStrings))];			
+		
+	// writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
+
+	writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/Trie<toString(ds)><classNamePostfix>.java|, classStrings);
 }
 	
 str generateClassString(int n) =  
