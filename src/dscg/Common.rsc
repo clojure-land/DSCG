@@ -19,6 +19,8 @@ import util::Math;
 /* PUBLIC CONSTANTS */
 public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");	 
 
+public Expression NULL() = constant(specific("Void"), "null");
+
 /* DATA SECTION */
 data DataStructure
 	= \map()
@@ -87,6 +89,7 @@ data Expression
 	| plusEqOne(Expression e)
 	| minEqOne(Expression e)
 
+	| exprFromString(str exprString)
 	;
 
 str toString(Expression:constant(_, constantString)) = constantString; 
@@ -117,7 +120,7 @@ data TrieSpecifics
 		Argument bitposMethod = ___bitposMethod(bitPartitionSize),
 		Argument bitmapMethod = ___bitmapMethod(bitPartitionSize),
 		Argument valmapMethod = ___valmapMethod(bitPartitionSize),		
-		
+				
 		list[Type] tupleTypes = [keyType, valType],
 		
 		str GenericsStr = Generics(ds, tupleTypes),		
@@ -132,6 +135,14 @@ data TrieSpecifics
 		Argument comparator = field(specific("Comparator\<Object\>"), "cmp"),
 		Argument index = field(primitive("int"), "index"),
 
+
+		Argument BitmapIndexedNode_contentArray = field(object(isArray = true), "nodes"),
+		Argument BitmapIndexedNode_payloadArity = field(primitive("byte"), "payloadArity"),	
+
+		list[Argument] argsFilter = [ BitmapIndexedNode_payloadArity ],
+		//list[Argument] argsFilter = [ mutator, BitmapIndexedNode_payloadArity ],
+				
+
 		Argument compactNodeReturn = \return(generic("<CompactNode(ds)><GenericsStr>")),
 		Argument optionalRangeReturn = \return(generic("Optional<MapsToGenericsStr>")),
 				
@@ -141,7 +152,7 @@ data TrieSpecifics
 		Method AbstractNode_findByKey 		= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift]),
 		Method AbstractNode_findByKeyEquiv 	= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
 		
-		Method AbstractNode_updated 		= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details]),
+		Method AbstractNode_updated 		= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details], argsFilter = argsFilter),
 		Method AbstractNode_updatedEquiv 	= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
 	
 		Method AbstractNode_removed 		= method(compactNodeReturn, "removed", args = [mutator, key(keyType), keyHash, shift, details]),
@@ -259,12 +270,6 @@ data TrieSpecifics
 
 		Method CompactNode_equals = method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
 		Method CompactNode_hashCode = method(\return(primitive("int")), "hashCode", visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
-
-		Argument BitmapIndexedNode_contentArray = field(object(isArray = true), "nodes"),
-		Argument BitmapIndexedNode_payloadArity = field(primitive("byte"), "payloadArity"),		
-
-		list[Argument] argsFilter = [],
-		//list[Argument] argsFilter = [ mutator, BitmapIndexedNode_payloadArity ],
 
 		Method BitmapIndexedNode_constructor = constructor(bitmapIndexedNodeClassReturn, "<bitmapIndexedNodeClassName>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity ], visibility = "private", argsFilter = argsFilter),
 
@@ -463,7 +468,15 @@ str eval(Expression e) =
 	"<eval(e.e)> - 1"
 when e is minEqOne;
 
-default str eval(Expression _) { throw "Ahhh"; }
+str eval(Expression e) = 
+	e.constantString
+when e is constant;
+
+str eval(Expression e) = 
+	e.exprString
+when e is exprFromString;
+
+default str eval(Expression e) { throw "Ahhh, you forgot <e>"; }
 
 str eval(list[Expression] xs) = intercalate(", ", mapper(xs, eval));
 default str eval(list[Expression] _) { throw "Ahhh"; }
