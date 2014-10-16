@@ -55,7 +55,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @SuppressWarnings(\"rawtypes\")
 public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> implements Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
 
-	<toString(UNCHECKED_ANNOTATION)>
+	<toString(UNCHECKED_ANNOTATION())>
 	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(Compact<toString(ts.ds)>Node.<emptyTrieNodeConstantName>, 0, 0);
 
 	private static final boolean DEBUG = false;
@@ -73,13 +73,13 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> extends Abstract
 		}
 	}
 
-	<toString(UNCHECKED_ANNOTATION)>
+	<toString(UNCHECKED_ANNOTATION())>
 	public static final <Generics(ts.ds, ts.tupleTypes)> Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> of() {
 		return <ts.coreClassName>.<emptyCollectionConstantName>;
 	}
 
 	<if (ds == \map()) {>
-	<toString(UNCHECKED_ANNOTATION)>
+	<toString(UNCHECKED_ANNOTATION())>
 	public static final <Generics(ts.ds, ts.tupleTypes)> Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> of(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
 			throw new IllegalArgumentException(\"Length of argument list is uneven: no key/value pairs.\");
@@ -99,7 +99,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> extends Abstract
 	<}>
 	
 	<if (ds == \set()) {>
-	<toString(UNCHECKED_ANNOTATION)>
+	<toString(UNCHECKED_ANNOTATION())>
 	public static final <Generics(ts.ds, ts.tupleTypes)> Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> of(<toString(ts.keyType)>... keys) {
 		Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>;
 
@@ -111,13 +111,13 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> extends Abstract
 	}
 	<}>
 	
-	<toString(UNCHECKED_ANNOTATION)>
+	<toString(UNCHECKED_ANNOTATION())>
 	public static final <Generics(ts.ds, ts.tupleTypes)> Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> transientOf() {
 		return <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 	}
 
 	<if (ds == \map()) {>
-	<toString(UNCHECKED_ANNOTATION)>
+	<toString(UNCHECKED_ANNOTATION())>
 	public static final <Generics(ts.ds, ts.tupleTypes)> Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> transientOf(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
 			throw new IllegalArgumentException(
@@ -138,7 +138,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> extends Abstract
 	<}>
 	
 	<if (ds == \set()) {>
-	<toString(UNCHECKED_ANNOTATION)>
+	<toString(UNCHECKED_ANNOTATION())>
 	public static final <Generics(ts.ds, ts.tupleTypes)> Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> transientOf(<toString(ts.keyType)>... keys) {
 		final Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 
@@ -506,7 +506,7 @@ default str generate_bodyOf_Core_removed(TrieSpecifics ts, rel[Option,bool] setu
 default str generate_bodyOf_Core_containsKey(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
 	"try {
-		<toString(UNCHECKED_ANNOTATION)>
+		<toString(UNCHECKED_ANNOTATION())>
 		<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
 		return rootNode.containsKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0<optionalComparatorArgument>);			
 	} catch (ClassCastException unused) {
@@ -527,7 +527,7 @@ default str generate_bodyOf_Core_containsValue(TrieSpecifics ts, rel[Option,bool
 default str generate_bodyOf_Core_get(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
 	"	try {
-			<toString(UNCHECKED_ANNOTATION)>
+			<toString(UNCHECKED_ANNOTATION())>
 			<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
 			final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0<optionalComparatorArgument>);
 	

@@ -64,12 +64,12 @@ void main() {
 	}
 }
 
-void doGenerateCurrent() {
-	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()));
-	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()));	
+void doGenerateBleedingEdge() {
+	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");
+	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");	
 }
 
-void doGenerate(TrieConfig cfg:hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes:[keyType, valType, *_], SpecializationConfig specializationConfig)) {
+void doGenerate(TrieConfig cfg:hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes:[keyType, valType, *_], SpecializationConfig specializationConfig), str overideClassNamePostfixWith = "") {
 	bool flagSpecialization = false;
 	int specializeTo = 0;
 	bool flagUntypedVariables = false;	
@@ -97,12 +97,17 @@ void doGenerate(TrieConfig cfg:hashTrieConfig(DataStructure ds, int bitPartition
 		classNamePostfix = classNamePostfix + "_<capitalize(toString(valType))>Value";
 	}
 
+	if (overideClassNamePostfixWith != "") {
+		classNamePostfix = "_<overideClassNamePostfixWith>";
+	}
+
 	rel[Option,bool] setup = { 
 		<useSpecialization(),flagSpecialization>,
 		<useUntypedVariables(),flagUntypedVariables>,
 		<useFixedStackIterator(),true>,
 		<useStructuralEquality(),true>,
-		<methodsWithComparator(),true>
+		<methodsWithComparator(),true>,
+		<useSandwichArrays(),true>
 	}; // { compactionViaFieldToMethod() };
 
 	TrieSpecifics ts = trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup);
@@ -665,49 +670,49 @@ str generateGenericNodeClassString(int n, int m, ts:___expandedTrieSpecifics(ds,
 	'		<intercalate("\n\n", ["this.<nodePosName><i> = <nodePosName><i>; this.<nodeName><i> = <nodeName><i>;" | i <- [1..n+1]])>
 	'	}
 	
-	'	<toString(UNCHECKED_ANNOTATION)>	
+	'	<toString(UNCHECKED_ANNOTATION())>	
 	'	@Override
 	'	Result<ResultGenerics> updated(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, V <valName>, int shift) {
 	'		<generate_bodyOf_GenericNode_updated(n, m, equalityDefault)>
 	'	}
 
-	'	<toString(UNCHECKED_ANNOTATION)>	
+	'	<toString(UNCHECKED_ANNOTATION())>	
 	'	@Override
 	'	Result<ResultGenerics> updated(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, V <valName>, int shift, Comparator\<Object\> <cmpName>) {
 	'		<generate_bodyOf_GenericNode_updated(n, m, equalityComparator)>
 	'	}
 
-	'	<toString(UNCHECKED_ANNOTATION)>	
+	'	<toString(UNCHECKED_ANNOTATION())>	
 	'	@Override
 	'	Result<ResultGenerics> removed(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, int shift) {
 	'		<generate_bodyOf_GenericNode_removed(n, m, equalityDefault)>
 	'	}
 
-	'	<toString(UNCHECKED_ANNOTATION)>	
+	'	<toString(UNCHECKED_ANNOTATION())>	
 	'	@Override
 	'	Result<ResultGenerics> removed(AtomicReference\<Thread\> mutator, K <keyName>, int <keyName>Hash, int shift, Comparator\<Object\> <cmpName>) {
 	'		<generate_bodyOf_GenericNode_removed(n, m, equalityComparator)>
 	'	}
 	
-	'	<toString(UNCHECKED_ANNOTATION)>
+	'	<toString(UNCHECKED_ANNOTATION())>
 	'	@Override
 	'	boolean <containsKeyMethodName(ds)>(Object <keyName>, int <keyName>Hash, int shift) {
 	'		<generate_bodyOf_GenericNode_containsKey(n, m, equalityDefault)>
 	'	}
 
-	'	<toString(UNCHECKED_ANNOTATION)>
+	'	<toString(UNCHECKED_ANNOTATION())>
 	'	@Override
 	'	boolean <containsKeyMethodName(ds)>(Object <keyName>, int <keyName>Hash, int shift, Comparator\<Object\> <cmpName>) {
 	'		<generate_bodyOf_GenericNode_containsKey(n, m, equalityComparator)>
 	'	}
 
-	'	<toString(UNCHECKED_ANNOTATION)>
+	'	<toString(UNCHECKED_ANNOTATION())>
 	'	@Override
 	'	Optional<MapsToGenerics> findByKey(Object <keyName>, int <keyName>Hash, int shift) {
 	'		<generate_bodyOf_GenericNode_findByKey(n, m, equalityDefault)>
 	'	}
 
-	'	<toString(UNCHECKED_ANNOTATION)>
+	'	<toString(UNCHECKED_ANNOTATION())>
 	'	@Override
 	'	Optional<MapsToGenerics> findByKey(Object <keyName>, int <keyName>Hash, int shift, Comparator\<Object\> cmp) {
 	'		<generate_bodyOf_GenericNode_findByKey(n, m, equalityComparator)>
@@ -1129,10 +1134,10 @@ default str generate_bodyOf_getKeyValueEntry(TrieSpecifics ts, int m) =
 str generateCompactNodeString() = 
 	"private static abstract class <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> extends <AbstractNode(ds)><Generics(ts.ds, ts.tupleTypes)> {
 
-		<toString(UNCHECKED_ANNOTATION)>
+		<toString(UNCHECKED_ANNOTATION())>
 		static final AbstractNode EMPTY_INDEX_NODE = new IndexNode(0, new AbstractNode[0], 0);
 
-		<toString(UNCHECKED_ANNOTATION)>
+		<toString(UNCHECKED_ANNOTATION())>
 		static <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> mergeNodes(<CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> node0, int hash0,
 						<CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> node1, int hash1, int shift) {
 			final int mask0 = (hash0 \>\>\> shift) & BIT_PARTITION_MASK;
@@ -1779,7 +1784,7 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 	'		<generate_bodyOf_findByKey(n, m, equalityComparator)>
 	'	}
 	
-	'	<toString(UNCHECKED_ANNOTATION)>
+	'	<toString(UNCHECKED_ANNOTATION())>
 	'	@Override
 	'	Iterator\<<CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)>\> nodeIterator() {
 	'		<if (n > 0) {>return ArrayIterator.\<<CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)>\> of(new <CompactNode(ds)>[] { <intercalate(", ", ["<nodeName><i>" | i <- [1..n+1]])> });<} else {>return Collections.emptyIterator();<}>
@@ -2025,14 +2030,14 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'		<generate_bodyOf_getSlot(mn)>
 	'	}	
 
-		<if (!isPrimitive(key(ts.keyType))) {><toString(UNCHECKED_ANNOTATION)><}>
+		<if (!isPrimitive(key(ts.keyType))) {><toString(UNCHECKED_ANNOTATION())><}>
 		@Override
 		<toString(ts.keyType)> getKey(int index) {
 			return (<toString(ts.keyType)>) getSlot(<use(tupleLengthConstant)> * index);
 		}
 	
 		<if (ts.ds == \map()) {>
-		<if (!isPrimitive(val(ts.valType))) {><toString(UNCHECKED_ANNOTATION)><}>
+		<if (!isPrimitive(val(ts.valType))) {><toString(UNCHECKED_ANNOTATION())><}>
 		@Override
 		<toString(ts.valType)> getValue(int index) {
 			return (<toString(ts.valType)>) getSlot(<use(tupleLengthConstant)> * index + 1);
@@ -2040,21 +2045,21 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 		<}>
 
 		<if (ts.ds == \map()) {>
-		<toString(UNCHECKED_ANNOTATION)>
+		<toString(UNCHECKED_ANNOTATION())>
 		@Override
 		Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> getKeyValueEntry(int index) {
 			return entryOf((<toString(ts.keyType)>) getSlot(<use(tupleLengthConstant)> * index), (<toString(ts.valType)>) getSlot(<use(tupleLengthConstant)> * index + 1));
 		}
 		<}>
 
-		<toString(UNCHECKED_ANNOTATION)>
+		<toString(UNCHECKED_ANNOTATION())>
 		@Override
 		public <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> getNode(int index) {
 			final int offset = <use(tupleLengthConstant)> * payloadArity();
 			return (<CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)>) getSlot(offset + index);
 		}
 		
-		<toString(UNCHECKED_ANNOTATION)>
+		<toString(UNCHECKED_ANNOTATION())>
 		@Override
 		Iterator\<<CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)>\> nodeIterator() {
 			final int offset = <use(tupleLengthConstant)> * payloadArity();

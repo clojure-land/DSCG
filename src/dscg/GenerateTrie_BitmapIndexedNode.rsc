@@ -17,124 +17,78 @@ import dscg::ArrayUtils;
 
 str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 
-	className = "BitmapIndexed<toString(ts.ds)>Node";
+	fields = [ts.mutator, ts.BitmapIndexedNode_contentArray, ts.BitmapIndexedNode_payloadArity];
 
 	return
-	"private static final class <className><Generics(ts.ds, ts.tupleTypes)> extends <className_compactNode(ts, ts.setup, true, true)><Generics(ts.ds, ts.tupleTypes)> {
-		private AtomicReference\<Thread\> mutator;
+	"private static final class <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> extends <className_compactNode(ts, ts.setup, true, true)><Generics(ts.ds, ts.tupleTypes)> {
 
-		private Object[] nodes;
-		final private byte payloadArity;
+		<decFields(fields)>
 		
-		<className>(AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>, Object[] nodes, byte payloadArity) {
-			super(mutator, <use(bitmapField)>, <use(valmapField)>);
+		<implOrOverride(ts.BitmapIndexedNode_constructor, 
+			"super(mutator, <use(bitmapField)>, <use(valmapField)>);
 			
-			assert (<use(tupleLengthConstant)> * <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.valmapField)>) + <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.bitmapField)>) == nodes.length);
+			<initFieldsWithIdendity(fields)>
 
-			this.mutator = mutator;
-
-			this.nodes = nodes;
-			this.payloadArity = payloadArity;
-
-			assert (payloadArity == <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.valmapField)>));
-			// assert (payloadArity() \>= 2 || nodeArity() \>= 1); // =
-			// // SIZE_MORE_THAN_ONE
-
-			// for (int i = 0; i \< <use(tupleLengthConstant)> * payloadArity; i++)
-			// assert ((nodes[i] instanceof CompactNode) == false);
-			//
-			// for (int i = <use(tupleLengthConstant)> * payloadArity; i \< nodes.length; i++)
-			// assert ((nodes[i] instanceof CompactNode) == true);
-
-			// assert invariant
-			<if (isOptionEnabled(ts.setup,useSpecialization()) && ts.nBound < ts.nMax) {>assert arity() \> <ts.nBound>;<}>assert nodeInvariant();
-		}
+			if (DEBUG) {
+				assert (payloadArity == <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.valmapField)>));
+			
+				assert (<use(tupleLengthConstant)> * <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.valmapField)>) + <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.bitmapField)>) == nodes.length);			
+			
+				for (int i = 0; i \< <use(tupleLengthConstant)> * payloadArity(); i++) {
+					assert ((nodes[i] instanceof <CompactNode(ts.ds)>) == false);
+				}
+				for (int i = <use(tupleLengthConstant)> * payloadArity(); i \< nodes.length; i++) {
+					assert ((nodes[i] instanceof <CompactNode(ts.ds)>) == true);
+				}
+			}
+			
+			<if (isOptionEnabled(ts.setup,useSpecialization()) && ts.nBound < ts.nMax) {>assert arity() \> <ts.nBound>;<}>assert nodeInvariant();")>					
 		
-		<if (!isPrimitive(ts.keyType)) {><toString(UNCHECKED_ANNOTATION)><}>
-		@Override
-		<toString(ts.keyType)> getKey(int index) {
-			return (<toString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index];
-		}
+		<implOrOverride(ts.AbstractNode_getKey,
+			"return (<toString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index];"
+			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.keyType)) ])>
+
+		<implOrOverride(ts.AbstractNode_getValue,
+			"return (<toString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1];"
+			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.valType)) ])>
 	
-		<if (ts.ds == \map()) {>
-		<if (!isPrimitive(ts.valType)) {><toString(UNCHECKED_ANNOTATION)><}>
-		@Override
-		<toString(ts.valType)> getValue(int index) {
-			return (<toString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1];
-		}
-		<}>
+		<implOrOverride(ts.AbstractNode_getKeyValueEntry, 
+			"return entryOf((<toString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<toString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);",
+			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.keyType) && !isPrimitive(ts.valType)) ])>
 
-		<if (ts.ds == \map()) {>
-		<toString(UNCHECKED_ANNOTATION)>
-		@Override
-		Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> getKeyValueEntry(int index) {
-			return entryOf((<toString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<toString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);
-		}
-		<}>
-
-		<toString(UNCHECKED_ANNOTATION)>
-		@Override
-		public <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> getNode(int index) {
-			final int offset = <use(tupleLengthConstant)> * payloadArity;
-			return (<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>) nodes[offset + index];
-		}
+		<implOrOverride(ts.CompactNode_getNode, generate_bodyOf_getNode(ts),
+			annotations = [ UNCHECKED_ANNOTATION() ])>
 
 		<implOrOverride(ts.AbstractNode_payloadIterator, 
 			"return ArrayKeyValueSupplierIterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity);")>
 
-		<toString(UNCHECKED_ANNOTATION)>
-		@Override
-		Iterator\<<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>\> nodeIterator() {
-			final int offset = <use(tupleLengthConstant)> * payloadArity;
+		<implOrOverride(ts.CompactNode_nodeIterator, generate_bodyOf_nodeIterator(ts),
+			annotations = [ UNCHECKED_ANNOTATION() ])>
 
-			for (int i = offset; i \< nodes.length - offset; i++) {
-				assert ((nodes[i] instanceof <AbstractNode(ts.ds)>) == true);
-			}
+		<implOrOverride(ts.AbstractNode_hasPayload,
+			generate_bodyOf_hasPayload(ts))>
 
-			return (Iterator) ArrayIterator.of(nodes, offset, nodes.length - offset);
-		}
+		<implOrOverride(ts.AbstractNode_payloadArity,
+			generate_bodyOf_payloadArity(ts))>
 
-		@Override
-		boolean hasPayload() {
-			return payloadArity != 0;
-		}
+		<implOrOverride(ts.AbstractNode_hasNodes, 
+			generate_bodyOf_hasNodes(ts))>
 
-		@Override
-		int payloadArity() {
-			return payloadArity;
-		}
+		<implOrOverride(ts.AbstractNode_nodeArity, 
+			generate_bodyOf_nodeArity(ts))>
 
-		@Override
-		boolean hasNodes() {
-			return <use(tupleLengthConstant)> * payloadArity != nodes.length;
-		}
+		<implOrOverride(ts.AbstractNode_getSlot, UNSUPPORTED_OPERATION_EXCEPTION)>
 
-		@Override
-		int nodeArity() {
-			return nodes.length - <use(tupleLengthConstant)> * payloadArity;
-		}
-
-		<if (isOptionEnabled(ts.setup,useUntypedVariables())) {>
-		@Override
-		<toString(object())> getSlot(int index) {
-			throw new UnsupportedOperationException();
-		}
-		<}>
-
-		<if (isOptionEnabled(ts.setup, useStructuralEquality())) {>
-		@Override
-		public int hashCode() {
-			final int prime = 31;
+		<implOrOverride(ts.CompactNode_hashCode,
+			"final int prime = 31;
 			int result = 0;
 			result = prime * result + (<primitiveHashCode(___valmapMethod(ts.bitPartitionSize))>);
 			result = prime * result + (<primitiveHashCode(___valmapMethod(ts.bitPartitionSize))>);
 			result = prime * result + Arrays.hashCode(nodes);
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object other) {
-			if (null == other) {
+			return result;")>
+		
+		<implOrOverride(ts.CompactNode_equals,
+			"if (null == other) {
 				return false;
 			}
 			if (this == other) {
@@ -143,7 +97,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			if (getClass() != other.getClass()) {
 				return false;
 			}
-			<className><QuestionMarkGenerics(ts.ds, ts.tupleTypes)> that = (<className><QuestionMarkGenerics(ts.ds, ts.tupleTypes)>) other;
+			<ts.bitmapIndexedNodeClassName><QuestionMarkGenerics(ts.ds, ts.tupleTypes)> that = (<ts.bitmapIndexedNodeClassName><QuestionMarkGenerics(ts.ds, ts.tupleTypes)>) other;
 			if (<use(bitmapMethod)> != that.<use(bitmapMethod)>) {
 				return false;
 			}
@@ -153,27 +107,21 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			if (!Arrays.equals(nodes, that.nodes)) {
 				return false;
 			}
-			return true;
-		}
-		<}>
+			return true;")>
 
-		@Override
-		byte sizePredicate() {
-			<if (isOptionEnabled(ts.setup,useSpecialization())) {>return SIZE_MORE_THAN_ONE;<} else {>if (this.nodeArity() == 0 && this.payloadArity == 0) {
+		<implOrOverride(ts.CompactNode_sizePredicate, 
+			"<if (isOptionEnabled(ts.setup,useSpecialization())) {>return SIZE_MORE_THAN_ONE;<} else {>if (this.nodeArity() == 0 && this.payloadArity() == 0) {
 				return SIZE_EMPTY;
-			} else if (this.nodeArity() == 0 && this.payloadArity == 1) {
+			} else if (this.nodeArity() == 0 && this.payloadArity() == 1) {
 				return SIZE_ONE;
 			} else {
 				return SIZE_MORE_THAN_ONE;
-			}<}>
-		}
+			}<}>")>
 
 		<implOrOverride(ts.CompactNode_convertToGenericNode, "return this;")>
 
-		<if (ts.ds == \map()) {>
-		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <dec(val(ts.valType))>) {
-			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
+		<implOrOverride(ts.CompactNode_copyAndSetValue, 
+			"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
 			
 			if (isAllowedToEdit(this.mutator, mutator)) {
 				// no copying if already editable
@@ -183,14 +131,17 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 				<dec(field(asArray(object()), "src"))> = this.nodes;
 				<arraycopyAndSetTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), 1, [val(ts.valType)], field(primitive("int"), "idx"))>
 				
-				return nodeOf(mutator, <use(bitmapMethod)>, <use(valmapMethod)>, <use(field(asArray(object()), "dst"))>, payloadArity);
-			}
-		}
-		<}>
+				return <call(ts.nodeOf_BitmapIndexedNode, 
+								argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
+												ts.bitmapField: useExpr(ts.bitmapMethod), ts.valmapField: useExpr(ts.valmapMethod)))>;
+			}")>
 
-		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node) {
+		<implOrOverride(ts.CompactNode_copyAndSetNode, 
+			"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
+			<dec(field(primitive("int"), "idx"))> = this.nodes.length - 1 - nodeIndex(bitpos);
+			<} else {>
 			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);
+			<}>
 
 			if (isAllowedToEdit(this.mutator, mutator)) {
 				// no copying if already editable
@@ -200,55 +151,73 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 				<dec(field(asArray(object()), "src"))> = this.nodes;
 				<arraycopyAndSetTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), 1, [\node(ts.ds, ts.tupleTypes)], field(primitive("int"), "idx"))>
 				
-				return nodeOf(mutator, <use(bitmapMethod)>, <use(valmapMethod)>, <use(field(asArray(object()), "dst"))>, payloadArity);
-			}
-		}
+				return <call(ts.nodeOf_BitmapIndexedNode, 
+								argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
+												ts.bitmapField: useExpr(ts.bitmapMethod), ts.valmapField: useExpr(ts.valmapMethod)))>;
+			}")>
 
-		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <dec(ts.payloadTuple)>) {
-			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
+		<implOrOverride(ts.CompactNode_copyAndInsertValue, 
+			"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			
 			<dec(field(asArray(object()), "src"))> = this.nodes;
 			<arraycopyAndInsertTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), tupleLength(ts.ds), ts.payloadTuple, field(primitive("int"), "idx"))>
-			
-			return nodeOf(mutator, <use(bitmapMethod)>, (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<use(valmapMethod)> | bitpos), <use(field(asArray(object()), "dst"))>, (byte) (payloadArity + 1));
-		}
 
-		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>) {
-			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
+			return <call(ts.nodeOf_BitmapIndexedNode, 
+							argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
+											ts.BitmapIndexedNode_payloadArity: cast(primitive("byte"), plusEqOne(useExpr(ts.BitmapIndexedNode_payloadArity))),
+											ts.bitmapField: useExpr(ts.bitmapMethod), 
+											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr(useExpr(ts.valmapMethod), useExpr(ts.bitposField)))))>;")>
+
+		<implOrOverride(ts.CompactNode_copyAndRemoveValue, 
+			"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			
 			<dec(field(asArray(object()), "src"))> = this.nodes;
 			<arraycopyAndRemoveTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), tupleLength(ts.ds), field(primitive("int"), "idx"))>
 
-			return nodeOf(mutator, <use(bitmapMethod)>, (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<use(valmapMethod)> ^ bitpos), <use(field(asArray(object()), "dst"))>, (byte) (payloadArity - 1));
-		}
+			return <call(ts.nodeOf_BitmapIndexedNode, 
+							argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
+											ts.BitmapIndexedNode_payloadArity: cast(primitive("byte"), minEqOne(useExpr(ts.BitmapIndexedNode_payloadArity))),
+											ts.bitmapField: useExpr(ts.bitmapMethod), 
+											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.valmapMethod), useExpr(ts.bitposField)))))>;")>
 
-		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
-						<dec(ts.bitposField)>, <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node) {
+		<implOrOverride(ts.CompactNode_copyAndMigrateFromInlineToNode, 
+			"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
+			<dec(field(primitive("int"), "idxOld"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
+			<dec(field(primitive("int"), "idxNew"))> = this.nodes.length - <use(tupleLengthConstant)> - nodeIndex(bitpos);
+			<} else {>
 			<dec(field(primitive("int"), "idxOld"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			<dec(field(primitive("int"), "idxNew"))> = <use(tupleLengthConstant)> * (payloadArity - 1) + nodeIndex(bitpos);
-			
+			<}>
+
 			<dec(field(asArray(object()), "src"))> = this.nodes;
 			<arraycopyAndMigrateFromDataTupleToNodeTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), tupleLength(ts.ds), field(primitive("int"), "idxOld"), 1, field(primitive("int"), "idxNew"), [ \node(ts.ds, ts.tupleTypes) ])>
+						
+			return <call(ts.nodeOf_BitmapIndexedNode, 
+							argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
+											ts.BitmapIndexedNode_payloadArity: cast(primitive("byte"), minEqOne(useExpr(ts.BitmapIndexedNode_payloadArity))),
+											ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr (useExpr(ts.bitmapMethod), useExpr(ts.bitposField))), 
+											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.valmapMethod), useExpr(ts.bitposField)))))>;")>
 
-			return nodeOf(mutator, (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<use(bitmapMethod)> | bitpos), (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<use(valmapMethod)> ^ bitpos), <use(field(asArray(object()), "dst"))>, (byte) (payloadArity - 1));
-		}
-
-		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
-						<dec(ts.bitposField)>, <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node) {
+		<implOrOverride(ts.CompactNode_copyAndMigrateFromNodeToInline,
+			"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
+			<dec(field(primitive("int"), "idxOld"))> = this.nodes.length - 1 - nodeIndex(bitpos);
+			<dec(field(primitive("int"), "idxNew"))> = dataIndex(bitpos);
+			<} else {>
 			<dec(field(primitive("int"), "idxOld"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);
 			<dec(field(primitive("int"), "idxNew"))> = dataIndex(bitpos);
-
+			<}>
+			
 			<dec(field(asArray(object()), "src"))> = this.nodes;
 			<arraycopyAndMigrateFromNodeTupleToDataTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), 1, field(primitive("int"), "idxOld"), tupleLength(ts.ds), field(primitive("int"), "idxNew"), headPayloadTuple(ts.ds, ts.tupleTypes, \node(ts.ds, ts.tupleTypes, "node")))>
-
-			return nodeOf(mutator, (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<use(bitmapMethod)> ^ bitpos), (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<use(valmapMethod)> | bitpos), <use(field(asArray(object()), "dst"))>, (byte) (payloadArity + 1));
-		}
+			
+			return <call(ts.nodeOf_BitmapIndexedNode, 
+							argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
+											ts.BitmapIndexedNode_payloadArity: cast(primitive("byte"), plusEqOne(useExpr(ts.BitmapIndexedNode_payloadArity))),
+											ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.bitmapMethod), useExpr(ts.bitposField))), 
+											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr (useExpr(ts.valmapMethod), useExpr(ts.bitposField)))))>;")>
 		
-		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, generate_removeInplaceValueAndConvertToSpecializedNode(ts))>		
+		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, 
+			generate_removeInplaceValueAndConvertToSpecializedNode(ts))>		
 	'}";
 }
 	
@@ -284,3 +253,34 @@ default str generate_removeInplaceValueAndConvertToSpecializedNode(TrieSpecifics
 	'			throw new IllegalStateException(\"Index out of range.\");
 	'	}"
 	;
+	
+default str generate_bodyOf_getNode(TrieSpecifics ts) = 
+	"final int offset = <use(tupleLengthConstant)> * payloadArity;
+	'return (<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>) nodes[offset + index];";
+	
+str generate_bodyOf_getNode(TrieSpecifics ts) = 
+	"return (<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>) nodes[nodes.length - 1 - index];"
+when isOptionEnabled(ts.setup, useSandwichArrays())
+	;
+	
+default str generate_bodyOf_nodeIterator(TrieSpecifics ts) = 
+	"final int offset = <use(tupleLengthConstant)> * payloadArity;
+	'
+	'for (int i = offset; i \< nodes.length - offset; i++) {
+	'	assert ((nodes[i] instanceof <AbstractNode(ts.ds)>) == true);
+	'}
+	'
+	'return (Iterator) ArrayIterator.of(nodes, offset, nodes.length - offset);";	
+		
+str generate_bodyOf_hasPayload(TrieSpecifics ts) = "return dataMap() != 0;" when isOptionEnabled(ts.setup, useSandwichArrays());
+default str generate_bodyOf_hasPayload(TrieSpecifics ts) = "return <use(ts.BitmapIndexedNode_payloadArity)> != 0;";
+
+str generate_bodyOf_payloadArity(TrieSpecifics ts) = "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.valmapMethod)>);" when isOptionEnabled(ts.setup, useSandwichArrays());
+default str generate_bodyOf_payloadArity(TrieSpecifics ts) = "return <use(ts.BitmapIndexedNode_payloadArity)>;";
+
+str generate_bodyOf_hasNodes(TrieSpecifics ts) = "return nodeMap() != 0;" when isOptionEnabled(ts.setup, useSandwichArrays());
+default str generate_bodyOf_hasNodes(TrieSpecifics ts) = "return <use(tupleLengthConstant)> * payloadArity != nodes.length;";
+
+str generate_bodyOf_nodeArity(TrieSpecifics ts) = "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.bitmapMethod)>);" when isOptionEnabled(ts.setup, useSandwichArrays());
+default str generate_bodyOf_nodeArity(TrieSpecifics ts) = "return nodes.length - <use(tupleLengthConstant)> * payloadArity;";
+

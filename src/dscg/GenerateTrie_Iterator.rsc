@@ -30,7 +30,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		private int currentStackLevel;
 		private final int[] nodeCursorsAndLengths = new int[MAX_DEPTH * 2];
 
-		<toString(UNCHECKED_ANNOTATION)>
+		<toString(UNCHECKED_ANNOTATION())>
 		Abstract<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)>[] nodes = new Abstract<toString(ts.ds)>Node[MAX_DEPTH];
 
 		Abstract<toString(ts.ds)>Iterator(Abstract<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)> rootNode) {
@@ -64,10 +64,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 										.getNode(nodeCursor);
 						nodeCursorsAndLengths[currentCursorIndex]++;
 
-						final int nextValueLength = nextNode.payloadArity();
-						final int nextNodeLength = nextNode.nodeArity();
-
-						if (nextNodeLength \> 0) {
+						if (nextNode.hasNodes()) {
 							/*
 							 * put node on next stack level for depth-first
 							 * traversal
@@ -78,16 +75,16 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 
 							nodes[nextStackLevel] = nextNode;
 							nodeCursorsAndLengths[nextCursorIndex] = 0;
-							nodeCursorsAndLengths[nextLengthIndex] = nextNodeLength;
+							nodeCursorsAndLengths[nextLengthIndex] = nextNode.nodeArity();
 						}
 
-						if (nextValueLength != 0) {
+						if (nextNode.hasPayload()) {
 							/*
 							 * found for next node that contains values
 							 */
 							currentValueNode = nextNode;
 							currentValueCursor = 0;
-							currentValueLength = nextValueLength;
+							currentValueLength = nextNode.payloadArity();
 							return true;
 						}
 					} else {

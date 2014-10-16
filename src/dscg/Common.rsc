@@ -11,14 +11,13 @@
  */
 module dscg::Common
 
+import IO;
 import List;
 import String;
 import util::Math;
 
 /* PUBLIC CONSTANTS */
-public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");	
-
-public Annotation UNCHECKED_ANNOTATION = uncheckedStringAnnotation("@SuppressWarnings(\"unchecked\")"); 
+public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");	 
 
 /* DATA SECTION */
 data DataStructure
@@ -62,9 +61,15 @@ data Statement
 str toString(Statement:uncheckedStringStatement(statementStr)) = statementStr;
 default str toString(Statement _) { throw "Ahhh"; }
 	
-data Annotation
+data Annotation(bool isActive = true)
 	= uncheckedStringAnnotation(str annotationStr)
-	;	
+	;
+	
+data Annotation(bool isActive = true)
+	= UNCHECKED_ANNOTATION();
+	
+str toString(UNCHECKED_ANNOTATION(isActive = true)) = "@SuppressWarnings(\"unchecked\")";	
+str toString(Annotation a) = "" when !a.isActive;
 
 str toString(Annotation:uncheckedStringAnnotation(annotationStr)) = annotationStr;
 default str toString(Annotation _) { throw "Ahhh"; }
@@ -73,14 +78,24 @@ default str toString(Annotation _) { throw "Ahhh"; }
 data Expression
 	= emptyExpression()
 	| constant(Type \type, str constantString)
-	;	
+	| useExpr(Argument arg)
+
+	| cast(Type \type, Expression e)
+	| bitwiseOr (Expression x, Expression y)
+	| bitwiseXor(Expression x, Expression y)
+
+	| plusEqOne(Expression e)
+	| minEqOne(Expression e)
+
+	;
 
 str toString(Expression:constant(_, constantString)) = constantString; 
 default str toString(Expression _) { throw "Ahhh"; }	
-	
+		
 data Method
-	= method(Argument returnArg, str name, list[Argument] args = [], str visibility = "", bool isActive = true)
-	| function(Argument returnArg, str name, list[Argument] args = [], str visibility = "", bool isActive = true, str generics = "");
+	= method(Argument returnArg, str name, list[Argument] args = [], list[Argument] argsFilter = [], str visibility = "", bool isActive = true)
+	| function(Argument returnArg, str name, list[Argument] args = [], list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "")
+	| constructor(Argument returnArg, str name, list[Argument] args = [], list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "");
 
 data Option // TODO: finish!
 	= useSpecialization()
@@ -89,6 +104,7 @@ data Option // TODO: finish!
 	| useStructuralEquality()	
 	| methodsWithComparator()
 	| compactionViaFieldToMethod()
+	| useSandwichArrays()
 	;
 
 data TrieSpecifics 
@@ -97,6 +113,10 @@ data TrieSpecifics
 		Argument bitposField = ___bitposField(bitPartitionSize),
 		Argument bitmapField = ___bitmapField(bitPartitionSize),
 		Argument valmapField = ___valmapField(bitPartitionSize),
+		
+		Argument bitposMethod = ___bitposMethod(bitPartitionSize),
+		Argument bitmapMethod = ___bitmapMethod(bitPartitionSize),
+		Argument valmapMethod = ___valmapMethod(bitPartitionSize),		
 		
 		list[Type] tupleTypes = [keyType, valType],
 		
@@ -131,12 +151,14 @@ data TrieSpecifics
 		str coreClassName = "Trie<toString(ds)><classNamePostfix>",
 		str coreInterfaceName = "Immutable<toString(ds)>",
 		str nodeIteratorClassName = "Trie<toString(ds)><classNamePostfix>NodeIterator",	
+		str bitmapIndexedNodeClassName = "BitmapIndexed<toString(ds)>Node",		
 				
 		Argument coreClassReturn = \return(generic("<coreClassName><GenericsStr>")),
 		Argument coreInterfaceReturn = \return(generic("<coreInterfaceName><GenericsExpanded(ds, tupleTypes)>")),
 		Argument compactNodeClassReturn = \return(generic("<CompactNode(ds)><GenericsStr>")),
 		Argument abstractNodeClassReturn = \return(generic("<AbstractNode(ds)><GenericsStr>")),
-	
+		Argument bitmapIndexedNodeClassReturn = \return(generic("<bitmapIndexedNodeClassName><GenericsStr>")),
+		
 		Method Core_updated 		= method(coreClassReturn, "<insertOrPutMethodName(ds)>",  			args = [*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public"),
 		Method Core_updatedEquiv 	= method(coreClassReturn, "<insertOrPutMethodName(ds)>Equivalent", 	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
 
@@ -175,7 +197,11 @@ data TrieSpecifics
 		
 		Method CompactNode_nodeMap 	= method(bitmapField, bitmapField.name),
 		Method CompactNode_dataMap 	= method(valmapField, valmapField.name),
-		
+				
+		Method CompactNode_copyAndRemoveValue = method(compactNodeClassReturn, "copyAndRemoveValue", args = [mutator, bitposField]),
+		Method CompactNode_copyAndInsertValue = method(compactNodeClassReturn, "copyAndInsertValue", args = [mutator, bitposField, *payloadTuple]),
+		Method CompactNode_copyAndSetValue = method(compactNodeClassReturn, "copyAndSetValue", args = [mutator, bitposField, val(valType)], isActive = ds == \map()),		
+		Method CompactNode_copyAndSetNode = method(compactNodeClassReturn, "copyAndSetNode", args = [mutator, bitposField, \node(ds, tupleTypes)]),		
 		Method CompactNode_copyAndInsertNode = method(compactNodeClassReturn, "copyAndInsertNode", args = [mutator, bitposField, \node(ds, tupleTypes)], isActive = false),
 		Method CompactNode_copyAndMigrateFromInlineToNode = method(compactNodeClassReturn, "copyAndMigrateFromInlineToNode", args = [mutator, bitposField, \node(ds, tupleTypes)]),
 		Method CompactNode_copyAndMigrateFromNodeToInline = method(compactNodeClassReturn, "copyAndMigrateFromNodeToInline", args = [mutator, bitposField, \node(ds, tupleTypes)]),
@@ -199,6 +225,8 @@ data TrieSpecifics
 		Method AbstractNode_nodeArity = method(\return(primitive("int")), "nodeArity"),
 		/***/
 		Method AbstractNode_nodeIterator = method(\return(generic("Iterator\<? extends <AbstractNode(ds)><GenericsStr>\>")), "nodeIterator"),
+		// TODO: improve overriding of methods
+		Method CompactNode_nodeIterator = method(\return(generic("Iterator\<? extends <CompactNode(ds)><GenericsStr>\>")), "nodeIterator", isActive = false),
 
 		Method AbstractNode_getKey = method(\return(keyType), "getKey", args = [index]),
 		Method AbstractNode_getValue = method(\return(valType), "getValue", args = [index], isActive = ds == \map()),		
@@ -230,7 +258,17 @@ data TrieSpecifics
 		Method jul_Set_containsAllEquivalent = method(\return(primitive("boolean")), "containsAllEquivalent", args = [ field(generic("Collection\<?\>"), "c"), comparator ], visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),		
 
 		Method CompactNode_equals = method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
-		Method CompactNode_hashCode = method(\return(primitive("int")), "hashCode", visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality()))
+		Method CompactNode_hashCode = method(\return(primitive("int")), "hashCode", visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
+
+		Argument BitmapIndexedNode_contentArray = field(object(isArray = true), "nodes"),
+		Argument BitmapIndexedNode_payloadArity = field(primitive("byte"), "payloadArity"),		
+
+		list[Argument] argsFilter = [],
+		//list[Argument] argsFilter = [ mutator, BitmapIndexedNode_payloadArity ],
+
+		Method BitmapIndexedNode_constructor = constructor(bitmapIndexedNodeClassReturn, "<bitmapIndexedNodeClassName>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity ], visibility = "private", argsFilter = argsFilter),
+
+		Method nodeOf_BitmapIndexedNode = function(compactNodeClassReturn, "nodeOf", generics = "<Generics(ds, tupleTypes)>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity ], argsFilter = argsFilter, isActive = !isOptionEnabled(setup,useSpecialization()) || nBound < nMax)	
 		)
 	;		
 	
@@ -400,6 +438,37 @@ str use(field(_, name)) = name;
 str use(getter(_, name)) = "<name>()";
 default str use(Argument a) { throw "You forgot <a>!"; }
 /***/
+
+str eval(Expression e) = 
+	use(e.arg) 
+when e is useExpr;
+
+str eval(Expression e) = 
+	"<eval(e.x)> | <eval(e.y)>"
+when e is bitwiseOr;
+
+str eval(Expression e) = 
+	"<eval(e.x)> ^ <eval(e.y)>"
+when e is bitwiseXor;
+
+str eval(Expression e) = 
+	"(<toString(e.\type)>) (<eval(e.e)>)"
+when e is cast;
+
+str eval(Expression e) = 
+	"<eval(e.e)> + 1"
+when e is plusEqOne;
+
+str eval(Expression e) = 
+	"<eval(e.e)> - 1"
+when e is minEqOne;
+
+default str eval(Expression _) { throw "Ahhh"; }
+
+str eval(list[Expression] xs) = intercalate(", ", mapper(xs, eval));
+default str eval(list[Expression] _) { throw "Ahhh"; }
+
+
 str use(list[Argument] xs) = intercalate(", ", mapper(xs, use));
 
 str use(Argument a) {
@@ -429,6 +498,11 @@ default str dec(Argument a) { throw "You forgot <a>!"; }
 /***/
 str dec(list[Argument] xs) = intercalate(", ", mapper(xs, dec));
 
+// TODO: merge with one above
+str decFields(list[Argument] xs) = intercalate("\n", mapper(xs, str(Argument x) { return "<dec(x)>;"; }));
+
+str initFieldsWithIdendity(list[Argument] xs) = intercalate("\n", mapper(xs, str(Argument x) { return "this.<use(x)> = <use(x)>;"; }));
+
 // convertions
 Argument asField(getter(\type, name)) = field(\type, name);
 Argument asField(f:field(_, _)) = f;
@@ -441,35 +515,84 @@ str toString(\set()) = "Set";
 str toString(\vector()) = "Vector";
 default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 
-str dec(Method m:method) = "abstract <toString(m.returnArg.\type)> <m.name>(<dec(m.args)>);" when m.isActive;
+str dec(Method m:method) = "abstract <toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>);" when m.isActive;
 str dec(Method m:method) = "" when !m.isActive;
 default str dec(Method m) { throw "You forgot <m>!"; }
 
 
 
-str implOrOverride(Method m:method, Statement bodyStatement, bool doOverride = true) = implOrOverride(m, toString(bodyStatement), doOverride = doOverride);
+str implOrOverride(Method m:method, Statement bodyStatement, bool doOverride = true, list[Annotation] annotations = []) = implOrOverride(m, toString(bodyStatement), doOverride = doOverride);
 
-str implOrOverride(m:method(_,_), str bodyStr, bool doOverride = true) = 
-	"
+str implOrOverride(m:method(_,_), str bodyStr, bool doOverride = true, list[Annotation] annotations = []) = 
+	"<for(a <- annotations) {><toString(a)><}>
 	<if (doOverride) {>@Override<}>
-	<m.visibility> <toString(m.returnArg.\type)> <m.name>(<dec(m.args)>) {
+	<m.visibility> <toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>) {
 		<bodyStr>
 	}
 	"
 when m.isActive
 	;
 
-str implOrOverride(m:function(_,_), str bodyStr, bool doOverride = true) = 
-	"<m.visibility> static final <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.args)>) {
+str implOrOverride(m:function(_,_), str bodyStr, bool doOverride = true, list[Annotation] annotations = []) = 
+	"<for(a <- annotations) {><toString(a)><}>
+	'<m.visibility> static final <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>) {
 	'	<bodyStr>
 	'}"
 when m.isActive
 	;
+	
+str implOrOverride(m:constructor(_,_), str bodyStr, bool doOverride = true, list[Annotation] annotations = []) = 
+	"<for(a <- annotations) {><toString(a)><}>
+	'<m.visibility> <m.name>(<dec(m.args - m.argsFilter)>) {
+	'	<bodyStr>
+	'}"
+when m.isActive
+	;		
 
-str implOrOverride(Method m, str bodyStr, bool doOverride = true) = "" when !m.isActive;
-default str implOrOverride(Method m, str bodyStr, bool doOverride = true) { throw "You forgot <m>!"; }
+str implOrOverride(Method m, str bodyStr, bool doOverride = true, list[Annotation] annotations = []) = "" when !m.isActive;
+
+default str implOrOverride(Method m, str bodyStr, bool doOverride = true, list[Annotation] annotations = []) { throw "You forgot <m>!"; }
 
 
+str call(m:constructor(_,_), map[Argument, Expression] argsOverride = (), str inferredGenericsStr = "") = 
+	"new <m.name><inferredGenericsStr>(<eval(substitute(m.args - m.argsFilter, argsOverride))>)"
+when m.isActive
+	;		
+
+str call(m:function(_,_), map[Argument, Expression] argsOverride = ()) = 
+	"<m.name>(<eval(substitute(m.args - m.argsFilter, argsOverride))>)"
+when m.isActive
+	;
+
+default str call(Method m, map[Argument, Expression] argsOverride = ()) { throw "You forgot <m>!"; }
+
+default list[Expression] substitute(list[Argument] args, map[Argument, Expression] argsOverride) {
+	list[Expression] res = [];
+	
+	for (arg <- args) {
+		if(argsOverride[arg]?) {
+			res += argsOverride[arg];
+		} else {
+			res += useExpr(arg);
+		}
+	}
+
+	return res;
+	
+	//list[Argument] res = args;
+	//
+	//for (k <- argsOverride) {		
+	//	if ([*xs, k, *ys] := res) {
+	//		println(xs);
+	//		println(ys);
+	//	
+	//		res = [*xs, argsOverride[k], *ys];
+	//	}
+	//}
+	//
+	//println(res);
+	//return res;
+}
 
 /*
  * Convenience Functions [TODO: remove global state dependency!]

@@ -97,7 +97,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		/* TODO: specialize removed(..) to remove this method from this interface */
 		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = false)>
 
-		<toString(UNCHECKED_ANNOTATION)>
+		<toString(UNCHECKED_ANNOTATION())>
 		static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> mergeNodes(<dec(__payloadTuple(ts.ds, ts.tupleTypes, 0))>, int keyHash0, <dec(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, int keyHash1, int shift) {
 			assert !(<equalityDefaultForArguments(key(ts.keyType, "key0"), key(ts.keyType, "key1"))>);
 
@@ -141,15 +141,11 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'		<if (isOptionEnabled(setup,useSpecialization())) {><emptyTrieNodeConstantName> = new <toString(ds)>0To0Node<ts.classNamePostfix><InferredGenerics(ts.ds, ts.tupleTypes)>(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0);<} else {><emptyTrieNodeConstantName> = new BitmapIndexed<toString(ds)>Node<InferredGenerics(ts.ds, ts.tupleTypes)>(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, new Object[] {}, (byte) 0);<}>	
 	'	};
 	
-	<if (!isOptionEnabled(setup,useSpecialization()) || nBound < nMax) {>
-	'	static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(AtomicReference\<Thread\> mutator,
-	'					<dec(ts.bitmapField)>, <dec(ts.valmapField)>, Object[] nodes, byte payloadArity) {
-	'		return new BitmapIndexed<toString(ds)>Node<InferredGenerics(ts.ds, ts.tupleTypes)>(mutator, <use(bitmapField)>, <use(valmapField)>, nodes, payloadArity);
-	'	}
-	<}>
+	<implOrOverride(ts.nodeOf_BitmapIndexedNode,
+		"return <call(ts.BitmapIndexedNode_constructor, inferredGenericsStr = InferredGenerics(ts.ds, ts.tupleTypes))>;")>	
 	
 	<if (!isOptionEnabled(setup,useSpecialization()) || nBound < nMax) {>
-	'	<toString(UNCHECKED_ANNOTATION)>
+	'	<toString(UNCHECKED_ANNOTATION())>
 	'	static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(AtomicReference\<Thread\> mutator) {
 	'		return <emptyTrieNodeConstantName>;
 	'	}

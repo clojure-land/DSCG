@@ -32,7 +32,7 @@ str generateOptionalClassString() {
 			}
 		};
 
-		<toString(UNCHECKED_ANNOTATION)>
+		<toString(UNCHECKED_ANNOTATION())>
 		static \<T\> Optional\<T\> empty() {
 			return EMPTY;
 		}
