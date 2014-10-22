@@ -46,7 +46,7 @@ void main() {
 	bitPartitionSizes = { 5 };
 	typeCombGenInt = { generic("K"), primitive("int") } * { primitive("int"), generic("V") };
 	
-	specializeToBounds = { 8 };
+	specializeToBounds = { 2, 8 };
 	booleanOptions = { true, false };
 				
 	set[SpecializationConfig] specializationConfigs 
@@ -107,7 +107,8 @@ void doGenerate(TrieConfig cfg:hashTrieConfig(DataStructure ds, int bitPartition
 		<useFixedStackIterator(),true>,
 		<useStructuralEquality(),true>,
 		<methodsWithComparator(),true>,
-		<useSandwichArrays(),true>
+		<useSandwichArrays(),true>,
+		<useStagedMutability(),true>		
 	}; // { compactionViaFieldToMethod() };
 
 	TrieSpecifics ts = trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup);
