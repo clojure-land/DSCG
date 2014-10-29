@@ -323,8 +323,8 @@ data TrieSpecifics
 		/***/
 		Method AbstractNode_payloadIterator = method(\return(generic("SupplierIterator<SupplierIteratorGenerics(ds, tupleTypes)>")), "payloadIterator", isActive = false),	
 
-		//Method AbstractNode_hasSlots = method(\return(primitive("boolean")), "hasSlots", isActive = isOptionEnabled(setup,useUntypedVariables())),
-		//Method AbstractNode_slotArity = method(\return(primitive("int")), "slotArity", isActive = isOptionEnabled(setup,useUntypedVariables())),		
+		Method AbstractNode_hasSlots = method(\return(primitive("boolean")), "hasSlots", isActive = isOptionEnabled(setup,useUntypedVariables())),
+		Method AbstractNode_slotArity = method(\return(primitive("int")), "slotArity", isActive = isOptionEnabled(setup,useUntypedVariables())),		
 		Method AbstractNode_getSlot = method(\return(object()), "getSlot", args = [index], isActive = isOptionEnabled(setup,useUntypedVariables())),
 		
 		Method jul_Map_put = method(\return(primitiveToClass(valType)), "put", args = [ key(primitiveToClass(keyType)), val(primitiveToClass(valType)) ], visibility = "public", isActive = ds == \map()),		

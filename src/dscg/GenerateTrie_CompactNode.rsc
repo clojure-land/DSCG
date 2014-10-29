@@ -698,6 +698,7 @@ str generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method 
 when (n + m) <= ts.nBound
 	;
 
+/* TODO: fix argument lists! */
 str generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration) {
 	if (!((n + m) == ts.nBound + 1 && (n + m) < ts.nMax)) {
 		fail;
@@ -705,7 +706,7 @@ str generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method 
 
 	list[Argument] argsForArray = contentArguments(n, m, ts, ts.setup);
 
-	return "return nodeOf(mutator, <bitmapField.name>, <valmapField.name>, new Object[] { <use(argsForArray)> }, (byte) <m>);";
+	return "return nodeOf(mutator, <bitmapField.name>, <valmapField.name>, new Object[] { <use(argsForArray)> }<if (!isOptionEnabled(ts.setup,useSandwichArrays())) {>, (byte) <m><}>);";
 }
 
 default str generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration) { 
@@ -757,7 +758,7 @@ default str generate_valNodeOf_factoryMethod_bitmap_untyped(int mn, ts:___expand
 
 		return
 		"static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
-		'	return nodeOf(mutator, <bitmapField.name>, <valmapField.name>, new Object[] { <use(argsForArray)> }, (byte) <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.valmapField)>));
+		'	return nodeOf(mutator, <bitmapField.name>, <valmapField.name>, new Object[] { <use(argsForArray)> }<if (!isOptionEnabled(ts.setup,useSandwichArrays())) {>, (byte) <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.valmapField)>)<}>);
 		'}
 		";
 	} else {

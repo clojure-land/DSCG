@@ -106,6 +106,9 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 
 		<dec(ts.AbstractNode_getSlot)>
 	
+		<dec(ts.AbstractNode_hasSlots)>
+		<dec(ts.AbstractNode_slotArity)>
+	
 		/**
 		 * The arity of this trie node (i.e. number of values and nodes stored
 		 * on this level).

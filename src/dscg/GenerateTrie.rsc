@@ -46,7 +46,7 @@ void main() {
 	bitPartitionSizes = { 5 };
 	typeCombGenInt = { generic("K"), primitive("int") } * { primitive("int"), generic("V") };
 	
-	specializeToBounds = { 2, 8 };
+	specializeToBounds = { 8 };
 	booleanOptions = { true, false };
 				
 	set[SpecializationConfig] specializationConfigs 
@@ -57,7 +57,8 @@ void main() {
 	set[TrieConfig] trieConfigs 
 		= { hashTrieConfig(d,b,[keyType,valType],s) | 
 				d <- dataStructures, b <- bitPartitionSizes, t:<keyType,valType> <- typeCombGenInt, s <- specializationConfigs,
-					(specializationConfig(_,true) := s) ==> (isGeneric(keyType) && isGeneric(valType)) };					
+					(specializationConfig(_,true) := s) ==> (isGeneric(keyType) && isGeneric(valType)),
+					(withoutSpecialization() := s) ==> (isGeneric(keyType) && isGeneric(valType))};					
 				
 	for (TrieConfig cfg <- trieConfigs) {
 		doGenerate(cfg);
@@ -67,6 +68,9 @@ void main() {
 void doGenerateBleedingEdge() {
 	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");
 	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");	
+
+	//doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(2, false)), overideClassNamePostfixWith = "BleedingEdge");
+	//doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(2, false)), overideClassNamePostfixWith = "BleedingEdge");	
 }
 
 void doGenerate(TrieConfig cfg:hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes:[keyType, valType, *_], SpecializationConfig specializationConfig), str overideClassNamePostfixWith = "") {

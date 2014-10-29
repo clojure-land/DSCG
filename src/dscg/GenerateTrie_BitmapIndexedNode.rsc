@@ -80,6 +80,12 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 
 		<implOrOverride(ts.AbstractNode_getSlot, UNSUPPORTED_OPERATION_EXCEPTION)>
 
+		<implOrOverride(ts.AbstractNode_hasSlots, 
+			"return nodes.length != 0;")>
+
+		<implOrOverride(ts.AbstractNode_slotArity, 
+			"return nodes.length;")>
+
 		<implOrOverride(ts.CompactNode_hashCode,
 			"final int prime = 31;
 			int result = 0;
