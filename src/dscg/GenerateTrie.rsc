@@ -112,7 +112,8 @@ void doGenerate(TrieConfig cfg:hashTrieConfig(DataStructure ds, int bitPartition
 		<useStructuralEquality(),true>,
 		<methodsWithComparator(),true>,
 		<useSandwichArrays(),true>,
-		<useStagedMutability(),true>		
+		<useStagedMutability(),true>,
+		<usePrefixInsteadOfPostfixEncoding(),true>		
 	}; // { compactionViaFieldToMethod() };
 
 	TrieSpecifics ts = trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup);
@@ -734,6 +735,12 @@ str generateGenericNodeClassString(int n, int m, ts:___expandedTrieSpecifics(ds,
 	'	}
 	}
 	";
+
+str generate_bodyOf_hasSlots(0) = 
+	"return false;";
+	
+default str generate_bodyOf_hasSlots(int mn) = 	
+	"return true;";
 	
 str generate_bodyOf_getSlot(0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
@@ -1341,7 +1348,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 default str generate_bodyOf_GenericNode_containsKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (<keyName>Hash \>\>\> shift) & BIT_PARTITION_MASK;
-	'<dec(ts.bitposField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask);
+	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
 	'
 	'if ((valmap & bitpos) != 0) {
 	'	return <eq("nodes[dataIndex(bitpos)]", keyName)>;
@@ -1361,7 +1368,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 default str generate_bodyOf_GenericNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
-	'<dec(ts.bitposField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask);
+	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
 
 	'if ((valmap & bitpos) != 0) { // inplace value
 	'	final int valIndex = dataIndex(bitpos);
@@ -1393,7 +1400,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
-	'<dec(ts.bitposField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask);
+	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
 	'
 	'if ((valmap & bitpos) != 0) { // inplace value
 	'	final int valIndex = dataIndex(bitpos);
@@ -1479,7 +1486,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 		
 default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) =
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
-	<dec(ts.bitposField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (1L \<\< mask);
+	<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
 
 	if ((valmap & bitpos) != 0) { // inplace value
 		final int valIndex = dataIndex(bitpos);
@@ -2015,19 +2022,11 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'		<if (m > 0) {>return ArrayKeyValueSupplierIterator.of(new Object[] { <intercalate(", ", ["<keyName><i>, <keyName><i>"  | i <- [1..m+1]])> });<} else {>return EmptySupplierIterator.emptyIterator();<}>
 	'	}	
 	<}>
+	<}>
 	
-	'	@Override
-	'	<toString(ts.keyType)> headKey() {
-	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a key.\")<} else {>return key1<}>;
-	'	}
+	<implOrOverride(ts.AbstractNode_hasSlots, generate_bodyOf_hasSlots(mn))>
 
-	<if (ts.ds == \map()) {>
-	'	@Override
-	'	<toString(ts.valType)> headVal() {
-	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a value.\")<} else {>return val1<}>;
-	'	}	
-	<}>
-	<}>
+	<implOrOverride(ts.AbstractNode_slotArity, "return <mn>;")>
 
 	<if (isOptionEnabled(setup,useUntypedVariables())) {>
 	'	@Override

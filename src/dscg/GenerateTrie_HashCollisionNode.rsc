@@ -138,12 +138,14 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			throw new IllegalStateException(\"Is leaf node.\");
 		}
 
-		<if (isOptionEnabled(setup,useUntypedVariables())) {>
-		@Override
-		<toString(object())> getSlot(int index) {
-			throw new UnsupportedOperationException();
-		}
-		<}>
+		<implOrOverride(ts.AbstractNode_getSlot, 
+			UNSUPPORTED_OPERATION_EXCEPTION)>
+
+		<implOrOverride(ts.AbstractNode_hasSlots, 
+			UNSUPPORTED_OPERATION_EXCEPTION)>
+
+		<implOrOverride(ts.AbstractNode_slotArity, 
+			UNSUPPORTED_OPERATION_EXCEPTION)>
 
 		<if (isOptionEnabled(setup, useStructuralEquality())) {>
 		@Override

@@ -177,6 +177,7 @@ data Option // TODO: finish!
 	| compactionViaFieldToMethod()
 	| useSandwichArrays()
 	| useStagedMutability()
+	| usePrefixInsteadOfPostfixEncoding()
 	;
 
 data TrieSpecifics 
@@ -200,7 +201,13 @@ data TrieSpecifics
 		
 		list[Argument] payloadTuple = __payloadTuple(ds, tupleTypes),
 		Argument keyHash = field(primitive("int"), "keyHash"),
+		Argument keyHash0 = field(primitive("int"), "keyHash0"),
+		Argument keyHash1 = field(primitive("int"), "keyHash1"),
+
 		Argument mask = field(primitive("int"), "mask"),
+		Argument mask0 = field(primitive("int"), "mask0"),
+		Argument mask1 = field(primitive("int"), "mask1"),		
+		
 		Argument shift = field(primitive("int"), "shift"),
 		Argument details = field(generic("Result<GenericsStr>"), "details"),
 		Argument comparator = field(specific("Comparator\<Object\>"), "cmp"),
@@ -291,6 +298,9 @@ data TrieSpecifics
 		Method CompactNode_removeInplaceValueAndConvertToSpecializedNode = method(compactNodeClassReturn, "removeInplaceValueAndConvertToSpecializedNode", args = [mutator, bitposField], isActive = isOptionEnabled(setup, useSpecialization())),				
 
 		Method CompactNode_convertToGenericNode	= method(compactNodeClassReturn, bitmapField.name, isActive = false), // if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax
+
+		Method CompactNode_mask = function(\return(primitive("int")), "mask", args = [keyHash, shift]),
+		Method CompactNode_bitpos = function(\return(chunkSizeToPrimitive(bitPartitionSize)), "bitpos", args = [mask]),
 
 		Method CompactNode_dataIndex = method(\return(primitive("int")), "dataIndex", args = [bitposField]),
 		Method CompactNode_nodeIndex = method(\return(primitive("int")), "nodeIndex", args = [bitposField]),
@@ -549,6 +559,10 @@ when e is constant;
 str eval(Expression e) = 
 	e.exprString
 when e is exprFromString;
+
+str eval(Expression e) = 
+	toString(e) 
+when e is call;
 
 default str eval(Expression e) { throw "Ahhh, you forgot <e>"; }
 
