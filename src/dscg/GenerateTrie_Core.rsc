@@ -53,7 +53,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 @SuppressWarnings(\"rawtypes\")
-public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> implements Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
+public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
 
 	<toString(UNCHECKED_ANNOTATION())>
 	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(Compact<toString(ts.ds)>Node.<emptyTrieNodeConstantName>, 0, 0);
@@ -206,10 +206,12 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> extends Abstract
 		}
 		return true;")>
 
-	@Override
-	public int size() {
-		return cachedSize;
-	}
+
+	<implOrOverride(ts.Core_size,
+		"return cachedSize;")>
+
+	<implOrOverride(ts.Core_isEmpty,
+		"return cachedSize == 0;")>
 
 	<if (ds == \set()) {>
 	@Override
@@ -234,6 +236,22 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> extends Abstract
 		return new <toString(ts.ds)>EntryIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);
 	}
 	<}>
+
+	<implOrOverride(ts.jul_Map_keySet,
+		"// TODO Auto-generated method stub
+		'return null;")>
+		
+	<implOrOverride(ts.jul_Map_values,
+		"// TODO Auto-generated method stub
+		'return null;")>		
+
+	<implOrOverride(ts.jul_Collection_toObjectArray,
+		"// TODO Auto-generated method stub
+		'return null;")>
+
+	<implOrOverride(ts.jul_Collection_toGenericArray,
+		"// TODO Auto-generated method stub
+		'return null;")>
 
 	<if (ds == \map()) {>
 	@Override

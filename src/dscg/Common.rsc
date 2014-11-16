@@ -164,7 +164,7 @@ data Expression
 	;				
 		
 data Method
-	= method(Argument returnArg, str name, list[Argument] args = [], list[Argument] argsFilter = [], str visibility = "", bool isActive = true)
+	= method(Argument returnArg, str name, list[Argument] args = [], list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "")
 	| function(Argument returnArg, str name, list[Argument] args = [], list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "")
 	| constructor(Argument returnArg, str name, list[Argument] args = [], list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "");
 
@@ -284,6 +284,9 @@ data TrieSpecifics
 		Method Core_removeAll 		= method(coreInterfaceReturn, "__removeAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
 		Method Core_removeAllEquiv 	= method(coreInterfaceReturn, "__removeAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),		
 		
+		Method Core_size = method(\return(primitive("int")), "size", visibility = "public"),		
+		Method Core_isEmpty = method(\return(primitive("boolean")), "isEmpty", visibility = "public"),
+		
 		Method CompactNode_nodeMap 	= method(bitmapField, bitmapField.name),
 		Method CompactNode_dataMap 	= method(valmapField, valmapField.name),
 				
@@ -342,6 +345,9 @@ data TrieSpecifics
 		Method jul_Map_clear = method(\return(\void()), "clear", visibility = "public", isActive = ds == \map()),		
 		Method jul_Map_putAll = method(\return(\void()), "putAll", args = [ field(generic("Map<GenericsExpandedUpperBounded(ds, tupleTypes)>"), "m") ], visibility = "public", isActive = ds == \map()),	
 
+		Method jul_Map_keySet = method(\return(generic("Set\<<toString(dsAtFunction__domain_type(ds, tupleTypes))>\>")), "keySet", visibility = "public", isActive = ds == \map()),
+		Method jul_Map_values = method(\return(generic("Collection\<<toString(dsAtFunction__range_type(ds, tupleTypes))>\>")), "values", visibility = "public", isActive = ds == \map()),
+		
 		Method jul_Set_add = method(\return(primitive("boolean")), "add", args = [ key(primitiveToClass(keyType)) ], visibility = "public", isActive = ds == \set()),		
 		Method jul_Set_remove = method(\return(primitive("boolean")), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = ds == \set()),
 		Method jul_Set_clear = method(\return(\void()), "clear", visibility = "public", isActive = ds == \set()),		
@@ -351,6 +357,15 @@ data TrieSpecifics
 
 		Method jul_Set_containsAll = method(\return(primitive("boolean")), "containsAll", args = [ field(generic("Collection\<?\>"), "c") ], visibility = "public", isActive = ds == \set()),		
 		Method jul_Set_containsAllEquivalent = method(\return(primitive("boolean")), "containsAllEquivalent", args = [ field(generic("Collection\<?\>"), "c"), comparator ], visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),		
+
+		Method jul_Collection_toObjectArray = method(\return(\object(isArray = true)), "toArray", visibility = "public", isActive = ds == \set()),
+		Method jul_Collection_toGenericArray = method(\return(\generic("T", isArray = true)), "toArray", generics = "\<T\>", args = [ field(generic("T", isArray = true), "a") ], visibility = "public", isActive = ds == \set()),
+	
+//@Override
+//public <T> T[] toArray(T[] a) {
+//	// TODO Auto-generated method stub
+//	return null;
+//}
 
 		Method CompactNode_equals = method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
 		Method CompactNode_hashCode = method(\return(primitive("int")), "hashCode", visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
@@ -627,7 +642,7 @@ str implOrOverride(Method m:method, Expression bodyExpr, bool doOverride = true,
 str implOrOverride(m:method(_,_), str bodyStr, bool doOverride = true, list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
 	<if (doOverride) {>@Override<}>
-	<m.visibility> <toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>) {
+	<m.visibility> <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>) {
 		<bodyStr>
 	}
 	"
@@ -763,10 +778,10 @@ str MapsToGenerics(DataStructure ds:\set(), tupleTypes:[keyType, *_])    = "\<<t
 str MapsToGenerics(DataStructure ds:\vector(), tupleTypes:[keyType, valType, *_] ) = "\<<toString(primitiveToClass(valType))>\>";
 default str MapsToGenerics(DataStructure _, list[Type] _) { throw "Ahhh"; }
 /***/
-str dsAtFunction__domain_type(DataStructure ds:\map())    = toString(keyType);
-str dsAtFunction__domain_type(DataStructure ds:\set())    = toString(keyType);
-str dsAtFunction__domain_type(DataStructure ds:\vector()) = toString(keyType);
-default str dsAtFunction__domain_type(_) { throw "Ahhh"; }
+Type dsAtFunction__domain_type(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = keyType;
+Type dsAtFunction__domain_type(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = keyType;
+Type dsAtFunction__domain_type(DataStructure ds:\vector(), tupleTypes:[keyType, valType, *_]) = keyType;
+default Type dsAtFunction__domain_type(_) { throw "Ahhh"; }
 /***/
 Type dsAtFunction__range_type(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = valType;
 Type dsAtFunction__range_type(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = keyType;
