@@ -69,8 +69,8 @@ void doGenerateBleedingEdge() {
 	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");
 	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");	
 
-	//doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(2, false)), overideClassNamePostfixWith = "BleedingEdge");
-	//doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(2, false)), overideClassNamePostfixWith = "BleedingEdge");	
+	//doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(1, false)), overideClassNamePostfixWith = "BleedingEdge");
+	//doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(1, false)), overideClassNamePostfixWith = "BleedingEdge");	
 }
 
 TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes:[keyType, valType, *_], SpecializationConfig specializationConfig), str overideClassNamePostfixWith) {
@@ -81,7 +81,7 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 	if (specializationConfig(__specializeTo, __flagUntypedVariables) := specializationConfig) {
 		flagSpecialization = true;
 		specializeTo = __specializeTo;
-		flagUntypedVariables = __flagUntypedVariables;		
+		flagUntypedVariables = __flagUntypedVariables;
 	}
 		
 	str classNamePostfix = "_<bitPartitionSize>Bits";
@@ -113,7 +113,7 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 		<methodsWithComparator(),true>,
 		<useSandwichArrays(),true>,
 		<useStagedMutability(),true>,
-		<usePrefixInsteadOfPostfixEncoding(),true>		
+		<usePrefixInsteadOfPostfixEncoding(),false>		
 	}; // { compactionViaFieldToMethod() };
 
 	return trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup);

@@ -100,9 +100,9 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		/* TODO: specialize removed(..) to remove this method from this interface */
 		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = false)>
 
-		<toString(UNCHECKED_ANNOTATION())>
-		static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> mergeNodes(<dec(__payloadTuple(ts.ds, ts.tupleTypes, 0))>, int keyHash0, <dec(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, int keyHash1, int shift) {
-			assert !(<equalityDefaultForArguments(key(ts.keyType, "key0"), key(ts.keyType, "key1"))>);
+
+		<implOrOverride(ts.CompactNode_mergeTwoKeyValPairs,
+			"assert !(<equalityDefaultForArguments(key(ts.keyType, "key0"), key(ts.keyType, "key1"))>);
 
 			if (keyHash0 == keyHash1) {
 				return new <hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<toString(ts.keyType)>[]) new <if (isPrimitive(ts.keyType)) {><toString(ts.keyType)><} else {>Object<}>[] { key0, key1 }
@@ -117,14 +117,14 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 				<generate_bodyOf_mergeTwoValues(ts, setup, positionStyle)>
 			} else {
 				// values fit on next level
-				final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node = mergeNodes(<use(__payloadTuple(ts.ds, ts.tupleTypes, 0))>, keyHash0, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, keyHash1, shift + BIT_PARTITION_SIZE);
+				final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node = <toString(call(ts.CompactNode_mergeTwoKeyValPairs, argsOverride = (ts.shift: plus(useExpr(ts.shift), useExpr(ts.BIT_PARTITION_SIZE)))))>;
 
 				<generate_bodyOf_mergeOnNextLevel(ts, setup, positionStyle)>
-			}
-		}
+			}", annotations = [ UNCHECKED_ANNOTATION() ])>
 
-		static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> mergeNodes(<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node0, int keyHash0, <dec(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, int keyHash1, int shift) {
-			<dec(ts.mask0)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
+
+		<implOrOverride(ts.CompactNode_mergeNodeAndKeyValPair,
+			"<dec(ts.mask0)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
 			<dec(ts.mask1)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash1))))>;
 
 			if (mask0 != mask1) {
@@ -132,11 +132,10 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 				<generate_bodyOf_mergeNodeAndValue(ts, setup, positionStyle)>
 			} else {
 				// values fit on next level
-				final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node = mergeNodes(node0, keyHash0, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, keyHash1, shift + BIT_PARTITION_SIZE);
-
+				final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node = <toString(call(ts.CompactNode_mergeNodeAndKeyValPair, argsOverride = (ts.shift: plus(useExpr(ts.shift), useExpr(ts.BIT_PARTITION_SIZE)))))>;
+				
 				<generate_bodyOf_mergeOnNextLevel(ts, setup, positionStyle)>
-			}
-		}	
+			}")>
 
 	'	static final <CompactNode(ts.ds)> <emptyTrieNodeConstantName>;
 
@@ -546,7 +545,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'		}<}>
 	'	} else {
 	'		<if (ds == \map()) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex);<}>
-	'		final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> subNodeNew = mergeNodes(currentKey, <if (ds == \map()) {> currentVal,<}><hashCode(key(ts.keyType, "currentKey"))>, key, <if (ds == \map()) {> val,<}> keyHash, shift + BIT_PARTITION_SIZE);
+	'		final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, <if (ds == \map()) {> currentVal,<}><hashCode(key(ts.keyType, "currentKey"))>, key, <if (ds == \map()) {> val,<}> keyHash, shift + BIT_PARTITION_SIZE);
 	'
 	'		<if (isOptionEnabled(setup,useSpecialization())) {>
 	'		// final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = copyAndRemoveValue(mutator, bitpos).copyAndInsertNode(mutator, bitpos, nodeNew);

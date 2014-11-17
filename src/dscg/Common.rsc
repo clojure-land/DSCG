@@ -183,6 +183,8 @@ data Option // TODO: finish!
 data TrieSpecifics 
 	= ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound, Type keyType = generic("K"), Type valType = generic("V"), str classNamePostfix = "", rel[Option,bool] setup = {},
 				
+		Argument BIT_PARTITION_SIZE = field(primitive("int"), "BIT_PARTITION_SIZE"), 
+				
 		Argument bitposField = ___bitposField(bitPartitionSize),
 		Argument bitmapField = ___bitmapField(bitPartitionSize),
 		Argument valmapField = ___valmapField(bitPartitionSize),
@@ -289,6 +291,9 @@ data TrieSpecifics
 		
 		Method CompactNode_nodeMap 	= method(bitmapField, bitmapField.name),
 		Method CompactNode_dataMap 	= method(valmapField, valmapField.name),
+
+		Method CompactNode_mergeTwoKeyValPairs = function(compactNodeClassReturn, "mergeTwoKeyValPairs", args = [ *__payloadTuple(ds, tupleTypes, 0), keyHash0, *__payloadTuple(ds, tupleTypes, 1), keyHash1, shift ], generics = GenericsStr), 
+		Method CompactNode_mergeNodeAndKeyValPair = function(compactNodeClassReturn, "mergeNodeAndKeyValPair", args = [ \node(ds, tupleTypes, 0), keyHash0, *__payloadTuple(ds, tupleTypes, 1), keyHash1, shift ], generics = GenericsStr),
 				
 		Method CompactNode_copyAndRemoveValue = method(compactNodeClassReturn, "copyAndRemoveValue", args = [mutator, bitposField]),
 		Method CompactNode_copyAndInsertValue = method(compactNodeClassReturn, "copyAndInsertValue", args = [mutator, bitposField, *payloadTuple]),
@@ -558,6 +563,10 @@ when e is bitwiseXor;
 str eval(Expression e) = 
 	"(<toString(e.\type)>) (<eval(e.e)>)"
 when e is cast;
+
+str eval(Expression e) = 
+	"<eval(e.l)> + <eval(e.r)>"
+when e is plus;
 
 str eval(Expression e) = 
 	"<eval(e.e)> + 1"

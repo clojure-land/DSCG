@@ -252,7 +252,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 str generate_bodyOf_HashCollisionNode_updated(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) =
 "if (this.hash != keyHash) {
 	details.modified();
-	return mergeNodes(this, this.hash, <use(ts.payloadTuple)>, keyHash, shift);
+	return mergeNodeAndKeyValPair(this, this.hash, <use(ts.payloadTuple)>, keyHash, shift);
 }
 
 for (int idx = 0; idx \< keys.length; idx++) {
