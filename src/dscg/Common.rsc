@@ -353,8 +353,8 @@ data TrieSpecifics
 		Method jul_Map_clear = method(\return(\void()), "clear", visibility = "public", isActive = ds == \map()),		
 		Method jul_Map_putAll = method(\return(\void()), "putAll", args = [ field(generic("Map<GenericsExpandedUpperBounded(ds, tupleTypes)>"), "m") ], visibility = "public", isActive = ds == \map()),	
 
-		Method jul_Map_keySet = method(\return(generic("Set\<<toString(dsAtFunction__domain_type(ds, tupleTypes))>\>")), "keySet", visibility = "public", isActive = ds == \map()),
-		Method jul_Map_values = method(\return(generic("Collection\<<toString(dsAtFunction__range_type(ds, tupleTypes))>\>")), "values", visibility = "public", isActive = ds == \map()),
+		Method jul_Map_keySet = method(\return(generic("Set\<<toString(primitiveToClass(dsAtFunction__domain_type(ds, tupleTypes)))>\>")), "keySet", visibility = "public", isActive = ds == \map()),
+		Method jul_Map_values = method(\return(generic("Collection\<<toString(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes)))>\>")), "values", visibility = "public", isActive = ds == \map()),
 		
 		Method jul_Set_add = method(\return(primitive("boolean")), "add", args = [ key(primitiveToClass(keyType)) ], visibility = "public", isActive = ds == \set()),		
 		Method jul_Set_remove = method(\return(primitive("boolean")), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = ds == \set()),
@@ -368,12 +368,6 @@ data TrieSpecifics
 
 		Method jul_Collection_toObjectArray = method(\return(\object(isArray = true)), "toArray", visibility = "public", isActive = ds == \set()),
 		Method jul_Collection_toGenericArray = method(\return(\generic("T", isArray = true)), "toArray", generics = "\<T\>", args = [ field(generic("T", isArray = true), "a") ], visibility = "public", isActive = ds == \set()),
-	
-//@Override
-//public <T> T[] toArray(T[] a) {
-//	// TODO Auto-generated method stub
-//	return null;
-//}
 
 		Method CompactNode_equals = method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
 		Method CompactNode_hashCode = method(\return(primitive("int")), "hashCode", visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
