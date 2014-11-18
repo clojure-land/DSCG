@@ -56,7 +56,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
 
 	<toString(UNCHECKED_ANNOTATION())>
-	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(Compact<toString(ts.ds)>Node.<emptyTrieNodeConstantName>, 0, 0);
+	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(<CompactNode(ts.ds)>.<emptyTrieNodeConstantName>, 0, 0);
 
 	private static final boolean DEBUG = false;
 

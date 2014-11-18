@@ -15,7 +15,7 @@ import dscg::Common;
 
 str generateAbstractNodeClassString(TrieSpecifics ts) { 
 	return 
-	"protected static abstract class <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> implements <ts.abstractAnyNodeClassName><UnifiedGenericsExpanded(ts.ds, ts.tupleTypes)> {
+	"protected static interface <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> extends <ts.abstractAnyNodeClassName><UnifiedGenericsExpanded(ts.ds, ts.tupleTypes)> {
 
 		static final int TUPLE_LENGTH = <tupleLength(ts.ds)>;
 
@@ -29,10 +29,10 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 		<dec(ts.AbstractNode_updatedEquiv)>
 		<dec(ts.AbstractNode_removed)>
 		<dec(ts.AbstractNode_removedEquiv)>
-		
-		static final boolean isAllowedToEdit(AtomicReference\<Thread\> x, AtomicReference\<Thread\> y) {
-			return x != null && y != null && (x == y || x.get() == y.get());
-		}
+				
+		<implOrOverride(ts.AbstractNode_isAllowedToEdit,
+			"return x != null && y != null && (x == y || x.get() == y.get());",
+			isOverride = \default())>
 						
 		<dec(ts.AbstractNode_getNode)>
 		
@@ -61,7 +61,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 				public boolean hasNext() {
 					return nextIndex \< <AbstractNode(ts.ds)>.this.nodeArity();
 				}
-			};", doOverride = new())>
+			};", doOverride = \default())>
 	
 	
 		<dec(ts.AbstractNode_getKey)>
@@ -102,7 +102,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 				public boolean hasNext() {
 					return nextIndex \< <AbstractNode(ts.ds)>.this.payloadArity();
 				}
-			};", doOverride = new())>
+			};", doOverride = \default())>
 
 		<dec(ts.AbstractNode_getSlot)>
 	
@@ -115,7 +115,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 		 * 
 		 * @return sum of nodes and values stored within
 		 */
-		<implOrOverride(ts.AbstractNode_arity, "return payloadArity() + nodeArity();", doOverride = new())>
+		<implOrOverride(ts.AbstractNode_arity, "return payloadArity() + nodeArity();", doOverride = \default())>
 
 		<implOrOverride(ts.AbstractNode_size, 
 			"final SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> it = new <toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(this);
@@ -126,6 +126,6 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 				it.next();
 			}
 
-			return size;", doOverride = new())>
+			return size;", doOverride = \default())>
 	}";
 }

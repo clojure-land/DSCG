@@ -25,15 +25,15 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		
 		protected int currentValueCursor;
 		protected int currentValueLength;
-		protected Abstract<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)> currentValueNode;
+		protected <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> currentValueNode;
 
 		private int currentStackLevel;
 		private final int[] nodeCursorsAndLengths = new int[MAX_DEPTH * 2];
 
 		<toString(UNCHECKED_ANNOTATION())>
-		Abstract<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)>[] nodes = new Abstract<toString(ts.ds)>Node[MAX_DEPTH];
+		<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>[] nodes = new <AbstractNode(ts.ds)>[MAX_DEPTH];
 
-		Abstract<toString(ts.ds)>Iterator(Abstract<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)> rootNode) {
+		Abstract<toString(ts.ds)>Iterator(<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> rootNode) {
 			currentStackLevel = 0;
 
 			currentValueNode = rootNode;
@@ -60,7 +60,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 					final int nodeLength = nodeCursorsAndLengths[currentLengthIndex];
 
 					if (nodeCursor \< nodeLength) {
-						final Abstract<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)> nextNode = nodes[currentStackLevel]
+						final <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nextNode = nodes[currentStackLevel]
 										.getNode(nodeCursor);
 						nodeCursorsAndLengths[currentCursorIndex]++;
 

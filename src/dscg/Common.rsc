@@ -130,14 +130,14 @@ str toString(Expression e:plus(l, r)) =
 //	"";
 //
 data Expression =
-	call(Method m, map[Argument, Expression] argsOverride = (), str inferredGenericsStr = "");
+	call(Method m, map[Argument, Expression] argsOverride = (), str inferredGenericsStr = "", map[Method,str] lookupTable = ());
 
 str toString(Expression c:call(m:constructor(_,_))) =
 	"new <m.name><c.inferredGenericsStr>(<eval(substitute(m.args - m.argsFilter, c.argsOverride))>)"
 when m.isActive;
 
 str toString(Expression c:call(m:function(_,_))) = 
-	"<m.name>(<eval(substitute(m.args - m.argsFilter, c.argsOverride))>)"
+	"<if (c.lookupTable[m]?) {><c.lookupTable[m]>.<}><m.name>(<eval(substitute(m.args - m.argsFilter, c.argsOverride))>)"
 when m.isActive;
 
 str toString(Expression c:call(m:method(_,_))) = 
@@ -167,6 +167,10 @@ data Method
 	= method(Argument returnArg, str name, list[Argument] args = [], list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "")
 	| function(Argument returnArg, str name, list[Argument] args = [], list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "")
 	| constructor(Argument returnArg, str name, list[Argument] args = [], list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "");
+
+// TODO: remove again
+Method interfaceMethod(Argument returnArg, str name, list[Argument] args = [], list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "") 
+	= method(returnArg, name, args = args, argsFilter = argsFilter, visibility = "public", isActive = isActive, generics = generics);
 
 data Option // TODO: finish!
 	= useSpecialization()
@@ -227,24 +231,28 @@ data TrieSpecifics
 		Argument compactNodeReturn = \return(generic("<CompactNode(ds)><GenericsStr>")),
 		Argument optionalRangeReturn = \return(generic("Optional<MapsToGenericsStr>")),
 				
-		Method AbstractNode_containsKey 		= method(\return(primitive("boolean")), "containsKey", args = [key(keyType), keyHash, shift]),
-		Method AbstractNode_containsKeyEquiv 	= method(\return(primitive("boolean")), "containsKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
+		Method AbstractNode_containsKey 		= interfaceMethod(\return(primitive("boolean")), "containsKey", args = [key(keyType), keyHash, shift]),
+		Method AbstractNode_containsKeyEquiv 	= interfaceMethod(\return(primitive("boolean")), "containsKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
 	
-		Method AbstractNode_findByKey 		= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift]),
-		Method AbstractNode_findByKeyEquiv 	= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
+		Method AbstractNode_findByKey 		= interfaceMethod(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift]),
+		Method AbstractNode_findByKeyEquiv 	= interfaceMethod(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
 		
-		Method AbstractNode_updated 		= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details]),
-		Method AbstractNode_updatedEquiv 	= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
+		Method AbstractNode_updated 		= interfaceMethod(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details]),
+		Method AbstractNode_updatedEquiv 	= interfaceMethod(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
 	
-		Method AbstractNode_removed 		= method(compactNodeReturn, "removed", args = [mutator, key(keyType), keyHash, shift, details]),
-		Method AbstractNode_removedEquiv 	= method(compactNodeReturn, "removed", args = [mutator, key(keyType), keyHash, shift, details, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),
+		Method AbstractNode_removed 		= interfaceMethod(compactNodeReturn, "removed", args = [mutator, key(keyType), keyHash, shift, details]),
+		Method AbstractNode_removedEquiv 	= interfaceMethod(compactNodeReturn, "removed", args = [mutator, key(keyType), keyHash, shift, details, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),
+			
+		Method AbstractNode_isAllowedToEdit = function(\return(primitive("boolean")), "isAllowedToEdit", args = [ field(mutatorType, "x"), field(mutatorType, "y") ] ),
 				
 		/* GENERATE_TRIE_CORE */
 		str coreClassName = "Trie<toString(ds)><classNamePostfix>",
 		str coreInterfaceName = "Immutable<toString(ds)>",
 		str abstractAnyNodeClassName = "INode",
+		str abstractNodeClassName = "<AbstractNode(ds)>",		
+		str compactNodeClassName = "<CompactNode(ds)>",
 		str nodeIteratorClassName = "Trie<toString(ds)><classNamePostfix>NodeIterator",	
-		str bitmapIndexedNodeClassName = "BitmapIndexed<toString(ds)>Node",
+		str bitmapIndexedNodeClassName = "IBitmapIndexed<toString(ds)>Node",
 		str hashCollisionClassName = "HashCollision<toString(ds)>Node<classNamePostfix>",		
 				
 		Argument coreClassReturn = \return(generic("<coreClassName><GenericsStr>")),
@@ -292,61 +300,65 @@ data TrieSpecifics
 		Method Core_size = method(\return(primitive("int")), "size", visibility = "public"),		
 		Method Core_isEmpty = method(\return(primitive("boolean")), "isEmpty", visibility = "public"),
 		
-		Method CompactNode_nodeMap 	= method(bitmapField, bitmapField.name),
-		Method CompactNode_dataMap 	= method(valmapField, valmapField.name),
+		Method CompactNode_nodeInvariant = interfaceMethod(\return(primitive("boolean")), "nodeInvariant"),
+		
+		Method CompactNode_nodeMap 	= interfaceMethod(bitmapField, bitmapField.name),
+		Method CompactNode_dataMap 	= interfaceMethod(valmapField, valmapField.name),
 
 		Method CompactNode_mergeTwoKeyValPairs = function(compactNodeClassReturn, "mergeTwoKeyValPairs", args = [ *__payloadTuple(ds, tupleTypes, 0), keyHash0, *__payloadTuple(ds, tupleTypes, 1), keyHash1, shift ], generics = GenericsStr), 
 		Method CompactNode_mergeNodeAndKeyValPair = function(compactNodeClassReturn, "mergeNodeAndKeyValPair", args = [ \node(ds, tupleTypes, 0), keyHash0, *__payloadTuple(ds, tupleTypes, 1), keyHash1, shift ], generics = GenericsStr),
-				
-		Method CompactNode_copyAndRemoveValue = method(compactNodeClassReturn, "copyAndRemoveValue", args = [mutator, bitposField]),
-		Method CompactNode_copyAndInsertValue = method(compactNodeClassReturn, "copyAndInsertValue", args = [mutator, bitposField, *payloadTuple]),
-		Method CompactNode_copyAndSetValue = method(compactNodeClassReturn, "copyAndSetValue", args = [mutator, bitposField, val(valType)], isActive = ds == \map()),		
-		Method CompactNode_copyAndSetNode = method(compactNodeClassReturn, "copyAndSetNode", args = [mutator, bitposField, \node(ds, tupleTypes)]),		
-		Method CompactNode_copyAndInsertNode = method(compactNodeClassReturn, "copyAndInsertNode", args = [mutator, bitposField, \node(ds, tupleTypes)], isActive = false),
-		Method CompactNode_copyAndMigrateFromInlineToNode = method(compactNodeClassReturn, "copyAndMigrateFromInlineToNode", args = [mutator, bitposField, \node(ds, tupleTypes)]),
-		Method CompactNode_copyAndMigrateFromNodeToInline = method(compactNodeClassReturn, "copyAndMigrateFromNodeToInline", args = [mutator, bitposField, \node(ds, tupleTypes)]),
-		Method CompactNode_copyAndRemoveNode = method(compactNodeClassReturn, "copyAndInsertNode", args = [mutator, bitposField], isActive = false),				
-		Method CompactNode_removeInplaceValueAndConvertToSpecializedNode = method(compactNodeClassReturn, "removeInplaceValueAndConvertToSpecializedNode", args = [mutator, bitposField], isActive = isOptionEnabled(setup, useSpecialization())),				
+
+		Method CompactNode_keyAt = interfaceMethod(\return(keyType), "keyAt", args = [ bitposField ]),
+		Method CompactNode_valAt = interfaceMethod(\return(valType), "valAt", args = [ bitposField ], isActive = ds == \map()), 
+		Method CompactNode_nodeAt = interfaceMethod(compactNodeClassReturn, "nodeAt", args = [ bitposField ]),
+			
+		Method CompactNode_copyAndRemoveValue = interfaceMethod(compactNodeClassReturn, "copyAndRemoveValue", args = [mutator, bitposField]),
+		Method CompactNode_copyAndInsertValue = interfaceMethod(compactNodeClassReturn, "copyAndInsertValue", args = [mutator, bitposField, *payloadTuple]),
+		Method CompactNode_copyAndSetValue = interfaceMethod(compactNodeClassReturn, "copyAndSetValue", args = [mutator, bitposField, val(valType)], isActive = ds == \map()),		
+		Method CompactNode_copyAndSetNode = interfaceMethod(compactNodeClassReturn, "copyAndSetNode", args = [mutator, bitposField, \node(ds, tupleTypes)]),		
+		Method CompactNode_copyAndInsertNode = interfaceMethod(compactNodeClassReturn, "copyAndInsertNode", args = [mutator, bitposField, \node(ds, tupleTypes)], isActive = false),
+		Method CompactNode_copyAndMigrateFromInlineToNode = interfaceMethod(compactNodeClassReturn, "copyAndMigrateFromInlineToNode", args = [mutator, bitposField, \node(ds, tupleTypes)]),
+		Method CompactNode_copyAndMigrateFromNodeToInline = interfaceMethod(compactNodeClassReturn, "copyAndMigrateFromNodeToInline", args = [mutator, bitposField, \node(ds, tupleTypes)]),
+		Method CompactNode_copyAndRemoveNode = interfaceMethod(compactNodeClassReturn, "copyAndInsertNode", args = [mutator, bitposField], isActive = false),				
+		Method CompactNode_removeInplaceValueAndConvertToSpecializedNode = interfaceMethod(compactNodeClassReturn, "removeInplaceValueAndConvertToSpecializedNode", args = [mutator, bitposField], isActive = isOptionEnabled(setup, useSpecialization())),				
 
 		Method CompactNode_convertToGenericNode	= method(compactNodeClassReturn, bitmapField.name, isActive = false), // if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax
 
 		Method CompactNode_mask = function(\return(primitive("int")), "mask", args = [keyHash, shift]),
 		Method CompactNode_bitpos = function(\return(chunkSizeToPrimitive(bitPartitionSize)), "bitpos", args = [mask]),
 
-		Method CompactNode_dataIndex = method(\return(primitive("int")), "dataIndex", args = [bitposField]),
-		Method CompactNode_nodeIndex = method(\return(primitive("int")), "nodeIndex", args = [bitposField]),
+		Method CompactNode_dataIndex = interfaceMethod(\return(primitive("int")), "dataIndex", args = [bitposField]),
+		Method CompactNode_nodeIndex = interfaceMethod(\return(primitive("int")), "nodeIndex", args = [bitposField]),
 
 		// TODO: improve overriding of methods
-		Method AbstractNode_getNode = method(abstractNodeClassReturn, "getNode", args = [index]),
-		Method CompactNode_getNode = method(compactNodeClassReturn, "getNode", args = [index]),	
+		Method AbstractNode_getNode = interfaceMethod(abstractNodeClassReturn, "getNode", args = [index]),
+		Method CompactNode_getNode = interfaceMethod(compactNodeClassReturn, "getNode", args = [index]),	
 		
-		Method CompactNode_sizePredicate = method(\return(primitive("byte")), "sizePredicate"),
+		Method CompactNode_sizePredicate = interfaceMethod(\return(primitive("byte")), "sizePredicate"),
 		
-		Method AbstractNode_arity = method(\return(primitive("int")), "arity"),
-		Method AbstractNode_size = method(\return(primitive("int")), "size"),		
+		Method AbstractNode_arity = interfaceMethod(\return(primitive("int")), "arity"),
+		Method AbstractNode_size = interfaceMethod(\return(primitive("int")), "size"),		
 		
-		Method CompactNode_getNode = method(compactNodeClassReturn, "getNode", args = [index]),
+		Method AbstractNode_hasNodes = interfaceMethod(\return(primitive("boolean")), "hasNodes"),
+		Method AbstractNode_nodeArity = interfaceMethod(\return(primitive("int")), "nodeArity"),
 		/***/
-		Method AbstractNode_hasNodes = method(\return(primitive("boolean")), "hasNodes"),
-		Method AbstractNode_nodeArity = method(\return(primitive("int")), "nodeArity"),
-		/***/
-		Method AbstractNode_nodeIterator = method(\return(generic("Iterator\<? extends <AbstractNode(ds)><GenericsStr>\>")), "nodeIterator"),
+		Method AbstractNode_nodeIterator = interfaceMethod(\return(generic("Iterator\<? extends <AbstractNode(ds)><GenericsStr>\>")), "nodeIterator"),
 		// TODO: improve overriding of methods
-		Method CompactNode_nodeIterator = method(\return(generic("Iterator\<? extends <CompactNode(ds)><GenericsStr>\>")), "nodeIterator", isActive = false),
+		Method CompactNode_nodeIterator = interfaceMethod(\return(generic("Iterator\<? extends <CompactNode(ds)><GenericsStr>\>")), "nodeIterator", isActive = false),
 
-		Method AbstractNode_getKey = method(\return(keyType), "getKey", args = [index]),
-		Method AbstractNode_getValue = method(\return(valType), "getValue", args = [index], isActive = ds == \map()),		
-		Method AbstractNode_getKeyValueEntry = method(\return(generic("java.util.Map.Entry<GenericsExpanded(ds, tupleTypes)>")), "getKeyValueEntry", args = [index], isActive = ds == \map()),
+		Method AbstractNode_getKey = interfaceMethod(\return(keyType), "getKey", args = [index]),
+		Method AbstractNode_getValue = interfaceMethod(\return(valType), "getValue", args = [index], isActive = ds == \map()),		
+		Method AbstractNode_getKeyValueEntry = interfaceMethod(\return(generic("java.util.Map.Entry<GenericsExpanded(ds, tupleTypes)>")), "getKeyValueEntry", args = [index], isActive = ds == \map()),
 	
 		/***/
-		Method AbstractNode_hasPayload = method(\return(primitive("boolean")), "hasPayload"),
-		Method AbstractNode_payloadArity = method(\return(primitive("int")), "payloadArity"),
+		Method AbstractNode_hasPayload = interfaceMethod(\return(primitive("boolean")), "hasPayload"),
+		Method AbstractNode_payloadArity = interfaceMethod(\return(primitive("int")), "payloadArity"),
 		/***/
-		Method AbstractNode_payloadIterator = method(\return(generic("SupplierIterator<SupplierIteratorGenerics(ds, tupleTypes)>")), "payloadIterator", isActive = false),	
+		Method AbstractNode_payloadIterator = interfaceMethod(\return(generic("SupplierIterator<SupplierIteratorGenerics(ds, tupleTypes)>")), "payloadIterator", isActive = false),	
 
-		Method AbstractNode_hasSlots = method(\return(primitive("boolean")), "hasSlots", isActive = isOptionEnabled(setup,useUntypedVariables())),
-		Method AbstractNode_slotArity = method(\return(primitive("int")), "slotArity", isActive = isOptionEnabled(setup,useUntypedVariables())),		
-		Method AbstractNode_getSlot = method(\return(object()), "getSlot", args = [index], isActive = isOptionEnabled(setup,useUntypedVariables())),
+		Method AbstractNode_hasSlots = interfaceMethod(\return(primitive("boolean")), "hasSlots", isActive = isOptionEnabled(setup,useUntypedVariables())),
+		Method AbstractNode_slotArity = interfaceMethod(\return(primitive("int")), "slotArity", isActive = isOptionEnabled(setup,useUntypedVariables())),		
+		Method AbstractNode_getSlot = interfaceMethod(\return(object()), "getSlot", args = [index], isActive = isOptionEnabled(setup,useUntypedVariables())),
 		
 		Method jul_Map_put = method(\return(primitiveToClass(valType)), "put", args = [ key(primitiveToClass(keyType)), val(primitiveToClass(valType)) ], visibility = "public", isActive = ds == \map()),		
 		Method jul_Map_remove = method(\return(primitiveToClass(valType)), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = ds == \map()),
@@ -369,14 +381,17 @@ data TrieSpecifics
 		Method jul_Collection_toObjectArray = method(\return(\object(isArray = true)), "toArray", visibility = "public", isActive = ds == \set()),
 		Method jul_Collection_toGenericArray = method(\return(\generic("T", isArray = true)), "toArray", generics = "\<T\>", args = [ field(generic("T", isArray = true), "a") ], visibility = "public", isActive = ds == \set()),
 
-		Method CompactNode_equals = method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
-		Method CompactNode_hashCode = method(\return(primitive("int")), "hashCode", visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
+		Method CompactNode_toString = method(\return(specific("String")), "toString", visibility = "public", isActive = false),
+		Method CompactNode_equals = method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality()) && false),
+		Method CompactNode_hashCode = method(\return(primitive("int")), "hashCode", visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality()) && false),
 
 		Method BitmapIndexedNode_constructor = constructor(bitmapIndexedNodeClassReturn, "<bitmapIndexedNodeClassName>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity ], visibility = "private", argsFilter = argsFilter),
 
-		Method nodeOf_BitmapIndexedNode = function(compactNodeClassReturn, "nodeOf", generics = "<Generics(ds, tupleTypes)>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity ], argsFilter = argsFilter, isActive = !isOptionEnabled(setup,useSpecialization()) || nBound < nMax)	
-		)
-	;		
+		//Method nodeOf_BitmapIndexedNode = function(compactNodeClassReturn, "nodeOf", generics = "<Generics(ds, tupleTypes)>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity ], argsFilter = argsFilter, isActive = !isOptionEnabled(setup,useSpecialization()) || nBound < nMax),	
+		Method nodeOf_BitmapIndexedNode = BitmapIndexedNode_constructor,
+		
+		map[Method, str] functionLookupTable = (AbstractNode_isAllowedToEdit: abstractNodeClassName)
+	);		
 	
 TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound, Type __keyType, Type __valType, str __classNamePostfix, rel[Option,bool] __setup) {
 	if (bitPartitionSize < 1 || bitPartitionSize > 6) {
@@ -643,6 +658,7 @@ default str dec(Method m) { throw "You forgot <m>!"; }
 
 data OverwriteType 
 	= new()
+	| newFinal()
 	| override()
 	| \default()
 	;
@@ -652,8 +668,8 @@ str implOrOverride(Method m:method, Expression bodyExpr, OverwriteType doOverrid
 
 str implOrOverride(m:method(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
-	<if (doOverride == \override()) {>@Override<}>
-	<m.visibility> <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>) {
+	<if (doOverride == override()) {>@Override<}>
+	<m.visibility> <if (doOverride == \default()) {>default<}> <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>) {
 		<bodyStr>
 	}
 	"
@@ -662,13 +678,13 @@ when m.isActive
 
 str implOrOverride(m:function(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
-	'<m.visibility> static final <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>) {
+	'<m.visibility> static <if (doOverride == newFinal()) {>final<}> <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>) {
 	'	<bodyStr>
 	'}"
 when m.isActive
 	;
 	
-str implOrOverride(m:constructor(_,_), str bodyStr,  OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
+str implOrOverride(m:constructor(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
 	'<m.visibility> <m.name>(<dec(m.args - m.argsFilter)>) {
 	'	<bodyStr>
@@ -731,8 +747,8 @@ list[Argument] payloadTriple(str posName, str keyName, str valName) {
 
 list[Argument] subnodePair(int i) = [ nodePos(i), \node(ts.ds, ts.tupleTypes, i) ];
 
-@memo str AbstractNode(DataStructure ds) = "Abstract<toString(ds)>Node";
-@memo str CompactNode(DataStructure ds) = "Compact<toString(ds)>Node";
+@memo str AbstractNode(DataStructure ds) = "I<toString(ds)>Node";
+@memo str CompactNode(DataStructure ds) = "ICompact<toString(ds)>Node";
 
 str Generics(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "" when !isGeneric(keyType) && !isGeneric(valType);
 str Generics(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<toString(primitiveToClass(keyType))>, <toString(primitiveToClass(valType))>\>" when isGeneric(keyType) && isGeneric(valType);
@@ -855,10 +871,10 @@ default str equalityComparatorForArguments(Argument x, Argument y) { throw "Ahhh
 /*
  * Mainly CompactNode specifics
  */
-str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:true) = "CompactMixed<toString(ds)>Node";
-str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:false) = "CompactNodesOnly<toString(ds)>Node";
-str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:false, bool values:true) = "CompactValuesOnly<toString(ds)>Node";
-str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:false, bool values:false) = "CompactEmpty<toString(ds)>Node";
+str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:true) = "BitmapIndexed<toString(ds)>Node_Mixed";
+str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:false) = "BitmapIndexed<toString(ds)>Node_NodesOnly";
+str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:false, bool values:true) = "BitmapIndexed<toString(ds)>Node_ValuesOnly";
+//str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:false, bool values:false) = "CompactEmpty<toString(ds)>Node";
 default str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes, bool values) { throw "Ahhh"; }
 
 list[Argument] metadataArguments(TrieSpecifics ts) 

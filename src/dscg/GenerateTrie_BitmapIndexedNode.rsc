@@ -20,9 +20,10 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 	// NOTE: filter list from constructor is used to restrict fields
 	fields = [ts.mutator, ts.BitmapIndexedNode_contentArray, ts.BitmapIndexedNode_payloadArity] - ts.BitmapIndexedNode_constructor.argsFilter;
 
-	return
-	"private static final class <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> extends <className_compactNode(ts, ts.setup, true, true)><Generics(ts.ds, ts.tupleTypes)> {
+	return // <className_compactNode(ts, ts.setup, true, true)>
+	"private static interface <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> extends <ts.compactNodeClassName><Generics(ts.ds, ts.tupleTypes)> {
 
+		/*
 		<decFields(fields)>
 		
 		<implOrOverride(ts.BitmapIndexedNode_constructor, 
@@ -44,47 +45,63 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			}
 			
 			<if (isOptionEnabled(ts.setup,useSpecialization()) && ts.nBound < ts.nMax) {>assert arity() \> <ts.nBound>;<}>assert nodeInvariant();")>					
+		*/
 		
 		<implOrOverride(ts.AbstractNode_getKey,
-			"return (<toString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index];"
+			"return (<toString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index];",
+			doOverride = \default(),
 			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.keyType)) ])>
 
 		<implOrOverride(ts.AbstractNode_getValue,
-			"return (<toString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1];"
+			"return (<toString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1];",
+			doOverride = \default(),
 			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.valType)) ])>
 	
 		<implOrOverride(ts.AbstractNode_getKeyValueEntry, 
 			"return entryOf((<toString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<toString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);",
+			doOverride = \default(),
 			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.keyType) && !isPrimitive(ts.valType)) ])>
 
-		<implOrOverride(ts.CompactNode_getNode, generate_bodyOf_getNode(ts),
+		<implOrOverride(ts.CompactNode_getNode, 
+			generate_bodyOf_getNode(ts),
+			doOverride = \default(),
 			annotations = [ UNCHECKED_ANNOTATION() ])>
 
 		<implOrOverride(ts.AbstractNode_payloadIterator, 
-			"return ArrayKeyValueSupplierIterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity);")>
+			"return ArrayKeyValueSupplierIterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity);",
+			doOverride = \default())>
 
 		<implOrOverride(ts.CompactNode_nodeIterator, generate_bodyOf_nodeIterator(ts),
+			doOverride = \default(),
 			annotations = [ UNCHECKED_ANNOTATION() ])>
 
 		<implOrOverride(ts.AbstractNode_hasPayload,
-			generate_bodyOf_hasPayload(ts))>
+			generate_bodyOf_hasPayload(ts), 
+			doOverride = \default())>
 
 		<implOrOverride(ts.AbstractNode_payloadArity,
-			generate_bodyOf_payloadArity(ts))>
+			generate_bodyOf_payloadArity(ts),
+			doOverride = \default())>
 
 		<implOrOverride(ts.AbstractNode_hasNodes, 
-			generate_bodyOf_hasNodes(ts))>
+			generate_bodyOf_hasNodes(ts),
+			doOverride = \default())>
 
 		<implOrOverride(ts.AbstractNode_nodeArity, 
-			generate_bodyOf_nodeArity(ts))>
+			generate_bodyOf_nodeArity(ts),
+			doOverride = \default())>
 
-		<implOrOverride(ts.AbstractNode_getSlot, UNSUPPORTED_OPERATION_EXCEPTION)>
+		<implOrOverride(ts.AbstractNode_getSlot, 
+			UNSUPPORTED_OPERATION_EXCEPTION, 
+			doOverride = \default())>
 
 		<implOrOverride(ts.AbstractNode_hasSlots, 
-			"return nodes.length != 0;")>
+			"return nodes.length != 0;",
+			doOverride = \default())>
 
 		<implOrOverride(ts.AbstractNode_slotArity, 
-			"return nodes.length;")>
+			"return nodes.length;",
+			doOverride = \default())>
 
 		<implOrOverride(ts.CompactNode_hashCode,
 			"final int prime = 31;
@@ -123,14 +140,17 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 				return SIZE_ONE;
 			} else {
 				return SIZE_MORE_THAN_ONE;
-			}<}>")>
+			}<}>",
+			doOverride = \default())>
 
-		<implOrOverride(ts.CompactNode_convertToGenericNode, "return this;")>
+		<implOrOverride(ts.CompactNode_convertToGenericNode, 
+			"return this;",
+			doOverride = \default())>
 
 		<implOrOverride(ts.CompactNode_copyAndSetValue, 
 			"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
-			
-			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (isAllowedToEdit(this.mutator, mutator)) {
+	
+			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (<toString(call(ts.AbstractNode_isAllowedToEdit, argsOverride = (field(ts.mutatorType, "x"): useExpr(field(ts.mutatorType, "this.mutator")), field(ts.mutatorType, "y"): useExpr(field(ts.mutatorType, "mutator"))), lookupTable = ts.functionLookupTable))>) {
 				// no copying if already editable
 				this.nodes[<use(field(primitive("int"), "idx"))>] = val;
 				return this;
@@ -141,7 +161,8 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 				return <toString(call(ts.nodeOf_BitmapIndexedNode, 
 								argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
 												ts.bitmapField: useExpr(ts.bitmapMethod), ts.valmapField: useExpr(ts.valmapMethod))))>;
-			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>")>
+			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>",
+			doOverride = \default())>
 
 		<noop(ts.CompactNode_copyAndSetValue,
 			
@@ -166,7 +187,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);
 			<}>
 
-			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (isAllowedToEdit(this.mutator, mutator)) {
+			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (<toString(call(ts.AbstractNode_isAllowedToEdit, argsOverride = (field(ts.mutatorType, "x"): useExpr(field(ts.mutatorType, "this.mutator")), field(ts.mutatorType, "y"): useExpr(field(ts.mutatorType, "mutator"))), lookupTable = ts.functionLookupTable))>) {
 				// no copying if already editable
 				this.nodes[<use(field(primitive("int"), "idx"))>] = node;
 				return this;
@@ -177,7 +198,8 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 				return <toString(call(ts.nodeOf_BitmapIndexedNode, 
 								argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
 												ts.bitmapField: useExpr(ts.bitmapMethod), ts.valmapField: useExpr(ts.valmapMethod))))>;
-			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>")>
+			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>",
+			doOverride = \default())>
 
 		<implOrOverride(ts.CompactNode_copyAndInsertValue, 
 			"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
@@ -189,7 +211,8 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 							argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
 											ts.BitmapIndexedNode_payloadArity: cast(primitive("byte"), plusEqOne(useExpr(ts.BitmapIndexedNode_payloadArity))),
 											ts.bitmapField: useExpr(ts.bitmapMethod), 
-											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;")>
+											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;",
+			doOverride = \default())>
 
 		<implOrOverride(ts.CompactNode_copyAndRemoveValue, 
 			"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
@@ -201,7 +224,8 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 							argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
 											ts.BitmapIndexedNode_payloadArity: cast(primitive("byte"), minEqOne(useExpr(ts.BitmapIndexedNode_payloadArity))),
 											ts.bitmapField: useExpr(ts.bitmapMethod), 
-											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;")>
+											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;",
+			doOverride = \default())>
 
 		<implOrOverride(ts.CompactNode_copyAndMigrateFromInlineToNode, 
 			"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
@@ -219,7 +243,8 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 							argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
 											ts.BitmapIndexedNode_payloadArity: cast(primitive("byte"), minEqOne(useExpr(ts.BitmapIndexedNode_payloadArity))),
 											ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr (useExpr(ts.bitmapMethod), useExpr(ts.bitposField))), 
-											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;")>
+											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;",											
+			doOverride = \default())>
 
 		<implOrOverride(ts.CompactNode_copyAndMigrateFromNodeToInline,
 			"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
@@ -237,10 +262,12 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 							argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
 											ts.BitmapIndexedNode_payloadArity: cast(primitive("byte"), plusEqOne(useExpr(ts.BitmapIndexedNode_payloadArity))),
 											ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.bitmapMethod), useExpr(ts.bitposField))), 
-											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr (useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;")>
+											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr (useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;",
+			doOverride = \default())>
 		
 		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, 
-			generate_removeInplaceValueAndConvertToSpecializedNode(ts))>		
+			generate_removeInplaceValueAndConvertToSpecializedNode(ts),
+			doOverride = \default())>		
 	'}";
 }
 	

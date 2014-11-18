@@ -28,7 +28,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 	hashCollisionClassName = "HashCollision<toString(ts.ds)>Node<classNamePostfix>";
 
 	return  
-	"private static final class <hashCollisionClassName><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
+	"private static final class <hashCollisionClassName><Generics(ts.ds, ts.tupleTypes)> implements <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
 		private <dec(field(asArray(ts.keyType), "keys"))>;		
 		<if (ds == \map()) {>private <dec(field(asArray(ts.valType), "vals"))>;<}>
 		private final int hash;
@@ -72,80 +72,66 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}		
 		<}>
 
-	<implOrOverride(ts.AbstractNode_containsKey, 		generate_bodyOf_HashCollisionNode_containsKey(ts, setup, equalityDefaultForArguments	))>
-	<implOrOverride(ts.AbstractNode_containsKeyEquiv,	generate_bodyOf_HashCollisionNode_containsKey(ts, setup, equalityComparatorForArguments	))>
+	<implOrOverride(ts.AbstractNode_containsKey, generate_bodyOf_HashCollisionNode_containsKey(ts, setup, equalityDefaultForArguments))>	
+	<implOrOverride(ts.AbstractNode_containsKeyEquiv, generate_bodyOf_HashCollisionNode_containsKey(ts, setup, equalityComparatorForArguments))>
 
-	<implOrOverride(ts.AbstractNode_findByKey, 		generate_bodyOf_HashCollisionNode_findByKey(ts, setup, equalityDefaultForArguments		))>
-	<implOrOverride(ts.AbstractNode_findByKeyEquiv,	generate_bodyOf_HashCollisionNode_findByKey(ts, setup, equalityComparatorForArguments	))>
+	<implOrOverride(ts.AbstractNode_findByKey, generate_bodyOf_HashCollisionNode_findByKey(ts, setup, equalityDefaultForArguments))>
+	<implOrOverride(ts.AbstractNode_findByKeyEquiv,	generate_bodyOf_HashCollisionNode_findByKey(ts, setup, equalityComparatorForArguments))>
 
-	<implOrOverride(ts.AbstractNode_updated, 		generate_bodyOf_HashCollisionNode_updated(ts, setup, equalityDefaultForArguments	))>
-	<implOrOverride(ts.AbstractNode_updatedEquiv,	generate_bodyOf_HashCollisionNode_updated(ts, setup, equalityComparatorForArguments	))>
+	<implOrOverride(ts.AbstractNode_updated, generate_bodyOf_HashCollisionNode_updated(ts, setup, equalityDefaultForArguments))>
+	<implOrOverride(ts.AbstractNode_updatedEquiv, generate_bodyOf_HashCollisionNode_updated(ts, setup, equalityComparatorForArguments))>
 
-	<implOrOverride(ts.AbstractNode_removed, 		generate_bodyOf_HashCollisionNode_removed(ts, setup, equalityDefaultForArguments	))>
-	<implOrOverride(ts.AbstractNode_removedEquiv,	generate_bodyOf_HashCollisionNode_removed(ts, setup, equalityComparatorForArguments	))>		
+	<implOrOverride(ts.AbstractNode_removed, generate_bodyOf_HashCollisionNode_removed(ts, setup, equalityDefaultForArguments))>
+	<implOrOverride(ts.AbstractNode_removedEquiv, generate_bodyOf_HashCollisionNode_removed(ts, setup, equalityComparatorForArguments))>		
 
-		@Override
-		boolean hasPayload() {
-			return true;
-		}
+	<implOrOverride(ts.AbstractNode_hasPayload,
+		"return true;",
+		isOverride = \default())>
 
-		@Override
-		int payloadArity() {
-			return keys.length;
-		}
+	<implOrOverride(ts.AbstractNode_payloadArity,
+		"return keys.length;",
+		isOverride = \default())>
 
-		@Override
-		boolean hasNodes() {
-			return false;
-		}
+	<implOrOverride(ts.AbstractNode_hasNodes,
+		"return false;",
+		isOverride = \default())>
 
-		@Override
-		int nodeArity() {
-			return 0;
-		}
+	<implOrOverride(ts.AbstractNode_nodeArity,
+		"return 0;",
+		isOverride = \default())>
 
-		@Override
-		int arity() {
-			return payloadArity();
-		}
+	<implOrOverride(ts.AbstractNode_arity,
+		"return payloadArity();",
+		isOverride = \default())>
 
-		@Override
-		byte sizePredicate() {
-			return SIZE_MORE_THAN_ONE;
-		}
+	<implOrOverride(ts.CompactNode_sizePredicate,
+		"return SIZE_MORE_THAN_ONE;",
+		isOverride = \default())>
 
-		@Override
-		<toString(ts.keyType)> getKey(int index) {
-			return keys[index];
-		}
+	<implOrOverride(ts.AbstractNode_getKey,
+		"return keys[index];",
+		isOverride = \default())>
 
-		<if (ds == \map()) {>
-		@Override
-		<toString(ts.valType)> getValue(int index) {
-			return vals[index];
-		}
-		<}>
+	<implOrOverride(ts.AbstractNode_getValue,
+		"return vals[index];",
+		isOverride = \default())>
 
-		<if (ds == \map()) {>
-		@Override
-		Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> getKeyValueEntry(int index) {
-			return entryOf(keys[index], vals[index]);
-		}
-		<}>
+	<implOrOverride(ts.AbstractNode_getKeyValueEntry,
+		"return entryOf(keys[index], vals[index]);",
+		isOverride = \default())>
 
-		@Override
-		public <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> getNode(int index) {
-			throw new IllegalStateException(\"Is leaf node.\");
-		}
+	<implOrOverride(ts.CompactNode_getNode,
+		"throw new IllegalStateException(\"Is leaf node.\");",
+		isOverride = \default())>
 
-		<implOrOverride(ts.AbstractNode_getSlot, 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
+	<implOrOverride(ts.AbstractNode_getSlot, 
+		UNSUPPORTED_OPERATION_EXCEPTION)>
 
-		<implOrOverride(ts.AbstractNode_hasSlots, 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
+	<implOrOverride(ts.AbstractNode_hasSlots, 
+		UNSUPPORTED_OPERATION_EXCEPTION)>
 
-		<implOrOverride(ts.AbstractNode_slotArity, 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
+	<implOrOverride(ts.AbstractNode_slotArity, 
+		UNSUPPORTED_OPERATION_EXCEPTION)>
 
 		<if (isOptionEnabled(setup, useStructuralEquality())) {>
 		@Override
@@ -212,38 +198,32 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		<}>
 
 		<implOrOverride(ts.CompactNode_convertToGenericNode, "return this;")>
-		
-		<if (ds == \map()) {>
-		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <dec(val(ts.valType))>) {
-			throw new UnsupportedOperationException();
-		}
-		<}>
 
-		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <dec(ts.payloadTuple)>) {
-			throw new UnsupportedOperationException();
-		}
+	<implOrOverride(ts.CompactNode_copyAndSetValue,
+		UNSUPPORTED_OPERATION_EXCEPTION,
+		isOverride = \default())>
 
-		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>) {
-			throw new UnsupportedOperationException();
-		}
+	<implOrOverride(ts.CompactNode_copyAndInsertValue,
+		UNSUPPORTED_OPERATION_EXCEPTION,
+		isOverride = \default())>
 
-		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node) {
-			throw new UnsupportedOperationException();
-		}
+	<implOrOverride(ts.CompactNode_copyAndRemoveValue,
+		UNSUPPORTED_OPERATION_EXCEPTION,
+		isOverride = \default())>
+
+	<implOrOverride(ts.CompactNode_copyAndSetNode,
+		UNSUPPORTED_OPERATION_EXCEPTION,
+		isOverride = \default())>
 		
-		<implOrOverride(ts.CompactNode_copyAndMigrateFromInlineToNode, UNSUPPORTED_OPERATION_EXCEPTION)>
+	<implOrOverride(ts.CompactNode_copyAndMigrateFromInlineToNode, UNSUPPORTED_OPERATION_EXCEPTION)>
+	
+	<implOrOverride(ts.CompactNode_copyAndMigrateFromNodeToInline, UNSUPPORTED_OPERATION_EXCEPTION)>
 		
-		<implOrOverride(ts.CompactNode_copyAndMigrateFromNodeToInline, UNSUPPORTED_OPERATION_EXCEPTION)>
-		
-		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, UNSUPPORTED_OPERATION_EXCEPTION)>	
+	<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, UNSUPPORTED_OPERATION_EXCEPTION)>	
 			
-		<implOrOverride(ts.CompactNode_nodeMap, UNSUPPORTED_OPERATION_EXCEPTION)>
+	<implOrOverride(ts.CompactNode_nodeMap, UNSUPPORTED_OPERATION_EXCEPTION)>
 		
-		<implOrOverride(ts.CompactNode_dataMap, UNSUPPORTED_OPERATION_EXCEPTION)>			
+	<implOrOverride(ts.CompactNode_dataMap, UNSUPPORTED_OPERATION_EXCEPTION)>			
 			
 	}"
 	;
@@ -252,7 +232,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 str generate_bodyOf_HashCollisionNode_updated(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) =
 "if (this.hash != keyHash) {
 	details.modified();
-	return mergeNodeAndKeyValPair(this, this.hash, <use(ts.payloadTuple)>, keyHash, shift);
+	return <CompactNode(ts.ds)>.mergeNodeAndKeyValPair(this, this.hash, <use(ts.payloadTuple)>, keyHash, shift);
 }
 
 for (int idx = 0; idx \< keys.length; idx++) {
@@ -291,7 +271,7 @@ for (int idx = 0; idx \< keys.length; idx++) {
 		<if (ds == \map()) {><dec(val(ts.valType, "currentVal"))> = vals[idx]; details.updated(currentVal);<}>
 		
 		if (this.arity() == 1) {			
-			return nodeOf(mutator);
+			return <CompactNode(ts.ds)>.EMPTY_NODE;
 		} else if (this.arity() == 2) {
 			/*
 			 * Create root node with singleton element. This node
@@ -300,7 +280,7 @@ for (int idx = 0; idx \< keys.length; idx++) {
 			 */
 			<dec(key(ts.keyType, "theOtherKey"))> = (idx == 0) ? keys[1] : keys[0];
 			<if (ds == \map()) {><dec(val(ts.valType, "theOtherVal"))> = (idx == 0) ? vals[1] : vals[0];<}>
-			return <CompactNode(ts.ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator).updated(mutator,
+			return EMPTY_NODE.updated(mutator,
 							theOtherKey<if (ds == \map()) {>, theOtherVal<}>, keyHash, 0, details<if (!(eq == equalityDefaultForArguments)) {>, cmp<}>);
 		} else {
 			<arraycopyAndRemoveTuple(field(asArray(ts.keyType), "this.keys"), field(asArray(ts.keyType), "keysNew"), 1, field(primitive("int"), "idx"))>
