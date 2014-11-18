@@ -178,6 +178,7 @@ data Option // TODO: finish!
 	| useSandwichArrays()
 	| useStagedMutability()
 	| usePrefixInsteadOfPostfixEncoding()
+	| usePathCompression()
 	;
 
 data TrieSpecifics 
@@ -242,7 +243,8 @@ data TrieSpecifics
 		str coreClassName = "Trie<toString(ds)><classNamePostfix>",
 		str coreInterfaceName = "Immutable<toString(ds)>",
 		str nodeIteratorClassName = "Trie<toString(ds)><classNamePostfix>NodeIterator",	
-		str bitmapIndexedNodeClassName = "BitmapIndexed<toString(ds)>Node",		
+		str bitmapIndexedNodeClassName = "BitmapIndexed<toString(ds)>Node",
+		str hashCollisionClassName = "HashCollision<toString(ds)>Node<classNamePostfix>",		
 				
 		Argument coreClassReturn = \return(generic("<coreClassName><GenericsStr>")),
 		Argument coreInterfaceReturn = \return(generic("<coreInterfaceName><GenericsExpanded(ds, tupleTypes)>")),

@@ -28,10 +28,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		  ts.mutator 
 		+ members);
 
-	str className = "<CompactNode(ts.ds)>";
-	str hashCollisionClassName = "HashCollision<toString(ds)>Node<ts.classNamePostfix>"; 
-
-	Position positionStyle = positionBitmap();
+	str className = "<CompactNode(ts.ds)>"; 
 
 	int n = 0; // TODO: remove
 	int m = 0; // TODO: remove
@@ -101,41 +98,11 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = false)>
 
 
-		<implOrOverride(ts.CompactNode_mergeTwoKeyValPairs,
-			"assert !(<equalityDefaultForArguments(key(ts.keyType, "key0"), key(ts.keyType, "key1"))>);
-
-			if (keyHash0 == keyHash1) {
-				return new <hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<toString(ts.keyType)>[]) new <if (isPrimitive(ts.keyType)) {><toString(ts.keyType)><} else {>Object<}>[] { key0, key1 }
-								<if (ds == \map()) {>, (<toString(ts.valType)>[]) new <if (isPrimitive(ts.valType)) {><toString(ts.valType)><} else {>Object<}>[] { val0, val1 }<}>);
-			}
-
-			<dec(ts.mask0)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
-			<dec(ts.mask1)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash1))))>;
-
-			if (mask0 != mask1) {
-				// both nodes fit on same level
-				<generate_bodyOf_mergeTwoValues(ts, setup, positionStyle)>
-			} else {
-				// values fit on next level
-				final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node = <toString(call(ts.CompactNode_mergeTwoKeyValPairs, argsOverride = (ts.shift: plus(useExpr(ts.shift), useExpr(ts.BIT_PARTITION_SIZE)))))>;
-
-				<generate_bodyOf_mergeOnNextLevel(ts, setup, positionStyle)>
-			}", annotations = [ UNCHECKED_ANNOTATION() ])>
-
+		<implOrOverride(ts.CompactNode_mergeTwoKeyValPairs, 
+			generate_bodyOf_mergeTwoKeyValPairs(ts), annotations = [ UNCHECKED_ANNOTATION() ])>
 
 		<implOrOverride(ts.CompactNode_mergeNodeAndKeyValPair,
-			"<dec(ts.mask0)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
-			<dec(ts.mask1)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash1))))>;
-
-			if (mask0 != mask1) {
-				// both nodes fit on same level
-				<generate_bodyOf_mergeNodeAndValue(ts, setup, positionStyle)>
-			} else {
-				// values fit on next level
-				final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node = <toString(call(ts.CompactNode_mergeNodeAndKeyValPair, argsOverride = (ts.shift: plus(useExpr(ts.shift), useExpr(ts.BIT_PARTITION_SIZE)))))>;
-				
-				<generate_bodyOf_mergeOnNextLevel(ts, setup, positionStyle)>
-			}")>
+			generate_bodyOf_mergeNodeAndKeyValPair(ts))>
 
 	'	static final <CompactNode(ts.ds)> <emptyTrieNodeConstantName>;
 
@@ -822,4 +789,117 @@ default str generate_bodyOf_mask(TrieSpecifics ts, Method decleration) =
 	"return (<use(ts.keyHash)> \>\>\> <use(ts.shift)>) & BIT_PARTITION_MASK;";
 	
 default str generate_bodyOf_bitpos(TrieSpecifics ts, Method decleration) =
-	"return (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (1L \<\< <use(ts.mask)>);";
+	"return (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (1L \<\< <use(ts.mask)>);";	
+	
+	
+default str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts) = 
+	"assert !(<equalityDefaultForArguments(key(ts.keyType, "key0"), key(ts.keyType, "key1"))>);
+
+	if (keyHash0 == keyHash1) {
+		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<toString(ts.keyType)>[]) new <if (isPrimitive(ts.keyType)) {><toString(ts.keyType)><} else {>Object<}>[] { key0, key1 }
+						<if (ts.ds == \map()) {>, (<toString(ts.valType)>[]) new <if (isPrimitive(ts.valType)) {><toString(ts.valType)><} else {>Object<}>[] { val0, val1 }<}>);
+	}
+
+	<dec(ts.mask0)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
+	<dec(ts.mask1)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash1))))>;
+
+	if (mask0 != mask1) {
+		// both nodes fit on same level
+		<generate_bodyOf_mergeTwoValues(ts, ts.setup, positionBitmap())>
+	} else {
+		final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node = <toString(call(ts.CompactNode_mergeTwoKeyValPairs, argsOverride = (ts.shift: plus(useExpr(ts.shift), useExpr(ts.BIT_PARTITION_SIZE)))))>;
+		// values fit on next level
+
+		<generate_bodyOf_mergeOnNextLevel(ts, ts.setup, positionBitmap())>
+	}";	
+	
+str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts) = 
+	"assert !(<equalityDefaultForArguments(key(ts.keyType, "key0"), key(ts.keyType, "key1"))>);
+
+	if (keyHash0 == keyHash1) {
+		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<toString(ts.keyType)>[]) new <if (isPrimitive(ts.keyType)) {><toString(ts.keyType)><} else {>Object<}>[] { key0, key1 }
+						<if (ts.ds == \map()) {>, (<toString(ts.valType)>[]) new <if (isPrimitive(ts.valType)) {><toString(ts.valType)><} else {>Object<}>[] { val0, val1 }<}>);
+	}
+
+	int originalShift = shift;
+
+	<dec(ts.mask0)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
+	<dec(ts.mask1)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash1))))>;
+
+	while (mask0 == mask1) {
+		shift += BIT_PARTITION_SIZE;
+
+		mask0 = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
+		mask1 = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash1))))>;
+	}
+
+	final int dataMap = bitpos(mask0) | bitpos(mask1);
+	final Object[] content;
+	
+	if (mask0 \< mask1) {
+		content = new Object[] { <use([ *__payloadTuple(ts.ds, ts.tupleTypes, 0), *__payloadTuple(ts.ds, ts.tupleTypes, 1) ])> };
+	} else {
+		content = new Object[] { <use([ *__payloadTuple(ts.ds, ts.tupleTypes, 1), *__payloadTuple(ts.ds, ts.tupleTypes, 0) ])> };
+	}
+			
+	// TODO: old semantics; fixme, I am still wrong
+	if (shift != originalShift) {
+		// apply path compression (TODO: correct allocation)
+		return new PathCompressedBitmapIndexedMapNode_ValuesOnly\<\>(null, dataMap, content, shift, prefix(keyHash0, shift));
+	} else {
+		// path compression not necessary (TODO: correct allocation)
+		return new BitmapIndexedMapNode_ValuesOnly\<\>(null, dataMap, content);
+	}"
+when isOptionEnabled(ts.setup, usePathCompression());
+	
+	
+default str generate_bodyOf_mergeNodeAndKeyValPair(TrieSpecifics ts) = 
+	"<dec(ts.mask0)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
+	<dec(ts.mask1)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash1))))>;
+
+	if (mask0 != mask1) {
+		// both nodes fit on same level
+		<generate_bodyOf_mergeNodeAndValue(ts, ts.setup, positionBitmap())>
+	} else {
+		// values fit on next level
+		final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node = <toString(call(ts.CompactNode_mergeNodeAndKeyValPair, argsOverride = (ts.shift: plus(useExpr(ts.shift), useExpr(ts.BIT_PARTITION_SIZE)))))>;
+		
+		<generate_bodyOf_mergeOnNextLevel(ts, ts.setup, positionBitmap())>
+	}";	
+
+str generate_bodyOf_mergeNodeAndKeyValPair(TrieSpecifics ts) = 
+	"if (keyHash0 == keyHash1) {
+		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<toString(ts.keyType)>[]) new <if (isPrimitive(ts.keyType)) {><toString(ts.keyType)><} else {>Object<}>[] { key0, key1 }
+						<if (ts.ds == \map()) {>, (<toString(ts.valType)>[]) new <if (isPrimitive(ts.valType)) {><toString(ts.valType)><} else {>Object<}>[] { val0, val1 }<}>);
+	}
+
+	int originalShift = shift;
+
+	<dec(ts.mask0)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
+	<dec(ts.mask1)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash1))))>;
+
+	while (mask0 == mask1) {
+		shift += BIT_PARTITION_SIZE;
+
+		mask0 = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
+		mask1 = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash1))))>;
+	}
+	
+	// both nodes fit on same level
+	final int nodeMap = bitpos(mask0);
+	final int dataMap = bitpos(mask1);
+
+	// store values before node
+	final Object[] content = new Object[] { key1, val1, node0 };
+	
+	// TODO: old semantics; fixme, I am still wrong
+	if (shift != originalShift) {
+		// apply path compression (TODO: correct allocation)
+		return new PathCompressedBitmapIndexedMapNode_Mixed\<\>(null, nodeMap, dataMap,
+						content, shift, prefix(keyHash0, shift));
+
+	} else {
+		// path compression not necessary (TODO: correct allocation)
+		return new BitmapIndexedMapNode_Mixed\<\>(null, nodeMap, dataMap, content);
+	}"
+when isOptionEnabled(ts.setup, usePathCompression());
