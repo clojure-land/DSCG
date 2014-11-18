@@ -242,6 +242,7 @@ data TrieSpecifics
 		/* GENERATE_TRIE_CORE */
 		str coreClassName = "Trie<toString(ds)><classNamePostfix>",
 		str coreInterfaceName = "Immutable<toString(ds)>",
+		str abstractAnyNodeClassName = "INode",
 		str nodeIteratorClassName = "Trie<toString(ds)><classNamePostfix>NodeIterator",	
 		str bitmapIndexedNodeClassName = "BitmapIndexed<toString(ds)>Node",
 		str hashCollisionClassName = "HashCollision<toString(ds)>Node<classNamePostfix>",		

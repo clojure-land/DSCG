@@ -15,7 +15,7 @@ import dscg::Common;
 
 str generateAbstractNodeClassString(TrieSpecifics ts) { 
 	return 
-	"protected static abstract class <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> extends AbstractNode<UnifiedGenericsExpanded(ts.ds, ts.tupleTypes)> {
+	"protected static abstract class <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> implements <ts.abstractAnyNodeClassName><UnifiedGenericsExpanded(ts.ds, ts.tupleTypes)> {
 
 		static final int TUPLE_LENGTH = <tupleLength(ts.ds)>;
 
