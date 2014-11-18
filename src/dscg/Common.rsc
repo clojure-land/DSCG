@@ -641,13 +641,18 @@ str dec(Method m:method) = "abstract <toString(m.returnArg.\type)> <m.name>(<dec
 str dec(Method m:method) = "" when !m.isActive;
 default str dec(Method m) { throw "You forgot <m>!"; }
 
+data OverwriteType 
+	= new()
+	| override()
+	| \default()
+	;
 
-str implOrOverride(Method m:method, Statement bodyStmt, bool doOverride = true, list[Annotation] annotations = []) = implOrOverride(m, toString(bodyStmt), doOverride = doOverride);
-str implOrOverride(Method m:method, Expression bodyExpr, bool doOverride = true, list[Annotation] annotations = []) = implOrOverride(m, toString(bodyExpr), doOverride = doOverride);
+str implOrOverride(Method m:method, Statement bodyStmt, OverwriteType doOverride = override(), list[Annotation] annotations = []) = implOrOverride(m, toString(bodyStmt), doOverride = doOverride);
+str implOrOverride(Method m:method, Expression bodyExpr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = implOrOverride(m, toString(bodyExpr), doOverride = doOverride);
 
-str implOrOverride(m:method(_,_), str bodyStr, bool doOverride = true, list[Annotation] annotations = []) = 
+str implOrOverride(m:method(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
-	<if (doOverride) {>@Override<}>
+	<if (doOverride == \override()) {>@Override<}>
 	<m.visibility> <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>) {
 		<bodyStr>
 	}
@@ -655,7 +660,7 @@ str implOrOverride(m:method(_,_), str bodyStr, bool doOverride = true, list[Anno
 when m.isActive
 	;
 
-str implOrOverride(m:function(_,_), str bodyStr, bool doOverride = true, list[Annotation] annotations = []) = 
+str implOrOverride(m:function(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
 	'<m.visibility> static final <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>) {
 	'	<bodyStr>
@@ -663,7 +668,7 @@ str implOrOverride(m:function(_,_), str bodyStr, bool doOverride = true, list[An
 when m.isActive
 	;
 	
-str implOrOverride(m:constructor(_,_), str bodyStr, bool doOverride = true, list[Annotation] annotations = []) = 
+str implOrOverride(m:constructor(_,_), str bodyStr,  OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
 	'<m.visibility> <m.name>(<dec(m.args - m.argsFilter)>) {
 	'	<bodyStr>
@@ -671,9 +676,9 @@ str implOrOverride(m:constructor(_,_), str bodyStr, bool doOverride = true, list
 when m.isActive
 	;		
 
-str implOrOverride(Method m, str bodyStr, bool doOverride = true, list[Annotation] annotations = []) = "" when !m.isActive;
+str implOrOverride(Method m, str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = "" when !m.isActive;
 
-default str implOrOverride(Method m, str bodyStr, bool doOverride = true, list[Annotation] annotations = []) { throw "You forgot <m>!"; }
+default str implOrOverride(Method m, str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) { throw "You forgot <m>!"; }
 
 default list[Expression] substitute(list[Argument] args, map[Argument, Expression] argsOverride) {
 	list[Expression] res = [];

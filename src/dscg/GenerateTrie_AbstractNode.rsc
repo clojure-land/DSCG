@@ -61,7 +61,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 				public boolean hasNext() {
 					return nextIndex \< <AbstractNode(ts.ds)>.this.nodeArity();
 				}
-			};", doOverride = false)>
+			};", doOverride = new())>
 	
 	
 		<dec(ts.AbstractNode_getKey)>
@@ -102,7 +102,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 				public boolean hasNext() {
 					return nextIndex \< <AbstractNode(ts.ds)>.this.payloadArity();
 				}
-			};", doOverride = false)>
+			};", doOverride = new())>
 
 		<dec(ts.AbstractNode_getSlot)>
 	
@@ -115,7 +115,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 		 * 
 		 * @return sum of nodes and values stored within
 		 */
-		<implOrOverride(ts.AbstractNode_arity, "return payloadArity() + nodeArity();", doOverride = false)>
+		<implOrOverride(ts.AbstractNode_arity, "return payloadArity() + nodeArity();", doOverride = new())>
 
 		<implOrOverride(ts.AbstractNode_size, 
 			"final SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> it = new <toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(this);
@@ -126,6 +126,6 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 				it.next();
 			}
 
-			return size;", doOverride = false)>
+			return size;", doOverride = new())>
 	}";
 }
