@@ -268,6 +268,9 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 			this.<ts.mutator.name> = <ts.mutator.name>;
 			this.<ts.BitmapIndexedNode_contentArray.name> = <ts.BitmapIndexedNode_contentArray.name>;
 			
+			assert <use(bitmapField)> != 0;
+			assert <use(valmapField)> != 0;
+					
 			this.<bitmapField.name> = <bitmapField.name>;
 			this.<valmapField.name> = <valmapField.name>;			
 		}
@@ -305,6 +308,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 			this.<ts.mutator.name> = <ts.mutator.name>;
 			this.<ts.BitmapIndexedNode_contentArray.name> = <ts.BitmapIndexedNode_contentArray.name>;
 
+			assert <use(bitmapField)> != 0;
+
 			this.<bitmapField.name> = <bitmapField.name>;
 		}
 
@@ -340,6 +345,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		<className_compactNode(ts.ds, ts.tupleTypes, false, true)>(final AtomicReference\<Thread\> mutator, <dec(ts.valmapField)>, <dec(ts.BitmapIndexedNode_contentArray)>) {
 			this.<ts.mutator.name> = <ts.mutator.name>;
 			this.<ts.BitmapIndexedNode_contentArray.name> = <ts.BitmapIndexedNode_contentArray.name>;
+			
+			assert <use(valmapField)> != 0;
 			
 			this.<valmapField.name> = <valmapField.name>;
 		}
@@ -404,7 +411,7 @@ Method rightConstructor(TrieSpecifics ts, hasNodes:false, hasValues:false) = ts.
 
 str generate_copyAndSetNode(TrieSpecifics ts, bool hasNodes, bool hasValues) {
 
-	if (!ts.CompactNode_copyAndSetValue.isActive) {
+	if (!ts.CompactNode_copyAndSetNode.isActive) {
 		return "";
 	}
 
