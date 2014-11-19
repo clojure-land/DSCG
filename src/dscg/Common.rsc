@@ -326,6 +326,21 @@ data TrieSpecifics
 		Method CompactNode_copyAndRemoveNode = interfaceMethod(compactNodeClassReturn, "copyAndInsertNode", args = [mutator, bitposField], isActive = false),				
 		Method CompactNode_removeInplaceValueAndConvertToSpecializedNode = interfaceMethod(compactNodeClassReturn, "removeInplaceValueAndConvertToSpecializedNode", args = [mutator, bitposField], isActive = isOptionEnabled(setup, useSpecialization())),				
 
+		Argument src = field(object(isArray = true), "src"),
+		Argument dst = field(object(isArray = true), "dst"),
+		Argument idx = field(primitive("int"), "idx"),
+		Argument idxOld = field(primitive("int"), "idxOld"),
+		Argument idxNew = field(primitive("int"), "idxNew"),
+
+		//Method CompactNode_arraycopyAndRemoveValue = function(\return(object(isArray = true)), "arraycopyAndRemoveValue", args = [mutator, bitposField], generics = GenericsStr),
+		Method CompactNode_arraycopyAndInsertValue = function(\return(object(isArray = true)), "arraycopyAndInsertValue", args = [mutator, src, idx, *payloadTuple], generics = GenericsStr),
+		//Method CompactNode_arraycopyAndSetValue = function(\return(object(isArray = true)), "arraycopyAndSetValue", args = [mutator, bitposField, val(valType)], generics = GenericsStr, isActive = ds == \map()),		
+		Method CompactNode_arraycopyAndSetNode = function(\return(object(isArray = true)), "arraycopyAndSetNode", args = [mutator, src, idx, \node(ds, tupleTypes)], generics = GenericsStr),
+		//Method CompactNode_arraycopyAndInsertNode = function(\return(object(isArray = true)), "arraycopyAndInsertNode", args = [mutator, bitposField, \node(ds, tupleTypes)], generics = GenericsStr, isActive = false),
+		Method CompactNode_arraycopyAndMigrateFromInlineToNode = function(\return(object(isArray = true)), "arraycopyAndMigrateFromInlineToNode", args = [mutator, src, idxOld, idxNew, \node(ds, tupleTypes)], generics = GenericsStr),
+		//Method CompactNode_arraycopyAndMigrateFromNodeToInline = function(\return(object(isArray = true)), "arraycopyAndMigrateFromNodeToInline", args = [mutator, bitposField, \node(ds, tupleTypes)], generics = GenericsStr),
+		//Method CompactNode_arraycopyAndRemoveNode = function(\return(object(isArray = true)), "arraycopyAndInsertNode", args = [mutator, bitposField], generics = GenericsStr, isActive = false),				
+
 		Method CompactNode_convertToGenericNode	= method(compactNodeClassReturn, bitmapField.name, isActive = false), // if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax
 
 		Method CompactNode_mask = function(\return(primitive("int")), "mask", args = [keyHash, shift]),

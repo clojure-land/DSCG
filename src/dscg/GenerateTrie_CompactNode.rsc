@@ -100,9 +100,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		/* TODO: specialize removed(..) to remove this method from this interface */
 		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = new())>
 
-
 		<implOrOverride(ts.CompactNode_mergeTwoKeyValPairs, 
-			generate_bodyOf_mergeTwoKeyValPairs(ts), doOverride = \default(), annotations = [ UNCHECKED_ANNOTATION() ])>
+			generate_bodyOf_mergeTwoKeyValPairs(ts), doOverride = \default())>
 
 		<implOrOverride(ts.CompactNode_mergeNodeAndKeyValPair,
 			generate_bodyOf_mergeNodeAndKeyValPair(ts), doOverride = \default())>
@@ -288,6 +287,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		public <toString(ts.valmapField.\type)> <valmapField.name>() {
 			return <valmapField.name>;
 		}
+		
+		<generate_copyAndSetNode(ts, true, true)>		
 
 	}
 
@@ -320,6 +321,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		public <toString(ts.valmapField.\type)> <valmapField.name>() {
 			return 0;
 		}
+		
+		<generate_copyAndSetNode(ts, true, false)>
 
 	}
 
@@ -353,6 +356,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 			return <valmapField.name>;
 		}
 
+		<generate_copyAndSetNode(ts, false, true)>
+
 	}
 	
 	private static final class <className_compactNode(ts.ds, ts.tupleTypes, false, false)><Generics(ts.ds, ts.tupleTypes)> implements <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> {
@@ -375,11 +380,39 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		public <toString(ts.valmapField.\type)> <valmapField.name>() {
 			return 0;
 		}
-
+		
+		<implOrOverride(ts.CompactNode_copyAndSetNode, UNSUPPORTED_OPERATION_EXCEPTION)>
+		
 	}	
 	"
 	;
 	
+}
+
+Method rightConstructor(TrieSpecifics ts, hasNodes:true, hasValues:true) = ts.BitmapIndexedNode_Mixed_constructor;
+Method rightConstructor(TrieSpecifics ts, hasNodes:true, hasValues:false) = ts.BitmapIndexedNode_NodesOnly_constructor;
+Method rightConstructor(TrieSpecifics ts, hasNodes:false, hasValues:true) = ts.BitmapIndexedNode_ValuesOnly_constructor;
+Method rightConstructor(TrieSpecifics ts, hasNodes:false, hasValues:false) = ts.BitmapIndexedNode_Empty_constructor;  
+
+str generate_copyAndSetNode(TrieSpecifics ts, bool hasNodes, bool hasValues) {
+
+	Method rightConstructor = rightConstructor(ts, hasNodes, hasValues); 
+
+	return implOrOverride(ts.CompactNode_copyAndSetNode, 
+				"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {><dec(field(primitive("int"), "idx"))> = <use(ts.BitmapIndexedNode_contentArray)>.length - 1 - nodeIndex(bitpos);<} else {><dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);<}>						
+				'
+				'<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (<toString(call(ts.AbstractNode_isAllowedToEdit, argsOverride = (field(ts.mutatorType, "x"): useExpr(field(ts.mutatorType, "this.<use(ts.mutatorGetter)>")), field(ts.mutatorType, "y"): useExpr(field(ts.mutatorType, "mutator"))), lookupTable = ts.functionLookupTable))>) {
+				'	// no copying if already editable
+				'	<use(ts.BitmapIndexedNode_contentArray)>[<use(ts.idx)>] = node;
+				'	return this;
+				'} else {<}>
+				'	<dec(ts.dst)> = <ts.bitmapIndexedNodeClassName>.<toString(call(ts.CompactNode_arraycopyAndSetNode, argsOverride = (ts.src: useExpr(ts.BitmapIndexedNode_contentArray))))>;			
+				'	return <toString(call(rightConstructor, 
+								argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
+												ts.bitmapField: useExpr(ts.bitmapMethod), ts.valmapField: useExpr(ts.valmapMethod)),
+								inferredGenericsStr = "\<\>"))>;
+				'<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>",
+				doOverride = override());
 }
 
 str generate_bodyOf_mergeTwoValues(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionField()) =
@@ -405,19 +438,21 @@ str generate_bodyOf_mergeTwoValues(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	"<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask0))))> | <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask1))))>);
 	'	
 	'if (mask0 \< mask1) {
-		return <toString(call(ts.nodeOf_BitmapIndexedNode, 
+		return <toString(call(ts.BitmapIndexedNode_ValuesOnly_constructor, 
 				argsOverride = (ts.mutator: NULL(),								
 								ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.bitmapField.\type, "0")), 
 								ts.valmapField: useExpr(ts.valmapField),
 								ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(__payloadTuple(ts.ds, ts.tupleTypes, 0))>, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))> }"),
-								ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "2")))))>;
+								ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "2"))),
+				inferredGenericsStr = "\<\>"))>;
 	'} else {
-		return <toString(call(ts.nodeOf_BitmapIndexedNode, 
+		return <toString(call(ts.BitmapIndexedNode_ValuesOnly_constructor, 
 				argsOverride = (ts.mutator: NULL(),								
 								ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.bitmapField.\type, "0")), 
 								ts.valmapField: useExpr(ts.valmapField),
 								ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, <use(__payloadTuple(ts.ds, ts.tupleTypes, 0))> }"),
-								ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "2")))))>;	
+								ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "2"))),
+				inferredGenericsStr = "\<\>"))>;	
 	'}";	
 
 default str generate_bodyOf_mergeTwoValues(TrieSpecifics _, Option _, Position _) { throw "something went wrong"; }
@@ -431,12 +466,13 @@ str generate_bodyOf_mergeOnNextLevel(ts:___expandedTrieSpecifics(ds, bitPartitio
 	
 str generate_bodyOf_mergeOnNextLevel(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),false>}, Position _) =
 	"<dec(ts.bitmapField)> = <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask0))))>;
-	'return <toString(call(ts.nodeOf_BitmapIndexedNode, 
+	'return <toString(call(ts.BitmapIndexedNode_NodesOnly_constructor, 
 		argsOverride = (ts.mutator: NULL(),								
 						ts.bitmapField: useExpr(ts.bitmapField),
 						ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.valmapField.\type, "0")),						
 						ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(\node(ts.ds, ts.tupleTypes))> }"),
-						ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "0")))))>;";	
+						ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "0"))),
+		inferredGenericsStr = "\<\>"))>;";	
 
 default str generate_bodyOf_mergeOnNextLevel(TrieSpecifics _, Option _, Position _) { throw "something went wrong"; }
 
@@ -456,10 +492,11 @@ str generate_bodyOf_mergeNodeAndValue(ts:___expandedTrieSpecifics(ds, bitPartiti
 	'<dec(ts.valmapField)> = <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask1))))>;
 	'
 	'// store values before node
-	'return <toString(call(ts.nodeOf_BitmapIndexedNode, 
+	'return <toString(call(ts.BitmapIndexedNode_Mixed_constructor, 
 		argsOverride = (ts.mutator: NULL(),								
 						ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, <use(\node(ts.ds, ts.tupleTypes, 0))> }"),
-								ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "1")))))>;";			
+						ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "1"))),
+		inferredGenericsStr = "\<\>"))>;";			
 
 default str generate_bodyOf_mergeNodeAndValue(TrieSpecifics _, Option _, Position _) { throw "something went wrong"; }
 
