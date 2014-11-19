@@ -205,6 +205,8 @@ data TrieSpecifics
 		
 		Type mutatorType = specific("AtomicReference\<Thread\>"),
 		Argument mutator = field(mutatorType, "mutator"),
+		Argument mutatorGetter = field(mutatorType, "mutator"),
+		Method mutatorMethod = interfaceMethod(\return(mutatorType), "mutator"),
 		
 		list[Argument] payloadTuple = __payloadTuple(ds, tupleTypes),
 		Argument keyHash = field(primitive("int"), "keyHash"),
@@ -220,8 +222,10 @@ data TrieSpecifics
 		Argument comparator = field(specific("Comparator\<Object\>"), "cmp"),
 		Argument index = field(primitive("int"), "index"),
 
-
+		// TODO: convert from argument to accessor 
 		Argument BitmapIndexedNode_contentArray = field(object(isArray = true), "nodes"),
+		Argument BitmapIndexedNode_contentArrayGetter = getter(object(isArray = true), "nodes"),
+		Method BitmapIndexedNode_contentArrayMethod = interfaceMethod(\return(object(isArray = true)), "nodes"),
 		Argument BitmapIndexedNode_payloadArity = field(primitive("byte"), "payloadArity"),	
 
 		list[Argument] argsFilter = [ BitmapIndexedNode_payloadArity ],

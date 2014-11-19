@@ -289,6 +289,12 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 			this.<valmapField.name> = <valmapField.name>;			
 		}
 
+		<implOrOverride(ts.mutatorMethod,
+			"return <use(ts.mutator)>;")>
+
+		<implOrOverride(ts.BitmapIndexedNode_contentArrayMethod,
+			"return <use(ts.BitmapIndexedNode_contentArray)>;")>
+
 		@Override
 		public <toString(ts.bitmapField.\type)> <bitmapField.name>() {
 			return <bitmapField.name>;
@@ -315,6 +321,12 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 			this.<bitmapField.name> = <bitmapField.name>;
 		}
 
+		<implOrOverride(ts.mutatorMethod,
+			"return <use(ts.mutator)>;")>
+
+		<implOrOverride(ts.BitmapIndexedNode_contentArrayMethod,
+			"return <use(ts.BitmapIndexedNode_contentArray)>;")>
+
 		@Override
 		public <toString(ts.bitmapField.\type)> <bitmapField.name>() {
 			return <bitmapField.name>;
@@ -340,6 +352,12 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 			
 			this.<valmapField.name> = <valmapField.name>;
 		}
+
+		<implOrOverride(ts.mutatorMethod,
+			"return <use(ts.mutator)>;")>
+
+		<implOrOverride(ts.BitmapIndexedNode_contentArrayMethod,
+			"return <use(ts.BitmapIndexedNode_contentArray)>;")>
 
 		@Override
 		public <toString(ts.bitmapField.\type)> <bitmapField.name>() {
