@@ -205,7 +205,7 @@ data TrieSpecifics
 		
 		Type mutatorType = specific("AtomicReference\<Thread\>"),
 		Argument mutator = field(mutatorType, "mutator"),
-		Argument mutatorGetter = field(mutatorType, "mutator"),
+		Argument mutatorGetter = getter(mutatorType, "mutator"),
 		Method mutatorMethod = interfaceMethod(\return(mutatorType), "mutator"),
 		
 		list[Argument] payloadTuple = __payloadTuple(ds, tupleTypes),
@@ -389,10 +389,13 @@ data TrieSpecifics
 		Method CompactNode_equals = method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality()) && false),
 		Method CompactNode_hashCode = method(\return(primitive("int")), "hashCode", visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality()) && false),
 
-		Method BitmapIndexedNode_constructor = constructor(bitmapIndexedNodeClassReturn, "<bitmapIndexedNodeClassName>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity ], visibility = "private", argsFilter = argsFilter),
+		Method BitmapIndexedNode_Mixed_constructor = constructor(bitmapIndexedNodeClassReturn, "<className_compactNode(ds, tupleTypes, true, true)>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity ], visibility = "private", argsFilter = argsFilter),
+		Method BitmapIndexedNode_ValuesOnly_constructor = constructor(bitmapIndexedNodeClassReturn, "<className_compactNode(ds, tupleTypes, false, true)>", args = [ mutator, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity ], visibility = "private", argsFilter = argsFilter),
+		Method BitmapIndexedNode_NodesOnly_constructor = constructor(bitmapIndexedNodeClassReturn, "<className_compactNode(ds, tupleTypes, true, false)>", args = [ mutator, bitmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity ], visibility = "private", argsFilter = argsFilter),
+		Method BitmapIndexedNode_Empty_constructor = constructor(bitmapIndexedNodeClassReturn, "<className_compactNode(ds, tupleTypes, false, false)>", visibility = "private", argsFilter = argsFilter),		
 
 		//Method nodeOf_BitmapIndexedNode = function(compactNodeClassReturn, "nodeOf", generics = "<Generics(ds, tupleTypes)>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity ], argsFilter = argsFilter, isActive = !isOptionEnabled(setup,useSpecialization()) || nBound < nMax),	
-		Method nodeOf_BitmapIndexedNode = BitmapIndexedNode_constructor,
+		Method nodeOf_BitmapIndexedNode = BitmapIndexedNode_Mixed_constructor,
 		
 		map[Method, str] functionLookupTable = (AbstractNode_isAllowedToEdit: abstractNodeClassName)
 	);		
@@ -875,11 +878,11 @@ default str equalityComparatorForArguments(Argument x, Argument y) { throw "Ahhh
 /*
  * Mainly CompactNode specifics
  */
-str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:true) = "BitmapIndexed<toString(ds)>Node_Mixed";
-str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:false) = "BitmapIndexed<toString(ds)>Node_NodesOnly";
-str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:false, bool values:true) = "BitmapIndexed<toString(ds)>Node_ValuesOnly";
-//str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:false, bool values:false) = "CompactEmpty<toString(ds)>Node";
-default str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes, bool values) { throw "Ahhh"; }
+str className_compactNode(DataStructure ds, list[Type] tupleTypes, bool nodes:true, bool values:true) = "BitmapIndexed<toString(ds)>Node_Mixed";
+str className_compactNode(DataStructure ds, list[Type] tupleTypes, bool nodes:true, bool values:false) = "BitmapIndexed<toString(ds)>Node_NodesOnly";
+str className_compactNode(DataStructure ds, list[Type] tupleTypes, bool nodes:false, bool values:true) = "BitmapIndexed<toString(ds)>Node_ValuesOnly";
+str className_compactNode(DataStructure ds, list[Type] tupleTypes, bool nodes:false, bool values:false) = "BitmapIndexed<toString(ds)>Node_Empty";
+default str className_compactNode(DataStructure ds, list[Type] tupleTypes, bool nodes, bool values) { throw "Ahhh"; }
 
 list[Argument] metadataArguments(TrieSpecifics ts) 
 	= [ ts.bitmapField, ts.valmapField ]

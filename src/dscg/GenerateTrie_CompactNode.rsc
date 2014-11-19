@@ -109,12 +109,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 		@SuppressWarnings(\"unchecked\")
 		static final <CompactNode(ts.ds)> <emptyTrieNodeConstantName> = 
-			<toString(call(ts.BitmapIndexedNode_constructor, 
-					argsOverride = (ts.mutator: NULL(),								
-								ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.bitmapField.\type, "0")), 
-								ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.valmapField.\type, "0")),
-								ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { }"),
-								ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "0")))))>;
+			<toString(call(ts.BitmapIndexedNode_Empty_constructor))>;
 
 		/*
 		static final <CompactNode(ts.ds)> <emptyTrieNodeConstantName>;
@@ -123,20 +118,9 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 			<if (isOptionEnabled(setup,useSpecialization())) {>
 				<emptyTrieNodeConstantName> = new <toString(ds)>0To0Node<ts.classNamePostfix><InferredGenerics(ts.ds, ts.tupleTypes)>(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0);
 			<} else {>
-		 		<emptyTrieNodeConstantName> = <toString(call(ts.BitmapIndexedNode_constructor, 
-					argsOverride = (ts.mutator: NULL(),								
-								ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.bitmapField.\type, "0")), 
-								ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.valmapField.\type, "0")),
-								ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { }"),
-								ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "0"))),
-					inferredGenericsStr = "<InferredGenerics(ts.ds, ts.tupleTypes)>"))>;
-				
+		 		<emptyTrieNodeConstantName> = <toString(call(ts.BitmapIndexedNode_Empty_constructor), inferredGenericsStr = "<InferredGenerics(ts.ds, ts.tupleTypes)>")>;
 			<}>	
 		};
-		
-	
-		<implOrOverride(ts.nodeOf_BitmapIndexedNode,
-			"return <toString(call(ts.BitmapIndexedNode_constructor, inferredGenericsStr = InferredGenerics(ts.ds, ts.tupleTypes)))>;")>	
 		*/
 	
 	<if (!isOptionEnabled(setup,useSpecialization()) || nBound < nMax) {>
@@ -273,7 +257,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	
 	}
 	
-	private static final class <className_compactNode(ts, setup, true, true)><Generics(ts.ds, ts.tupleTypes)> implements <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> {
+	private static final class <className_compactNode(ts.ds, ts.tupleTypes, true, true)><Generics(ts.ds, ts.tupleTypes)> implements <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> {
 
 		private <dec(ts.mutator)>;
 		private <dec(ts.BitmapIndexedNode_contentArray)>;
@@ -281,7 +265,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		private <dec(ts.bitmapField)>;
 		private <dec(ts.valmapField)>;
 
-		<className_compactNode(ts, setup, true, true)>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>, <dec(ts.BitmapIndexedNode_contentArray)>) {
+		<className_compactNode(ts.ds, ts.tupleTypes, true, true)>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>, <dec(ts.BitmapIndexedNode_contentArray)>) {
 			this.<ts.mutator.name> = <ts.mutator.name>;
 			this.<ts.BitmapIndexedNode_contentArray.name> = <ts.BitmapIndexedNode_contentArray.name>;
 			
@@ -307,14 +291,14 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 	}
 
-	private static final class <className_compactNode(ts, setup, true, false)><Generics(ts.ds, ts.tupleTypes)> implements <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> {
+	private static final class <className_compactNode(ts.ds, ts.tupleTypes, true, false)><Generics(ts.ds, ts.tupleTypes)> implements <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> {
 
 		private <dec(ts.mutator)>;
 		private <dec(ts.BitmapIndexedNode_contentArray)>;
 
 		private <dec(ts.bitmapField)>;
 
-		<className_compactNode(ts, setup, true, false)>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.BitmapIndexedNode_contentArray)>) {
+		<className_compactNode(ts.ds, ts.tupleTypes, true, false)>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.BitmapIndexedNode_contentArray)>) {
 			this.<ts.mutator.name> = <ts.mutator.name>;
 			this.<ts.BitmapIndexedNode_contentArray.name> = <ts.BitmapIndexedNode_contentArray.name>;
 
@@ -339,14 +323,14 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 	}
 
-	private static final class <className_compactNode(ts, setup, false, true)><Generics(ts.ds, ts.tupleTypes)> implements <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> {
+	private static final class <className_compactNode(ts.ds, ts.tupleTypes, false, true)><Generics(ts.ds, ts.tupleTypes)> implements <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> {
 
 		private <dec(ts.mutator)>;
 		private <dec(ts.BitmapIndexedNode_contentArray)>;
 
 		private <dec(ts.valmapField)>;
 
-		<className_compactNode(ts, setup, false, true)>(final AtomicReference\<Thread\> mutator, <dec(ts.valmapField)>, <dec(ts.BitmapIndexedNode_contentArray)>) {
+		<className_compactNode(ts.ds, ts.tupleTypes, false, true)>(final AtomicReference\<Thread\> mutator, <dec(ts.valmapField)>, <dec(ts.BitmapIndexedNode_contentArray)>) {
 			this.<ts.mutator.name> = <ts.mutator.name>;
 			this.<ts.BitmapIndexedNode_contentArray.name> = <ts.BitmapIndexedNode_contentArray.name>;
 			
@@ -370,6 +354,29 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		}
 
 	}
+	
+	private static final class <className_compactNode(ts.ds, ts.tupleTypes, false, false)><Generics(ts.ds, ts.tupleTypes)> implements <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> {
+
+		<className_compactNode(ts.ds, ts.tupleTypes, false, false)>() {
+		}
+
+		<implOrOverride(ts.mutatorMethod,
+			"return null;")>
+
+		<implOrOverride(ts.BitmapIndexedNode_contentArrayMethod,
+			"return new Object[] {};")>
+
+		@Override
+		public <toString(ts.bitmapField.\type)> <bitmapField.name>() {
+			return 0;
+		}
+
+		@Override
+		public <toString(ts.valmapField.\type)> <valmapField.name>() {
+			return 0;
+		}
+
+	}	
 	"
 	;
 	

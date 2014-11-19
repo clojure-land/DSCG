@@ -18,7 +18,7 @@ import dscg::ArrayUtils;
 str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 
 	// NOTE: filter list from constructor is used to restrict fields
-	fields = [ts.mutator, ts.BitmapIndexedNode_contentArray, ts.BitmapIndexedNode_payloadArity] - ts.BitmapIndexedNode_constructor.argsFilter;
+	fields = [ts.mutator, ts.BitmapIndexedNode_contentArray, ts.BitmapIndexedNode_payloadArity] - ts.BitmapIndexedNode_Mixed_constructor.argsFilter;
 
 	return // <className_compactNode(ts, ts.setup, true, true)>
 	"private static interface <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> extends <ts.compactNodeClassName><Generics(ts.ds, ts.tupleTypes)> {
@@ -29,7 +29,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 		/*
 		<decFields(fields)>
 		
-		<implOrOverride(ts.BitmapIndexedNode_constructor, 
+		<implOrOverride(ts.BitmapIndexedNode_Mixed_constructor, 
 			"super(<if (isOptionEnabled(ts.setup, useStagedMutability())) {>mutator<} else {>null<}>, <use(bitmapField)>, <use(valmapField)>);
 			
 			<initFieldsWithIdendity(fields)>
@@ -153,7 +153,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 		<implOrOverride(ts.CompactNode_copyAndSetValue, 
 			"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
 	
-			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (<toString(call(ts.AbstractNode_isAllowedToEdit, argsOverride = (field(ts.mutatorType, "x"): useExpr(field(ts.mutatorType, "this.mutator")), field(ts.mutatorType, "y"): useExpr(field(ts.mutatorType, "mutator"))), lookupTable = ts.functionLookupTable))>) {
+			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (<toString(call(ts.AbstractNode_isAllowedToEdit, argsOverride = (field(ts.mutatorType, "x"): useExpr(field(ts.mutatorType, "this.<use(ts.mutatorGetter)>")), field(ts.mutatorType, "y"): useExpr(field(ts.mutatorType, "mutator"))), lookupTable = ts.functionLookupTable))>) {
 				// no copying if already editable
 				this.<use(ts.BitmapIndexedNode_contentArrayGetter)>[<use(field(primitive("int"), "idx"))>] = val;
 				return this;
@@ -190,7 +190,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);
 			<}>
 
-			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (<toString(call(ts.AbstractNode_isAllowedToEdit, argsOverride = (field(ts.mutatorType, "x"): useExpr(field(ts.mutatorType, "this.mutator")), field(ts.mutatorType, "y"): useExpr(field(ts.mutatorType, "mutator"))), lookupTable = ts.functionLookupTable))>) {
+			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (<toString(call(ts.AbstractNode_isAllowedToEdit, argsOverride = (field(ts.mutatorType, "x"): useExpr(field(ts.mutatorType, "this.<use(ts.mutatorGetter)>")), field(ts.mutatorType, "y"): useExpr(field(ts.mutatorType, "mutator"))), lookupTable = ts.functionLookupTable))>) {
 				// no copying if already editable
 				this.<use(ts.BitmapIndexedNode_contentArrayGetter)>[<use(field(primitive("int"), "idx"))>] = node;
 				return this;
