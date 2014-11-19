@@ -290,6 +290,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		
 		<generate_copyAndSetNode(ts, true, true)>		
 
+		<generate_copyAndSetValue(ts, true, true)>
+
 	}
 
 	private static final class <className_compactNode(ts.ds, ts.tupleTypes, true, false)><Generics(ts.ds, ts.tupleTypes)> implements <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> {
@@ -323,6 +325,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		}
 		
 		<generate_copyAndSetNode(ts, true, false)>
+		
+		<implOrOverride(ts.CompactNode_copyAndSetValue, UNSUPPORTED_OPERATION_EXCEPTION)>		
 
 	}
 
@@ -356,7 +360,9 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 			return <valmapField.name>;
 		}
 
-		<generate_copyAndSetNode(ts, false, true)>
+		<implOrOverride(ts.CompactNode_copyAndSetNode, UNSUPPORTED_OPERATION_EXCEPTION)>
+		
+		<generate_copyAndSetValue(ts, false, true)>		
 
 	}
 	
@@ -382,6 +388,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		}
 		
 		<implOrOverride(ts.CompactNode_copyAndSetNode, UNSUPPORTED_OPERATION_EXCEPTION)>
+
+		<implOrOverride(ts.CompactNode_copyAndSetValue, UNSUPPORTED_OPERATION_EXCEPTION)>
 		
 	}	
 	"
@@ -395,6 +403,10 @@ Method rightConstructor(TrieSpecifics ts, hasNodes:false, hasValues:true) = ts.B
 Method rightConstructor(TrieSpecifics ts, hasNodes:false, hasValues:false) = ts.BitmapIndexedNode_Empty_constructor;  
 
 str generate_copyAndSetNode(TrieSpecifics ts, bool hasNodes, bool hasValues) {
+
+	if (!ts.CompactNode_copyAndSetValue.isActive) {
+		return "";
+	}
 
 	Method rightConstructor = rightConstructor(ts, hasNodes, hasValues); 
 
@@ -414,6 +426,33 @@ str generate_copyAndSetNode(TrieSpecifics ts, bool hasNodes, bool hasValues) {
 				'<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>",
 				doOverride = override());
 }
+
+
+str generate_copyAndSetValue(TrieSpecifics ts, bool hasNodes, bool hasValues) {
+
+	if (!ts.CompactNode_copyAndSetValue.isActive) {
+		return "";
+	}
+
+	Method rightConstructor = rightConstructor(ts, hasNodes, hasValues); 
+
+	return implOrOverride(ts.CompactNode_copyAndSetValue, 
+				"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
+		
+				<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (<toString(call(ts.AbstractNode_isAllowedToEdit, argsOverride = (field(ts.mutatorType, "x"): useExpr(field(ts.mutatorType, "this.<use(ts.mutatorGetter)>")), field(ts.mutatorType, "y"): useExpr(field(ts.mutatorType, "mutator"))), lookupTable = ts.functionLookupTable))>) {
+					// no copying if already editable
+					this.<use(ts.BitmapIndexedNode_contentArrayGetter)>[<use(field(primitive("int"), "idx"))>] = val;
+					return this;
+				} else {<}>					
+					<dec(ts.dst)> = <ts.bitmapIndexedNodeClassName>.<toString(call(ts.CompactNode_arraycopyAndSetValue, argsOverride = (ts.src: useExpr(ts.BitmapIndexedNode_contentArray))))>;
+					return <toString(call(rightConstructor, 
+									argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
+													ts.bitmapField: useExpr(ts.bitmapMethod), ts.valmapField: useExpr(ts.valmapMethod)),
+									inferredGenericsStr = "\<\>"))>;
+				<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>",
+				doOverride = \override());
+}
+
 
 str generate_bodyOf_mergeTwoValues(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionField()) =
 	"if (mask0 \< mask1) {

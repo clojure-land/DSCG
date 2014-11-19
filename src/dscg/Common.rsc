@@ -334,7 +334,7 @@ data TrieSpecifics
 
 		//Method CompactNode_arraycopyAndRemoveValue = function(\return(object(isArray = true)), "arraycopyAndRemoveValue", args = [mutator, bitposField], generics = GenericsStr),
 		Method CompactNode_arraycopyAndInsertValue = function(\return(object(isArray = true)), "arraycopyAndInsertValue", args = [mutator, src, idx, *payloadTuple], generics = GenericsStr),
-		//Method CompactNode_arraycopyAndSetValue = function(\return(object(isArray = true)), "arraycopyAndSetValue", args = [mutator, bitposField, val(valType)], generics = GenericsStr, isActive = ds == \map()),		
+		Method CompactNode_arraycopyAndSetValue = function(\return(object(isArray = true)), "arraycopyAndSetValue", args = [mutator, src, idx, val(valType)], generics = GenericsStr, isActive = ds == \map()),		
 		Method CompactNode_arraycopyAndSetNode = function(\return(object(isArray = true)), "arraycopyAndSetNode", args = [mutator, src, idx, \node(ds, tupleTypes)], generics = GenericsStr),
 		//Method CompactNode_arraycopyAndInsertNode = function(\return(object(isArray = true)), "arraycopyAndInsertNode", args = [mutator, bitposField, \node(ds, tupleTypes)], generics = GenericsStr, isActive = false),
 		Method CompactNode_arraycopyAndMigrateFromInlineToNode = function(\return(object(isArray = true)), "arraycopyAndMigrateFromInlineToNode", args = [mutator, src, idxOld, idxNew, \node(ds, tupleTypes)], generics = GenericsStr),

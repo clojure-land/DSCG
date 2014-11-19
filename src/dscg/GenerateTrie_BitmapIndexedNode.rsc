@@ -150,28 +150,6 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			"return this;",
 			doOverride = \default())>
 
-
-
-
-
-
-		<implOrOverride(ts.CompactNode_copyAndSetValue, 
-			"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
-	
-			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (<toString(call(ts.AbstractNode_isAllowedToEdit, argsOverride = (field(ts.mutatorType, "x"): useExpr(field(ts.mutatorType, "this.<use(ts.mutatorGetter)>")), field(ts.mutatorType, "y"): useExpr(field(ts.mutatorType, "mutator"))), lookupTable = ts.functionLookupTable))>) {
-				// no copying if already editable
-				this.<use(ts.BitmapIndexedNode_contentArrayGetter)>[<use(field(primitive("int"), "idx"))>] = val;
-				return this;
-			} else {<}>
-				<dec(field(asArray(object()), "src"))> = this.<use(ts.BitmapIndexedNode_contentArrayGetter)>;
-				<arraycopyAndSetTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), 1, [val(ts.valType)], field(primitive("int"), "idx"))>
-				
-				return <toString(call(ts.nodeOf_BitmapIndexedNode, 
-								argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
-												ts.bitmapField: useExpr(ts.bitmapMethod), ts.valmapField: useExpr(ts.valmapMethod))))>;
-			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>",
-			doOverride = \default())>
-
 		<noop(ts.CompactNode_copyAndSetValue,
 			
 			compoundExpr([
@@ -187,9 +165,16 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 	
 			])
 		)>
+		
+		
+		
+		
+		
 			
-			
-			
+		<implOrOverride(ts.CompactNode_arraycopyAndSetValue,	
+			"<arraycopyAndSetTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), 1, [val(ts.valType)], field(primitive("int"), "idx"))>
+			'return <use(ts.dst)>;",											 
+			doOverride = new())>	
 			
 		<implOrOverride(ts.CompactNode_arraycopyAndSetNode, 
 			"<arraycopyAndSetTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), 1, [\node(ts.ds, ts.tupleTypes)], field(primitive("int"), "idx"))>
