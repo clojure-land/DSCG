@@ -120,7 +120,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		 		<emptyTrieNodeConstantName> = <toString(call(ts.BitmapIndexedNode_Empty_constructor), inferredGenericsStr = "<InferredGenerics(ts.ds, ts.tupleTypes)>")>;
 			<}>	
 		};
-		*/
+		
 	
 	<if (!isOptionEnabled(setup,useSpecialization()) || nBound < nMax) {>
 	'	<toString(UNCHECKED_ANNOTATION())>
@@ -133,16 +133,17 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'		return nodeOf(mutator, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0);
 	'	}
 	<}>
+	*/
 
 	<if (!isOptionEnabled(setup,useSpecialization())) {>
-	'	static <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>, <dec(ts.payloadTuple)>) {
-	'		assert <use(bitmapField)> == 0;	
-	'		return <toString(call(ts.nodeOf_BitmapIndexedNode, 
+	'	static <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(AtomicReference\<Thread\> mutator, <dec(ts.valmapField)>, <dec(ts.payloadTuple)>) {	
+	'		return <toString(call(ts.BitmapIndexedNode_ValuesOnly_constructor, 
 				argsOverride = (ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.bitmapField.\type, "0")),						
 								ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(ts.payloadTuple)> }"),
-								ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "1")))))>;
+								ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "1"))),
+				inferredGenericsStr = "\<\>"))>;
 	'	}
-	<}>
+	<}>	
 	
 	<generate_specializationFactoryMethods(ts, setup)>
 	
@@ -759,10 +760,10 @@ default str removed_value_block1(ts:___expandedTrieSpecifics(ds, bitPartitionSiz
 	'					: <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: call(ts.CompactNode_mask, argsOverride = (ts.shift: constant(primitive("int"), "0"))))))>;
 	'
 	'	if (dataIndex == 0) {
-	'		return <CompactNode(ts.ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0,
+	'		return <CompactNode(ts.ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, 
 	'						newDataMap, getKey(1)<if (ds == \map()) {>, getValue(1)<}>);
 	'	} else {
-	'		return <CompactNode(ts.ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0,
+	'		return <CompactNode(ts.ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, 
 	'						newDataMap, getKey(0)<if (ds == \map()) {>, getValue(0)<}>);
 	'	}
 	'}";
