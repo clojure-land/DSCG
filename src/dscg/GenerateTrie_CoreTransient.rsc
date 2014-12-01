@@ -46,7 +46,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			try {
 				<toString(UNCHECKED_ANNOTATION())>
 				<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
-				return rootNode.containsKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0);			
+				return rootNode.containsKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0);			
 			} catch (ClassCastException unused) {
 				return false;
 			}
@@ -57,7 +57,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			try {
 				<toString(UNCHECKED_ANNOTATION())>
 				<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
-				return rootNode.containsKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0, cmp);			
+				return rootNode.containsKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0, cmp);			
 			} catch (ClassCastException unused) {
 				return false;
 			}
@@ -69,7 +69,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			try {
 				<toString(UNCHECKED_ANNOTATION())>
 				<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
-				final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0);
+				final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0);
 		
 				if (result.isPresent()) {
 					return result.get();
@@ -86,7 +86,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			try {
 				<toString(UNCHECKED_ANNOTATION())>
 				<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
-				final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0, cmp);
+				final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0, cmp);
 		
 				if (result.isPresent()) {
 					return result.get();
@@ -123,7 +123,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			final int keyHash = key.hashCode();
 			<dec(ts.details)> = Result.unchanged();
 		
-			<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(mutator, key, keyHash, 0, <use(ts.details)>);
+			<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(mutator, key, improve(keyHash), 0, <use(ts.details)>);
 
 			if (<use(ts.details)>.isModified()) {
 				<if (ds == \map()) {>				
@@ -165,7 +165,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			final int keyHash = key.hashCode();
 			<dec(ts.details)> = Result.unchanged();
 		
-			<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(mutator, key, keyHash, 0, <use(ts.details)>, cmp);
+			<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(mutator, key, improve(keyHash), 0, <use(ts.details)>, cmp);
 
 			if (<use(ts.details)>.isModified()) {
 				<if (ds == \map()) {>				
@@ -444,7 +444,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, n
 		final int keyHash = key.hashCode();
 		<dec(ts.details)>= Result.unchanged();
 		
-		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, keyHash, 0, details<if (useComparator) {>, cmp<}>);
+		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, improve(keyHash), 0, details<if (useComparator) {>, cmp<}>);
 
 		if (<use(ts.details)>.isModified()) {
 			rootNode = newRootNode;
@@ -489,7 +489,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, n
 		final int keyHash = key.hashCode();
 		<dec(ts.details)>= Result.unchanged();
 		
-		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, keyHash, 0, details<if (useComparator) {>, cmp<}>);
+		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, improve(keyHash), 0, details<if (useComparator) {>, cmp<}>);
 
 		if (<use(ts.details)>.isModified()) {
 			rootNode = newRootNode;

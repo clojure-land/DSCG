@@ -152,6 +152,13 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 
 	<generate_checkHashCodeAndSize(ts, setup)>
 	
+	private static int improve(final int hash) {
+		int h = hash + ~(hash \<\< 9);
+		h = h ^ (h \>\>\> 14);
+		h = h + (h \<\< 4);
+		return h ^ (h \>\>\> 10);
+	}
+	
 	<implOrOverride(ts.Core_updated, 		generate_bodyOf_Core_updated(ts, setup, equalityDefaultForArguments		))>
 	<implOrOverride(ts.Core_updatedEquiv,	generate_bodyOf_Core_updated(ts, setup, equalityComparatorForArguments	))>
 
@@ -475,7 +482,7 @@ default str generate_bodyOf_Core_updated(TrieSpecifics ts, rel[Option,bool] setu
 	"	final int keyHash = key.hashCode();
 		<dec(ts.details)> = Result.unchanged();
 		
-		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(null, <use(ts.payloadTuple)>, keyHash, 0, <use(ts.details)><optionalComparatorArgument>);
+		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(null, <use(ts.payloadTuple)>, improve(keyHash), 0, <use(ts.details)><optionalComparatorArgument>);
 
 		if (<use(ts.details)>.isModified()) {
 			<if (ts.ds == \map()) {>
@@ -505,7 +512,7 @@ default str generate_bodyOf_Core_removed(TrieSpecifics ts, rel[Option,bool] setu
 	"final int keyHash = key.hashCode();
 	<dec(ts.details)> = Result.unchanged();
 	
-	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(null, key, keyHash, 0, <use(ts.details)><optionalComparatorArgument>);
+	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(null, key, improve(keyHash), 0, <use(ts.details)><optionalComparatorArgument>);
 
 	if (<use(ts.details)>.isModified()) {
 		<if (ts.ds == \set()) {>
@@ -526,7 +533,7 @@ default str generate_bodyOf_Core_containsKey(TrieSpecifics ts, rel[Option,bool] 
 	"try {
 		<toString(UNCHECKED_ANNOTATION())>
 		<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
-		return rootNode.containsKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0<optionalComparatorArgument>);			
+		return rootNode.containsKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0<optionalComparatorArgument>);			
 	} catch (ClassCastException unused) {
 		return false;
 	}"
@@ -547,7 +554,7 @@ default str generate_bodyOf_Core_get(TrieSpecifics ts, rel[Option,bool] setup, s
 	"	try {
 			<toString(UNCHECKED_ANNOTATION())>
 			<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
-			final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, <hashCode(key(ts.keyType))>, 0<optionalComparatorArgument>);
+			final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0<optionalComparatorArgument>);
 	
 			if (result.isPresent()) {
 				return result.get();
