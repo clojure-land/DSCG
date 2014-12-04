@@ -153,10 +153,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	<generate_checkHashCodeAndSize(ts, setup)>
 	
 	private static int improve(final int hash) {
-		int h = hash + ~(hash \<\< 9);
-		h = h ^ (h \>\>\> 14);
-		h = h + (h \<\< 4);
-		return h ^ (h \>\>\> 10);
+		return hash; // return idendity
 	}
 	
 	<implOrOverride(ts.Core_updated, 		generate_bodyOf_Core_updated(ts, setup, equalityDefaultForArguments		))>
@@ -328,6 +325,72 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	public int hashCode() {
 		return hashCode;
 	}
+
+	<if (!isOptionEnabled(setup, useStructuralEquality()) && ts.ds == \map()) {>
+	@Override
+	public boolean equals(Object other) {
+		if (other == this)
+			return true;
+		if (other == null)
+			return false;
+
+		if (other instanceof Map) {
+			Map that = (Map) other;
+
+			if (this.size() != that.size())
+				return false;
+
+			for (@SuppressWarnings(\"unchecked\")
+			Iterator\<Entry\> it = that.entrySet().iterator(); it.hasNext();) {
+				Entry entry = it.next();
+
+				try {
+					@SuppressWarnings(\"unchecked\")
+					final K key = (K) entry.getKey();
+					final Optional\<V\> result = rootNode.findByKey(key, improve(key.hashCode()), 0);
+
+					if (!result.isPresent()) {
+						return false;
+					} else {
+						@SuppressWarnings(\"unchecked\")
+						final V val = (V) entry.getValue();
+
+						if (!result.get().equals(val)) {
+							return false;
+						}
+					}
+				} catch (ClassCastException unused) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+	<}>
+
+	<if (!isOptionEnabled(setup, useStructuralEquality()) && ts.ds == \set()) {>
+	@Override
+	public boolean equals(Object other) {
+		if (other == this)
+			return true;
+		if (other == null)
+			return false;
+
+		if (other instanceof Set) {
+			Set that = (Set) other;
+
+			if (this.size() != that.size())
+				return false;
+
+			return containsAll(that);
+		}
+
+		return false;
+	}
+	<}>
 
 	<if (isOptionEnabled(setup, useStructuralEquality())) {>
 	@Override
