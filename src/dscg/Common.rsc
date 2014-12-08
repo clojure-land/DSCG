@@ -218,7 +218,8 @@ data TrieSpecifics
 
 
 		Argument BitmapIndexedNode_contentArray = field(object(isArray = true), "nodes"),
-		Argument BitmapIndexedNode_payloadArity = field(primitive("byte"), "payloadArity"),	
+		Argument BitmapIndexedNode_payloadArity = field(primitive("byte"), "payloadArity"),
+		Argument BitmapIndexedNode_nodeArity = field(primitive("byte"), "nodeArity"),	
 
 		list[Argument] argsFilter = [],
 		//list[Argument] argsFilter = [ mutator, BitmapIndexedNode_payloadArity ],
@@ -372,9 +373,9 @@ data TrieSpecifics
 		Method CompactNode_equals = method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
 		Method CompactNode_hashCode = method(\return(primitive("int")), "hashCode", visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
 
-		Method BitmapIndexedNode_constructor = constructor(bitmapIndexedNodeClassReturn, "<bitmapIndexedNodeClassName>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity ], visibility = "private", argsFilter = argsFilter),
+		Method BitmapIndexedNode_constructor = constructor(bitmapIndexedNodeClassReturn, "<bitmapIndexedNodeClassName>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ], visibility = "private", argsFilter = argsFilter),
 
-		Method nodeOf_BitmapIndexedNode = function(compactNodeClassReturn, "nodeOf", generics = "<Generics(ds, tupleTypes)>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity ], argsFilter = argsFilter, isActive = !isOptionEnabled(setup,useSpecialization()) || nBound < nMax)	
+		Method nodeOf_BitmapIndexedNode = function(compactNodeClassReturn, "nodeOf", generics = "<Generics(ds, tupleTypes)>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ], argsFilter = argsFilter, isActive = !isOptionEnabled(setup,useSpecialization()) || nBound < nMax)	
 		)
 	;		
 	

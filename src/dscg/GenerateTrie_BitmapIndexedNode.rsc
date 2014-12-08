@@ -18,7 +18,7 @@ import dscg::ArrayUtils;
 str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 
 	// NOTE: filter list from constructor is used to restrict fields
-	fields = [ts.mutator, ts.BitmapIndexedNode_contentArray, ts.BitmapIndexedNode_payloadArity] - ts.BitmapIndexedNode_constructor.argsFilter;
+	fields = [ts.mutator, ts.BitmapIndexedNode_contentArray, ts.BitmapIndexedNode_payloadArity, ts.BitmapIndexedNode_nodeArity] - ts.BitmapIndexedNode_constructor.argsFilter;
 
 	return
 	"private static final class <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> extends <className_compactNode(ts, ts.setup, true, true)><Generics(ts.ds, ts.tupleTypes)> {
@@ -219,6 +219,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			return <toString(call(ts.nodeOf_BitmapIndexedNode, 
 							argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
 											ts.BitmapIndexedNode_payloadArity: cast(primitive("byte"), minEqOne(useExpr(ts.BitmapIndexedNode_payloadArity))),
+											ts.BitmapIndexedNode_nodeArity: cast(primitive("byte"), plusEqOne(useExpr(ts.BitmapIndexedNode_nodeArity))),
 											ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr (useExpr(ts.bitmapMethod), useExpr(ts.bitposField))), 
 											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;")>
 
@@ -237,6 +238,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			return <toString(call(ts.nodeOf_BitmapIndexedNode, 
 							argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
 											ts.BitmapIndexedNode_payloadArity: cast(primitive("byte"), plusEqOne(useExpr(ts.BitmapIndexedNode_payloadArity))),
+											ts.BitmapIndexedNode_nodeArity: cast(primitive("byte"), minEqOne(useExpr(ts.BitmapIndexedNode_nodeArity))),
 											ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.bitmapMethod), useExpr(ts.bitposField))), 
 											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr (useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;")>
 		
