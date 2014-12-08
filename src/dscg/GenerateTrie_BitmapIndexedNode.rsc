@@ -61,7 +61,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			annotations = [ UNCHECKED_ANNOTATION() ])>
 
 		<implOrOverride(ts.AbstractNode_payloadIterator, 
-			"return ArrayKeyValueSupplierIterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity);")>
+			generate_bodyOf_payloadIterator(ts))>
 
 		<implOrOverride(ts.CompactNode_nodeIterator, generate_bodyOf_nodeIterator(ts),
 			annotations = [ UNCHECKED_ANNOTATION() ])>
@@ -78,7 +78,8 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 		<implOrOverride(ts.AbstractNode_nodeArity, 
 			generate_bodyOf_nodeArity(ts))>
 
-		<implOrOverride(ts.AbstractNode_getSlot, UNSUPPORTED_OPERATION_EXCEPTION)>
+		<implOrOverride(ts.AbstractNode_getSlot, 
+			"return nodes[<use(ts.index)>];")>
 
 		<implOrOverride(ts.AbstractNode_hasSlots, 
 			"return nodes.length != 0;")>
@@ -284,16 +285,35 @@ default str generate_bodyOf_getNode(TrieSpecifics ts) =
 str generate_bodyOf_getNode(TrieSpecifics ts) = 
 	"return (<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>) nodes[nodes.length - 1 - index];"
 when isOptionEnabled(ts.setup, useSandwichArrays())
-	;
+	;	
 	
-default str generate_bodyOf_nodeIterator(TrieSpecifics ts) = 
+str generate_bodyOf_nodeIterator(TrieSpecifics ts) = 
 	"final int offset = <use(tupleLengthConstant)> * payloadArity;
+	'final int length = nodes.length - offset;
 	'
-	'for (int i = offset; i \< nodes.length - offset; i++) {
-	'	assert ((nodes[i] instanceof <AbstractNode(ts.ds)>) == true);
+	'if (DEBUG) {
+	'	for (int i = offset; i \< offset + length; i++) {
+	'		assert ((nodes[i] instanceof <AbstractNode(ts.ds)>) == true);
+	'	}
 	'}
+	' 
+	'return (Iterator) ArrayIterator.of(nodes, offset, length);"
+when !isOptionEnabled(ts.setup, useSandwichArrays())
+	;		
+	
+str generate_bodyOf_nodeIterator(TrieSpecifics ts) = 
+	"final int length = nodeArity();
+	'final int offset = nodes.length - length;
 	'
-	'return (Iterator) ArrayIterator.of(nodes, offset, nodes.length - offset);";	
+	'if (DEBUG) {
+	'	for (int i = offset; i \< offset + length; i++) {
+	'		assert ((nodes[i] instanceof <AbstractNode(ts.ds)>) == true);
+	'	}
+	'}
+	' 
+	'return (Iterator) ArrayIterator.of(nodes, offset, length);"
+when isOptionEnabled(ts.setup, useSandwichArrays())	
+	;	
 		
 str generate_bodyOf_hasPayload(TrieSpecifics ts) = "return dataMap() != 0;" when isOptionEnabled(ts.setup, useSandwichArrays());
 default str generate_bodyOf_hasPayload(TrieSpecifics ts) = "return <use(ts.BitmapIndexedNode_payloadArity)> != 0;";
@@ -307,3 +327,12 @@ default str generate_bodyOf_hasNodes(TrieSpecifics ts) = "return <use(tupleLengt
 str generate_bodyOf_nodeArity(TrieSpecifics ts) = "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.bitmapMethod)>);" when isOptionEnabled(ts.setup, useSandwichArrays());
 default str generate_bodyOf_nodeArity(TrieSpecifics ts) = "return nodes.length - <use(tupleLengthConstant)> * payloadArity;";
 
+str generate_bodyOf_payloadIterator(TrieSpecifics ts) 
+	= "return ArrayKeyValueSupplierIterator.of(nodes, 0, payloadArity());"
+when ts.ds == \map();
+
+str generate_bodyOf_payloadIterator(TrieSpecifics ts) 
+	= "return ArraySupplierIterator.of(nodes, 0, payloadArity());"
+when ts.ds == \set();
+
+default str generate_bodyOf_payloadIterator(TrieSpecifics ts) { throw "Ahhh"; }

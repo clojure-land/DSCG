@@ -369,6 +369,40 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 
 		return false;
 	}
+	
+	<if (false) {>
+	@Override
+	public boolean equals(Object other) {
+		if (other == this)
+			return true;
+		if (other == null)
+			return false;
+
+		if (other instanceof TrieMap_BleedingEdge) {
+			TrieMap_BleedingEdge that = (TrieMap_BleedingEdge) other;
+
+			if (this.size() != that.size())
+				return false;
+
+			SupplierIterator it1 = this.keyIterator();
+			SupplierIterator it2 = that.keyIterator();
+
+			boolean result = true;
+			while (it1.hasNext() && it2.hasNext() && (result = it1.next().equals(it2.next()))
+							&& (result = it1.get().equals(it2.get())))
+				;
+
+			assert !result || !it1.hasNext(); // result =\> !it1.hasNext
+			assert !result || !it2.hasNext(); // result =\> !it2.hasNext
+
+			return result;
+		} else if (other instanceof Map) {
+			throw new UnsupportedOperationException(\"TODO\");
+		}		
+
+		return false;
+	}	
+	<}>
 	<}>
 
 	<if (!isOptionEnabled(setup, useStructuralEquality()) && ts.ds == \set()) {>
@@ -390,6 +424,39 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 
 		return false;
 	}
+
+	<if (false) {>	
+	@Override
+	public boolean equals(Object other) {
+		if (other == this)
+			return true;
+		if (other == null)
+			return false;
+
+		if (other instanceof TrieSet_BleedingEdge) {
+			TrieSet_BleedingEdge that = (TrieSet_BleedingEdge) other;
+
+			if (this.size() != that.size())
+				return false;
+
+			Iterator it1 = this.iterator();
+			Iterator it2 = that.iterator();
+
+			boolean result = true;
+			while (it1.hasNext() && it2.hasNext() && (result = it1.next().equals(it2.next())))
+				;
+
+			assert !result || !it1.hasNext(); // result =\> !it1.hasNext
+			assert !result || !it2.hasNext(); // result =\> !it2.hasNext
+
+			return result;
+		} else if (other instanceof Set) {
+			throw new UnsupportedOperationException(\"TODO\");
+		}
+
+		return false;
+	}
+	<}>	
 	<}>
 
 	<if (isOptionEnabled(setup, useStructuralEquality())) {>

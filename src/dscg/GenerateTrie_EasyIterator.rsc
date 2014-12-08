@@ -13,17 +13,19 @@ module dscg::GenerateTrie_EasyIterator
 
 import dscg::Common;
 
-str generateEasyIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
+str generateEasyIteratorClassString(TrieSpecifics ts, rel[Option,bool] setup) = 
 	"/**
 	 * Iterator that first iterates over inlined-values and then continues depth
 	 * first recursively.
 	 */
-	private static class Trie<toString(ds)>Iterator<GenericsDec(ds)> implements SupplierIterator<SupplierIteratorGenerics(ds)> {
+	private static class Trie<toString(ts.ds)><ts.classNamePostfix>Iterator<Generics(ts.ds, ts.tupleTypes)> implements SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> {
 
-		final Deque\<Iterator\<? extends <CompactNode(ds)>\>\> nodeIteratorStack;
-		SupplierIterator<SupplierIteratorGenerics(ds)> valueIterator;
+		final Deque\<Iterator\<? extends <AbstractNode(ts.ds)>\>\> nodeIteratorStack;
+		SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> valueIterator;
 
-		Trie<toString(ds)>Iterator(<CompactNode(ds)><Generics(ds)> rootNode) {
+		private boolean hasNext = false;
+
+		Trie<toString(ts.ds)><ts.classNamePostfix>Iterator(<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> rootNode) {
 			if (rootNode.hasPayload()) {
 				valueIterator = rootNode.payloadIterator();
 			} else {
@@ -40,13 +42,13 @@ str generateEasyIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 		public boolean hasNext() {
 			while (true) {
 				if (valueIterator.hasNext()) {
-					return true;
+					return hasNext = true;
 				} else {
 					if (nodeIteratorStack.isEmpty()) {
-						return false;
+						return hasNext = false;
 					} else {
 						if (nodeIteratorStack.peek().hasNext()) {
-							<CompactNode(ds)><Generics(ds)> innerNode = nodeIteratorStack.peek().next();
+							<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> innerNode = nodeIteratorStack.peek().next();
 
 							if (innerNode.hasPayload())
 								valueIterator = innerNode.payloadIterator();
@@ -66,14 +68,14 @@ str generateEasyIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 
 		@Override
 		public K next() {
-			if (!hasNext())
+			if (!hasNext)
 				throw new NoSuchElementException();
 
 			return valueIterator.next();
 		}
 
 		@Override
-		public V get() {
+		public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
 			return valueIterator.get();
 		}
 

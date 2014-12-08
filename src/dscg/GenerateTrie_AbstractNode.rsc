@@ -44,6 +44,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 			"return new Iterator\<<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>\>() {
 
 				int nextIndex = 0;
+				final int nodeArity = <AbstractNode(ts.ds)>.this.nodeArity();
 
 				@Override
 				public void remove() {
@@ -59,7 +60,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 
 				@Override
 				public boolean hasNext() {
-					return nextIndex \< <AbstractNode(ts.ds)>.this.nodeArity();
+					return nextIndex \< nodeArity;
 				}
 			};", doOverride = new())>
 	
@@ -76,6 +77,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 			"return new SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>() {
 
 				int nextIndex = 0;
+				final int payloadArity = <AbstractNode(ts.ds)>.this.payloadArity();
 
 				@Override
 				public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
@@ -100,7 +102,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 
 				@Override
 				public boolean hasNext() {
-					return nextIndex \< <AbstractNode(ts.ds)>.this.payloadArity();
+					return nextIndex \< payloadArity;
 				}
 			};", doOverride = new())>
 

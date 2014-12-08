@@ -108,10 +108,10 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 	rel[Option,bool] setup = { 
 		<useSpecialization(),flagSpecialization>,
 		<useUntypedVariables(),flagUntypedVariables>,
-		<useFixedStackIterator(),true>,
+		<useFixedStackIterator(),false>,
 		<useStructuralEquality(),true>,
 		<methodsWithComparator(),true>,
-		<useSandwichArrays(),true>,
+		<useSandwichArrays(),false>,
 		<useStagedMutability(),true>,
 		<usePrefixInsteadOfPostfixEncoding(),false>,	
 		<usePathCompression(),false>	

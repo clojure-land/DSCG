@@ -29,6 +29,8 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 
 		private int currentStackLevel;
 		private final int[] nodeCursorsAndLengths = new int[MAX_DEPTH * 2];
+		
+		protected boolean hasNext = false;
 
 		<toString(UNCHECKED_ANNOTATION())>
 		Abstract<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)>[] nodes = new Abstract<toString(ts.ds)>Node[MAX_DEPTH];
@@ -47,7 +49,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 
 		public boolean hasNext() {
 			if (currentValueCursor \< currentValueLength) {
-				return true;
+				return hasNext = true;
 			} else {
 				/*
 				 * search for next node that contains values
@@ -85,7 +87,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 							currentValueNode = nextNode;
 							currentValueCursor = 0;
 							currentValueLength = nextNode.payloadArity();
-							return true;
+							return hasNext = true;
 						}
 					} else {
 						currentStackLevel--;
@@ -93,7 +95,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 				}
 			}
 
-			return false;
+			return hasNext = false;
 		}
 
 		public void remove() {
@@ -110,7 +112,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 
 		@Override
 		public <toString(primitiveToClass(ts.keyType))> next() {
-			if (!hasNext()) {
+			if (!hasNext) {
 				throw new NoSuchElementException();
 			} else {
 				return currentValueNode.getKey(currentValueCursor++);
@@ -133,7 +135,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 
 		@Override
 		public <toString(primitiveToClass(ts.valType))> next() {
-			if (!hasNext()) {
+			if (!hasNext) {
 				throw new NoSuchElementException();
 			} else {
 				return currentValueNode.getValue(currentValueCursor++);
@@ -155,7 +157,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 
 		@Override
 		public Map.Entry<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> next() {
-			if (!hasNext()) {
+			if (!hasNext) {
 				throw new NoSuchElementException();
 			} else {
 				return currentValueNode.getKeyValueEntry(currentValueCursor++);

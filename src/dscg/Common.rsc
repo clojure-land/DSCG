@@ -220,7 +220,7 @@ data TrieSpecifics
 		Argument BitmapIndexedNode_contentArray = field(object(isArray = true), "nodes"),
 		Argument BitmapIndexedNode_payloadArity = field(primitive("byte"), "payloadArity"),	
 
-		list[Argument] argsFilter = [ BitmapIndexedNode_payloadArity ],
+		list[Argument] argsFilter = [],
 		//list[Argument] argsFilter = [ mutator, BitmapIndexedNode_payloadArity ],
 				
 
@@ -332,7 +332,7 @@ data TrieSpecifics
 		/***/
 		Method AbstractNode_nodeIterator = method(\return(generic("Iterator\<? extends <AbstractNode(ds)><GenericsStr>\>")), "nodeIterator"),
 		// TODO: improve overriding of methods
-		Method CompactNode_nodeIterator = method(\return(generic("Iterator\<? extends <CompactNode(ds)><GenericsStr>\>")), "nodeIterator", isActive = false),
+		Method CompactNode_nodeIterator = method(\return(generic("Iterator\<? extends <CompactNode(ds)><GenericsStr>\>")), "nodeIterator", isActive = !isOptionEnabled(setup, useFixedStackIterator())),
 
 		Method AbstractNode_getKey = method(\return(keyType), "getKey", args = [index]),
 		Method AbstractNode_getValue = method(\return(valType), "getValue", args = [index], isActive = ds == \map()),		
@@ -342,11 +342,11 @@ data TrieSpecifics
 		Method AbstractNode_hasPayload = method(\return(primitive("boolean")), "hasPayload"),
 		Method AbstractNode_payloadArity = method(\return(primitive("int")), "payloadArity"),
 		/***/
-		Method AbstractNode_payloadIterator = method(\return(generic("SupplierIterator<SupplierIteratorGenerics(ds, tupleTypes)>")), "payloadIterator", isActive = false),	
+		Method AbstractNode_payloadIterator = method(\return(generic("SupplierIterator<SupplierIteratorGenerics(ds, tupleTypes)>")), "payloadIterator", isActive = !isOptionEnabled(setup, useFixedStackIterator())),	
 
-		Method AbstractNode_hasSlots = method(\return(primitive("boolean")), "hasSlots", isActive = isOptionEnabled(setup,useUntypedVariables())),
-		Method AbstractNode_slotArity = method(\return(primitive("int")), "slotArity", isActive = isOptionEnabled(setup,useUntypedVariables())),		
-		Method AbstractNode_getSlot = method(\return(object()), "getSlot", args = [index], isActive = isOptionEnabled(setup,useUntypedVariables())),
+		Method AbstractNode_hasSlots = method(\return(primitive("boolean")), "hasSlots", isActive = true), // isOptionEnabled(setup,useUntypedVariables()
+		Method AbstractNode_slotArity = method(\return(primitive("int")), "slotArity", isActive = true), // isOptionEnabled(setup,useUntypedVariables())		
+		Method AbstractNode_getSlot = method(\return(object()), "getSlot", args = [index], isActive = true), // isOptionEnabled(setup,useUntypedVariables())
 		
 		Method jul_Map_put = method(\return(primitiveToClass(valType)), "put", args = [ key(primitiveToClass(keyType)), val(primitiveToClass(valType)) ], visibility = "public", isActive = ds == \map()),		
 		Method jul_Map_remove = method(\return(primitiveToClass(valType)), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = ds == \map()),
@@ -770,8 +770,9 @@ str GenericsExpandedReversed(DataStructure ds:\set(), tupleTypes:[keyType, *_]) 
 str GenericsExpandedUpperBounded(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<? extends <toString(primitiveToClass(keyType))>, ? extends <toString(primitiveToClass(valType))>\>";
 str GenericsExpandedUpperBounded(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<? extends <toString(primitiveToClass(keyType))>\>";
 
-str GenericsDec(DataStructure ds:\map()) = "\<K <GenericsDecExtentionForPrimitives(key(ts.keyType))>, V <GenericsDecExtentionForPrimitives(val(ts.valType))>\>";
-str GenericsDec(DataStructure ds:\set()) = "\<K <GenericsDecExtentionForPrimitives(key(ts.keyType))>\>";
+str GenericsDec(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<K <GenericsDecExtentionForPrimitives(key(keyType))>, V <GenericsDecExtentionForPrimitives(val(valType))>\>";
+str GenericsDec(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<K <GenericsDecExtentionForPrimitives(key(keyType))>\>";
+//???
 str GenericsDecExtentionForPrimitives(Argument a) = "extends <primitiveToClass(a)>" when !isGeneric(a);
 default str GenericsDecExtentionForPrimitives(Argument _) = "";
 
