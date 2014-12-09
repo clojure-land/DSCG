@@ -290,8 +290,8 @@ when isOptionEnabled(ts.setup, useSandwichArrays())
 	;	
 	
 str generate_bodyOf_nodeIterator(TrieSpecifics ts) = 
-	"final int offset = <use(tupleLengthConstant)> * payloadArity;
-	'final int length = nodes.length - offset;
+	"final int offset = <use(tupleLengthConstant)> * <use(ts.BitmapIndexedNode_payloadArity)>;
+	'final int length = <use(ts.BitmapIndexedNode_nodeArity)>;
 	'
 	'if (DEBUG) {
 	'	for (int i = offset; i \< offset + length; i++) {
@@ -324,10 +324,12 @@ str generate_bodyOf_payloadArity(TrieSpecifics ts) = "return <integerOrLongObjec
 default str generate_bodyOf_payloadArity(TrieSpecifics ts) = "return <use(ts.BitmapIndexedNode_payloadArity)>;";
 
 str generate_bodyOf_hasNodes(TrieSpecifics ts) = "return nodeMap() != 0;" when isOptionEnabled(ts.setup, useSandwichArrays());
-default str generate_bodyOf_hasNodes(TrieSpecifics ts) = "return <use(tupleLengthConstant)> * payloadArity != nodes.length;";
+default str generate_bodyOf_hasNodes(TrieSpecifics ts) = "return <use(ts.BitmapIndexedNode_nodeArity)> != 0;"; 
+// previously "return <use(tupleLengthConstant)> * payloadArity != nodes.length;";
 
 str generate_bodyOf_nodeArity(TrieSpecifics ts) = "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.bitmapMethod)>);" when isOptionEnabled(ts.setup, useSandwichArrays());
-default str generate_bodyOf_nodeArity(TrieSpecifics ts) = "return nodes.length - <use(tupleLengthConstant)> * payloadArity;";
+default str generate_bodyOf_nodeArity(TrieSpecifics ts) = "return <use(ts.BitmapIndexedNode_nodeArity)>;";
+// previously "return nodes.length - <use(tupleLengthConstant)> * payloadArity;";
 
 str generate_bodyOf_payloadIterator(TrieSpecifics ts) 
 	= "return ArrayKeyValueSupplierIterator.of(nodes, 0, payloadArity());"
