@@ -27,75 +27,82 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		protected int currentValueLength;
 		protected Abstract<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)> currentValueNode;
 
-		private int currentStackLevel;
+		private int currentStackLevel = -1;
 		private final int[] nodeCursorsAndLengths = new int[MAX_DEPTH * 2];
-		
-		protected boolean hasNext = false;
 
 		<toString(UNCHECKED_ANNOTATION())>
 		Abstract<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)>[] nodes = new Abstract<toString(ts.ds)>Node[MAX_DEPTH];
 
 		Abstract<toString(ts.ds)>Iterator(Abstract<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)> rootNode) {
-			currentStackLevel = 0;
+			if (rootNode.hasNodes()) {
+				currentStackLevel = 0;
 
-			currentValueNode = rootNode;
-			currentValueCursor = 0;
-			currentValueLength = rootNode.payloadArity();
+				nodes[0] = rootNode;
+				nodeCursorsAndLengths[0] = 0;
+				nodeCursorsAndLengths[1] = rootNode.nodeArity();					
+			}			
 
-			nodes[0] = rootNode;
-			nodeCursorsAndLengths[0] = 0;
-			nodeCursorsAndLengths[1] = rootNode.nodeArity();
+			if (rootNode.hasPayload()) {
+				currentValueNode = rootNode;
+				currentValueCursor = 0;
+				currentValueLength = rootNode.payloadArity();
+				
+			}
+		}
+
+		/*
+		 * search for next node that contains values
+		 */
+		private boolean searchNextValueNode() {
+			while (currentStackLevel \>= 0) {
+				final int currentCursorIndex = currentStackLevel * 2;
+				final int currentLengthIndex = currentCursorIndex + 1;
+
+				final int nodeCursor = nodeCursorsAndLengths[currentCursorIndex];
+				final int nodeLength = nodeCursorsAndLengths[currentLengthIndex];
+
+				if (nodeCursor \< nodeLength) {
+					final Abstract<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)> nextNode = nodes[currentStackLevel]
+									.getNode(nodeCursor);
+					nodeCursorsAndLengths[currentCursorIndex]++;
+
+					if (nextNode.hasNodes()) {
+						/*
+						 * put node on next stack level for depth-first
+						 * traversal
+						 */
+						final int nextStackLevel = ++currentStackLevel;
+						final int nextCursorIndex = nextStackLevel * 2;
+						final int nextLengthIndex = nextCursorIndex + 1;
+
+						nodes[nextStackLevel] = nextNode;
+						nodeCursorsAndLengths[nextCursorIndex] = 0;
+						nodeCursorsAndLengths[nextLengthIndex] = nextNode.nodeArity();
+					}
+
+					if (nextNode.hasPayload()) {
+						/*
+						 * found next node that contains values
+						 */
+						currentValueNode = nextNode;
+						currentValueCursor = 0;
+						currentValueLength = nextNode.payloadArity();
+						return true;
+					}
+				} else {
+					currentStackLevel--;
+				}
+			}
+
+			return false;		
 		}
 
 		public boolean hasNext() {
 			if (currentValueCursor \< currentValueLength) {
-				return hasNext = true;
+				return true;
 			} else {
-				/*
-				 * search for next node that contains values
-				 */
-				while (currentStackLevel \>= 0) {
-					final int currentCursorIndex = currentStackLevel * 2;
-					final int currentLengthIndex = currentCursorIndex + 1;
-
-					final int nodeCursor = nodeCursorsAndLengths[currentCursorIndex];
-					final int nodeLength = nodeCursorsAndLengths[currentLengthIndex];
-
-					if (nodeCursor \< nodeLength) {
-						final Abstract<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)> nextNode = nodes[currentStackLevel]
-										.getNode(nodeCursor);
-						nodeCursorsAndLengths[currentCursorIndex]++;
-
-						if (nextNode.hasNodes()) {
-							/*
-							 * put node on next stack level for depth-first
-							 * traversal
-							 */
-							final int nextStackLevel = ++currentStackLevel;
-							final int nextCursorIndex = nextStackLevel * 2;
-							final int nextLengthIndex = nextCursorIndex + 1;
-
-							nodes[nextStackLevel] = nextNode;
-							nodeCursorsAndLengths[nextCursorIndex] = 0;
-							nodeCursorsAndLengths[nextLengthIndex] = nextNode.nodeArity();
-						}
-
-						if (nextNode.hasPayload()) {
-							/*
-							 * found next node that contains values
-							 */
-							currentValueNode = nextNode;
-							currentValueCursor = 0;
-							currentValueLength = nextNode.payloadArity();
-							return hasNext = true;
-						}
-					} else {
-						currentStackLevel--;
-					}
-				}
+				return searchNextValueNode();
 			}
-
-			return hasNext = false;
 		}
 
 		public void remove() {
@@ -112,7 +119,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 
 		@Override
 		public <toString(primitiveToClass(ts.keyType))> next() {
-			if (!hasNext) {
+			if (!hasNext()) {
 				throw new NoSuchElementException();
 			} else {
 				return currentValueNode.getKey(currentValueCursor++);
@@ -135,7 +142,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 
 		@Override
 		public <toString(primitiveToClass(ts.valType))> next() {
-			if (!hasNext) {
+			if (!hasNext()) {
 				throw new NoSuchElementException();
 			} else {
 				return currentValueNode.getValue(currentValueCursor++);
@@ -157,7 +164,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 
 		@Override
 		public Map.Entry<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> next() {
-			if (!hasNext) {
+			if (!hasNext()) {
 				throw new NoSuchElementException();
 			} else {
 				return currentValueNode.getKeyValueEntry(currentValueCursor++);
