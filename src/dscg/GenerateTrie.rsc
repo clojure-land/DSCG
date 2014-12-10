@@ -146,9 +146,12 @@ void doGenerate(TrieConfig cfg, str overideClassNamePostfixWith = "") {
 	
 	innerClassStrings 
 		= innerClassStrings
-		+ [ generateNodeIteratorClassString(ts, ts.setup, ts.classNamePostfix)]
-		+ [ generateCoreTransientClassString(ts, ts.setup, ts.classNamePostfix)]		
+		+ [ generateNodeIteratorClassString(ts, ts.setup, ts.classNamePostfix)]		
 		;
+		
+	if (isOptionEnabled(ts.setup, useStagedMutability())) { 
+		innerClassStrings = innerClassStrings + [ generateCoreTransientClassString(ts, ts.setup, ts.classNamePostfix)];
+	}	
 		
 	if (isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useUntypedVariables())) {
 		innerClassStrings = innerClassStrings + 

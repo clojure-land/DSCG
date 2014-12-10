@@ -313,12 +313,12 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 
 	@Override
 	public boolean isTransientSupported() {
-		return true;
+		return <isOptionEnabled(ts.setup, useStagedMutability())>; 
 	}
 
 	@Override
 	public Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> asTransient() {
-		return new Transient<ts.coreClassName><Generics(ts.ds, ts.tupleTypes)>(this);
+		<if (isOptionEnabled(ts.setup, useStagedMutability())) {> return new Transient<ts.coreClassName><Generics(ts.ds, ts.tupleTypes)>(this); <} else {> <toString(UNSUPPORTED_OPERATION_EXCEPTION)> <}>		
 	}
 
 	@Override

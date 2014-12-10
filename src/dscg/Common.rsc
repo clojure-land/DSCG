@@ -221,10 +221,8 @@ data TrieSpecifics
 		Argument BitmapIndexedNode_payloadArity = field(primitive("byte"), "payloadArity"),
 		Argument BitmapIndexedNode_nodeArity = field(primitive("byte"), "nodeArity"),	
 
-		list[Argument] argsFilter = [ BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ],
-		//list[Argument] argsFilter = [ mutator, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ],
-				
-
+		list[Argument] argsFilter = calculateArgsFilter(setup),
+		
 		Argument compactNodeReturn = \return(generic("<CompactNode(ds)><GenericsStr>")),
 		Argument optionalRangeReturn = \return(generic("Optional<MapsToGenericsStr>")),
 				
@@ -391,6 +389,26 @@ TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound, 
 	}
 	
 	return ___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound, keyType = __keyType, valType = __valType, classNamePostfix = __classNamePostfix, setup = __setup);
+}
+
+list[Argument] calculateArgsFilter(rel[Option,bool] setup) {
+	// TODO: code duplication: get rid of!	
+	Type mutatorType = specific("AtomicReference\<Thread\>");
+	Argument mutator = field(mutatorType, "mutator");
+	Argument BitmapIndexedNode_payloadArity = field(primitive("byte"), "payloadArity");
+	Argument BitmapIndexedNode_nodeArity = field(primitive("byte"), "nodeArity");
+	
+	list[Argument] argsFilter = [];
+
+	if (!isOptionEnabled(setup, useStagedMutability())) {
+		argsFilter += [ mutator ];
+	}
+
+	if (isOptionEnabled(setup, useSandwichArrays())) {
+		argsFilter += [ BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ];
+	}
+
+	return argsFilter;
 }
 
 data Position // TODO: finish!
