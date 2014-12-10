@@ -222,7 +222,7 @@ data TrieSpecifics
 		Argument BitmapIndexedNode_nodeArity = field(primitive("byte"), "nodeArity"),	
 
 		list[Argument] argsFilter = [],
-		//list[Argument] argsFilter = [ mutator, BitmapIndexedNode_payloadArity ],
+		//list[Argument] argsFilter = [ mutator, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ],
 				
 
 		Argument compactNodeReturn = \return(generic("<CompactNode(ds)><GenericsStr>")),
