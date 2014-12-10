@@ -12,6 +12,7 @@
 module dscg::GenerateTrie_EasyIterator
 
 import dscg::Common;
+import util::Math;
 
 str generateEasyIteratorClassString(TrieSpecifics ts, rel[Option,bool] setup) = 
 	"/**
@@ -20,63 +21,73 @@ str generateEasyIteratorClassString(TrieSpecifics ts, rel[Option,bool] setup) =
 	 */
 	private static class Trie<toString(ts.ds)><ts.classNamePostfix>Iterator<Generics(ts.ds, ts.tupleTypes)> implements SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> {
 
-		final Deque\<Iterator\<? extends <AbstractNode(ts.ds)>\>\> nodeIteratorStack;
-		SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> valueIterator;
+		Iterator\<? extends <AbstractNode(ts.ds)>\>[] nodeIteratorStack = null;
+		int peek = -1;
 
-		private boolean hasNext = false;
+		SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> currentValueIterator = null;
+		Iterator\<? extends <AbstractNode(ts.ds)>\> currentNodeIterator = null;
 
 		Trie<toString(ts.ds)><ts.classNamePostfix>Iterator(<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> rootNode) {
-			if (rootNode.hasPayload()) {
-				valueIterator = rootNode.payloadIterator();
-			} else {
-				valueIterator = EmptySupplierIterator.emptyIterator();
+			if (rootNode.hasNodes()) {
+				nodeIteratorStack = new Iterator[<2 + ceil(32/ts.bitPartitionSize)>];
+			
+				currentNodeIterator = rootNode.nodeIterator();
+				peek += 1;
+				nodeIteratorStack[peek] = currentNodeIterator;
 			}
 
-			nodeIteratorStack = new ArrayDeque\<\>();
-			if (rootNode.hasNodes()) {
-				nodeIteratorStack.push(rootNode.nodeIterator());
+			if (rootNode.hasPayload()) {
+				currentValueIterator = rootNode.payloadIterator();
 			}
 		}
 
 		@Override
 		public boolean hasNext() {
+			if (currentValueIterator != null && currentValueIterator.hasNext()) {
+				return true;
+			} else {
+				return searchNextValueIterator();
+			}
+		}
+		
+		private boolean searchNextValueIterator() {
 			while (true) {
-				if (valueIterator.hasNext()) {
-					return hasNext = true;
-				} else {
-					if (nodeIteratorStack.isEmpty()) {
-						return hasNext = false;
-					} else {
-						if (nodeIteratorStack.peek().hasNext()) {
-							<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> innerNode = nodeIteratorStack.peek().next();
+				if (currentNodeIterator != null && currentNodeIterator.hasNext()) {
+					<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> innerNode = currentNodeIterator.next();
 
-							if (innerNode.hasPayload())
-								valueIterator = innerNode.payloadIterator();
-
-							if (innerNode.hasNodes()) {
-								nodeIteratorStack.push(innerNode.nodeIterator());
-							}
-							continue;
-						} else {
-							nodeIteratorStack.pop();
-							continue;
-						}
+					if (innerNode.hasNodes()) {
+						currentNodeIterator = innerNode.nodeIterator();
+						peek += 1;
+						nodeIteratorStack[peek] = currentNodeIterator;
 					}
+
+					if (innerNode.hasPayload()) {
+						currentValueIterator = innerNode.payloadIterator();
+						// return hasNext = true;
+						return true;
+					}
+				} else {
+					if (peek \<= 0)
+						// return hasNext = false;
+						return false;
+
+					peek -= 1;
+					currentNodeIterator = nodeIteratorStack[peek];
 				}
 			}
 		}
 
 		@Override
 		public K next() {
-			if (!hasNext)
+			if (!hasNext())
 				throw new NoSuchElementException();
 
-			return valueIterator.next();
+			return currentValueIterator.next();
 		}
 
 		@Override
 		public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
-			return valueIterator.get();
+			return currentValueIterator.get();
 		}
 
 		@Override

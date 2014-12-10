@@ -332,7 +332,7 @@ default str generate_bodyOf_nodeArity(TrieSpecifics ts) = "return <use(ts.Bitmap
 // previously "return nodes.length - <use(tupleLengthConstant)> * payloadArity;";
 
 str generate_bodyOf_payloadIterator(TrieSpecifics ts) 
-	= "return ArrayKeyValueSupplierIterator.of(nodes, 0, payloadArity());"
+	= "return ArrayKeyValueSupplierIterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity());"
 when ts.ds == \map();
 
 str generate_bodyOf_payloadIterator(TrieSpecifics ts) 
