@@ -108,10 +108,10 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 	rel[Option,bool] setup = { 
 		<useSpecialization(),flagSpecialization>,
 		<useUntypedVariables(),flagUntypedVariables>,
-		<useFixedStackIterator(),false>,
+		<useFixedStackIterator(),true>,
 		<useStructuralEquality(),true>,
 		<methodsWithComparator(),true>,
-		<useSandwichArrays(),false>,
+		<useSandwichArrays(),true>,
 		<useStagedMutability(),true>,
 		<usePrefixInsteadOfPostfixEncoding(),false>,	
 		<usePathCompression(),false>	
@@ -747,17 +747,49 @@ str generate_bodyOf_hasSlots(0) =
 default str generate_bodyOf_hasSlots(int mn) = 	
 	"return true;";
 	
-str generate_bodyOf_getSlot(0)
+str generate_bodyOf_getSlot(TrieSpecifics ts, 0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
+when isOptionEnabled(ts.setup,useUntypedVariables())
 	;
 	
-default str generate_bodyOf_getSlot(int mn) = 	
+str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
 	"		switch(index) {
 	'			<for (i <- [0..mn]) {>case <i>:
 	'				return <slotName><i>;
 	'			<}>default:
 	'				throw new IllegalStateException(\"Index out of range.\");
 	'			}"
+when isOptionEnabled(ts.setup,useUntypedVariables())
+	;
+	
+str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
+	"final int boundary = TUPLE_LENGTH * payloadArity();
+	'
+	'if (index \< boundary) {
+	'	if (index % 2 == 0) {
+	'		return getKey(index / 2);
+	'	} else {
+	'		return getValue(index / 2);
+	'	}
+	'} else {
+	'	return getNode(index - boundary);
+	'}"
+when !isOptionEnabled(ts.setup,useUntypedVariables()) && ts.ds == \map()
+	;
+	
+str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
+	"final int boundary = payloadArity();
+	'
+	'if (index \< boundary) {
+	'	return getKey(index);
+	'} else {
+	'	return getNode(index - boundary);
+	'}"
+when !isOptionEnabled(ts.setup,useUntypedVariables()) && ts.ds == \set()
+	;	
+	
+default str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) =	
+	"throw new UnsupportedOperationException();"
 	;
 	
 str generate_bodyOf_getNode(0)
@@ -2033,11 +2065,9 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 
 	<implOrOverride(ts.AbstractNode_slotArity, "return <mn>;")>
 
+	<implOrOverride(ts.AbstractNode_getSlot, generate_bodyOf_getSlot(ts, mn))> 
+
 	<if (isOptionEnabled(setup,useUntypedVariables())) {>
-	'	@Override
-	'	<toString(object())> getSlot(int index) {
-	'		<generate_bodyOf_getSlot(mn)>
-	'	}	
 
 		<if (!isPrimitive(key(ts.keyType))) {><toString(UNCHECKED_ANNOTATION())><}>
 		@Override

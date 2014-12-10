@@ -20,7 +20,6 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 	 */
 	private static abstract class Abstract<toString(ts.ds)>Iterator<Generics(ts.ds, ts.tupleTypes)> {
 		
-		// TODO: verify maximum deepness
 		private static final int MAX_DEPTH = <2 + ceil(32/bitPartitionSize)>;
 		
 		protected int currentValueCursor;

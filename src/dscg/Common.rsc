@@ -221,7 +221,7 @@ data TrieSpecifics
 		Argument BitmapIndexedNode_payloadArity = field(primitive("byte"), "payloadArity"),
 		Argument BitmapIndexedNode_nodeArity = field(primitive("byte"), "nodeArity"),	
 
-		list[Argument] argsFilter = [],
+		list[Argument] argsFilter = [ BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ],
 		//list[Argument] argsFilter = [ mutator, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ],
 				
 
