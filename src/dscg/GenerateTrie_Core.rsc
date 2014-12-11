@@ -223,9 +223,10 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		return keyIterator();
 	}
 	<}>
-
+	
+	
 	@Override
-	public SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> keyIterator() {
+	public <if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<toString(primitiveToClass(ts.keyType))>\><}> keyIterator() {
 		<generate_bodyOf_keyIterator(ts, ts.setup)>
 	}
 

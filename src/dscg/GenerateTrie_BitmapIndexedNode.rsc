@@ -332,11 +332,11 @@ default str generate_bodyOf_nodeArity(TrieSpecifics ts) = "return <use(ts.Bitmap
 // previously "return nodes.length - <use(tupleLengthConstant)> * payloadArity;";
 
 str generate_bodyOf_payloadIterator(TrieSpecifics ts) 
-	= "return ArrayKeyValueSupplierIterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity());"
+	= "return (Iterator) ArrayKeyValue<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>Supplier<}>Iterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity());"
 when ts.ds == \map();
 
 str generate_bodyOf_payloadIterator(TrieSpecifics ts) 
-	= "return ArraySupplierIterator.of(nodes, 0, payloadArity());"
+	= "return (Iterator) Array<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>Supplier<}>Iterator.of(nodes, 0, payloadArity());"
 when ts.ds == \set();
 
 default str generate_bodyOf_payloadIterator(TrieSpecifics ts) { throw "Ahhh"; }

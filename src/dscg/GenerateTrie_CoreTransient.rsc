@@ -317,7 +317,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		<}>
 
 		@Override
-		public SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> keyIterator() {
+		public <if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<toString(primitiveToClass(ts.keyType))>\><}> keyIterator() {
 			return new Transient<toString(ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(this);
 		}
 
@@ -341,8 +341,8 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		 * Iterator that first iterates over inlined-values and then continues
 		 * depth first recursively.
 		 */
-		private static class Transient<toString(ds)>KeyIterator<Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ds)>Iterator<Generics(ts.ds, ts.tupleTypes)>
-						implements SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> {
+		private static class Transient<toString(ds)>KeyIterator<Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ds)>Iterator<Generics(ts.ds, ts.tupleTypes)> implements
+				<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<toString(primitiveToClass(ts.keyType))>\><}> {
 
 			final <className><Generics(ts.ds, ts.tupleTypes)> <uncapitalize(className)>;
 			<toString(primitiveToClass(ts.keyType))> lastKey;
@@ -362,10 +362,11 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 				}
 			}
 
+			<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
 			@Override
 			public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
 				throw new UnsupportedOperationException();
-			}
+			}<}>
 
 			/*
 			 * TODO: test removal with iteration rigorously

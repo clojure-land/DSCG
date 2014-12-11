@@ -19,12 +19,13 @@ str generateEasyIteratorClassString(TrieSpecifics ts, rel[Option,bool] setup) =
 	 * Iterator that first iterates over inlined-values and then continues depth
 	 * first recursively.
 	 */
-	private static class Trie<toString(ts.ds)><ts.classNamePostfix>Iterator<Generics(ts.ds, ts.tupleTypes)> implements SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> {
+	private static class Trie<toString(ts.ds)><ts.classNamePostfix>Iterator<Generics(ts.ds, ts.tupleTypes)> implements 
+		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<toString(primitiveToClass(ts.keyType))>\><}> {
 
 		Iterator\<? extends <AbstractNode(ts.ds)>\>[] nodeIteratorStack = null;
 		int peek = -1;
 
-		SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> currentValueIterator = null;
+		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<toString(primitiveToClass(ts.keyType))>\><}> currentValueIterator = null;
 		Iterator\<? extends <AbstractNode(ts.ds)>\> currentNodeIterator = null;
 
 		Trie<toString(ts.ds)><ts.classNamePostfix>Iterator(<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> rootNode) {
@@ -85,10 +86,11 @@ str generateEasyIteratorClassString(TrieSpecifics ts, rel[Option,bool] setup) =
 			return currentValueIterator.next();
 		}
 
+		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
 		@Override
 		public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
 			return currentValueIterator.get();
-		}
+		}<}>
 
 		@Override
 		public void remove() {

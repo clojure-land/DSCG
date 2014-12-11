@@ -44,8 +44,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 			if (rootNode.hasPayload()) {
 				currentValueNode = rootNode;
 				currentValueCursor = 0;
-				currentValueLength = rootNode.payloadArity();
-				
+				currentValueLength = rootNode.payloadArity();		
 			}
 		}
 
@@ -108,9 +107,9 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 			throw new UnsupportedOperationException();
 		}
 	}
-	
+
 	private static final class <toString(ts.ds)>KeyIterator<Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ts.ds)>Iterator<Generics(ts.ds, ts.tupleTypes)> implements
-					SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> {
+			<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<toString(primitiveToClass(ts.keyType))>\><}> {
 
 		<toString(ts.ds)>KeyIterator(<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> rootNode) {
 			super(rootNode);
@@ -125,15 +124,16 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 			}
 		}
 
+		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
 		@Override
 		public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
 			throw new UnsupportedOperationException();
-		}
+		}<}>
 	}
 
 	<if (ds == \map()) {>
 	private static final class <toString(ts.ds)>ValueIterator<Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ts.ds)>Iterator<Generics(ts.ds, ts.tupleTypes)> implements
-					SupplierIterator<SupplierIteratorGenericsReversed(ts.ds, ts.tupleTypes)> {
+			<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenericsReversed(ts.ds, ts.tupleTypes)><} else {>Iterator\<<toString(primitiveToClass(ts.valType))>\><}> {
 
 		<toString(ts.ds)>ValueIterator(<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> rootNode) {
 			super(rootNode);
@@ -148,14 +148,15 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 			}
 		}
 
+		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
 		@Override
 		public <toString(primitiveToClass(ts.keyType))> get() {
 			throw new UnsupportedOperationException();
-		}
+		}<}>
 	}
 
 	private static final class <toString(ts.ds)>EntryIterator<Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ts.ds)>Iterator<Generics(ts.ds, ts.tupleTypes)> implements
-					SupplierIterator\<Map.Entry<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>, <toString(primitiveToClass(ts.keyType))>\> {
+			<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator\<Map.Entry<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>, <toString(primitiveToClass(ts.keyType))>\><} else {>Iterator\<Map.Entry<Generics(ts.ds, ts.tupleTypes)>\><}> {
 
 		<toString(ts.ds)>EntryIterator(<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> rootNode) {
 			super(rootNode);
@@ -170,10 +171,11 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 			}
 		}
 
+		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
 		@Override
 		public <toString(primitiveToClass(ts.keyType))> get() {
 			throw new UnsupportedOperationException();
-		}
+		}<}>
 	}
 	<}>
 	"

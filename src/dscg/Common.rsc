@@ -172,6 +172,7 @@ data Option // TODO: finish!
 	= useSpecialization()
 	| useUntypedVariables() // dependent on useSpecialization() 
 	| useFixedStackIterator()
+	| useSupplierIterator()
 	| useStructuralEquality()	
 	| methodsWithComparator()
 	| compactionViaFieldToMethod()
@@ -341,7 +342,7 @@ data TrieSpecifics
 		Method AbstractNode_hasPayload = method(\return(primitive("boolean")), "hasPayload"),
 		Method AbstractNode_payloadArity = method(\return(primitive("int")), "payloadArity"),
 		/***/
-		Method AbstractNode_payloadIterator = method(\return(generic("SupplierIterator<SupplierIteratorGenerics(ds, tupleTypes)>")), "payloadIterator", isActive = !isOptionEnabled(setup, useFixedStackIterator())),	
+		Method AbstractNode_payloadIterator = method(\return(generic(isOptionEnabled(setup, useSupplierIterator()) ? "SupplierIterator<SupplierIteratorGenerics(ds, tupleTypes)>" : "Iterator\<<toString(primitiveToClass(keyType))>\>")), "payloadIterator", isActive = !isOptionEnabled(setup, useFixedStackIterator())),	
 
 		Method AbstractNode_hasSlots = method(\return(primitive("boolean")), "hasSlots", isActive = true), // isOptionEnabled(setup,useUntypedVariables()
 		Method AbstractNode_slotArity = method(\return(primitive("int")), "slotArity", isActive = true), // isOptionEnabled(setup,useUntypedVariables())		
