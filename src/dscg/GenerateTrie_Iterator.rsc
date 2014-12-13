@@ -20,7 +20,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 	 */
 	private static abstract class Abstract<toString(ts.ds)>Iterator<Generics(ts.ds, ts.tupleTypes)> {
 		
-		private static final int MAX_DEPTH = <2 + ceil(32/ts.bitPartitionSize)>;
+		private static final int MAX_DEPTH = <ceil(32./ts.bitPartitionSize)>;
 		
 		protected int currentValueCursor;
 		protected int currentValueLength;
@@ -156,7 +156,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 	}
 
 	private static final class <toString(ts.ds)>EntryIterator<Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ts.ds)>Iterator<Generics(ts.ds, ts.tupleTypes)> implements
-			<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator\<Map.Entry<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>, <toString(primitiveToClass(ts.keyType))>\><} else {>Iterator\<Map.Entry<Generics(ts.ds, ts.tupleTypes)>\><}> {
+			<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator\<Map.Entry<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>, <toString(primitiveToClass(ts.keyType))>\><} else {>Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\><}> {
 
 		<toString(ts.ds)>EntryIterator(<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> rootNode) {
 			super(rootNode);

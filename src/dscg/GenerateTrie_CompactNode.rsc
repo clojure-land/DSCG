@@ -36,6 +36,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	return
 	"private static abstract class <className><Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ds)>Node<Generics(ts.ds, ts.tupleTypes)> {
 		
+		<dec(field(primitive("int"), "HASH_CODE_LENGTH"), constant(primitive("int"), "32"), isStatic = true, isFinal = true)>;
+		
 		<dec(field(primitive("int"), "BIT_PARTITION_SIZE"), constant(primitive("int"), "<bitPartitionSize>"), isStatic = true, isFinal = true)>;
 		<dec(field(primitive("int"), "BIT_PARTITION_MASK"), constant(primitive("int"), "0b<for (i <- [1..bitPartitionSize+1]) {>1<}>"), isStatic = true, isFinal = true)>;
 		
@@ -101,8 +103,10 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		<implOrOverride(ts.CompactNode_mergeTwoKeyValPairs, 
 			generate_bodyOf_mergeTwoKeyValPairs(ts), annotations = [ UNCHECKED_ANNOTATION() ])>
 
+		<if (false) {>
 		<implOrOverride(ts.CompactNode_mergeNodeAndKeyValPair,
 			generate_bodyOf_mergeNodeAndKeyValPair(ts))>
+		<}>
 
 	'	static final <CompactNode(ts.ds)> <emptyTrieNodeConstantName>;
 
@@ -800,8 +804,8 @@ default str generate_bodyOf_bitpos(TrieSpecifics ts, Method decleration) =
 	
 default str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts) = 
 	"assert !(<equalityDefaultForArguments(key(ts.keyType, "key0"), key(ts.keyType, "key1"))>);
-
-	if (keyHash0 == keyHash1) {
+	
+		if (<use(ts.shift)> \>= HASH_CODE_LENGTH) {
 		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<toString(ts.keyType)>[]) new <if (isPrimitive(ts.keyType)) {><toString(ts.keyType)><} else {>Object<}>[] { key0, key1 }
 						<if (ts.ds == \map()) {>, (<toString(ts.valType)>[]) new <if (isPrimitive(ts.valType)) {><toString(ts.valType)><} else {>Object<}>[] { val0, val1 }<}>);
 	}

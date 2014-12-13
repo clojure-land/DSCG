@@ -296,7 +296,7 @@ data TrieSpecifics
 		Method CompactNode_dataMap 	= method(valmapField, valmapField.name),
 
 		Method CompactNode_mergeTwoKeyValPairs = function(compactNodeClassReturn, "mergeTwoKeyValPairs", args = [ *__payloadTuple(ds, tupleTypes, 0), keyHash0, *__payloadTuple(ds, tupleTypes, 1), keyHash1, shift ], generics = GenericsStr), 
-		Method CompactNode_mergeNodeAndKeyValPair = function(compactNodeClassReturn, "mergeNodeAndKeyValPair", args = [ \node(ds, tupleTypes, 0), keyHash0, *__payloadTuple(ds, tupleTypes, 1), keyHash1, shift ], generics = GenericsStr),
+		Method CompactNode_mergeNodeAndKeyValPair = function(compactNodeClassReturn, "mergeNodeAndKeyValPair", args = [ \node(ds, tupleTypes, 0), keyHash0, *__payloadTuple(ds, tupleTypes, 1), keyHash1, shift ], generics = GenericsStr, isActive = false),
 				
 		Method CompactNode_copyAndRemoveValue = method(compactNodeClassReturn, "copyAndRemoveValue", args = [mutator, bitposField]),
 		Method CompactNode_copyAndInsertValue = method(compactNodeClassReturn, "copyAndInsertValue", args = [mutator, bitposField, *payloadTuple]),
