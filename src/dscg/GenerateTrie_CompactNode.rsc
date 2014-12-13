@@ -155,6 +155,9 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 	<generate_specializationFactoryMethods(ts, setup)>
 	
+	<implOrOverride(ts.CompactNode_index,
+		"return <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___anybitmapField(bitPartitionSize))> & (bitpos - 1));", doOverride = new())>
+	
 	<implOrOverride(ts.CompactNode_dataIndex, 
 		"return <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(bitPartitionSize))> & (bitpos - 1));", doOverride = new())>
 
@@ -426,17 +429,20 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(int n, int
 	"<dec(ts.mask)> = <toString(call(ts.CompactNode_mask))>;
 	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
 	'
-	'if ((<use(valmapMethod)> & bitpos) != 0) {
-	'	return <eq(key(ts.keyType, "keyAt(bitpos)"), key(ts.keyType))>;
+	'final int dataMap = <use(valmapMethod)>;
+	'if ((dataMap & bitpos) != 0) {
+	'	final int index = (dataMap == -1) ? mask : index(dataMap, bitpos);
+	'	return <eq(key(ts.keyType, "getKey(index)"), key(ts.keyType))>;
 	'}
 	'
-	'if ((<use(bitmapMethod)> & bitpos) != 0) {
-	'	return nodeAt(bitpos).containsKey(<keyName>, <keyName>Hash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
+	'final int nodeMap = <use(bitmapMethod)>;
+	'if ((nodeMap & bitpos) != 0) {
+	'	final int index = (nodeMap == -1) ? mask : index(nodeMap, bitpos);
+	'	return getNode(index).containsKey(<keyName>, <keyName>Hash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
 	'}
 	'
 	'return false;"
 	;
-	
 	
 str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(_, _, _, rel[Option,bool] setup, str(Argument, Argument) eq)	
 	= "throw new UnsupportedOperationException();"

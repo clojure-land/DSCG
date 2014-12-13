@@ -313,6 +313,8 @@ data TrieSpecifics
 		Method CompactNode_mask = function(\return(primitive("int")), "mask", args = [keyHash, shift]),
 		Method CompactNode_bitpos = function(\return(chunkSizeToPrimitive(bitPartitionSize)), "bitpos", args = [mask]),
 
+		Method CompactNode_index = function(\return(primitive("int")), "index", args = [ ___anybitmapField(bitPartitionSize), bitposField]),
+
 		Method CompactNode_dataIndex = method(\return(primitive("int")), "dataIndex", args = [bitposField]),
 		Method CompactNode_nodeIndex = method(\return(primitive("int")), "nodeIndex", args = [bitposField]),
 
@@ -477,6 +479,8 @@ default Argument \node(DataStructure ds, _) { throw "Ahhh"; }
 public Argument bitmapField = field("nodeMap");
 public Argument valmapField = field("dataMap");
 public Argument bitposField = field("bitpos");
+
+Argument ___anybitmapField(int bitPartitionSize) = field(chunkSizeToPrimitive(bitPartitionSize), "bitmap");
 
 Argument ___bitmapField(int bitPartitionSize) = field(chunkSizeToPrimitive(bitPartitionSize), "nodeMap");
 Argument ___valmapField(int bitPartitionSize) = field(chunkSizeToPrimitive(bitPartitionSize), "dataMap");
