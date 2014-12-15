@@ -154,9 +154,14 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 
 	<generate_specializationFactoryMethods(ts, setup)>
-	
-	<implOrOverride(ts.CompactNode_index,
+
+	<implOrOverride(ts.CompactNode_index2,
 		"return <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___anybitmapField(bitPartitionSize))> & (bitpos - 1));", doOverride = new())>
+	
+	<implOrOverride(ts.CompactNode_index3,
+		"return (<useSafeUnsigned(___anybitmapField(bitPartitionSize))> == -1) 
+			? mask 
+			: <toString(call(ts.CompactNode_index2))>;", doOverride = new())>
 	
 	<implOrOverride(ts.CompactNode_dataIndex, 
 		"return <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(bitPartitionSize))> & (bitpos - 1));", doOverride = new())>
@@ -431,13 +436,13 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(int n, int
 	'
 	'final int dataMap = <use(valmapMethod)>;
 	'if ((dataMap & bitpos) != 0) {
-	'	final int index = (dataMap == -1) ? mask : index(dataMap, bitpos);
+	'	final int index = index(dataMap, mask, bitpos);
 	'	return <eq(key(ts.keyType, "getKey(index)"), key(ts.keyType))>;
 	'}
 	'
 	'final int nodeMap = <use(bitmapMethod)>;
 	'if ((nodeMap & bitpos) != 0) {
-	'	final int index = (nodeMap == -1) ? mask : index(nodeMap, bitpos);
+	'	final int index = index(nodeMap, mask, bitpos);
 	'	return getNode(index).containsKey(<keyName>, <keyName>Hash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
 	'}
 	'
