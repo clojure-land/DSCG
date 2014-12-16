@@ -118,13 +118,18 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			return true;")>
 
 		<implOrOverride(ts.CompactNode_sizePredicate, 
-			"<if (isOptionEnabled(ts.setup,useSpecialization())) {>return SIZE_MORE_THAN_ONE;<} else {>if (this.nodeArity() == 0 && this.payloadArity() == 0) {
-				return SIZE_EMPTY;
-			} else if (this.nodeArity() == 0 && this.payloadArity() == 1) {
-				return SIZE_ONE;
-			} else {
-				return SIZE_MORE_THAN_ONE;
-			}<}>")>
+			"<if (isOptionEnabled(ts.setup,useSpecialization())) {>return SIZE_MORE_THAN_ONE;<} else {>if (this.nodeArity() == 0) {
+			'	switch (this.payloadArity()) {
+			'	case 0:
+			'		return SIZE_EMPTY;
+			'	case 1:
+			'		return SIZE_ONE;
+			'	default:
+			'		return SIZE_MORE_THAN_ONE;
+			'	}
+			'} else {
+			'	return SIZE_MORE_THAN_ONE;
+			'}<}>")>
 
 		<implOrOverride(ts.CompactNode_convertToGenericNode, "return this;")>
 
