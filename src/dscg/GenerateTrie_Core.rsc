@@ -51,6 +51,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.List;
+import java.util.ArrayList;
 
 @SuppressWarnings(\"rawtypes\")
 public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
@@ -242,21 +244,13 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	}
 	<}>
 
-	<implOrOverride(ts.jul_Map_keySet,
-		"// TODO Auto-generated method stub
-		'return null;")>
+	<implOrOverride(ts.jul_Map_keySet, generate_bodyOf_jul_Map_keySet(ts))>
 		
-	<implOrOverride(ts.jul_Map_values,
-		"// TODO Auto-generated method stub
-		'return null;")>		
+	<implOrOverride(ts.jul_Map_values, generate_bodyOf_jul_Map_values(ts))>
 
-	<implOrOverride(ts.jul_Collection_toObjectArray,
-		"// TODO Auto-generated method stub
-		'return null;")>
+	<implOrOverride(ts.jul_Collection_toObjectArray, generate_bodyOf_jul_Collection_toObjectArray(ts))>
 
-	<implOrOverride(ts.jul_Collection_toGenericArray,
-		"// TODO Auto-generated method stub
-		'return null;")>
+	<implOrOverride(ts.jul_Collection_toGenericArray, generate_bodyOf_jul_Collection_toGenericArray(ts))>
 
 	<if (ds == \map()) {>
 	@Override
@@ -723,3 +717,33 @@ default str generate_bodyOf_Core_removeAll(TrieSpecifics ts, rel[Option,bool] se
 		tmp.__removeAll<optionalEquivalentPostfix>(<uncapitalize(toString(ts.ds))><optionalComparatorArgument>);
 		return tmp.freeze();"
 	;		
+
+default str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts) = "";
+default str generate_bodyOf_jul_Map_values(TrieSpecifics ts) = "";
+
+default str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) = ""; // { throw "Ahhh"; } // we don't have lazy evaluation
+
+str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) =
+	"Object[] array = new Object[cachedSize];
+	'
+	'int idx = 0;
+	'for (K key : this) {
+	'	array[idx++] = key;
+	'}
+	'
+	'return array;"
+when ts.ds == \set()
+	;	
+
+default str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) = ""; // { throw "Ahhh"; } // we don't have lazy evaluation
+
+str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) =
+	"List<ts.GenericsStr> list = new ArrayList<ts.GenericsStr>(cachedSize);
+	'
+	'for (K key : this) {
+	'	list.add(key);
+	'}
+	'
+	'return list.toArray(a);"
+when ts.ds == \set()
+	;
