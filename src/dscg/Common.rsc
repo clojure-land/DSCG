@@ -358,7 +358,8 @@ data TrieSpecifics
 
 		Method jul_Map_keySet = method(\return(generic("Set\<<toString(primitiveToClass(dsAtFunction__domain_type(ds, tupleTypes)))>\>")), "keySet", visibility = "public", isActive = ds == \map()),
 		Method jul_Map_values = method(\return(generic("Collection\<<toString(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes)))>\>")), "values", visibility = "public", isActive = ds == \map()),
-		
+		Method jul_Map_entrySet = method(\return(generic("Set\<java.util.Map.Entry<GenericsExpanded(ds, tupleTypes)>\>")), "entrySet", visibility = "public", isActive = ds == \map()),
+				
 		Method jul_Set_add = method(\return(primitive("boolean")), "add", args = [ key(primitiveToClass(keyType)) ], visibility = "public", isActive = ds == \set()),		
 		Method jul_Set_remove = method(\return(primitive("boolean")), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = ds == \set()),
 		Method jul_Set_clear = method(\return(\void()), "clear", visibility = "public", isActive = ds == \set()),		

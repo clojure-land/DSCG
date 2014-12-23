@@ -248,63 +248,11 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		
 	<implOrOverride(ts.jul_Map_values, generate_bodyOf_jul_Map_values(ts))>
 
+	<implOrOverride(ts.jul_Map_entrySet, generate_bodyOf_jul_Map_entrySet(ts))>
+
 	<implOrOverride(ts.jul_Collection_toObjectArray, generate_bodyOf_jul_Collection_toObjectArray(ts))>
 
 	<implOrOverride(ts.jul_Collection_toGenericArray, generate_bodyOf_jul_Collection_toGenericArray(ts))>
-
-	<if (ds == \map()) {>
-	@Override
-	public Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet() {
-		Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet = null;
-
-		if (entrySet == null) {
-			entrySet = new AbstractSet\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
-				@Override
-				public Iterator\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> iterator() {
-					return new Iterator\<Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
-						private final Iterator\<Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> i = entryIterator();
-
-						@Override
-						public boolean hasNext() {
-							return i.hasNext();
-						}
-
-						@Override
-						public Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> next() {
-							return i.next();
-						}
-
-						@Override
-						public void remove() {
-							i.remove();
-						}
-					};
-				}
-
-				@Override
-				public int size() {
-					return <ts.coreClassName>.this.size();
-				}
-
-				@Override
-				public boolean isEmpty() {
-					return <ts.coreClassName>.this.isEmpty();
-				}
-
-				@Override
-				public void clear() {
-					<ts.coreClassName>.this.clear();
-				}
-
-				@Override
-				public boolean contains(Object k) {
-					return <ts.coreClassName>.this.containsKey(k);
-				}
-			};
-		}
-		return entrySet;
-	}
-	<}>
 
 	@Override
 	public boolean isTransientSupported() {
@@ -716,10 +664,7 @@ default str generate_bodyOf_Core_removeAll(TrieSpecifics ts, rel[Option,bool] se
 	"	Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> tmp = asTransient();
 		tmp.__removeAll<optionalEquivalentPostfix>(<uncapitalize(toString(ts.ds))><optionalComparatorArgument>);
 		return tmp.freeze();"
-	;		
-
-default str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts) = "";
-default str generate_bodyOf_jul_Map_values(TrieSpecifics ts) = "";
+	;
 
 default str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) = ""; // { throw "Ahhh"; } // we don't have lazy evaluation
 
@@ -746,4 +691,136 @@ str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) =
 	'
 	'return list.toArray(a);"
 when ts.ds == \set()
+	;
+	
+	
+default str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts) = "";
+
+str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts) =
+	"Set\<<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\> keySet = null;
+	'
+	'if (keySet == null) {
+	'	keySet = new AbstractSet\<<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\>() {
+	'		@Override
+	'		public Iterator\<<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\> iterator() {
+	'			return <ts.coreClassName>.this.keyIterator();
+	'		}
+	'
+	'		@Override
+	'		public int size() {
+	'			return <ts.coreClassName>.this.size();
+	'		}
+	'
+	'		@Override
+	'		public boolean isEmpty() {
+	'			return <ts.coreClassName>.this.isEmpty();
+	'		}
+	'
+	'		@Override
+	'		public void clear() {
+	'			<ts.coreClassName>.this.clear();
+	'		}
+	'
+	'		@Override
+	'		public boolean contains(Object k) {
+	'			return <ts.coreClassName>.this.containsKey(k);
+	'		}
+	'	};
+	'}
+	'
+	'return keySet;"
+when ts.ds == \map()
+	;
+
+default str generate_bodyOf_jul_Map_values(TrieSpecifics ts) = "";
+
+str generate_bodyOf_jul_Map_values(TrieSpecifics ts) = 
+	"Collection\<<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>\> values = null;
+	'
+	'if (values == null) {
+	'	values = new AbstractCollection\<<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>\>() {
+	'		@Override
+	'		public Iterator\<<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>\> iterator() {
+	'			return <ts.coreClassName>.this.valueIterator();
+	'		}
+	'
+	'		@Override
+	'		public int size() {
+	'			return <ts.coreClassName>.this.size();
+	'		}
+	'
+	'		@Override
+	'		public boolean isEmpty() {
+	'			return <ts.coreClassName>.this.isEmpty();
+	'		}
+	'
+	'		@Override
+	'		public void clear() {
+	'			<ts.coreClassName>.this.clear();
+	'		}
+	'
+	'		@Override
+	'		public boolean contains(Object v) {
+	'			return <ts.coreClassName>.this.containsValue(v);
+	'		}
+	'	};
+	'}
+	'
+	'return values;"
+when ts.ds == \map()
+	;
+
+default str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts) = "";	
+	
+str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts) = 
+	"Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet = null;
+	'
+	'if (entrySet == null) {
+	'	entrySet = new AbstractSet\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
+	'		@Override
+	'		public Iterator\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> iterator() {
+	'			return new Iterator\<Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
+	'				private final Iterator\<Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> i = entryIterator();
+	'
+	'				@Override
+	'				public boolean hasNext() {
+	'					return i.hasNext();
+	'				}
+	'
+	'				@Override
+	'				public Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> next() {
+	'					return i.next();
+	'				}
+	'
+	'				@Override
+	'				public void remove() {
+	'					i.remove();
+	'				}
+	'			};
+	'		}
+	'
+	'		@Override
+	'		public int size() {
+	'			return <ts.coreClassName>.this.size();
+	'		}
+	'
+	'		@Override
+	'		public boolean isEmpty() {
+	'			return <ts.coreClassName>.this.isEmpty();
+	'		}
+	'
+	'		@Override
+	'		public void clear() {
+	'			<ts.coreClassName>.this.clear();
+	'		}
+	'
+	'		@Override
+	'		public boolean contains(Object k) {
+	'			return <ts.coreClassName>.this.containsKey(k);
+	'		}
+	'	};
+	'}
+	'
+	'return entrySet;"
+when ts.ds == \map()
 	;
