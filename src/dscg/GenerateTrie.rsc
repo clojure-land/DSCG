@@ -78,6 +78,11 @@ void doGenerateBleedingEdge() {
 	//doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(1, false)), overideClassNamePostfixWith = "BleedingEdge");	
 }
 
+void doGenerateSpecializedUntyped() {
+	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(8, true)));
+	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(8, true)));	
+}
+
 TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes:[keyType, valType, *_], SpecializationConfig specializationConfig), str overideClassNamePostfixWith) {
 	bool flagSpecialization = false;
 	int specializeTo = 0;

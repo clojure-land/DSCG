@@ -40,6 +40,7 @@ import static org.eclipse.imp.pdb.facts.util.AbstractSpecialisedImmutableMap.ent
 import java.text.DecimalFormat;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
+import java.util.AbstractCollection;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
@@ -269,7 +270,9 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		return hashCode;
 	}
 
-	<if (!isOptionEnabled(setup, useStructuralEquality()) && ts.ds == \map()) {>
+	<if (false) {>
+	// <!isOptionEnabled(setup, useStructuralEquality()) && ts.ds == \map()>
+	
 	@Override
 	public boolean equals(Object other) {
 		if (other == this)
@@ -348,7 +351,9 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	<}>
 	<}>
 
-	<if (!isOptionEnabled(setup, useStructuralEquality()) && ts.ds == \set()) {>
+	<if (false) {>
+	// <!isOptionEnabled(setup, useStructuralEquality()) && ts.ds == \set()>
+	
 	@Override
 	public boolean equals(Object other) {
 		if (other == this)
@@ -402,7 +407,6 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	<}>	
 	<}>
 
-	<if (isOptionEnabled(setup, useStructuralEquality())) {>
 	@Override
 	public boolean equals(Object other) {
 		if (other == this) {
@@ -412,6 +416,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 			return false;
 		}
 
+		<if (isOptionEnabled(setup, useStructuralEquality())) {>
 		if (other instanceof <ts.coreClassName>) {
 			<ts.coreClassName><QuestionMarkGenerics(ts.ds, ts.tupleTypes)> that = (<ts.coreClassName><QuestionMarkGenerics(ts.ds, ts.tupleTypes)>) other;
 
@@ -420,11 +425,10 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 			}
 
 			return rootNode.equals(that.rootNode);
-		}
-
-		return super.equals(other);
+		} else <}> <generate_fragmentOf_CoreEquals(ts)>
+		
+		return false;
 	}
-	<}>
 
 	/*
 	 * For analysis purposes only.
@@ -672,7 +676,7 @@ str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) =
 	"Object[] array = new Object[cachedSize];
 	'
 	'int idx = 0;
-	'for (K key : this) {
+	'for (<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))> key : this) {
 	'	array[idx++] = key;
 	'}
 	'
@@ -683,9 +687,9 @@ when ts.ds == \set()
 default str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) = ""; // { throw "Ahhh"; } // we don't have lazy evaluation
 
 str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) =
-	"List<ts.GenericsStr> list = new ArrayList<ts.GenericsStr>(cachedSize);
+	"List<GenericsExpanded(ts.ds, ts.tupleTypes)> list = new ArrayList<GenericsExpanded(ts.ds, ts.tupleTypes)>(cachedSize);
 	'
-	'for (K key : this) {
+	'for (<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))> key : this) {
 	'	list.add(key);
 	'}
 	'
@@ -824,3 +828,55 @@ str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts) =
 	'return entrySet;"
 when ts.ds == \map()
 	;
+	
+str generate_fragmentOf_CoreEquals(TrieSpecifics ts) = 
+"
+if (other instanceof Map) {
+	Map that = (Map) other;
+
+	if (this.size() != that.size())
+		return false;
+
+	for (@SuppressWarnings(\"unchecked\")
+	Iterator\<Entry\> it = that.entrySet().iterator(); it.hasNext();) {
+		Entry entry = it.next();
+
+		try {
+			@SuppressWarnings(\"unchecked\")
+			<dec(key(ts.keyType))> = (<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>) entry.getKey();
+			final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(key, improve(<hashCode(key(ts.keyType))>), 0);
+
+			if (!result.isPresent()) {
+				return false;
+			} else {
+				@SuppressWarnings(\"unchecked\")
+				<dec(val(ts.valType))> = (<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>) entry.getValue();
+
+				if (!result.get().equals(val)) {
+					return false;
+				}
+			}
+		} catch (ClassCastException unused) {
+			return false;
+		}
+	}
+
+	return true;
+}
+"
+when ts.ds == \map();
+
+str generate_fragmentOf_CoreEquals(TrieSpecifics ts) = 
+"
+if (other instanceof Set) {
+	Set that = (Set) other;
+
+	if (this.size() != that.size())
+		return false;
+
+	return containsAll(that);
+}
+"
+when ts.ds == \set();
+
+default str generate_fragmentOf_CoreEquals(TrieSpecifics ts) { throw "Ahhh"; }
