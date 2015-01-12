@@ -33,6 +33,7 @@ import dscg::GenerateTrie_NodeIterator;
 import dscg::GenerateTrie_Core_Common;
 import dscg::GenerateTrie_Core;
 import dscg::GenerateTrie_CoreTransient;
+import dscg::GenerateTrie_ImmutableInterface;
 
 data TrieConfig 
 	= hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes, SpecializationConfig specializationConfig);
@@ -63,6 +64,19 @@ void main() {
 	for (TrieConfig cfg <- trieConfigs) {
 		doGenerate(cfg);
 	}
+	
+	doGenerateInterfaces();	
+}
+
+void doGenerateInterfaces() {
+	TrieSpecifics genericTsSet = expandConfiguration(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()), "");
+	TrieSpecifics genericTsMap = expandConfiguration(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()), "");
+	
+	writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/<immutableInterfaceName(\set())>.java|, generateImmutableInterface(genericTsSet));
+	writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/<transientInterfaceName(\set())>.java|, generateTransientInterface(genericTsSet));
+
+	writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/<immutableInterfaceName(\map())>.java|, generateImmutableInterface(genericTsMap));
+	writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/<transientInterfaceName(\map())>.java|, generateTransientInterface(genericTsMap));	
 }
 
 void doGenerateCurrent() {

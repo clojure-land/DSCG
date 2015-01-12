@@ -253,11 +253,17 @@ data TrieSpecifics
 		Argument abstractNodeClassReturn = \return(generic("<AbstractNode(ds)><GenericsStr>")),
 		Argument bitmapIndexedNodeClassReturn = \return(generic("<bitmapIndexedNodeClassName><GenericsStr>")),
 		
-		Method Core_updated 		= method(coreClassReturn, "<insertOrPutMethodName(ds)>",  			args = [*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public"),
-		Method Core_updatedEquiv 	= method(coreClassReturn, "<insertOrPutMethodName(ds)>Equivalent", 	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
+		Argument coreImmutableInterfaceReturn = \return(generic("<immutableInterfaceName(ds)><GenericsStr>")),
+		Argument coreTransientInterfaceReturn = \return(generic("<transientInterfaceName(ds)><GenericsStr>")),
+		
+		Method Core_updated 		= method(coreInterfaceReturn, "<insertOrPutMethodName(ds)>",  			args = [*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public"),
+		Method Core_updatedEquiv 	= method(coreInterfaceReturn, "<insertOrPutMethodName(ds)>Equivalent", 	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
 
-		//Method CoreTransient_updated 		= method(\return(primitive("boolean"), "<insertOrPutMethodName(ds)>",  			[*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public"),
-		//Method CoreTransient_updatedEquiv 	= method(\return(primitive("boolean"), "<insertOrPutMethodName(ds)>Equivalent", [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
+		Method CoreTransient_insert 		= method(\return(primitive("boolean")), "<insertOrPutMethodName(\set())>",  			args = [*mapper(payloadTuple, primitiveToClassArgument)], visibility = "public", isActive = ds == \set()),
+		Method CoreTransient_insertEquiv 	= method(\return(primitive("boolean")), "<insertOrPutMethodName(\set())>Equivalent", 	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
+
+		Method CoreTransient_put 		= method(\return(generic("<toString(primitiveToClass(valType))>")), "<insertOrPutMethodName(\map())>",				args = [*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public", isActive = ds == \map()),
+		Method CoreTransient_putEquiv 	= method(\return(generic("<toString(primitiveToClass(valType))>")), "<insertOrPutMethodName(\map())>Equivalent",	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public", isActive = ds == \map() && isOptionEnabled(setup, methodsWithComparator())),
 
 		Argument __weirdArgument = field(generic("<if (ds == \set()) {>Immutable<}><toString(ds)><GenericsExpandedUpperBounded(ds, tupleTypes)>"), "<uncapitalize(toString(ds))>"),
 		Argument __anotherWeirdArgument = field(generic("<toString(ds)><GenericsExpandedUpperBounded(ds, tupleTypes)>"), "<uncapitalize(toString(ds))>"),
@@ -286,11 +292,25 @@ data TrieSpecifics
 		Method Core_retainAll 		= method(coreInterfaceReturn, "__retainAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
 		Method Core_retainAllEquiv 	= method(coreInterfaceReturn, "__retainAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
 		
+		Method CoreTransient_retainAll 		= method(\return(primitive("boolean")), "__retainAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
+		Method CoreTransient_retainAllEquiv = method(\return(primitive("boolean")), "__retainAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
+
 		Method Core_removeAll 		= method(coreInterfaceReturn, "__removeAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
 		Method Core_removeAllEquiv 	= method(coreInterfaceReturn, "__removeAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),		
+
+		Method CoreTransient_removeAll 		= method(\return(primitive("boolean")), "__removeAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
+		Method CoreTransient_removeAllEquiv = method(\return(primitive("boolean")), "__removeAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),		
 		
 		Method Core_size = method(\return(primitive("int")), "size", visibility = "public"),		
 		Method Core_isEmpty = method(\return(primitive("boolean")), "isEmpty", visibility = "public"),
+		
+		Method Core_isTransientSupported = method(\return(primitive("boolean")), "isTransientSupported", visibility = "public"),
+		Method Core_asTransient = method(coreTransientInterfaceReturn, "asTransient", visibility = "public"),
+		Method CoreTransient_freeze = method(coreImmutableInterfaceReturn, "freeze", visibility = "public"),
+		
+		Method Core_keyIterator = method(\return(generic("Iterator\<<toString(primitiveToClass(keyType))>\>")), "keyIterator", visibility = "public", isActive = true),
+		Method Core_valueIterator = method(\return(generic("Iterator\<<toString(primitiveToClass(valType))>\>")), "valueIterator", visibility = "public", isActive = ds == \map()),
+		Method Core_entryIterator = method(\return(generic("Iterator\<Map.Entry<GenericsStr>\>")), "entryIterator", visibility = "public", isActive = ds == \map()),
 		
 		Method CompactNode_nodeMap 	= method(bitmapField, bitmapField.name),
 		Method CompactNode_dataMap 	= method(valmapField, valmapField.name),
@@ -663,9 +683,9 @@ str toString(\set()) = "Set";
 str toString(\vector()) = "Vector";
 default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 
-str dec(Method m:method) = "abstract <toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>);" when m.isActive;
-str dec(Method m:method) = "" when !m.isActive;
-default str dec(Method m) { throw "You forgot <m>!"; }
+str dec(Method m:method, bool asAbstract = false) = "<if (asAbstract) {>abstract <}><toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>);" when m.isActive;
+str dec(Method m:method, bool asAbstract = false) = "" when !m.isActive;
+default str dec(Method m, bool asAbstract = false) { throw "You forgot <m>!"; }
 
 data OverwriteType 
 	= new()
@@ -962,3 +982,7 @@ default str specializedClassName(int n, int m, TrieSpecifics ts) = "<toString(ts
 
 
 default str noop(_, _) = "";
+
+
+str immutableInterfaceName(DataStructure ds) = "Immutable<toString(ds)>";
+str transientInterfaceName(DataStructure ds) = "Transient<toString(ds)>"; 

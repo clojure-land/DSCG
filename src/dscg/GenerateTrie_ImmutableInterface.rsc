@@ -14,10 +14,10 @@ module dscg::GenerateTrie_ImmutableInterface
 import dscg::Common;
 import dscg::GenerateTrie;
 
-str generateInterface(TrieSpecifics ts) =
+str generateImmutableInterface(TrieSpecifics ts) =
 "
 /*******************************************************************************
- * Copyright (c) 2013-2014 CWI
+ * Copyright (c) 2013-2015 CWI
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,51 +31,112 @@ package org.eclipse.imp.pdb.facts.util;
 
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
-public interface ImmutableMap<GenericsStr> extends Map<GenericsStr> {
+public interface <immutableInterfaceName(ts.ds)><ts.GenericsStr> extends <toString(ts.ds)><ts.GenericsStr> {
 
-    boolean containsKey(Object o);
-    
-	boolean containsKeyEquivalent(Object o, Comparator<Object> cmp);
+	<generate_bodyOf_ImmutableInterface(ts)>
+		
+}";
 
-    V get(Object o);
-    
-    V getEquivalent(Object o, Comparator<Object> cmp);
-	
-    boolean containsValue(Object o);
-    
-	boolean containsValueEquivalent(Object o, Comparator<Object> cmp);
-	
-//	boolean containsAll(Collection\<?\> c);
-//	
-//	boolean containsAllEquivalent(Collection\<?\> c, Comparator\<Object\> cmp);
+str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) = 
+"
+	<dec(ts.Core_containsKey)>
+	<dec(ts.Core_containsKeyEquiv)>
+
+	<dec(ts.jul_Set_containsAll)>
+	<dec(ts.jul_Set_containsAllEquivalent)>
+
+	<dec(ts.Core_get)>
+	<dec(ts.Core_getEquiv)>
+
+	<dec(ts.Core_containsValue)>
+	<dec(ts.Core_containsValueEquiv)>
 	
 	<dec(ts.Core_updated)>
+	<dec(ts.Core_updatedEquiv)>
+	
+	<dec(ts.Core_insertOrPutAll)>
+	<dec(ts.Core_insertOrPutAllEquiv)>
+
+	<dec(ts.Core_removed)>
+	<dec(ts.Core_removedEquiv)>
+	
+	<dec(ts.Core_removeAll)>
+	<dec(ts.Core_removeAllEquiv)>
+
+	<dec(ts.Core_retainAll)>
+	<dec(ts.Core_retainAllEquiv)>
+	
+	<dec(ts.Core_keyIterator)>
+	<dec(ts.Core_valueIterator)>
+	<dec(ts.Core_entryIterator)>
+	
+	<dec(ts.Core_isTransientSupported)>	
+	<dec(ts.Core_asTransient)>	
+";
+
+str generateTransientInterface(TrieSpecifics ts) =
+"
+/*******************************************************************************
+ * Copyright (c) 2013-2015 CWI
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *
+ *   * Michael Steindorfer - Michael.Steindorfer@cwi.nl - CWI  
+ *******************************************************************************/
+package org.eclipse.imp.pdb.facts.util;
+
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+
+public interface <transientInterfaceName(ts.ds)><ts.GenericsStr> extends <toString(ts.ds)><ts.GenericsStr> {
+
+	<generate_bodyOf_TransientInterface(ts)>
 		
-	
-	ImmutableMap<ts.GenericStr> __put(K key, V value);
+}";
 
-	ImmutableMap<ts.GenericStr> __putEquivalent(K key, V value, Comparator<Object> cmp);
-	
-	ImmutableMap<ts.GenericStr> __putAll(Map\<? extends K, ? extends V\> map);
-	
-	ImmutableMap<ts.GenericStr> __putAllEquivalent(Map\<? extends K, ? extends V\> map, Comparator\<Object\> cmp);
-	
-	ImmutableMap<ts.GenericStr> __remove(K key);
-	
-	ImmutableMap<ts.GenericStr> __removeEquivalent(K key, Comparator<Object> cmp);
+str generate_bodyOf_TransientInterface(TrieSpecifics ts) = 
+"
+	<dec(ts.Core_containsKey)>
+	<dec(ts.Core_containsKeyEquiv)>
 
-	Iterator<K> keyIterator();
-	
-	Iterator<V> valueIterator();
-	
-	Iterator\<Map.Entry\<ts.GenericStr\>\> entryIterator();
-	
-//	SupplierIterator<ts.GenericStr> supplierIterator();
-	
-	public abstract TransientMap<ts.GenericStr> asTransient();
+	<dec(ts.jul_Set_containsAll)>
+	<dec(ts.jul_Set_containsAllEquivalent)>
 
-	public abstract boolean isTransientSupported();
+	<dec(ts.Core_get)>
+	<dec(ts.Core_getEquiv)>
+
+	<dec(ts.CoreTransient_insert)>
+	<dec(ts.CoreTransient_insertEquiv)>
+
+	<dec(ts.CoreTransient_put)>
+	<dec(ts.CoreTransient_putEquiv)>
 	
-}" when ts.ds == \map();
+	<dec(ts.CoreTransient_insertOrPutAll)>
+	<dec(ts.CoreTransient_insertOrPutAllEquiv)>
+
+	<dec(ts.CoreTransient_removed)>
+	<dec(ts.CoreTransient_removedEquiv)>
+	
+	<dec(ts.CoreTransient_removeAll)>
+	<dec(ts.CoreTransient_removeAllEquiv)>
+
+	<dec(ts.CoreTransient_retainAll)>
+	<dec(ts.CoreTransient_retainAllEquiv)>
+	
+	<dec(ts.Core_keyIterator)>
+	<dec(ts.Core_valueIterator)>
+	<dec(ts.Core_entryIterator)>
+		
+	<dec(ts.CoreTransient_freeze)>	
+";
