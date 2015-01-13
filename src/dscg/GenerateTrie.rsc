@@ -35,6 +35,9 @@ import dscg::GenerateTrie_Core_Common;
 import dscg::GenerateTrie_Core;
 import dscg::GenerateTrie_CoreTransient;
 
+private str targetProject = "pdb.values";
+private str targetFolder = "src/org/eclipse/imp/pdb/facts/util";
+
 data TrieConfig 
 	= hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes, SpecializationConfig specializationConfig);
 
@@ -72,11 +75,11 @@ void doGenerateInterfaces() {
 	TrieSpecifics genericTsSet = expandConfiguration(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()), "");
 	TrieSpecifics genericTsMap = expandConfiguration(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()), "");
 	
-	writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/<immutableInterfaceName(\set())>.java|, generateImmutableInterface(genericTsSet));
-	writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/<transientInterfaceName(\set())>.java|, generateTransientInterface(genericTsSet));
+	writeFile(|project://<targetProject>/<targetFolder>/<immutableInterfaceName(\set())>.java|, generateImmutableInterface(genericTsSet));
+	writeFile(|project://<targetProject>/<targetFolder>/<transientInterfaceName(\set())>.java|, generateTransientInterface(genericTsSet));
 
-	writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/<immutableInterfaceName(\map())>.java|, generateImmutableInterface(genericTsMap));
-	writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/<transientInterfaceName(\map())>.java|, generateTransientInterface(genericTsMap));	
+	writeFile(|project://<targetProject>/<targetFolder>/<immutableInterfaceName(\map())>.java|, generateImmutableInterface(genericTsMap));
+	writeFile(|project://<targetProject>/<targetFolder>/<transientInterfaceName(\map())>.java|, generateTransientInterface(genericTsMap));	
 }
 
 void doGenerateCurrent() {
@@ -193,7 +196,7 @@ void doGenerate(TrieConfig cfg, str overideClassNamePostfixWith = "") {
 		
 	// writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
 
-	writeFile(|project://pdb.values/src/org/eclipse/imp/pdb/facts/util/Trie<toString(ts.ds)><ts.classNamePostfix>.java|, classStrings);
+	writeFile(|project://<targetProject>/<targetFolder>/Trie<toString(ts.ds)><ts.classNamePostfix>.java|, classStrings);
 }
 	
 str generateClassString(int n) =  
