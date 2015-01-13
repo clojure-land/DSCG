@@ -22,6 +22,7 @@ import dscg::GenerateImmutableMap;
 import dscg::GenerateTrie_Optional;
 import dscg::GenerateTrie_Result;
 
+import dscg::GenerateTrie_ImmutableInterface;
 import dscg::GenerateTrie_AbstractAnyNode;
 import dscg::GenerateTrie_AbstractNode;
 import dscg::GenerateTrie_CompactNode;
@@ -33,7 +34,6 @@ import dscg::GenerateTrie_NodeIterator;
 import dscg::GenerateTrie_Core_Common;
 import dscg::GenerateTrie_Core;
 import dscg::GenerateTrie_CoreTransient;
-import dscg::GenerateTrie_ImmutableInterface;
 
 data TrieConfig 
 	= hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes, SpecializationConfig specializationConfig);

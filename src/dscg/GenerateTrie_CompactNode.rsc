@@ -44,14 +44,14 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		<implOrOverride(ts.CompactNode_mask, generate_bodyOf_mask(ts, ts.CompactNode_mask))>
 		<implOrOverride(ts.CompactNode_bitpos, generate_bodyOf_bitpos(ts, ts.CompactNode_bitpos))>		
 		
-		<dec(ts.CompactNode_nodeMap)>
-		<dec(ts.CompactNode_dataMap)>
+		<dec(ts.CompactNode_nodeMap, asAbstract = true)>
+		<dec(ts.CompactNode_dataMap, asAbstract = true)>
 		
 		<dec(field(primitive("byte"), "SIZE_EMPTY"), 		constant(primitive("byte"), "0b00"), isStatic = true)>;
 		<dec(field(primitive("byte"), "SIZE_ONE"), 			constant(primitive("byte"), "0b01"), isStatic = true)>;
 		<dec(field(primitive("byte"), "SIZE_MORE_THAN_ONE"),constant(primitive("byte"), "0b10"), isStatic = true)>;
 
-		<dec(ts.CompactNode_convertToGenericNode)>
+		<dec(ts.CompactNode_convertToGenericNode, asAbstract = true)>
 
 		/**
 		 * Abstract predicate over a node\'s size. Value can be either
@@ -60,10 +60,10 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		 * 
 		 * @return size predicate
 		 */
-		<dec(ts.CompactNode_sizePredicate)>
+		<dec(ts.CompactNode_sizePredicate, asAbstract = true)>
 
 		@Override
-		<dec(ts.CompactNode_getNode)>
+		<dec(ts.CompactNode_getNode, asAbstract = true)>
 
 		boolean nodeInvariant() {
 			boolean inv1 = (size() - payloadArity() \>= 2 * (arity() - payloadArity()));
@@ -92,9 +92,9 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		
 		<implOrOverride(ts.CompactNode_copyAndRemoveNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = new())>
 	
-		<dec(ts.CompactNode_copyAndMigrateFromInlineToNode)>
+		<dec(ts.CompactNode_copyAndMigrateFromInlineToNode, asAbstract = true)>
 		
-		<dec(ts.CompactNode_copyAndMigrateFromNodeToInline)>
+		<dec(ts.CompactNode_copyAndMigrateFromNodeToInline, asAbstract = true)>
 		
 		/* TODO: specialize removed(..) to remove this method from this interface */
 		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = new())>

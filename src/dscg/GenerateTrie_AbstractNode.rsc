@@ -19,25 +19,25 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 
 		static final int TUPLE_LENGTH = <tupleLength(ts.ds)>;
 
-		<dec(ts.AbstractNode_containsKey)>
-		<dec(ts.AbstractNode_containsKeyEquiv)>
+		<dec(ts.AbstractNode_containsKey, asAbstract = true)>
+		<dec(ts.AbstractNode_containsKeyEquiv, asAbstract = true)>
 	
-		<dec(ts.AbstractNode_findByKey)>
-		<dec(ts.AbstractNode_findByKeyEquiv)>
+		<dec(ts.AbstractNode_findByKey, asAbstract = true)>
+		<dec(ts.AbstractNode_findByKeyEquiv, asAbstract = true)>
 
-		<dec(ts.AbstractNode_updated)>
-		<dec(ts.AbstractNode_updatedEquiv)>
-		<dec(ts.AbstractNode_removed)>
-		<dec(ts.AbstractNode_removedEquiv)>
+		<dec(ts.AbstractNode_updated, asAbstract = true)>
+		<dec(ts.AbstractNode_updatedEquiv, asAbstract = true)>
+		<dec(ts.AbstractNode_removed, asAbstract = true)>
+		<dec(ts.AbstractNode_removedEquiv, asAbstract = true)>
 		
 		static final boolean isAllowedToEdit(AtomicReference\<Thread\> x, AtomicReference\<Thread\> y) {
 			return x != null && y != null && (x == y || x.get() == y.get());
 		}
 						
-		<dec(ts.AbstractNode_getNode)>
+		<dec(ts.AbstractNode_getNode, asAbstract = true)>
 		
-		<dec(ts.AbstractNode_hasNodes)>
-		<dec(ts.AbstractNode_nodeArity)>
+		<dec(ts.AbstractNode_hasNodes, asAbstract = true)>
+		<dec(ts.AbstractNode_nodeArity, asAbstract = true)>
 
 		@Deprecated
 		<implOrOverride(ts.AbstractNode_nodeIterator, 
@@ -65,12 +65,12 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 			};", doOverride = new())>
 	
 	
-		<dec(ts.AbstractNode_getKey)>
-		<dec(ts.AbstractNode_getValue)>				
-		<dec(ts.AbstractNode_getKeyValueEntry)>	
+		<dec(ts.AbstractNode_getKey, asAbstract = true)>
+		<dec(ts.AbstractNode_getValue, asAbstract = true)>				
+		<dec(ts.AbstractNode_getKeyValueEntry, asAbstract = true)>	
 	
-		<dec(ts.AbstractNode_hasPayload)>
-		<dec(ts.AbstractNode_payloadArity)>
+		<dec(ts.AbstractNode_hasPayload, asAbstract = true)>
+		<dec(ts.AbstractNode_payloadArity, asAbstract = true)>
 
 		@Deprecated
 		<implOrOverride(ts.AbstractNode_payloadIterator, 
@@ -107,10 +107,10 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 				}
 			};", doOverride = new())>
 
-		<dec(ts.AbstractNode_getSlot)>
+		<dec(ts.AbstractNode_getSlot, asAbstract = true)>
 	
-		<dec(ts.AbstractNode_hasSlots)>
-		<dec(ts.AbstractNode_slotArity)>
+		<dec(ts.AbstractNode_hasSlots, asAbstract = true)>
+		<dec(ts.AbstractNode_slotArity, asAbstract = true)>
 	
 		/**
 		 * The arity of this trie node (i.e. number of values and nodes stored
