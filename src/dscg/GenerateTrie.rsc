@@ -35,9 +35,6 @@ import dscg::GenerateTrie_Core_Common;
 import dscg::GenerateTrie_Core;
 import dscg::GenerateTrie_CoreTransient;
 
-private str targetProject = "pdb.values";
-private str targetFolder = "src/org/eclipse/imp/pdb/facts/util";
-
 data TrieConfig 
 	= hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes, SpecializationConfig specializationConfig);
 

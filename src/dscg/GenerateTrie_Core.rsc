@@ -23,7 +23,7 @@ str generateCoreClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nM
 	
 return 
 "/*******************************************************************************
- * Copyright (c) 2013-2014 CWI
+ * Copyright (c) 2013-2015 CWI
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,9 +33,9 @@ return
  *
  *   * Michael Steindorfer - Michael.Steindorfer@cwi.nl - CWI  
  *******************************************************************************/
-package org.eclipse.imp.pdb.facts.util;
+package <targetBasePackage>;
 
-import static org.eclipse.imp.pdb.facts.util.AbstractSpecialisedImmutableMap.entryOf;
+import static <targetBasePackage>.AbstractSpecialisedImmutableMap.entryOf;
 
 import java.text.DecimalFormat;
 import java.util.AbstractMap;

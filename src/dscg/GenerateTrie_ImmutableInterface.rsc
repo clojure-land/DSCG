@@ -27,7 +27,7 @@ str generateImmutableInterface(TrieSpecifics ts) =
  *
  *   * Michael Steindorfer - Michael.Steindorfer@cwi.nl - CWI  
  *******************************************************************************/
-package org.eclipse.imp.pdb.facts.util;
+package <targetBasePackage>;
 
 import java.util.Comparator;
 import java.util.Iterator;
@@ -91,7 +91,7 @@ str generateTransientInterface(TrieSpecifics ts) =
  *
  *   * Michael Steindorfer - Michael.Steindorfer@cwi.nl - CWI  
  *******************************************************************************/
-package org.eclipse.imp.pdb.facts.util;
+package <targetBasePackage>;
 
 import java.util.Comparator;
 import java.util.Iterator;

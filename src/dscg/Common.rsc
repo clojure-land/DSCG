@@ -21,6 +21,14 @@ public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("thr
 
 public Expression NULL() = constant(specific("Void"), "null");
 
+public str targetBasePackage = "org.eclipse.imp.pdb.facts.util";
+public str targetProject = "pdb.values";
+public str targetFolder = "src/<replaceAll(targetBasePackage, ".", "/")>";
+
+//public str targetBasePackage = "org.rascalmpl.foundation.collection";
+//public str targetProject = "trie-collections";
+//public str targetFolder = "src/main/java/<replaceAll(targetBasePackage, ".", "/")>";
+
 /* DATA SECTION */
 data DataStructure
 	= \map()
