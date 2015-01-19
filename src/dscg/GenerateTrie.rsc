@@ -121,7 +121,7 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 	if (!isGeneric(keyType)) {
 		classNamePostfix = classNamePostfix + "_<capitalize(toString(keyType))>Key";
 	}	
-	if (!isGeneric(valType) && ds == \map()) {
+	if (!isGeneric(valType) && \map() := ds) {
 		classNamePostfix = classNamePostfix + "_<capitalize(toString(valType))>Value";
 	}
 
@@ -325,7 +325,7 @@ default list[&T] insertAfterOrDefaultAtFront(list[&T] xs, list[&T] old, list[&T]
 
 str generate_bodyOf_updated(0, 0, str(str, str) eq) = 
 	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
-	'return Result.modified(<nodeOf(0, 1, "mask, <keyName><if (ts.ds == \map()) {>, <valName><}>")>);"
+	'return Result.modified(<nodeOf(0, 1, "mask, <keyName><if (\map() := ts.ds) {>, <valName><}>")>);"
 	;
 	
 str generate_bodyOf_updated(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
@@ -457,7 +457,7 @@ str generate_bodyOf_removed(0, 2, _, _, str(str, str) eq) {
 		"if (mask == <keyPosName><i>) {
 		'	if (<eq("<keyName>", "<keyName><i>")>) {
 		'		/*
-		'		 * Create node with <if (ts.ds == \map()) {>pair<} else {>element<}> <keyName><3 - i><if (ts.ds == \map()) {>, <valName><3 - i><}>. This
+		'		 * Create node with <if (\map() := ts.ds) {>pair<} else {>element<}> <keyName><3 - i><if (\map() := ts.ds) {>, <valName><3 - i><}>. This
 		'		 * node will a) either become the new root returned, or b)
 		'		 * unwrapped and inlined.
 		'		 */
@@ -693,7 +693,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 default str generate_bodyOf_findByKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) 
 	= "final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);\n\n"	
 	+ intercalate(" else ", 
-		["if(mask == <keyPosName><i> && <eq("<keyName>", "<keyName><i>")>) { return Optional.of(<if (ts.ds == \map()) {>entryOf(<keyName><i>, <valName><i>)<} else {><keyName><i><}>); }" | i <- [1..m+1]] +
+		["if(mask == <keyPosName><i> && <eq("<keyName>", "<keyName><i>")>) { return Optional.of(<if (\map() := ts.ds) {>entryOf(<keyName><i>, <valName><i>)<} else {><keyName><i><}>); }" | i <- [1..m+1]] +
 		["if(mask == <nodePosName><i>) { return <nodeName><i>.findByKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>); }" | i <- [1..n+1]])
 	+ " else { return Optional.empty(); }"
 	;	
@@ -802,7 +802,7 @@ str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) =
 	'} else {
 	'	return getNode(index - boundary);
 	'}"
-when !isOptionEnabled(ts.setup,useUntypedVariables()) && ts.ds == \map()
+when !isOptionEnabled(ts.setup,useUntypedVariables()) && \map() := ts.ds
 	;
 	
 str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
@@ -1151,7 +1151,7 @@ str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedT
 	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
 	'
 	'	<dec(key(ts.keyType))> = <nodeName>.getKey(0);
-	'	<if (ts.ds == \map()) {><dec(val(ts.valType))> = <nodeName>.getValue(0);<}>	
+	'	<if (\map() := ts.ds) {><dec(val(ts.valType))> = <nodeName>.getValue(0);<}>	
 	'
 	'	switch(bitIndex) {
 	'		<for (i <- [0..mn]) {>case <i>:
@@ -1177,7 +1177,7 @@ default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___e
 	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
 	'
 	'	<dec(key(ts.keyType))> = <nodeName>.getKey(0);
-	'	<if (ts.ds == \map()) {><dec(val(ts.valType))> = <nodeName>.getValue(0);<}>	
+	'	<if (\map() := ts.ds) {><dec(val(ts.valType))> = <nodeName>.getValue(0);<}>	
 	'
 	'	switch(bitIndex) {
 	'		<for (i <- [1..n+1]) {>case <i-1>:
@@ -1494,12 +1494,12 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrie
 	'
 	'		return Result.updated(thisNew, (V) currentVal);<}>
 	'	} else {
-	'		final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> nodeNew = mergeNodes((K) nodes[valIndex], nodes[valIndex].hashCode(),<if (ts.ds == \map()) {> (V) nodes[valIndex + 1],<}> key, keyHash,<if (ts.ds == \map()) {> val,<}> shift + BIT_PARTITION_SIZE);
+	'		final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> nodeNew = mergeNodes((K) nodes[valIndex], nodes[valIndex].hashCode(),<if (\map() := ts.ds) {> (V) nodes[valIndex + 1],<}> key, keyHash,<if (\map() := ts.ds) {> val,<}> shift + BIT_PARTITION_SIZE);
 	'
-	'		final int offset = <if (ts.ds == \map()) {>2 * <}>(payloadArity - 1);
+	'		final int offset = <if (\map() := ts.ds) {>2 * <}>(payloadArity - 1);
 	'		final int index = Integer.bitCount(((bitmap | bitpos) ^ (valmap ^ bitpos)) & (bitpos - 1));
 	'
-	'		final Object[] editableNodes = copyAndMoveToBack<if (ts.ds == \map()) {>Pair<}>(this.nodes, valIndex, offset + index, nodeNew);
+	'		final Object[] editableNodes = copyAndMoveToBack<if (\map() := ts.ds) {>Pair<}>(this.nodes, valIndex, offset + index, nodeNew);
 	'
 	'		final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, bitmap | bitpos, valmap ^ bitpos, editableNodes, (byte) (payloadArity - 1));
 	'
@@ -1528,7 +1528,7 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrie
 	'		thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, bitmap, valmap, editableNodes, payloadArity);
 	'	}
 	'
-		<if (ts.ds == \map()) {>
+		<if (\map() := ts.ds) {>
 	'	if (<nestedResult>.hasReplacedValue()) {
 	'		return Result.updated(thisNew, <nestedResult>.getReplacedValue());
 	'	}
@@ -1537,7 +1537,7 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrie
 	'	return Result.modified(thisNew);
 	'} else {
 	'	// no value
-	'	final Object[] editableNodes = copyAndInsert<if (ts.ds == \map()) {>Pair<}>(this.nodes, dataIndex(bitpos), key<if (ts.ds == \map()) {>, val<}>);
+	'	final Object[] editableNodes = copyAndInsert<if (\map() := ts.ds) {>Pair<}>(this.nodes, dataIndex(bitpos), key<if (\map() := ts.ds) {>, val<}>);
 	'
 	'	final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, bitmap | bitpos, valmap | bitpos, editableNodes, (byte) (payloadArity + 1));
 	'
@@ -1579,7 +1579,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 
 				return Result.modified(thisNew);
 			} else if (USE_SPECIALIAZIONS && this.arity() == <nBound + 1>) {
-				final Object[] editableNodes = copyAndRemove<if (ts.ds == \map()) {>Pair<}>(this.nodes, valIndex);
+				final Object[] editableNodes = copyAndRemove<if (\map() := ts.ds) {>Pair<}>(this.nodes, valIndex);
 	
 				final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator,
 								this.bitmap ^ bitpos, this.valmap ^ bitpos, editableNodes,
@@ -1587,7 +1587,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 	
 				return Result.modified(thisNew.convertToGenericNode());
 			} else {
-				final Object[] editableNodes = copyAndRemove<if (ts.ds == \map()) {>Pair<}>(this.nodes, valIndex);
+				final Object[] editableNodes = copyAndRemove<if (\map() := ts.ds) {>Pair<}>(this.nodes, valIndex);
 	
 				final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator,
 								this.bitmap ^ bitpos, this.valmap ^ bitpos, editableNodes,
@@ -1617,7 +1617,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 				return <nestedResult>;
 			} else if (USE_SPECIALIAZIONS && this.arity() == <nBound + 1>) {
 				// remove node
-				final Object[] editableNodes = copyAndRemove<if (ts.ds == \map()) {>Pair<}>(this.nodes, bitIndex);
+				final Object[] editableNodes = copyAndRemove<if (\map() := ts.ds) {>Pair<}>(this.nodes, bitIndex);
 
 				final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator,
 								bitmap ^ bitpos, valmap, editableNodes, payloadArity);
@@ -1625,7 +1625,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 				return Result.modified(thisNew.convertToGenericNode());
 			} else {
 				// remove node
-				final Object[] editableNodes = copyAndRemove<if (ts.ds == \map()) {>Pair<}>(this.nodes, bitIndex);
+				final Object[] editableNodes = copyAndRemove<if (\map() := ts.ds) {>Pair<}>(this.nodes, bitIndex);
 
 				final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator,
 								bitmap ^ bitpos, valmap, editableNodes, payloadArity);
@@ -1641,8 +1641,8 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 				// inline value (move to front)
 				final int valIndexNew = Integer.bitCount((valmap | bitpos) & (bitpos - 1));
 	
-				final Object[] editableNodes = copyAndMoveToFront<if (ts.ds == \map()) {>Pair<}>(this.nodes, bitIndex,
-								valIndexNew, subNodeNew.getKey(0)<if (ts.ds == \map()) {>, subNodeNew.getValue(0)<}>);
+				final Object[] editableNodes = copyAndMoveToFront<if (\map() := ts.ds) {>Pair<}>(this.nodes, bitIndex,
+								valIndexNew, subNodeNew.getKey(0)<if (\map() := ts.ds) {>, subNodeNew.getValue(0)<}>);
 	
 				final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, bitmap,
 								valmap | bitpos, editableNodes, (byte) (payloadArity + 1));
@@ -1722,7 +1722,7 @@ str generate_valNodeOf_factoryMethod(int n, int m, ts:___expandedTrieSpecifics(d
 		
 		list[Argument] argsForArray = [];
 
-		if (ds == \map()) {
+		if (\map() := ds) {
 			argsForArray = [ key(ts.keyType, i), val(ts.valType, i) | i <- [1..m+1]] + [ \node(ts.ds, ts.tupleTypes, j) | j <- [1..n+1]];
 		} else { 
 			argsForArray = [ key(ts.keyType, i) | i <- [1..m+1]] + [ \node(ts.ds, ts.tupleTypes, j) | j <- [1..n+1]];
@@ -1745,7 +1745,7 @@ str generate_valNodeOf_factoryMethod(int n, int m, ts:___expandedTrieSpecifics(d
 			'	final Object[] content = new Object[] { <use(argsForArray)> } ;
 			'
 			'	<if (m > 1) {>
-			'	<if (ts.ds == \map()) {>
+			'	<if (\map() := ts.ds) {>
 			'	// final BitonicSorterForArbitraryN_Pairs sorterPayload = new BitonicSorterForArbitraryN_Pairs();
 			'	BitonicSorterForArbitraryN_Pairs.sort(new int[] { <use(keyPosArgs)> }, content, 0);
 			'	<} else {>
@@ -1756,7 +1756,7 @@ str generate_valNodeOf_factoryMethod(int n, int m, ts:___expandedTrieSpecifics(d
 			'	
 			'	<if (n > 1) {>
 			'	// final BitonicSorterForArbitraryN_Single sorterSubnodes = new BitonicSorterForArbitraryN_Single();
-			'	BitonicSorterForArbitraryN_Single.sort(new int[] { <use(nodePosArgs)> }, content, <if (ts.ds == \map()) {><2*m><}else{><m><}>);
+			'	BitonicSorterForArbitraryN_Single.sort(new int[] { <use(nodePosArgs)> }, content, <if (\map() := ts.ds) {><2*m><}else{><m><}>);
 			'	<}>
 			'
 			'	return nodeOf(mutator, bitmap, valmap, content, (byte) <m>);		
@@ -1877,7 +1877,7 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 	'		return <n>;
 	'	}	
 
-	<if (ts.ds == \map()) {>
+	<if (\map() := ts.ds) {>
 	'	@Override
 	'	SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator() {
 	'		<if (m > 0) {>return ArrayKeyValueSupplierIterator.of(new Object[] { <intercalate(", ", ["<keyName><i>, <valName><i>"  | i <- [1..m+1]])> });<} else {>return EmptySupplierIterator.emptyIterator();<}>
@@ -1904,7 +1904,7 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a key.\")<} else {>return key1<}>;
 	'	}
 
-	<if (ts.ds == \map()) {>
+	<if (\map() := ts.ds) {>
 	'	@Override
 	'	<toString(ts.valType)> headVal() {
 	'		<if (m == 0) {>throw new UnsupportedOperationException(\"Node does not directly contain a value.\")<} else {>return val1<}>;
@@ -1921,14 +1921,14 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 	'		<generate_bodyOf_getKey(m)>
 	'	}
 
-	<if (ts.ds == \map()) {>
+	<if (\map() := ts.ds) {>
 	'	@Override
 	'	V getValue(int index) {
 	'		<generate_bodyOf_getValue(m)>
 	'	}
 	<}>
 		
-	<if (ts.ds == \map()) {>
+	<if (\map() := ts.ds) {>
 	'	@Override
 	'	Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> getKeyValueEntry(int index) {
 	'		<generate_bodyOf_getKeyValueEntry(ts, m)>
@@ -1945,7 +1945,7 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 	'	public int hashCode() {
 	'		<if ((n + m) > 0) {>final int prime = 31; int result = 1;<} else {>int result = 1;<}>
 	'		<for (i <- [1..m+1]) {>
-	'		<if (ts.ds == \map()) {>result = prime * result + <valName><i>.hashCode();<}>
+	'		<if (\map() := ts.ds) {>result = prime * result + <valName><i>.hashCode();<}>
 	'		<}><for (i <- [1..n+1]) {>
 	'		result = prime * result + <nodePosName><i>;
 	'		result = prime * result + <nodeName><i>.hashCode();
@@ -1976,7 +1976,7 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 
 	'	@Override
 	'	public String toString() {		
-	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (ts.ds == \map()) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use(members)>);<}>
+	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (\map() := ts.ds) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use(members)>);<}>
 	'	}
 	
 	'}
@@ -2014,7 +2014,7 @@ str generate_equalityComparisons(int n, int m, ts:___expandedTrieSpecifics(ds, b
 	'<for (i <- [1..m+1]) {>
 	'if (!(<eq(key(ts.keyType, "<keyName><i>"), key(ts.keyType, "that.<keyName><i>"))>)) {
 	'	return false;
-	'}<if (ts.ds == \map()) {>if (!(<eq(val(ts.valType, "<valName><i>"), val(ts.valType, "that.<valName><i>"))>)) {
+	'}<if (\map() := ts.ds) {>if (!(<eq(val(ts.valType, "<valName><i>"), val(ts.valType, "that.<valName><i>"))>)) {
 	'	return false;
 	'}<}><}><for (i <- [1..n+1]) {>
 	'if (!(<eq(\node(ts.ds, ts.tupleTypes, "<nodeName><i>"), \node(ts.ds, ts.tupleTypes, "that.<nodeName><i>"))>)) {
@@ -2076,7 +2076,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'	}
 
 	<if (false) {>	
-	<if (ts.ds == \map()) {>
+	<if (\map() := ts.ds) {>
 	'	@Override
 	'	SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator() {
 	'		<if (m > 0) {>return ArrayKeyValueSupplierIterator.of(new Object[] { <intercalate(", ", ["<keyName><i>, <valName><i>"  | i <- [1..m+1]])> });<} else {>return EmptySupplierIterator.emptyIterator();<}>
@@ -2103,7 +2103,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 			return (<toString(ts.keyType)>) getSlot(<use(tupleLengthConstant)> * index);
 		}
 	
-		<if (ts.ds == \map()) {>
+		<if (\map() := ts.ds) {>
 		<if (!isPrimitive(val(ts.valType))) {><toString(UNCHECKED_ANNOTATION())><}>
 		@Override
 		<toString(ts.valType)> getValue(int index) {
@@ -2111,7 +2111,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 		}
 		<}>
 
-		<if (ts.ds == \map()) {>
+		<if (\map() := ts.ds) {>
 		<toString(UNCHECKED_ANNOTATION())>
 		@Override
 		Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> getKeyValueEntry(int index) {
@@ -2181,14 +2181,14 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'		<generate_bodyOf_getKey(m)>
 	'	}
 
-	<if (ts.ds == \map()) {>
+	<if (\map() := ts.ds) {>
 	'	@Override
 	'	<toString(ts.valType)> getValue(int index) {
 	'		<generate_bodyOf_getValue(m)>
 	'	}
 	<}>
 	
-	<if (ts.ds == \map()) {>
+	<if (\map() := ts.ds) {>
 	'	@Override
 	'	Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> getKeyValueEntry(int index) {
 	'		<generate_bodyOf_getKeyValueEntry(ts, m)>
@@ -2228,7 +2228,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'	}	
 	<}>
 
-	<if (ts.ds == \map()) {>
+	<if (\map() := ts.ds) {>
 	'	@Override
 	'	<CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <dec(val(ts.valType))>) {
 	'		<generate_bodyOf_copyAndSetValue(n, m, ts, setup)>
@@ -2305,7 +2305,7 @@ default str generate_bodyOf_hashCode(int n, int m, ts:___expandedTrieSpecifics(d
 "		<if ((n + m) > 0) {>final int prime = 31; int result = 1; \n\n result = prime * result + (<primitiveHashCode(___bitmapMethod(bitPartitionSize))>); result = prime * result + (<primitiveHashCode(___valmapMethod(bitPartitionSize))>);<} else {>int result = 1;<}>
 '	
 '		<for (i <- [1..m+1]) {>		
-'		result = prime * result + <hashCode(key(ts.keyType, i))>; <if (ts.ds == \map()) {>result = prime * result + <hashCode(val(ts.valType, i))>;<}> <}>
+'		result = prime * result + <hashCode(key(ts.keyType, i))>; <if (\map() := ts.ds) {>result = prime * result + <hashCode(val(ts.valType, i))>;<}> <}>
 '		<for (i <- [1..n+1]) {>
 '		result = prime * result + <hashCode(\node(ts.ds, ts.tupleTypes, i))>;<}>
 '			
@@ -2324,5 +2324,5 @@ str generate_toString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartition
 //default str generate_toString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
 //	"	@Override
 //	'	public String toString() {		
-//	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (ts.ds == \map()) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(<use(valmapMethod)>, (byte) <i>)"), *__payloadTuple(ts.ds, ts.tupleTypes, i) | i <- [1..m+1]] + [ field("recoverMask(<use(bitmapMethod)>, (byte) <i>)"), \node(ts.ds, ts.tupleTypes, i)	| i <- [1..n+1]])>);<}>
+//	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (\map() := ts.ds) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(<use(valmapMethod)>, (byte) <i>)"), *__payloadTuple(ts.ds, ts.tupleTypes, i) | i <- [1..m+1]] + [ field("recoverMask(<use(bitmapMethod)>, (byte) <i>)"), \node(ts.ds, ts.tupleTypes, i)	| i <- [1..n+1]])>);<}>
 //	'	}";

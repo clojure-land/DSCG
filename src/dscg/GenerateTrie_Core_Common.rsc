@@ -51,5 +51,5 @@ str generate_checkHashCodeAndSize(ts:___expandedTrieSpecifics(ds, bitPartitionSi
 		return hash == targetHash && size == targetSize;
 	}
 	"
-when ds == \map() || ds == vector()	
+when \map() := ds || ds == vector()	
 	;

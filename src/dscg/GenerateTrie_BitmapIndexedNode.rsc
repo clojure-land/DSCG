@@ -263,13 +263,13 @@ default str generate_removeInplaceValueAndConvertToSpecializedNode(TrieSpecifics
 	'
 	'	switch(payloadArity()) { // 0 \<= payloadArity \<= <ts.nBound+1> // or ts.nMax
 	'	<for (m <- [1..ts.nBound+2], m <= ts.nMax, n <- [ts.nBound+1-m]) {>case <m>: {
-	'		<for (i <- [1..m]) {><dec(key(ts.keyType, i), isFinal = false)>; <if(ts.ds == \map()){><dec(val(ts.valType, i), isFinal = false)>;<}><}>
+	'		<for (i <- [1..m]) {><dec(key(ts.keyType, i), isFinal = false)>; <if(\map() := ts.ds){><dec(val(ts.valType, i), isFinal = false)>;<}><}>
 	'
 	'		switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>: {
 				<for (<j,k> <- zip([1..m], [0..m] - [i-1])) {>
 				<use(key(ts.keyType, j))> = getKey(<k>);
-				<if(ts.ds == \map()){><use(val(ts.valType, j))> = getValue(<k>);<}><}>
+				<if(\map() := ts.ds){><use(val(ts.valType, j))> = getValue(<k>);<}><}>
 				break;
 	'		}<}>default:
 	'				throw new IllegalStateException(\"Index out of range.\");
@@ -338,7 +338,7 @@ default str generate_bodyOf_nodeArity(TrieSpecifics ts) = "return <use(ts.Bitmap
 
 str generate_bodyOf_payloadIterator(TrieSpecifics ts) 
 	= "return (Iterator) ArrayKeyValue<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>Supplier<}>Iterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity());"
-when ts.ds == \map();
+when \map() := ts.ds;
 
 str generate_bodyOf_payloadIterator(TrieSpecifics ts) 
 	= "return (Iterator) Array<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>Supplier<}>Iterator.of(nodes, 0, payloadArity());"

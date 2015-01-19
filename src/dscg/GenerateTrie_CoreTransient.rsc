@@ -101,7 +101,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		<insertOrPut(ts, setup, useComparator = false)>
 		<insertOrPut(ts, setup, useComparator = true )>
 
-		<if (ds == \map()) {>
+		<if (\map() := ds) {>
 		<insertOrPutAll(ts, setup, args = [field(specific("<toString(ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ds))>")], useComparator = false)>
 		<insertOrPutAll(ts, setup, args = [field(specific("<toString(ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ds))>")], useComparator = true )>		
 		<}>		
@@ -126,7 +126,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(mutator, key, improve(keyHash), 0, <use(ts.details)>);
 
 			if (<use(ts.details)>.isModified()) {
-				<if (ds == \map()) {>				
+				<if (\map() := ds) {>				
 					assert <use(ts.details)>.hasReplacedValue();
 					final int valHash = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
 	
@@ -168,7 +168,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(mutator, key, improve(keyHash), 0, <use(ts.details)>, cmp);
 
 			if (<use(ts.details)>.isModified()) {
-				<if (ds == \map()) {>				
+				<if (\map() := ds) {>				
 					assert <use(ts.details)>.hasReplacedValue();
 					final int valHash = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
 	
@@ -250,7 +250,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}		
 		<}>
 
-		<if (ds == \map()) {>
+		<if (\map() := ds) {>
 		@Override
 		public Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet() {
 			Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet = null;
@@ -321,7 +321,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			return new Transient<toString(ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(this);
 		}
 
-		<if (ds == \map()) {>
+		<if (\map() := ds) {>
 		@Override
 		public Iterator\<<toString(primitiveToClass(ts.valType))>\> valueIterator() {
 			// return new Trie<toString(ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(keyIterator());

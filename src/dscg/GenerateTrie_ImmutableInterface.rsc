@@ -14,9 +14,8 @@ module dscg::GenerateTrie_ImmutableInterface
 import dscg::Common;
 import dscg::GenerateTrie;
 
-str generateImmutableInterface(TrieSpecifics ts) =
-"
-/*******************************************************************************
+str copyrightHeaderWithPackageAndImports = 
+"/*******************************************************************************
  * Copyright (c) 2013-2015 CWI
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -33,7 +32,10 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
+import java.util.Set;";
+
+str generateImmutableInterface(TrieSpecifics ts) =
+"<copyrightHeaderWithPackageAndImports>
 
 public interface <immutableInterfaceName(ts.ds)><ts.GenericsStr> extends <toString(ts.ds)><ts.GenericsStr> {
 
@@ -79,25 +81,7 @@ str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) =
 ";
 
 str generateTransientInterface(TrieSpecifics ts) =
-"
-/*******************************************************************************
- * Copyright (c) 2013-2015 CWI
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *
- * Contributors:
- *
- *   * Michael Steindorfer - Michael.Steindorfer@cwi.nl - CWI  
- *******************************************************************************/
-package <targetBasePackage>;
-
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+"<copyrightHeaderWithPackageAndImports>
 
 public interface <transientInterfaceName(ts.ds)><ts.GenericsStr> extends <toString(ts.ds)><ts.GenericsStr> {
 

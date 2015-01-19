@@ -31,7 +31,7 @@ public str targetFolder = "src/<replaceAll(targetBasePackage, ".", "/")>";
 
 /* DATA SECTION */
 data DataStructure
-	= \map()
+	= \map(bool multi = false)
 	| \set()
 	| \vector()
 	;
@@ -270,8 +270,8 @@ data TrieSpecifics
 		Method CoreTransient_insert 		= method(\return(primitive("boolean")), "<insertOrPutMethodName(\set())>",  			args = [*mapper(payloadTuple, primitiveToClassArgument)], visibility = "public", isActive = ds == \set()),
 		Method CoreTransient_insertEquiv 	= method(\return(primitive("boolean")), "<insertOrPutMethodName(\set())>Equivalent", 	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
 
-		Method CoreTransient_put 		= method(\return(generic("<toString(primitiveToClass(valType))>")), "<insertOrPutMethodName(\map())>",				args = [*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public", isActive = ds == \map()),
-		Method CoreTransient_putEquiv 	= method(\return(generic("<toString(primitiveToClass(valType))>")), "<insertOrPutMethodName(\map())>Equivalent",	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public", isActive = ds == \map() && isOptionEnabled(setup, methodsWithComparator())),
+		Method CoreTransient_put 		= method(\return(generic("<toString(primitiveToClass(valType))>")), "<insertOrPutMethodName(\map())>",				args = [*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public", isActive = \map() := ds),
+		Method CoreTransient_putEquiv 	= method(\return(generic("<toString(primitiveToClass(valType))>")), "<insertOrPutMethodName(\map())>Equivalent",	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public", isActive = \map() := ds && isOptionEnabled(setup, methodsWithComparator())),
 
 		Argument __weirdArgument = field(generic("<if (ds == \set()) {>Immutable<}><toString(ds)><GenericsExpandedUpperBounded(ds, tupleTypes)>"), "<uncapitalize(toString(ds))>"),
 		Argument __anotherWeirdArgument = field(generic("<toString(ds)><GenericsExpandedUpperBounded(ds, tupleTypes)>"), "<uncapitalize(toString(ds))>"),
@@ -294,8 +294,8 @@ data TrieSpecifics
 		Method Core_get 		= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "get",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public"),
 		Method Core_getEquiv 	= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "getEquivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
 
-		Method Core_containsValue 		= method(\return(primitive("boolean")), "containsValue",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public", isActive = ds == \map()),
-		Method Core_containsValueEquiv 	= method(\return(primitive("boolean")), "containsValueEquivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = ds == \map() && isOptionEnabled(setup, methodsWithComparator())),													
+		Method Core_containsValue 		= method(\return(primitive("boolean")), "containsValue",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public", isActive = \map() := ds),
+		Method Core_containsValueEquiv 	= method(\return(primitive("boolean")), "containsValueEquivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = \map() := ds && isOptionEnabled(setup, methodsWithComparator())),													
 
 		Method Core_retainAll 		= method(coreInterfaceReturn, "__retainAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
 		Method Core_retainAllEquiv 	= method(coreInterfaceReturn, "__retainAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
@@ -317,8 +317,8 @@ data TrieSpecifics
 		Method CoreTransient_freeze = method(coreImmutableInterfaceReturn, "freeze", visibility = "public"),
 		
 		Method Core_keyIterator = method(\return(generic("Iterator\<<toString(primitiveToClass(keyType))>\>")), "keyIterator", visibility = "public", isActive = true),
-		Method Core_valueIterator = method(\return(generic("Iterator\<<toString(primitiveToClass(valType))>\>")), "valueIterator", visibility = "public", isActive = ds == \map()),
-		Method Core_entryIterator = method(\return(generic("Iterator\<Map.Entry<GenericsStr>\>")), "entryIterator", visibility = "public", isActive = ds == \map()),
+		Method Core_valueIterator = method(\return(generic("Iterator\<<toString(primitiveToClass(valType))>\>")), "valueIterator", visibility = "public", isActive = \map() := ds),
+		Method Core_entryIterator = method(\return(generic("Iterator\<Map.Entry<GenericsStr>\>")), "entryIterator", visibility = "public", isActive = \map() := ds),
 		
 		Method CompactNode_nodeMap 	= method(bitmapField, bitmapField.name),
 		Method CompactNode_dataMap 	= method(valmapField, valmapField.name),
@@ -328,7 +328,7 @@ data TrieSpecifics
 				
 		Method CompactNode_copyAndRemoveValue = method(compactNodeClassReturn, "copyAndRemoveValue", args = [mutator, bitposField]),
 		Method CompactNode_copyAndInsertValue = method(compactNodeClassReturn, "copyAndInsertValue", args = [mutator, bitposField, *payloadTuple]),
-		Method CompactNode_copyAndSetValue = method(compactNodeClassReturn, "copyAndSetValue", args = [mutator, bitposField, val(valType)], isActive = ds == \map()),		
+		Method CompactNode_copyAndSetValue = method(compactNodeClassReturn, "copyAndSetValue", args = [mutator, bitposField, val(valType)], isActive = \map() := ds),		
 		Method CompactNode_copyAndSetNode = method(compactNodeClassReturn, "copyAndSetNode", args = [mutator, bitposField, \node(ds, tupleTypes)]),		
 		Method CompactNode_copyAndInsertNode = method(compactNodeClassReturn, "copyAndInsertNode", args = [mutator, bitposField, \node(ds, tupleTypes)], isActive = false),
 		Method CompactNode_copyAndMigrateFromInlineToNode = method(compactNodeClassReturn, "copyAndMigrateFromInlineToNode", args = [mutator, bitposField, \node(ds, tupleTypes)]),
@@ -366,8 +366,8 @@ data TrieSpecifics
 		Method CompactNode_nodeIterator = method(\return(generic("Iterator\<? extends <CompactNode(ds)><GenericsStr>\>")), "nodeIterator", isActive = !isOptionEnabled(setup, useFixedStackIterator())),
 
 		Method AbstractNode_getKey = method(\return(keyType), "getKey", args = [index]),
-		Method AbstractNode_getValue = method(\return(valType), "getValue", args = [index], isActive = ds == \map()),		
-		Method AbstractNode_getKeyValueEntry = method(\return(generic("java.util.Map.Entry<GenericsExpanded(ds, tupleTypes)>")), "getKeyValueEntry", args = [index], isActive = ds == \map()),
+		Method AbstractNode_getValue = method(\return(valType), "getValue", args = [index], isActive = \map() := ds),		
+		Method AbstractNode_getKeyValueEntry = method(\return(generic("java.util.Map.Entry<GenericsExpanded(ds, tupleTypes)>")), "getKeyValueEntry", args = [index], isActive = \map() := ds),
 	
 		/***/
 		Method AbstractNode_hasPayload = method(\return(primitive("boolean")), "hasPayload"),
@@ -379,14 +379,14 @@ data TrieSpecifics
 		Method AbstractNode_slotArity = method(\return(primitive("int")), "slotArity", isActive = true), // isOptionEnabled(setup,useUntypedVariables())		
 		Method AbstractNode_getSlot = method(\return(object()), "getSlot", args = [index], isActive = true), // isOptionEnabled(setup,useUntypedVariables())
 		
-		Method jul_Map_put = method(\return(primitiveToClass(valType)), "put", args = [ key(primitiveToClass(keyType)), val(primitiveToClass(valType)) ], visibility = "public", isActive = ds == \map()),		
-		Method jul_Map_remove = method(\return(primitiveToClass(valType)), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = ds == \map()),
-		Method jul_Map_clear = method(\return(\void()), "clear", visibility = "public", isActive = ds == \map()),		
-		Method jul_Map_putAll = method(\return(\void()), "putAll", args = [ field(generic("Map<GenericsExpandedUpperBounded(ds, tupleTypes)>"), "m") ], visibility = "public", isActive = ds == \map()),	
+		Method jul_Map_put = method(\return(primitiveToClass(valType)), "put", args = [ key(primitiveToClass(keyType)), val(primitiveToClass(valType)) ], visibility = "public", isActive = \map() := ds),		
+		Method jul_Map_remove = method(\return(primitiveToClass(valType)), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = \map() := ds),
+		Method jul_Map_clear = method(\return(\void()), "clear", visibility = "public", isActive = \map() := ds),		
+		Method jul_Map_putAll = method(\return(\void()), "putAll", args = [ field(generic("Map<GenericsExpandedUpperBounded(ds, tupleTypes)>"), "m") ], visibility = "public", isActive = \map() := ds),	
 
-		Method jul_Map_keySet = method(\return(generic("Set\<<toString(primitiveToClass(dsAtFunction__domain_type(ds, tupleTypes)))>\>")), "keySet", visibility = "public", isActive = ds == \map()),
-		Method jul_Map_values = method(\return(generic("Collection\<<toString(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes)))>\>")), "values", visibility = "public", isActive = ds == \map()),
-		Method jul_Map_entrySet = method(\return(generic("Set\<java.util.Map.Entry<GenericsExpanded(ds, tupleTypes)>\>")), "entrySet", visibility = "public", isActive = ds == \map()),
+		Method jul_Map_keySet = method(\return(generic("Set\<<toString(primitiveToClass(dsAtFunction__domain_type(ds, tupleTypes)))>\>")), "keySet", visibility = "public", isActive = \map() := ds),
+		Method jul_Map_values = method(\return(generic("Collection\<<toString(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes)))>\>")), "values", visibility = "public", isActive = \map() := ds),
+		Method jul_Map_entrySet = method(\return(generic("Set\<java.util.Map.Entry<GenericsExpanded(ds, tupleTypes)>\>")), "entrySet", visibility = "public", isActive = \map() := ds),
 				
 		Method jul_Set_add = method(\return(primitive("boolean")), "add", args = [ key(primitiveToClass(keyType)) ], visibility = "public", isActive = ds == \set()),		
 		Method jul_Set_remove = method(\return(primitive("boolean")), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = ds == \set()),
@@ -752,7 +752,7 @@ default list[Expression] substitute(list[Argument] args, map[Argument, Expressio
  * Convenience Functions [TODO: remove global state dependency!]
  */
 list[Argument] payloadTriple(int i) {
-	if (ds == \map()) {
+	if (\map() := ds) {
 		return [ keyPos(i), key(ts.keyType, i), val(ts.valType, i) ];
 	} else { 
 		return [ keyPos(i), key(ts.keyType, i) ];
@@ -760,7 +760,7 @@ list[Argument] payloadTriple(int i) {
 }
 
 list[Argument] payloadTriple(str posName) {
-	if (ds == \map()) {
+	if (\map() := ds) {
 		return [ field("byte", posName), key(ts.keyType), val(ts.valType) ];
 	} else { 
 		return [ field("byte", posName), key(ts.keyType) ];
@@ -768,7 +768,7 @@ list[Argument] payloadTriple(str posName) {
 }
 
 list[Argument] payloadTriple(str posName, int i) {
-	if (ds == \map()) {
+	if (\map() := ds) {
 		return [ field("byte", posName), key(ts.keyType, i), val(ts.valType, i) ];
 	} else { 
 		return [ field("byte", posName), key(ts.keyType, i) ];
@@ -776,7 +776,7 @@ list[Argument] payloadTriple(str posName, int i) {
 }
 
 list[Argument] payloadTriple(str posName, str keyName, str valName) {
-	if (ds == \map()) {
+	if (\map() := ds) {
 		return [ field("byte", posName), key(keyName), val(valName) ];
 	} else { 
 		return [ field("byte", posName), key(keyName) ];
@@ -928,12 +928,12 @@ list[Argument] typedContentArguments(int n, int m, ts:___expandedTrieSpecifics(d
 list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
 	= [ key(ts.keyType, i), val(ts.valType, i) | i <- [1..m+1]] 
 	+ [ \node(ts.ds, ts.tupleTypes, i)   | i <- [1..n+1]]
-when (ds == \map() || ds == \vector()) 
+when (\map() := ds || ds == \vector()) 
 		&& !isOptionEnabled(setup,useUntypedVariables());
 
 list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
 	= [ slot(i) | i <- [0..2*m + n]]
-when (ds == \map() || ds == \vector()) 
+when (\map() := ds || ds == \vector()) 
 		&& isOptionEnabled(setup,useUntypedVariables());
 
 list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 

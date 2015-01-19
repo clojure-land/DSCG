@@ -78,7 +78,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 			return inv1 && inv2 && inv3 && inv4 && inv5;
 		}
 
-	<if (ds == \map()) {>
+	<if (\map() := ds) {>
 	'	abstract <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <dec(val(ts.valType))>);
 	<}>	
 	
@@ -173,7 +173,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 		return getKey(dataIndex(bitpos)); 
 	}
 
-	<if (ds == \map()) {>
+	<if (\map() := ds) {>
 	<toString(ts.valType)> valAt(<dec(ts.bitposField)>) {
 		return getValue(dataIndex(bitpos)); 
 	}
@@ -475,7 +475,7 @@ str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___
 	'}
 	'
 	'return Optional.empty();"
-when ds == \map() || ds == \vector()
+when \map() := ds || ds == \vector()
 	;
 	
 str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
@@ -532,8 +532,8 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'			return copyAndSetValue(mutator, bitpos, val);
 	'		}<}>
 	'	} else {
-	'		<if (ds == \map()) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex);<}>
-	'		final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, <if (ds == \map()) {> currentVal,<}>improve(<hashCode(key(ts.keyType, "currentKey"))>), key, <if (ds == \map()) {> val,<}> keyHash, shift + BIT_PARTITION_SIZE);
+	'		<if (\map() := ds) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex);<}>
+	'		final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, <if (\map() := ds) {> currentVal,<}>improve(<hashCode(key(ts.keyType, "currentKey"))>), key, <if (\map() := ds) {> val,<}> keyHash, shift + BIT_PARTITION_SIZE);
 	'
 	'		<if (isOptionEnabled(setup,useSpecialization())) {>
 	'		// final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = copyAndRemoveValue(mutator, bitpos).copyAndInsertNode(mutator, bitpos, nodeNew);
@@ -558,7 +558,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'} else {
 	'	// no value
 	'	<use(ts.details)>.modified();
-	'	return copyAndInsertValue(mutator, bitpos, key<if (ds == \map()) {>, val<}>);
+	'	return copyAndInsertValue(mutator, bitpos, key<if (\map() := ds) {>, val<}>);
 	'}"
 	;
 }
@@ -582,7 +582,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 		<dec(field(primitive("int"), "dataIndex"))> = dataIndex(bitpos);
 		
 		if (<eq(key(ts.keyType, "getKey(dataIndex)"), key(ts.keyType))>) {
-			<if (ds == \map()) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex); details.updated(currentVal);<} else {>details.modified();<}>			
+			<if (\map() := ds) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex); details.updated(currentVal);<} else {>details.modified();<}>			
 		
 			<removed_value_block1(ts, setup)> else <if (isOptionEnabled(setup,useSpecialization())) {><removed_value_block2(ts, setup)> else<}> {					
 				return copyAndRemoveValue(mutator, bitpos);
@@ -641,10 +641,10 @@ default str removed_value_block1(ts:___expandedTrieSpecifics(ds, bitPartitionSiz
 	'
 	'	if (dataIndex == 0) {
 	'		return <CompactNode(ts.ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0,
-	'						newDataMap, getKey(1)<if (ds == \map()) {>, getValue(1)<}>);
+	'						newDataMap, getKey(1)<if (\map() := ds) {>, getValue(1)<}>);
 	'	} else {
 	'		return <CompactNode(ts.ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0,
-	'						newDataMap, getKey(0)<if (ds == \map()) {>, getValue(0)<}>);
+	'						newDataMap, getKey(0)<if (\map() := ds) {>, getValue(0)<}>);
 	'	}
 	'}";
 	
@@ -818,7 +818,7 @@ default str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts) =
 	
 		if (<use(ts.shift)> \>= HASH_CODE_LENGTH) {
 		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<toString(ts.keyType)>[]) new <if (isPrimitive(ts.keyType)) {><toString(ts.keyType)><} else {>Object<}>[] { key0, key1 }
-						<if (ts.ds == \map()) {>, (<toString(ts.valType)>[]) new <if (isPrimitive(ts.valType)) {><toString(ts.valType)><} else {>Object<}>[] { val0, val1 }<}>);
+						<if (\map() := ts.ds) {>, (<toString(ts.valType)>[]) new <if (isPrimitive(ts.valType)) {><toString(ts.valType)><} else {>Object<}>[] { val0, val1 }<}>);
 	}
 
 	<dec(ts.mask0)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
@@ -839,7 +839,7 @@ str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts) =
 
 	if (keyHash0 == keyHash1) {
 		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<toString(ts.keyType)>[]) new <if (isPrimitive(ts.keyType)) {><toString(ts.keyType)><} else {>Object<}>[] { key0, key1 }
-						<if (ts.ds == \map()) {>, (<toString(ts.valType)>[]) new <if (isPrimitive(ts.valType)) {><toString(ts.valType)><} else {>Object<}>[] { val0, val1 }<}>);
+						<if (\map() := ts.ds) {>, (<toString(ts.valType)>[]) new <if (isPrimitive(ts.valType)) {><toString(ts.valType)><} else {>Object<}>[] { val0, val1 }<}>);
 	}
 
 	int originalShift = shift;
@@ -891,7 +891,7 @@ default str generate_bodyOf_mergeNodeAndKeyValPair(TrieSpecifics ts) =
 str generate_bodyOf_mergeNodeAndKeyValPair(TrieSpecifics ts) = 
 	"if (keyHash0 == keyHash1) {
 		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<toString(ts.keyType)>[]) new <if (isPrimitive(ts.keyType)) {><toString(ts.keyType)><} else {>Object<}>[] { key0, key1 }
-						<if (ts.ds == \map()) {>, (<toString(ts.valType)>[]) new <if (isPrimitive(ts.valType)) {><toString(ts.valType)><} else {>Object<}>[] { val0, val1 }<}>);
+						<if (\map() := ts.ds) {>, (<toString(ts.valType)>[]) new <if (isPrimitive(ts.valType)) {><toString(ts.valType)><} else {>Object<}>[] { val0, val1 }<}>);
 	}
 
 	int originalShift = shift;

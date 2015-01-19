@@ -82,7 +82,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		return <ts.coreClassName>.<emptyCollectionConstantName>;
 	}
 
-	<if (ds == \map()) {>
+	<if (\map() := ds) {>
 	<toString(UNCHECKED_ANNOTATION())>
 	public static final <Generics(ts.ds, ts.tupleTypes)> Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> of(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
@@ -120,7 +120,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		return <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 	}
 
-	<if (ds == \map()) {>
+	<if (\map() := ds) {>
 	<toString(UNCHECKED_ANNOTATION())>
 	public static final <Generics(ts.ds, ts.tupleTypes)> Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> transientOf(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
@@ -234,7 +234,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		<generate_bodyOf_keyIterator(ts, ts.setup)>
 	}
 
-	<if (ds == \map()) {>
+	<if (\map() := ds) {>
 	@Override
 	public Iterator\<<toString(primitiveToClass(ts.valType))>\> valueIterator() {
 		return new <toString(ts.ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);
@@ -272,7 +272,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	}
 
 	<if (false) {>
-	// <!isOptionEnabled(setup, useStructuralEquality()) && ts.ds == \map()>
+	// <!isOptionEnabled(setup, useStructuralEquality()) && \map() := ts.ds>
 	
 	@Override
 	public boolean equals(Object other) {
@@ -563,7 +563,7 @@ default str generate_bodyOf_Core_updated(TrieSpecifics ts, rel[Option,bool] setu
 		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(null, <use(ts.payloadTuple)>, improve(keyHash), 0, <use(ts.details)><optionalComparatorArgument>);
 
 		if (<use(ts.details)>.isModified()) {
-			<if (ts.ds == \map()) {>
+			<if (\map() := ts.ds) {>
 				if (<use(ts.details)>.hasReplacedValue()) {
 					final int valHashOld = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
 					final int valHashNew = <hashCode(val(ts.valType))>;
@@ -573,7 +573,7 @@ default str generate_bodyOf_Core_updated(TrieSpecifics ts, rel[Option,bool] setu
 				}
 			<}>
 				
-			<if (ts.ds == \map()) {>
+			<if (\map() := ts.ds) {>
 				final int valHash = <hashCode(val(ts.valType))>;
 				return new <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)>(newRootNode, hashCode + (keyHash ^ valHash), cachedSize + 1);
 			<} else {>
@@ -734,7 +734,7 @@ str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts) =
 	'}
 	'
 	'return keySet;"
-when ts.ds == \map()
+when \map() := ts.ds
 	;
 
 default str generate_bodyOf_jul_Map_values(TrieSpecifics ts) = "";
@@ -772,7 +772,7 @@ str generate_bodyOf_jul_Map_values(TrieSpecifics ts) =
 	'}
 	'
 	'return values;"
-when ts.ds == \map()
+when \map() := ts.ds
 	;
 
 default str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts) = "";	
@@ -827,7 +827,7 @@ str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts) =
 	'}
 	'
 	'return entrySet;"
-when ts.ds == \map()
+when \map() := ts.ds
 	;
 	
 str generate_fragmentOf_CoreEquals(TrieSpecifics ts) = 
@@ -865,7 +865,7 @@ if (other instanceof Map) {
 	return true;
 }
 "
-when ts.ds == \map();
+when \map() := ts.ds;
 
 str generate_fragmentOf_CoreEquals(TrieSpecifics ts) = 
 "
