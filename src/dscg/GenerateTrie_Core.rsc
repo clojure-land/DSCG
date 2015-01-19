@@ -257,6 +257,13 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 
 	<implOrOverride(ts.jul_Collection_toGenericArray, generate_bodyOf_jul_Collection_toGenericArray(ts))>
 
+	<implOrOverride(ts.CoreCommon_equals, generate_bodyOf_CoreCommon_equals(ts, ts.coreTransientClassName))>
+
+	@Override
+	public int hashCode() {
+		return hashCode;
+	}
+
 	@Override
 	public boolean isTransientSupported() {
 		return <isOptionEnabled(ts.setup, useStagedMutability())>; 
@@ -267,58 +274,9 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		<if (isOptionEnabled(ts.setup, useStagedMutability())) {> return new Transient<ts.coreClassName><Generics(ts.ds, ts.tupleTypes)>(this); <} else {> <toString(UNSUPPORTED_OPERATION_EXCEPTION)> <}>		
 	}
 
-	@Override
-	public int hashCode() {
-		return hashCode;
-	}
-
 	<if (false) {>
 	// <!isOptionEnabled(setup, useStructuralEquality()) && \map() := ts.ds>
-	
-	@Override
-	public boolean equals(Object other) {
-		if (other == this)
-			return true;
-		if (other == null)
-			return false;
 
-		if (other instanceof Map) {
-			Map that = (Map) other;
-
-			if (this.size() != that.size())
-				return false;
-
-			for (@SuppressWarnings(\"unchecked\")
-			Iterator\<Map.Entry\> it = that.entrySet().iterator(); it.hasNext();) {
-				Map.Entry entry = it.next();
-
-				try {
-					@SuppressWarnings(\"unchecked\")
-					final K key = (K) entry.getKey();
-					final Optional\<V\> result = rootNode.findByKey(key, improve(key.hashCode()), 0);
-
-					if (!result.isPresent()) {
-						return false;
-					} else {
-						@SuppressWarnings(\"unchecked\")
-						final V val = (V) entry.getValue();
-
-						if (!result.get().equals(val)) {
-							return false;
-						}
-					}
-				} catch (ClassCastException unused) {
-					return false;
-				}
-			}
-
-			return true;
-		}
-
-		return false;
-	}
-	
-	<if (false) {>
 	@Override
 	public boolean equals(Object other) {
 		if (other == this)
@@ -351,31 +309,10 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		return false;
 	}	
 	<}>
-	<}>
 
 	<if (false) {>
 	// <!isOptionEnabled(setup, useStructuralEquality()) && ts.ds == \set()>
-	
-	@Override
-	public boolean equals(Object other) {
-		if (other == this)
-			return true;
-		if (other == null)
-			return false;
-
-		if (other instanceof Set) {
-			Set that = (Set) other;
-
-			if (this.size() != that.size())
-				return false;
-
-			return containsAll(that);
-		}
-
-		return false;
-	}
-
-	<if (false) {>	
+		
 	@Override
 	public boolean equals(Object other) {
 		if (other == this)
@@ -406,10 +343,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 
 		return false;
 	}
-	<}>	
 	<}>
-
-	<implOrOverride(ts.CoreCommon_equals, generate_bodyOf_CoreCommon_equals(ts, ts.coreClassName))>
 	
 	/*
 	 * For analysis purposes only.
