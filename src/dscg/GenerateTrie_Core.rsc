@@ -251,7 +251,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		
 	<implOrOverride(ts.jul_Map_values, generate_bodyOf_jul_Map_values(ts, ts.coreClassName))>
 
-	<implOrOverride(ts.jul_Map_entrySet, generate_bodyOf_jul_Map_entrySet(ts))>
+	<implOrOverride(ts.jul_Map_entrySet, generate_bodyOf_jul_Map_entrySet(ts, ts.coreClassName))>
 
 	<implOrOverride(ts.jul_Collection_toObjectArray, generate_bodyOf_jul_Collection_toObjectArray(ts))>
 
@@ -409,29 +409,8 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	<}>	
 	<}>
 
-	@Override
-	public boolean equals(Object other) {
-		if (other == this) {
-			return true;
-		}
-		if (other == null) {
-			return false;
-		}
-
-		<if (isOptionEnabled(setup, useStructuralEquality())) {>
-		if (other instanceof <ts.coreClassName>) {
-			<ts.coreClassName><QuestionMarkGenerics(ts.ds, ts.tupleTypes)> that = (<ts.coreClassName><QuestionMarkGenerics(ts.ds, ts.tupleTypes)>) other;
-
-			if (this.size() != that.size()) {
-				return false;
-			}
-
-			return rootNode.equals(that.rootNode);
-		} else <}> <generate_fragmentOf_CoreEquals(ts)>
-		
-		return false;
-	}
-
+	<implOrOverride(ts.CoreCommon_equals, generate_bodyOf_CoreCommon_equals(ts, ts.coreClassName))>
+	
 	/*
 	 * For analysis purposes only.
 	 */
@@ -661,140 +640,3 @@ default str generate_bodyOf_Core_removeAll(TrieSpecifics ts, rel[Option,bool] se
 		tmp.__removeAll<optionalEquivalentPostfix>(<uncapitalize(toString(ts.ds))><optionalComparatorArgument>);
 		return tmp.freeze();"
 	;
-
-default str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) = ""; // { throw "Ahhh"; } // we don't have lazy evaluation
-
-str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) =
-	"Object[] array = new Object[cachedSize];
-	'
-	'int idx = 0;
-	'for (<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))> key : this) {
-	'	array[idx++] = key;
-	'}
-	'
-	'return array;"
-when ts.ds == \set()
-	;	
-
-default str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) = ""; // { throw "Ahhh"; } // we don't have lazy evaluation
-
-str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) =
-	"List<GenericsExpanded(ts.ds, ts.tupleTypes)> list = new ArrayList<GenericsExpanded(ts.ds, ts.tupleTypes)>(cachedSize);
-	'
-	'for (<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))> key : this) {
-	'	list.add(key);
-	'}
-	'
-	'return list.toArray(a);"
-when ts.ds == \set()
-	;
-	
-	
-
-
-default str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts) = "";	
-	
-str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts) = 
-	"Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet = null;
-	'
-	'if (entrySet == null) {
-	'	entrySet = new AbstractSet\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
-	'		@Override
-	'		public Iterator\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> iterator() {
-	'			return new Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
-	'				private final Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> i = entryIterator();
-	'
-	'				@Override
-	'				public boolean hasNext() {
-	'					return i.hasNext();
-	'				}
-	'
-	'				@Override
-	'				public Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> next() {
-	'					return i.next();
-	'				}
-	'
-	'				@Override
-	'				public void remove() {
-	'					i.remove();
-	'				}
-	'			};
-	'		}
-	'
-	'		@Override
-	'		public int size() {
-	'			return <ts.coreClassName>.this.size();
-	'		}
-	'
-	'		@Override
-	'		public boolean isEmpty() {
-	'			return <ts.coreClassName>.this.isEmpty();
-	'		}
-	'
-	'		@Override
-	'		public void clear() {
-	'			<ts.coreClassName>.this.clear();
-	'		}
-	'
-	'		@Override
-	'		public boolean contains(Object k) {
-	'			return <ts.coreClassName>.this.containsKey(k);
-	'		}
-	'	};
-	'}
-	'
-	'return entrySet;"
-when \map() := ts.ds
-	;
-	
-str generate_fragmentOf_CoreEquals(TrieSpecifics ts) = 
-"
-if (other instanceof Map) {
-	Map that = (Map) other;
-
-	if (this.size() != that.size())
-		return false;
-
-	for (@SuppressWarnings(\"unchecked\")
-	Iterator\<Map.Entry\> it = that.entrySet().iterator(); it.hasNext();) {
-		Map.Entry entry = it.next();
-
-		try {
-			@SuppressWarnings(\"unchecked\")
-			<dec(key(ts.keyType))> = (<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>) entry.getKey();
-			final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(key, improve(<hashCode(key(ts.keyType))>), 0);
-
-			if (!result.isPresent()) {
-				return false;
-			} else {
-				@SuppressWarnings(\"unchecked\")
-				<dec(val(ts.valType))> = (<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>) entry.getValue();
-
-				if (!result.get().equals(val)) {
-					return false;
-				}
-			}
-		} catch (ClassCastException unused) {
-			return false;
-		}
-	}
-
-	return true;
-}
-"
-when \map() := ts.ds;
-
-str generate_fragmentOf_CoreEquals(TrieSpecifics ts) = 
-"
-if (other instanceof Set) {
-	Set that = (Set) other;
-
-	if (this.size() != that.size())
-		return false;
-
-	return containsAll(that);
-}
-"
-when ts.ds == \set();
-
-default str generate_fragmentOf_CoreEquals(TrieSpecifics ts) { throw "Ahhh"; }

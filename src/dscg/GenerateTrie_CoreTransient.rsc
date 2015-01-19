@@ -266,60 +266,6 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}		
 		<}>
 
-		<if (\map() := ds) {>
-		@Override
-		public Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet() {
-			Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet = null;
-
-			if (entrySet == null) {
-				entrySet = new AbstractSet\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
-					@Override
-					public Iterator\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> iterator() {
-						return new Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
-							private final Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> i = entryIterator();
-
-							@Override
-							public boolean hasNext() {
-								return i.hasNext();
-							}
-
-							@Override
-							public Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> next() {
-								return i.next();
-							}
-
-							@Override
-							public void remove() {
-								i.remove();
-							}
-						};
-					}
-
-					@Override
-					public int size() {
-						return <className>.this.size();
-					}
-
-					@Override
-					public boolean isEmpty() {
-						return <className>.this.isEmpty();
-					}
-
-					@Override
-					public void clear() {
-						<className>.this.clear();
-					}
-
-					@Override
-					public boolean contains(Object k) {
-						return <className>.this.containsKey(k);
-					}
-				};
-			}
-			return entrySet;
-		}
-		<}>
-
 		<implOrOverride(ts.CoreCommon_size,
 			"return cachedSize;")>
 	
@@ -401,38 +347,17 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		<implOrOverride(ts.jul_Map_keySet, generate_bodyOf_jul_Map_keySet(ts, ts.coreTransientClassName))>
 			
 		<implOrOverride(ts.jul_Map_values, generate_bodyOf_jul_Map_values(ts, ts.coreTransientClassName))>
+
+		<implOrOverride(ts.jul_Map_entrySet, generate_bodyOf_jul_Map_entrySet(ts, ts.coreTransientClassName))>
 	
 		<if (false) {>
-			<implOrOverride(ts.jul_Map_entrySet, generate_bodyOf_jul_Map_entrySet(ts))>
-		
 			<implOrOverride(ts.jul_Collection_toObjectArray, generate_bodyOf_jul_Collection_toObjectArray(ts))>
 		
 			<implOrOverride(ts.jul_Collection_toGenericArray, generate_bodyOf_jul_Collection_toGenericArray(ts))>
 		<}>
 
-		<if (isOptionEnabled(setup, useStructuralEquality())) {>
-		@Override
-		public boolean equals(Object other) {
-			if (other == this) {
-				return true;
-			}
-			if (other == null) {
-				return false;
-			}
-	
-			if (other instanceof <className>) {
-				<className><QuestionMarkGenerics(ts.ds, ts.tupleTypes)> that = (<className><QuestionMarkGenerics(ts.ds, ts.tupleTypes)>) other;
-	
-				if (this.size() != that.size()) {
-					return false;
-				}
-	
-				return rootNode.equals(that.rootNode);
-			}
-	
-			return super.equals(other);
-		}
-		<}>
+
+		<implOrOverride(ts.CoreCommon_equals, generate_bodyOf_CoreCommon_equals(ts, ts.coreTransientClassName))>
 
 		@Override
 		public int hashCode() {
