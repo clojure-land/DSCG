@@ -246,6 +246,9 @@ data TrieSpecifics
 	
 		Method AbstractNode_removed 		= method(compactNodeReturn, "removed", args = [mutator, key(keyType), keyHash, shift, details]),
 		Method AbstractNode_removedEquiv 	= method(compactNodeReturn, "removed", args = [mutator, key(keyType), keyHash, shift, details, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),
+		
+		Method AbstractNode_Multimap_removed 		= method(compactNodeReturn, "removed", args = [mutator, *payloadTuple, keyHash, shift, details], isActive = \map() := ds),
+		Method AbstractNode_Multimap_removedEquiv 	= method(compactNodeReturn, "removed", args = [mutator, *payloadTuple, keyHash, shift, details, comparator], isActive = \map() := ds && isOptionEnabled(setup, methodsWithComparator())),
 				
 		/* GENERATE_TRIE_CORE */
 		str coreClassName = "Trie<toString(ds)><classNamePostfix>",
