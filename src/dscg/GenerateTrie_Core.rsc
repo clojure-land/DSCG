@@ -169,8 +169,8 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	<implOrOverride(ts.Core_containsKey, 		generate_bodyOf_Core_containsKey(ts, setup, equalityDefaultForArguments		))>
 	<implOrOverride(ts.Core_containsKeyEquiv,	generate_bodyOf_Core_containsKey(ts, setup, equalityComparatorForArguments	))>
 
-	<implOrOverride(ts.Core_containsValue, 		generate_bodyOf_Core_containsValue(ts, setup, equalityDefaultForArguments		))>
-	<implOrOverride(ts.Core_containsValueEquiv,	generate_bodyOf_Core_containsValue(ts, setup, equalityComparatorForArguments	))>
+	<implOrOverride(ts.CoreCommon_containsValue, 		generate_bodyOf_CoreCommon_containsValue(ts, setup, equalityDefaultForArguments		))>
+	<implOrOverride(ts.CoreCommon_containsValueEquiv,	generate_bodyOf_CoreCommon_containsValue(ts, setup, equalityComparatorForArguments	))>
 
 	<implOrOverride(ts.Core_get, 		generate_bodyOf_Core_get(ts, setup, equalityDefaultForArguments		))>
 	<implOrOverride(ts.Core_getEquiv,	generate_bodyOf_Core_get(ts, setup, equalityComparatorForArguments	))>
@@ -190,6 +190,8 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	<implOrOverride(ts.jul_Map_clear, UNSUPPORTED_OPERATION_EXCEPTION)>
 	<implOrOverride(ts.jul_Map_remove, UNSUPPORTED_OPERATION_EXCEPTION)>
 	<implOrOverride(ts.jul_Map_putAll, UNSUPPORTED_OPERATION_EXCEPTION)>
+	
+	<implOrOverride(ts.Multimap_remove, UNSUPPORTED_OPERATION_EXCEPTION)>
 	
 	<implOrOverride(ts.jul_Set_add, UNSUPPORTED_OPERATION_EXCEPTION)>	
 	<implOrOverride(ts.jul_Set_clear, UNSUPPORTED_OPERATION_EXCEPTION)>
@@ -215,10 +217,10 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		return true;")>
 
 
-	<implOrOverride(ts.Core_size,
+	<implOrOverride(ts.CoreCommon_size,
 		"return cachedSize;")>
 
-	<implOrOverride(ts.Core_isEmpty,
+	<implOrOverride(ts.CoreCommon_isEmpty,
 		"return cachedSize == 0;")>
 
 	<if (ds == \set()) {>
@@ -227,8 +229,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		return keyIterator();
 	}
 	<}>
-	
-	
+		
 	@Override
 	public <if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<toString(primitiveToClass(ts.keyType))>\><}> keyIterator() {
 		<generate_bodyOf_keyIterator(ts, ts.setup)>
@@ -246,9 +247,9 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	}
 	<}>
 
-	<implOrOverride(ts.jul_Map_keySet, generate_bodyOf_jul_Map_keySet(ts))>
+	<implOrOverride(ts.jul_Map_keySet, generate_bodyOf_jul_Map_keySet(ts, ts.coreClassName))>
 		
-	<implOrOverride(ts.jul_Map_values, generate_bodyOf_jul_Map_values(ts))>
+	<implOrOverride(ts.jul_Map_values, generate_bodyOf_jul_Map_values(ts, ts.coreClassName))>
 
 	<implOrOverride(ts.jul_Map_entrySet, generate_bodyOf_jul_Map_entrySet(ts))>
 
@@ -288,8 +289,8 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 				return false;
 
 			for (@SuppressWarnings(\"unchecked\")
-			Iterator\<Entry\> it = that.entrySet().iterator(); it.hasNext();) {
-				Entry entry = it.next();
+			Iterator\<Map.Entry\> it = that.entrySet().iterator(); it.hasNext();) {
+				Map.Entry entry = it.next();
 
 				try {
 					@SuppressWarnings(\"unchecked\")
@@ -617,16 +618,6 @@ default str generate_bodyOf_Core_containsKey(TrieSpecifics ts, rel[Option,bool] 
 	}"
 	;
 
-default str generate_bodyOf_Core_containsValue(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
-				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
-	"	for (Iterator\<<toString(primitiveToClass(ts.valType))>\> iterator = valueIterator(); iterator.hasNext();) {
-			if (iterator.next().equals(o)) {
-				return true;
-			}
-		}
-		return false;"
-	;
-
 default str generate_bodyOf_Core_get(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
 	"	try {
@@ -699,81 +690,7 @@ when ts.ds == \set()
 	;
 	
 	
-default str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts) = "";
 
-str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts) =
-	"Set\<<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\> keySet = null;
-	'
-	'if (keySet == null) {
-	'	keySet = new AbstractSet\<<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\>() {
-	'		@Override
-	'		public Iterator\<<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\> iterator() {
-	'			return <ts.coreClassName>.this.keyIterator();
-	'		}
-	'
-	'		@Override
-	'		public int size() {
-	'			return <ts.coreClassName>.this.size();
-	'		}
-	'
-	'		@Override
-	'		public boolean isEmpty() {
-	'			return <ts.coreClassName>.this.isEmpty();
-	'		}
-	'
-	'		@Override
-	'		public void clear() {
-	'			<ts.coreClassName>.this.clear();
-	'		}
-	'
-	'		@Override
-	'		public boolean contains(Object k) {
-	'			return <ts.coreClassName>.this.containsKey(k);
-	'		}
-	'	};
-	'}
-	'
-	'return keySet;"
-when \map() := ts.ds
-	;
-
-default str generate_bodyOf_jul_Map_values(TrieSpecifics ts) = "";
-
-str generate_bodyOf_jul_Map_values(TrieSpecifics ts) = 
-	"Collection\<<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>\> values = null;
-	'
-	'if (values == null) {
-	'	values = new AbstractCollection\<<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>\>() {
-	'		@Override
-	'		public Iterator\<<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>\> iterator() {
-	'			return <ts.coreClassName>.this.valueIterator();
-	'		}
-	'
-	'		@Override
-	'		public int size() {
-	'			return <ts.coreClassName>.this.size();
-	'		}
-	'
-	'		@Override
-	'		public boolean isEmpty() {
-	'			return <ts.coreClassName>.this.isEmpty();
-	'		}
-	'
-	'		@Override
-	'		public void clear() {
-	'			<ts.coreClassName>.this.clear();
-	'		}
-	'
-	'		@Override
-	'		public boolean contains(Object v) {
-	'			return <ts.coreClassName>.this.containsValue(v);
-	'		}
-	'	};
-	'}
-	'
-	'return values;"
-when \map() := ts.ds
-	;
 
 default str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts) = "";	
 	
@@ -784,8 +701,8 @@ str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts) =
 	'	entrySet = new AbstractSet\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
 	'		@Override
 	'		public Iterator\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> iterator() {
-	'			return new Iterator\<Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
-	'				private final Iterator\<Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> i = entryIterator();
+	'			return new Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
+	'				private final Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> i = entryIterator();
 	'
 	'				@Override
 	'				public boolean hasNext() {
@@ -793,7 +710,7 @@ str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts) =
 	'				}
 	'
 	'				@Override
-	'				public Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> next() {
+	'				public Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> next() {
 	'					return i.next();
 	'				}
 	'
@@ -839,8 +756,8 @@ if (other instanceof Map) {
 		return false;
 
 	for (@SuppressWarnings(\"unchecked\")
-	Iterator\<Entry\> it = that.entrySet().iterator(); it.hasNext();) {
-		Entry entry = it.next();
+	Iterator\<Map.Entry\> it = that.entrySet().iterator(); it.hasNext();) {
+		Map.Entry entry = it.next();
 
 		try {
 			@SuppressWarnings(\"unchecked\")

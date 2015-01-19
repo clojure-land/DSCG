@@ -85,8 +85,15 @@ void doGenerateCurrent() {
 }
 
 void doGenerateBleedingEdge() {
-	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");
-	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");	
+	TrieConfig tcMultimap = hashTrieConfig(\map(multi = true), 5, [generic("K"), generic("V")], withoutSpecialization());
+
+	writeFile(|project://<targetProject>/<targetFolder>/<immutableInterfaceName(\map(multi = true))>.java|, generateImmutableInterface(expandConfiguration(tcMultimap, "")));
+	writeFile(|project://<targetProject>/<targetFolder>/<transientInterfaceName(\map(multi = true))>.java|, generateTransientInterface(expandConfiguration(tcMultimap, "")));
+
+	doGenerate(tcMultimap, overideClassNamePostfixWith = "BleedingEdge");
+	
+	//doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");
+	//doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");	
 
 	//doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(1, false)), overideClassNamePostfixWith = "BleedingEdge");
 	//doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(1, false)), overideClassNamePostfixWith = "BleedingEdge");	

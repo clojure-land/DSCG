@@ -250,6 +250,8 @@ data TrieSpecifics
 		/* GENERATE_TRIE_CORE */
 		str coreClassName = "Trie<toString(ds)><classNamePostfix>",
 		str coreInterfaceName = "Immutable<toString(ds)>",
+		str coreTransientClassName = "TransientTrie<toString(ds)><classNamePostfix>",
+		str coreTransientInterfaceName = "TransientImmutable<toString(ds)>",
 		str abstractAnyNodeClassName = "INode",
 		str nodeIteratorClassName = "Trie<toString(ds)><classNamePostfix>NodeIterator",	
 		str bitmapIndexedNodeClassName = "BitmapIndexed<toString(ds)>Node",
@@ -294,8 +296,8 @@ data TrieSpecifics
 		Method Core_get 		= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "get",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public"),
 		Method Core_getEquiv 	= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "getEquivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
 
-		Method Core_containsValue 		= method(\return(primitive("boolean")), "containsValue",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public", isActive = \map() := ds),
-		Method Core_containsValueEquiv 	= method(\return(primitive("boolean")), "containsValueEquivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = \map() := ds && isOptionEnabled(setup, methodsWithComparator())),													
+		Method CoreCommon_containsValue 		= method(\return(primitive("boolean")), "containsValue",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public", isActive = \map() := ds),
+		Method CoreCommon_containsValueEquiv 	= method(\return(primitive("boolean")), "containsValueEquivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = \map() := ds && isOptionEnabled(setup, methodsWithComparator())),													
 
 		Method Core_retainAll 		= method(coreInterfaceReturn, "__retainAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
 		Method Core_retainAllEquiv 	= method(coreInterfaceReturn, "__retainAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
@@ -309,8 +311,8 @@ data TrieSpecifics
 		Method CoreTransient_removeAll 		= method(\return(primitive("boolean")), "__removeAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
 		Method CoreTransient_removeAllEquiv = method(\return(primitive("boolean")), "__removeAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),		
 		
-		Method Core_size = method(\return(primitive("int")), "size", visibility = "public"),		
-		Method Core_isEmpty = method(\return(primitive("boolean")), "isEmpty", visibility = "public"),
+		Method CoreCommon_size = method(\return(primitive("int")), "size", visibility = "public"),		
+		Method CoreCommon_isEmpty = method(\return(primitive("boolean")), "isEmpty", visibility = "public"),
 		
 		Method Core_isTransientSupported = method(\return(primitive("boolean")), "isTransientSupported", visibility = "public"),
 		Method Core_asTransient = method(coreTransientInterfaceReturn, "asTransient", visibility = "public"),
@@ -380,9 +382,11 @@ data TrieSpecifics
 		Method AbstractNode_getSlot = method(\return(object()), "getSlot", args = [index], isActive = true), // isOptionEnabled(setup,useUntypedVariables())
 		
 		Method jul_Map_put = method(\return(primitiveToClass(valType)), "put", args = [ key(primitiveToClass(keyType)), val(primitiveToClass(valType)) ], visibility = "public", isActive = \map() := ds),		
-		Method jul_Map_remove = method(\return(primitiveToClass(valType)), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = \map() := ds),
+		Method jul_Map_remove = method(\return(primitiveToClass(valType)), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = \map(multi = false) := ds),
 		Method jul_Map_clear = method(\return(\void()), "clear", visibility = "public", isActive = \map() := ds),		
-		Method jul_Map_putAll = method(\return(\void()), "putAll", args = [ field(generic("Map<GenericsExpandedUpperBounded(ds, tupleTypes)>"), "m") ], visibility = "public", isActive = \map() := ds),	
+		Method jul_Map_putAll = method(\return(\void()), "putAll", args = [ field(generic("<toString(ds)><GenericsExpandedUpperBounded(ds, tupleTypes)>"), "m") ], visibility = "public", isActive = \map() := ds),	
+
+		Method Multimap_remove = method(\return(primitiveToClass(valType)), "remove", args = [ field(object(), "<keyName>"), field(object(), "<valName>") ], visibility = "public", isActive = \map(multi = true) := ds),
 
 		Method jul_Map_keySet = method(\return(generic("Set\<<toString(primitiveToClass(dsAtFunction__domain_type(ds, tupleTypes)))>\>")), "keySet", visibility = "public", isActive = \map() := ds),
 		Method jul_Map_values = method(\return(generic("Collection\<<toString(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes)))>\>")), "values", visibility = "public", isActive = \map() := ds),
@@ -686,7 +690,8 @@ default Argument asField(Argument a) { throw "You forgot <a>!"; }
 /***/
 list[Argument] asFieldList(list[Argument] xs) = mapper(xs, asField);
 
-str toString(\map()) = "Map";
+str toString(\map(multi = false)) = "Map";
+str toString(\map(multi = true)) = "Multimap";
 str toString(\set()) = "Set";
 str toString(\vector()) = "Vector";
 default str toString(DataStructure ds) { throw "You forgot <ds>!"; }

@@ -53,3 +53,90 @@ str generate_checkHashCodeAndSize(ts:___expandedTrieSpecifics(ds, bitPartitionSi
 	"
 when \map() := ds || ds == vector()	
 	;
+
+default str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass) = "";
+
+str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass) =
+	"Set\<<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\> keySet = null;
+	'
+	'if (keySet == null) {
+	'	keySet = new AbstractSet\<<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\>() {
+	'		@Override
+	'		public Iterator\<<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\> iterator() {
+	'			return <enclosingClass>.this.keyIterator();
+	'		}
+	'
+	'		@Override
+	'		public int size() {
+	'			return <enclosingClass>.this.size();
+	'		}
+	'
+	'		@Override
+	'		public boolean isEmpty() {
+	'			return <enclosingClass>.this.isEmpty();
+	'		}
+	'
+	'		@Override
+	'		public void clear() {
+	'			<enclosingClass>.this.clear();
+	'		}
+	'
+	'		@Override
+	'		public boolean contains(Object k) {
+	'			return <enclosingClass>.this.containsKey(k);
+	'		}
+	'	};
+	'}
+	'
+	'return keySet;"
+when \map() := ts.ds
+	;
+
+default str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) = "";
+
+str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) = 
+	"Collection\<<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>\> values = null;
+	'
+	'if (values == null) {
+	'	values = new AbstractCollection\<<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>\>() {
+	'		@Override
+	'		public Iterator\<<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>\> iterator() {
+	'			return <enclosingClass>.this.valueIterator();
+	'		}
+	'
+	'		@Override
+	'		public int size() {
+	'			return <enclosingClass>.this.size();
+	'		}
+	'
+	'		@Override
+	'		public boolean isEmpty() {
+	'			return <enclosingClass>.this.isEmpty();
+	'		}
+	'
+	'		@Override
+	'		public void clear() {
+	'			<enclosingClass>.this.clear();
+	'		}
+	'
+	'		@Override
+	'		public boolean contains(Object v) {
+	'			return <enclosingClass>.this.containsValue(v);
+	'		}
+	'	};
+	'}
+	'
+	'return values;"
+when \map() := ts.ds
+	;
+	
+default str generate_bodyOf_CoreCommon_containsValue(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
+				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
+	"	for (Iterator\<<toString(primitiveToClass(ts.valType))>\> iterator = valueIterator(); iterator.hasNext();) {
+			if (iterator.next().equals(o)) {
+				return true;
+			}
+		}
+		return false;"
+	;
+	

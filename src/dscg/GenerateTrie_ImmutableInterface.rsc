@@ -54,8 +54,8 @@ str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) =
 	<dec(ts.Core_get)>
 	<dec(ts.Core_getEquiv)>
 
-	<dec(ts.Core_containsValue)>
-	<dec(ts.Core_containsValueEquiv)>
+	<dec(ts.CoreCommon_containsValue)>
+	<dec(ts.CoreCommon_containsValueEquiv)>
 	
 	<dec(ts.Core_updated)>
 	<dec(ts.Core_updatedEquiv)>
@@ -99,6 +99,9 @@ str generate_bodyOf_TransientInterface(TrieSpecifics ts) =
 
 	<dec(ts.Core_get)>
 	<dec(ts.Core_getEquiv)>
+	
+	<dec(ts.CoreCommon_containsValue)>
+	<dec(ts.CoreCommon_containsValueEquiv)>	
 
 	<dec(ts.CoreTransient_insert)>
 	<dec(ts.CoreTransient_insertEquiv)>

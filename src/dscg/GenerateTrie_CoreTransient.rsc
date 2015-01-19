@@ -22,7 +22,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 	str persistentClassName = "Trie<toString(ds)><classNamePostfix>";
 	
 	return
-	"static final class <className><Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> implements
+	"static final class <className><Generics(ts.ds, ts.tupleTypes)> implements
 					Transient<toString(ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
 		final private AtomicReference\<Thread\> mutator;
 		private <AbstractNode(ds)><Generics(ts.ds, ts.tupleTypes)> rootNode;
@@ -40,6 +40,20 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 		
 		<generate_checkHashCodeAndSize(ts, setup)>	
+
+		<implOrOverride(ts.jul_Map_put, UNSUPPORTED_OPERATION_EXCEPTION)>	
+		<implOrOverride(ts.jul_Map_clear, UNSUPPORTED_OPERATION_EXCEPTION)>
+		<implOrOverride(ts.jul_Map_remove, UNSUPPORTED_OPERATION_EXCEPTION)>
+		<implOrOverride(ts.jul_Map_putAll, UNSUPPORTED_OPERATION_EXCEPTION)>
+		
+		<implOrOverride(ts.Multimap_remove, UNSUPPORTED_OPERATION_EXCEPTION)>
+		
+		<implOrOverride(ts.jul_Set_add, UNSUPPORTED_OPERATION_EXCEPTION)>	
+		<implOrOverride(ts.jul_Set_clear, UNSUPPORTED_OPERATION_EXCEPTION)>
+		<implOrOverride(ts.jul_Set_remove, UNSUPPORTED_OPERATION_EXCEPTION)>
+		<implOrOverride(ts.jul_Set_addAll, UNSUPPORTED_OPERATION_EXCEPTION)>
+		<implOrOverride(ts.jul_Set_removeAll, UNSUPPORTED_OPERATION_EXCEPTION)>
+		<implOrOverride(ts.jul_Set_retainAll, UNSUPPORTED_OPERATION_EXCEPTION)>
 
 		@Override
 		public boolean <containsKeyMethodName(ds)>(Object o) {
@@ -63,6 +77,8 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 			}
 		}
 		
+		<implOrOverride(ts.CoreCommon_containsValue, 		generate_bodyOf_CoreCommon_containsValue(ts, setup, equalityDefaultForArguments		))>
+		<implOrOverride(ts.CoreCommon_containsValueEquiv,	generate_bodyOf_CoreCommon_containsValue(ts, setup, equalityComparatorForArguments	))>		
 		
 		@Override
 		public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get(Object o) {
@@ -259,8 +275,8 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 				entrySet = new AbstractSet\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
 					@Override
 					public Iterator\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> iterator() {
-						return new Iterator\<Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
-							private final Iterator\<Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> i = entryIterator();
+						return new Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
+							private final Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> i = entryIterator();
 
 							@Override
 							public boolean hasNext() {
@@ -268,7 +284,7 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 							}
 
 							@Override
-							public Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> next() {
+							public Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> next() {
 								return i.next();
 							}
 
@@ -304,10 +320,11 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		}
 		<}>
 
-		@Override
-		public int size() {
-			return cachedSize;
-		}
+		<implOrOverride(ts.CoreCommon_size,
+			"return cachedSize;")>
+	
+		<implOrOverride(ts.CoreCommon_isEmpty,
+			"return cachedSize == 0;")>
 
 		<if (ds == \set()) {>
 		@Override
@@ -380,6 +397,18 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 				}				
 			}
 		}
+
+		<implOrOverride(ts.jul_Map_keySet, generate_bodyOf_jul_Map_keySet(ts, ts.coreTransientClassName))>
+			
+		<implOrOverride(ts.jul_Map_values, generate_bodyOf_jul_Map_values(ts, ts.coreTransientClassName))>
+	
+		<if (false) {>
+			<implOrOverride(ts.jul_Map_entrySet, generate_bodyOf_jul_Map_entrySet(ts))>
+		
+			<implOrOverride(ts.jul_Collection_toObjectArray, generate_bodyOf_jul_Collection_toObjectArray(ts))>
+		
+			<implOrOverride(ts.jul_Collection_toGenericArray, generate_bodyOf_jul_Collection_toGenericArray(ts))>
+		<}>
 
 		<if (isOptionEnabled(setup, useStructuralEquality())) {>
 		@Override
@@ -548,7 +577,7 @@ str insertOrPutAll(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax
 	public boolean <methodName>(<dec(filterArgs(args))>) {
 		boolean modified = false;
 
-		for (Entry<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)> entry : map.entrySet()) {
+		for (Map.Entry<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)> entry : <toLowerCase(toString(ds))>.entrySet()) {
 			final boolean isPresent = containsKey<if (useComparator) {>Equivalent<}>(entry.getKey()<if (useComparator) {>, cmp<}>);
 			<dec(primitiveToClassArgument(val(ts.valType, "replaced")))> = __put<if (useComparator) {>Equivalent<}>(entry.getKey(), entry.getValue()<if (useComparator) {>, cmp<}>);
 
