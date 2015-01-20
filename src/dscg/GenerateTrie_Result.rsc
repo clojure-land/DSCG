@@ -16,7 +16,7 @@ import dscg::GenerateTrie;
 
 str generateResultClassString(TrieSpecifics ts, rel[Option,bool] setup) {
 
-	className = "Result";
+	className = "<ts.ResultStr>";
 
 	return
 	"static final class <className><Generics(ts.ds, ts.tupleTypes)> {
@@ -36,11 +36,11 @@ str generateResultClassString(TrieSpecifics ts, rel[Option,bool] setup) {
 		}
 
 		// update: neither element, nor element count changed
-		public static <Generics(ts.ds, ts.tupleTypes)> Result<Generics(ts.ds, ts.tupleTypes)> unchanged() {
-			return new Result<InferredGenerics(ts.ds, ts.tupleTypes)>();
+		public static <Generics(ts.ds, ts.tupleTypes)> <className><Generics(ts.ds, ts.tupleTypes)> unchanged() {
+			return new <className><InferredGenerics(ts.ds, ts.tupleTypes)>();
 		}
 
-		private Result() {
+		private <className>() {
 		}
 
 		public boolean isModified() {

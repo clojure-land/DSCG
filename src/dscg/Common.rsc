@@ -50,6 +50,7 @@ data Type
 	| ___primitive(str \type, bool isArray = false)
 	;
 
+str toString(t:unknown()) = "???<if (t.isArray) {>[]<}>";
 str toString(t:\void()) = "void<if (t.isArray) {>[]<}>";
 str toString(t:object()) = "java.lang.Object<if (t.isArray) {>[]<}>";
 str toString(t:generic  (str \type)) = "<\type><if (t.isArray) {>[]<}>";
@@ -141,24 +142,24 @@ data Expression =
 	call(Method m, map[Argument, Expression] argsOverride = (), str inferredGenericsStr = "");
 
 str toString(Expression c:call(m:constructor(_,_))) =
-	"new <m.name><c.inferredGenericsStr>(<eval(substitute(m.args - m.argsFilter, c.argsOverride))>)"
+	"new <m.name><c.inferredGenericsStr>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride))>)"
 when m.isActive;
 
 str toString(Expression c:call(m:function(_,_))) = 
-	"<m.name>(<eval(substitute(m.args - m.argsFilter, c.argsOverride))>)"
+	"<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride))>)"
 when m.isActive;
 
 str toString(Expression c:call(m:method(_,_))) = 
-	"<m.name>(<eval(substitute(m.args - m.argsFilter, c.argsOverride))>)"
+	"<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride))>)"
 when m.isActive;
 
 //str call(m:constructor(_,_), map[Argument, Expression] argsOverride = (), str inferredGenericsStr = "") = 
-//	"new <m.name><inferredGenericsStr>(<eval(substitute(m.args - m.argsFilter, argsOverride))>)"
+//	"new <m.name><inferredGenericsStr>(<eval(substitute(m.lazyArgs() - m.argsFilter, argsOverride))>)"
 //when m.isActive
 //	;		
 //
 //str call(m:function(_,_), map[Argument, Expression] argsOverride = ()) = 
-//	"<m.name>(<eval(substitute(m.args - m.argsFilter, argsOverride))>)"
+//	"<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, argsOverride))>)"
 //when m.isActive
 //	;
 
@@ -172,9 +173,9 @@ data Expression
 	;				
 		
 data Method
-	= method(Argument returnArg, str name, list[Argument] args = [], list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "")
-	| function(Argument returnArg, str name, list[Argument] args = [], list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "")
-	| constructor(Argument returnArg, str name, list[Argument] args = [], list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "");
+	= method(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "")
+	| function(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "")
+	| constructor(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "");
 
 data Option // TODO: finish!
 	= useSpecialization()
@@ -205,6 +206,7 @@ data TrieSpecifics
 				
 		list[Type] tupleTypes = [keyType, valType],
 		
+		str ResultStr = "<toString(ds)>Result",
 		str GenericsStr = Generics(ds, tupleTypes),		
 		str MapsToGenericsStr = MapsToGenerics(ds, tupleTypes),
 		
@@ -221,7 +223,7 @@ data TrieSpecifics
 		Argument mask1 = field(primitive("int"), "mask1"),		
 		
 		Argument shift = field(primitive("int"), "shift"),
-		Argument details = field(generic("Result<GenericsStr>"), "details"),
+		Argument details = field(generic("<ResultStr><GenericsStr>"), "details"),
 		Argument comparator = field(specific("Comparator\<Object\>"), "cmp"),
 		Argument index = field(primitive("int"), "index"),
 
@@ -238,8 +240,8 @@ data TrieSpecifics
 		Method AbstractNode_containsKey 		= method(\return(primitive("boolean")), "containsKey", args = [key(keyType), keyHash, shift]),
 		Method AbstractNode_containsKeyEquiv 	= method(\return(primitive("boolean")), "containsKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
 	
-		Method AbstractNode_findByKey 		= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift]),
-		Method AbstractNode_findByKeyEquiv 	= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
+		Method AbstractNode_findByKey 		= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift], isActive = \map(multi = true) != ds),
+		Method AbstractNode_findByKeyEquiv 	= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift, comparator], isActive = \map(multi = true) != ds && isOptionEnabled(setup, methodsWithComparator())),		
 		
 		Method AbstractNode_updated 		= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details]),
 		Method AbstractNode_updatedEquiv 	= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
@@ -293,8 +295,8 @@ data TrieSpecifics
 		Method Core_containsKey 		= method(\return(primitive("boolean")), "<containsKeyMethodName(ds)>",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public"),
 		Method Core_containsKeyEquiv 	= method(\return(primitive("boolean")), "<containsKeyMethodName(ds)>Equivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
 
-		Method Core_get 		= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "get",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public"),
-		Method Core_getEquiv 	= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "getEquivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
+		Method Core_get 		= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "get",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public", isActive = \map(multi = true) != ds),
+		Method Core_getEquiv 	= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "getEquivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = \map(multi = true) != ds && isOptionEnabled(setup, methodsWithComparator())),
 
 		Method CoreCommon_containsValue 		= method(\return(primitive("boolean")), "containsValue",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public", isActive = \map() := ds),
 		Method CoreCommon_containsValueEquiv 	= method(\return(primitive("boolean")), "containsValueEquivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = \map() := ds && isOptionEnabled(setup, methodsWithComparator())),													
@@ -325,12 +327,12 @@ data TrieSpecifics
 		Method CompactNode_nodeMap 	= method(bitmapField, bitmapField.name),
 		Method CompactNode_dataMap 	= method(valmapField, valmapField.name),
 
-		Method CompactNode_mergeTwoKeyValPairs = function(compactNodeClassReturn, "mergeTwoKeyValPairs", args = [ *__payloadTuple(ds, tupleTypes, 0), keyHash0, *__payloadTuple(ds, tupleTypes, 1), keyHash1, shift ], generics = GenericsStr), 
-		Method CompactNode_mergeNodeAndKeyValPair = function(compactNodeClassReturn, "mergeNodeAndKeyValPair", args = [ \node(ds, tupleTypes, 0), keyHash0, *__payloadTuple(ds, tupleTypes, 1), keyHash1, shift ], generics = GenericsStr, isActive = false),
+		Method CompactNode_mergeTwoKeyValPairs = function(compactNodeClassReturn, "mergeTwoKeyValPairs", args = [ *__payloadTupleAtNode(ds, tupleTypes, 0), keyHash0, *__payloadTupleAtNode(ds, tupleTypes, 1), keyHash1, shift ], generics = GenericsStr), 
+		Method CompactNode_mergeNodeAndKeyValPair = function(compactNodeClassReturn, "mergeNodeAndKeyValPair", args = [ \inode(ds, tupleTypes, 0), keyHash0, *__payloadTupleAtNode(ds, tupleTypes, 1), keyHash1, shift ], generics = GenericsStr, isActive = false),
 				
 		Method CompactNode_copyAndRemoveValue = method(compactNodeClassReturn, "copyAndRemoveValue", args = [mutator, bitposField]),
 		Method CompactNode_copyAndInsertValue = method(compactNodeClassReturn, "copyAndInsertValue", args = [mutator, bitposField, *payloadTuple]),
-		Method CompactNode_copyAndSetValue = method(compactNodeClassReturn, "copyAndSetValue", args = [mutator, bitposField, val(valType)], isActive = \map() := ds),		
+		Method CompactNode_copyAndSetValue = method(compactNodeClassReturn, "copyAndSetValue", lazyArgs = list[Argument]() { return [mutator, bitposField, __payloadTupleAtNode(ds, tupleTypes)[1] ]; }, isActive = \map() := ds),		
 		Method CompactNode_copyAndSetNode = method(compactNodeClassReturn, "copyAndSetNode", args = [mutator, bitposField, \node(ds, tupleTypes)]),		
 		Method CompactNode_copyAndInsertNode = method(compactNodeClassReturn, "copyAndInsertNode", args = [mutator, bitposField, \node(ds, tupleTypes)], isActive = false),
 		Method CompactNode_copyAndMigrateFromInlineToNode = method(compactNodeClassReturn, "copyAndMigrateFromInlineToNode", args = [mutator, bitposField, \node(ds, tupleTypes)]),
@@ -368,7 +370,7 @@ data TrieSpecifics
 		Method CompactNode_nodeIterator = method(\return(generic("Iterator\<? extends <CompactNode(ds)><GenericsStr>\>")), "nodeIterator", isActive = !isOptionEnabled(setup, useFixedStackIterator())),
 
 		Method AbstractNode_getKey = method(\return(keyType), "getKey", args = [index]),
-		Method AbstractNode_getValue = method(\return(valType), "getValue", args = [index], isActive = \map() := ds),		
+		Method AbstractNode_getValue = method(\return(__returnTypeOf_AbstractNode_getValue(ds, tupleTypes)), "getValue", args = [index], isActive = \map() := ds),
 		Method AbstractNode_getKeyValueEntry = method(\return(generic("java.util.Map.Entry<GenericsExpanded(ds, tupleTypes)>")), "getKeyValueEntry", args = [index], isActive = \map() := ds),
 	
 		/***/
@@ -429,6 +431,9 @@ TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound, 
 	
 	return ___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound, keyType = __keyType, valType = __valType, classNamePostfix = __classNamePostfix, setup = __setup);
 }
+
+default TrieSpecifics setTrieSpecificsFromRangeOfMap(TrieSpecifics mapTs) = mapTs;
+TrieSpecifics setTrieSpecificsFromRangeOfMap(TrieSpecifics mapTs) = trieSpecifics(\set(), mapTs.bitPartitionSize, mapTs.nBound, mapTs.valType, mapTs.valType, mapTs.classNamePostfix, mapTs.setup) when \map() := mapTs.ds;
 
 list[Argument] calculateArgsFilter(rel[Option,bool] setup) {
 	// TODO: code duplication: get rid of!	
@@ -507,10 +512,18 @@ Argument slot(int i) 		= slot("<slotName><i>");
 Argument slot(str name)		= field(object(), "<name>");
 
 Argument nodePos(int i) = field("byte", "<nodePosName><i>");
+
+// implementation node
 Argument \node(DataStructure ds, list[Type] tupleTypes)			= field(specific("<CompactNode(ds)><Generics(ds, tupleTypes)>"), "<nodeName>");
 Argument \node(DataStructure ds, list[Type] tupleTypes, int i) 	= field(specific("<CompactNode(ds)><Generics(ds, tupleTypes)>"), "<nodeName><i>");
 Argument \node(DataStructure ds, list[Type] tupleTypes, str name)	= field(specific("<CompactNode(ds)><Generics(ds, tupleTypes)>"), name);
 default Argument \node(DataStructure ds, _) { throw "Ahhh"; }
+
+//interface node
+Argument \inode(DataStructure ds, list[Type] tupleTypes)			= field(specific("<AbstractNode(ds)><Generics(ds, tupleTypes)>"), "<nodeName>");
+Argument \inode(DataStructure ds, list[Type] tupleTypes, int i) 	= field(specific("<AbstractNode(ds)><Generics(ds, tupleTypes)>"), "<nodeName><i>");
+Argument \inode(DataStructure ds, list[Type] tupleTypes, str name)	= field(specific("<AbstractNode(ds)><Generics(ds, tupleTypes)>"), name);
+default Argument \inode(DataStructure ds, _) { throw "Ahhh"; }
 
 public Argument bitmapField = field("nodeMap");
 public Argument valmapField = field("dataMap");
@@ -698,7 +711,7 @@ str toString(\set()) = "Set";
 str toString(\vector()) = "Vector";
 default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 
-str dec(Method m:method, bool asAbstract = false) = "<if (asAbstract) {>abstract <}><toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>);" when m.isActive;
+str dec(Method m:method, bool asAbstract = false) = "<if (asAbstract) {>abstract <}><toString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>);" when m.isActive;
 str dec(Method m:method, bool asAbstract = false) = "" when !m.isActive;
 default str dec(Method m, bool asAbstract = false) { throw "You forgot <m>!"; }
 
@@ -714,7 +727,7 @@ str implOrOverride(Method m:method, Expression bodyExpr, OverwriteType doOverrid
 str implOrOverride(m:method(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
 	<if (doOverride == \override()) {>@Override<}>
-	<m.visibility> <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>) {
+	<m.visibility> <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>) {
 		<bodyStr>
 	}
 	"
@@ -723,7 +736,7 @@ when m.isActive
 
 str implOrOverride(m:function(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
-	'<m.visibility> static final <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.args - m.argsFilter)>) {
+	'<m.visibility> static final <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>) {
 	'	<bodyStr>
 	'}"
 when m.isActive
@@ -731,7 +744,7 @@ when m.isActive
 	
 str implOrOverride(m:constructor(_,_), str bodyStr,  OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
-	'<m.visibility> <m.name>(<dec(m.args - m.argsFilter)>) {
+	'<m.visibility> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>) {
 	'	<bodyStr>
 	'}"
 when m.isActive
@@ -954,9 +967,21 @@ list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bi
 when (ds == \set()) 
 		&& isOptionEnabled(setup,useUntypedVariables());
 
+Type __returnTypeOf_AbstractNode_getValue(ds:\map(multi = true), list[Type] tupleTypes:[_, valType, *_]) = generic("<AbstractNode(\set())><MapsToGenerics(ds, tupleTypes)>");
+Type __returnTypeOf_AbstractNode_getValue(ds:\map(multi = false), list[Type] tupleTypes:[_, valType, *_]) = val(valType);
+Type __returnTypeOf_AbstractNode_getValue(ds:\set, list[Type] tupleTypes) = unknown();
+
 list[Argument] __payloadTuple_Core_remove(ds:\map(multi = true), tupleTypes:[keyType, valType, *_]) = [ key(keyType), val(valType) ];
 list[Argument] __payloadTuple_Core_remove(ds:\map(multi = false), tupleTypes:[keyType, *_]) = [ key(keyType) ];
 list[Argument] __payloadTuple_Core_remove(ds:\set(), tupleTypes:[keyType, *_])= [ key(keyType) ];
+
+list[Argument] __payloadTupleAtNode(ds:\map(multi = true), tupleTypes:[keyType, valType, *_]) = [ key(keyType), \inode(\set(), [ valType ], "valNode") ];
+list[Argument] __payloadTupleAtNode(ds:\map(multi = false), tupleTypes:[keyType, valType, *_]) = [ key(keyType), val(valType) ];
+list[Argument] __payloadTupleAtNode(ds:\set(), tupleTypes:[keyType, *_])= [ key(keyType) ];
+
+list[Argument] __payloadTupleAtNode(ds:\map(multi = true), tupleTypes:[keyType, valType, *_], int i) = [ key(keyType, i), \inode(\set(), [ valType ], "valNode<i>") ];
+list[Argument] __payloadTupleAtNode(ds:\map(multi = false), tupleTypes:[keyType, valType, *_], int i) = [ key(keyType, i), val(valType, i) ];
+list[Argument] __payloadTupleAtNode(ds:\set(), tupleTypes:[keyType, *_], int i)= [ key(keyType, i) ];
 
 list[Argument] __payloadTuple(ds:\map(), tupleTypes:[keyType, valType, *_]) = [ key(keyType), val(valType) ];
 list[Argument] __payloadTuple(ds:\set(), tupleTypes:[keyType, *_])= [ key(keyType) ];

@@ -472,7 +472,7 @@ default str generate_bodyOf_Core_updated(TrieSpecifics ts, rel[Option,bool] setu
 
 	return  
 	"	final int keyHash = key.hashCode();
-		<dec(ts.details)> = Result.unchanged();
+		<dec(ts.details)> = <ts.ResultStr>.unchanged();
 		
 		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(null, <use(ts.payloadTuple)>, improve(keyHash), 0, <use(ts.details)><optionalComparatorArgument>);
 
@@ -501,7 +501,7 @@ default str generate_bodyOf_Core_updated(TrieSpecifics ts, rel[Option,bool] setu
 
 default str generate_bodyOf_Core_removed(TrieSpecifics ts, rel[Option,bool] setup, Method nodeRemovedMethod) =
 	"final int keyHash = key.hashCode();
-	<dec(ts.details)> = Result.unchanged();
+	<dec(ts.details)> = <ts.ResultStr>.unchanged();
 
 	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.<toString(call(nodeRemovedMethod, 
 					argsOverride = (ts.mutator: NULL(),

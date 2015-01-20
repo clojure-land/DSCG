@@ -155,6 +155,24 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 void doGenerate(TrieConfig cfg, str overideClassNamePostfixWith = "") {
 	TrieSpecifics ts = expandConfiguration(cfg, overideClassNamePostfixWith);
 	
+	list[str] innerClassStrings = doGenerateInnerClassStrings(ts);
+	if (\map(multi = true) := ts.ds) {
+		TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts);
+		
+		innerClassStrings = innerClassStrings
+		+ [ generateResultClassString(tsSet, ts.setup) ]
+		+ [ generateAbstractNodeClassString(tsSet)]		
+		+ [ generateCompactNodeClassString(tsSet, ts.setup)];
+	}	
+		
+	list[str] classStrings = [ generateCoreClassString(ts, ts.setup, intercalate("\n", innerClassStrings))];			
+		
+	// writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
+
+	writeFile(|project://<targetProject>/<targetFolder>/Trie<toString(ts.ds)><ts.classNamePostfix>.java|, classStrings);
+}
+	
+list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 	list[str] innerClassStrings 
 		= [ generateOptionalClassString() ]
 		+ [ generateResultClassString(ts, ts.setup) ]
@@ -195,12 +213,8 @@ void doGenerate(TrieConfig cfg, str overideClassNamePostfixWith = "") {
 		innerClassStrings = innerClassStrings + 
 		[ generateSpecializedNodeWithBitmapPositionsClassString(mn, 0, ts, ts.setup, ts.classNamePostfix) | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound ];
 	}
-		
-	list[str] classStrings = [ generateCoreClassString(ts, ts.setup, intercalate("\n", innerClassStrings))];			
-		
-	// writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
-
-	writeFile(|project://<targetProject>/<targetFolder>/Trie<toString(ts.ds)><ts.classNamePostfix>.java|, classStrings);
+	
+	return innerClassStrings;
 }
 	
 str generateClassString(int n) =  
@@ -332,7 +346,7 @@ default list[&T] insertAfterOrDefaultAtFront(list[&T] xs, list[&T] old, list[&T]
 
 str generate_bodyOf_updated(0, 0, str(str, str) eq) = 
 	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
-	'return Result.modified(<nodeOf(0, 1, "mask, <keyName><if (\map() := ts.ds) {>, <valName><}>")>);"
+	'return <ts.ResultStr>.modified(<nodeOf(0, 1, "mask, <keyName><if (\map() := ts.ds) {>, <valName><}>")>);"
 	;
 	
 str generate_bodyOf_updated(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
@@ -361,18 +375,18 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,b
 					"if (mask == <keyPosName><i>) {
 					'	if (<eq("<keyName>", "<keyName><i>")>) {
 					'		if (<eq("<valName>", "<valName><i>")>) {
-					'			result = Result.unchanged(this);
+					'			result = <ts.ResultStr>.unchanged(this);
 					'		} else {		
 					'			// update <keyName><i>, <valName><i>
-					'			result = Result.updated(<nodeOf(n, m, use(replace(generateMembers(n, m), [ val(ts.valType, i) ], [ field(valName) ])))>, <use(val(ts.valType, i))>);
+					'			result = <ts.ResultStr>.updated(<nodeOf(n, m, use(replace(generateMembers(n, m), [ val(ts.valType, i) ], [ field(valName) ])))>, <use(val(ts.valType, i))>);
 					'		}
 					'	} else {
 					'		// merge into node
 					'		final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <valName><i>, <keyName>, <keyName>Hash, <valName>, shift + BIT_PARTITION_SIZE);
 					'		
-					'		<if (isOptionEnabled(setup, useStructuralEquality())) {><if (n == 0) {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
-					'			result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);
-					'		}<}><} else {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<}>
+					'		<if (isOptionEnabled(setup, useStructuralEquality())) {><if (n == 0) {>result = <ts.ResultStr>.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = <ts.ResultStr>.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
+					'			result = <ts.ResultStr>.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);
+					'		}<}><} else {>result = <ts.ResultStr>.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<}>
 					'	}
 					'}"; 
 		
@@ -380,13 +394,13 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,b
 				return 
 					"if (mask == <keyPosName><i>) {
 					'	if (<eq("<keyName>", "<keyName><i>")>) {
-					'		result = Result.unchanged(this);
+					'		result = <ts.ResultStr>.unchanged(this);
 					'	} else {
 					'		// merge into node
 					'		final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <keyName>, <keyName>Hash, shift + BIT_PARTITION_SIZE);
 					'		
-					'		<if (n == 0) {>result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
-					'			result = Result.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);
+					'		<if (n == 0) {>result = <ts.ResultStr>.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = <ts.ResultStr>.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
+					'			result = <ts.ResultStr>.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);
 					'		}<}>
 					'	}
 					'}"; 
@@ -408,12 +422,12 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,b
 					'		final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <nodeOf(n, m, use(replace(generateMembers(n, m), subnodePair(i), [field("mask"), field("<nestedResult>.getNode()")])))>;
 					'
 					'		if (<nestedResult>.hasReplacedValue()) {
-					'			result = Result.updated(thisNew, <nestedResult>.getReplacedValue());
+					'			result = <ts.ResultStr>.updated(thisNew, <nestedResult>.getReplacedValue());
 					'		} else {
-					'			result = Result.modified(thisNew);
+					'			result = <ts.ResultStr>.modified(thisNew);
 					'		}
 					'	} else {
-					'		result = Result.unchanged(this);
+					'		result = <ts.ResultStr>.unchanged(this);
 					'	}
 					'}
 					"; 
@@ -426,9 +440,9 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,b
 					'
 					'	if (<nestedResult>.isModified()) {
 					'		final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <nodeOf(n, m, use(replace(generateMembers(n, m), subnodePair(i), [field("mask"), field("<nestedResult>.getNode()")])))>;
-					'		result = Result.modified(thisNew);
+					'		result = <ts.ResultStr>.modified(thisNew);
 					'	} else {
-					'		result = Result.unchanged(this);
+					'		result = <ts.ResultStr>.unchanged(this);
 					'	}
 					'}
 					"; 
@@ -444,14 +458,14 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,b
 	'		
 	'<intercalate(" else ", [ updated_clause_inline(i)| i <- [1..m+1]] + [ updated_clause_node(i)| i <- [1..n+1]])> else {
 	'	// no value
-	'	<if (isOptionEnabled(setup, useStructuralEquality())) {>result = Result.modified(inlineValue(mutator, <use(payloadTriple("mask"))>));<} else {>result = Result.modified(<nodeOf(n, m+1, use(generatePayloadMembers(m) + payloadTriple("mask") + generateSubnodeMembers(n)))>);<}>
+	'	<if (isOptionEnabled(setup, useStructuralEquality())) {>result = <ts.ResultStr>.modified(inlineValue(mutator, <use(payloadTriple("mask"))>));<} else {>result = <ts.ResultStr>.modified(<nodeOf(n, m+1, use(generatePayloadMembers(m) + payloadTriple("mask") + generateSubnodeMembers(n)))>);<}>
 	'}
 	'		
 	'return result;";	
 }	
 
 str generate_bodyOf_removed(0, 0, _, _, str(str, str) eq)
-	= "return Result.unchanged(this);"
+	= "return <ts.ResultStr>.unchanged(this);"
 	;
 	
 str generate_bodyOf_removed(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
@@ -469,9 +483,9 @@ str generate_bodyOf_removed(0, 2, _, _, str(str, str) eq) {
 		'		 * unwrapped and inlined.
 		'		 */
 		'		final byte <keyPosName><3 - i>AtShiftZero = (shift == 0) ? <keyPosName><3 - i> : (byte) (keyHash & BIT_PARTITION_MASK);
-		'		result = Result.modified(<nodeOf(0, 1, use(payloadTriple("<keyPosName><3 - i>AtShiftZero", 3 - i)))>);
+		'		result = <ts.ResultStr>.modified(<nodeOf(0, 1, use(payloadTriple("<keyPosName><3 - i>AtShiftZero", 3 - i)))>);
 		'	} else {
-		'		result = Result.unchanged(this);
+		'		result = <ts.ResultStr>.unchanged(this);
 		'	}
 		'}";
 	};
@@ -481,7 +495,7 @@ str generate_bodyOf_removed(0, 2, _, _, str(str, str) eq) {
 	'final Result<ResultGenerics> result;		
 	'		
 	'<intercalate(" else ", [ removed_clause_inline(i) | i <- [1..3]])> else {
-	'	result = Result.unchanged(this);
+	'	result = <ts.ResultStr>.unchanged(this);
 	'}
 	'
 	'return result;";		
@@ -492,9 +506,9 @@ default str generate_bodyOf_removed(int n, int m, DataStructure ds, rel[Option,b
 		"if (mask == <keyPosName><i>) {
 		'	if (<eq("<keyName>", "<keyName><i>")>) {
 		'		// remove <keyName><i>, <valName><i>
-		'		result = Result.modified(<nodeOf(n, m-1, use(generateMembers(n, m) - payloadTriple(i)))>);
+		'		result = <ts.ResultStr>.modified(<nodeOf(n, m-1, use(generateMembers(n, m) - payloadTriple(i)))>);
 		'	} else {
-		'		result = Result.unchanged(this);
+		'		result = <ts.ResultStr>.unchanged(this);
 		'	}
 		'}";
 	};
@@ -514,19 +528,19 @@ default str generate_bodyOf_removed(int n, int m, DataStructure ds, rel[Option,b
 					result = <nestedResult>;
 					break;< } else {> case SIZE_ONE:
 					// inline sub-node value
-					<if (isOptionEnabled(setup, useStructuralEquality())) {>result = Result.modified(removeNode<i>AndInlineValue(mutator, <use(payloadTriple("mask", "updatedNode.getKey(0)", "updatedNode.getValue(0)"))>));<} else {>result = Result.modified(<nodeOf(n-1, m+1, use(payloadTriple("mask", "updatedNode.getKey(0)", "updatedNode.getValue(0)") + generateMembers(n, m) - subnodePair(i)))>);<}>
+					<if (isOptionEnabled(setup, useStructuralEquality())) {>result = <ts.ResultStr>.modified(removeNode<i>AndInlineValue(mutator, <use(payloadTriple("mask", "updatedNode.getKey(0)", "updatedNode.getValue(0)"))>));<} else {>result = <ts.ResultStr>.modified(<nodeOf(n-1, m+1, use(payloadTriple("mask", "updatedNode.getKey(0)", "updatedNode.getValue(0)") + generateMembers(n, m) - subnodePair(i)))>);<}>
 					break;<}>
 					
 				case SIZE_MORE_THAN_ONE:
 					// update <nodeName><i>
-					result = Result.modified(<nodeOf(n, m, use(replace(generateMembers(n, m), subnodePair(i), [field("mask"), field("updatedNode")])))>);
+					result = <ts.ResultStr>.modified(<nodeOf(n, m, use(replace(generateMembers(n, m), subnodePair(i), [field("mask"), field("updatedNode")])))>);
 					break;
 
 				default:
 					throw new IllegalStateException(\"Size predicate violates node invariant.\");
 				}
 		'	} else {
-		'		result = Result.unchanged(this);
+		'		result = <ts.ResultStr>.unchanged(this);
 		'	}
 		'}"; 
 	};
@@ -536,7 +550,7 @@ default str generate_bodyOf_removed(int n, int m, DataStructure ds, rel[Option,b
 	'final Result<ResultGenerics> result;		
 	'		
 	'<intercalate(" else ", [ removed_clause_inline(i)| i <- [1..m+1]] + [ removed_clause_node(i)| i <- [1..n+1]])> else {
-	'	result = Result.unchanged(this);
+	'	result = <ts.ResultStr>.unchanged(this);
 	'}
 	'
 	'return result;";
@@ -1271,28 +1285,28 @@ str generateLeafNodeString() =
 						Comparator\<Object\> cmp) {
 			if (this.keyHash != keyHash)
 				// insert (no collision)
-				return Result.modified(mergeNodes(this, this.keyHash, new LeafNode<Generics(ts.ds, ts.tupleTypes)>(key,
+				return <ts.ResultStr>.modified(mergeNodes(this, this.keyHash, new LeafNode<Generics(ts.ds, ts.tupleTypes)>(key,
 								keyHash, val), keyHash, shift));
 
 			if (cmp.compare(this.key, key) != 0)
 				// insert (hash collision)
-				return Result.modified(new LeafHashCollisionNode<Generics(ts.ds, ts.tupleTypes)>(keyHash, new LeafNode[] {
+				return <ts.ResultStr>.modified(new LeafHashCollisionNode<Generics(ts.ds, ts.tupleTypes)>(keyHash, new LeafNode[] {
 								this, new LeafNode<Generics(ts.ds, ts.tupleTypes)>(key, keyHash, val) }));
 
 			if (cmp.compare(this.val, val) != 0)
 				// value replaced
-				return Result.updated(new LeafNode<Generics(ts.ds, ts.tupleTypes)>(key, keyHash, val), val);
+				return <ts.ResultStr>.updated(new LeafNode<Generics(ts.ds, ts.tupleTypes)>(key, keyHash, val), val);
 
-			return Result.unchanged(this);
+			return <ts.ResultStr>.unchanged(this);
 		}
 
 		@Override
 		Result<Generics(ts.ds, ts.tupleTypes)> removed(AtomicReference\<Thread\> mutator, K key, int hash, int shift,
 						Comparator\<Object\> cmp) {
 			if (cmp.compare(this.key, key) == 0) {
-				return Result.modified(EMPTY_INDEX_NODE);
+				return <ts.ResultStr>.modified(EMPTY_INDEX_NODE);
 			} else {
-				return Result.unchanged(this);
+				return <ts.ResultStr>.unchanged(this);
 			}
 		}
 
@@ -1480,10 +1494,10 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrie
 	'	final Object currentKey = nodes[valIndex];
 	'
 	'	if (<eq("currentKey", keyName)>) {
-	'		<if (ds == \set()) {>return Result.unchanged(this);<} else {>final Object currentVal = nodes[valIndex + 1];
+	'		<if (ds == \set()) {>return <ts.ResultStr>.unchanged(this);<} else {>final Object currentVal = nodes[valIndex + 1];
 	'
 	'		if (<eq("currentVal", valName)>) {
-	'			return Result.unchanged(this);
+	'			return <ts.ResultStr>.unchanged(this);
 	'		}
 	'
 	'		// update mapping
@@ -1499,7 +1513,7 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrie
 	'			thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, bitmap, valmap, editableNodes, payloadArity);
 	'		}
 	'
-	'		return Result.updated(thisNew, (V) currentVal);<}>
+	'		return <ts.ResultStr>.updated(thisNew, (V) currentVal);<}>
 	'	} else {
 	'		final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> nodeNew = mergeNodes((K) nodes[valIndex], nodes[valIndex].hashCode(),<if (\map() := ts.ds) {> (V) nodes[valIndex + 1],<}> key, keyHash,<if (\map() := ts.ds) {> val,<}> shift + BIT_PARTITION_SIZE);
 	'
@@ -1510,7 +1524,7 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrie
 	'
 	'		final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, bitmap | bitpos, valmap ^ bitpos, editableNodes, (byte) (payloadArity - 1));
 	'
-	'		return Result.modified(thisNew);
+	'		return <ts.ResultStr>.modified(thisNew);
 	'	}
 	'} else if ((bitmap & bitpos) != 0) { // node (not value)
 	'	final int bitIndex = bitIndex(bitpos);
@@ -1519,7 +1533,7 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrie
 	'	final Result<ResultGenerics> <nestedResult> = subNode.updated(mutator, key, keyHash, val, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
 	'
 	'	if (!<nestedResult>.isModified()) {
-	'		return Result.unchanged(this);
+	'		return <ts.ResultStr>.unchanged(this);
 	'	}
 	'
 	'	final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew;
@@ -1537,18 +1551,18 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrie
 	'
 		<if (\map() := ts.ds) {>
 	'	if (<nestedResult>.hasReplacedValue()) {
-	'		return Result.updated(thisNew, <nestedResult>.getReplacedValue());
+	'		return <ts.ResultStr>.updated(thisNew, <nestedResult>.getReplacedValue());
 	'	}
 		<}>
 	'
-	'	return Result.modified(thisNew);
+	'	return <ts.ResultStr>.modified(thisNew);
 	'} else {
 	'	// no value
 	'	final Object[] editableNodes = copyAndInsert<if (\map() := ts.ds) {>Pair<}>(this.nodes, dataIndex(bitpos), key<if (\map() := ts.ds) {>, val<}>);
 	'
 	'	final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, bitmap | bitpos, valmap | bitpos, editableNodes, (byte) (payloadArity + 1));
 	'
-	'	return Result.modified(thisNew);
+	'	return <ts.ResultStr>.modified(thisNew);
 	'}";	
 		
 str generate_bodyOf_GenericNode_removed(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
@@ -1584,7 +1598,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 									(byte) (1));
 				}
 
-				return Result.modified(thisNew);
+				return <ts.ResultStr>.modified(thisNew);
 			} else if (USE_SPECIALIAZIONS && this.arity() == <nBound + 1>) {
 				final Object[] editableNodes = copyAndRemove<if (\map() := ts.ds) {>Pair<}>(this.nodes, valIndex);
 	
@@ -1592,7 +1606,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 								this.bitmap ^ bitpos, this.valmap ^ bitpos, editableNodes,
 								(byte) (payloadArity - 1));
 	
-				return Result.modified(thisNew.convertToGenericNode());
+				return <ts.ResultStr>.modified(thisNew.convertToGenericNode());
 			} else {
 				final Object[] editableNodes = copyAndRemove<if (\map() := ts.ds) {>Pair<}>(this.nodes, valIndex);
 	
@@ -1600,10 +1614,10 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 								this.bitmap ^ bitpos, this.valmap ^ bitpos, editableNodes,
 								(byte) (payloadArity - 1));
 	
-				return Result.modified(thisNew);
+				return <ts.ResultStr>.modified(thisNew);
 			}
 		} else {		
-			return Result.unchanged(this);
+			return <ts.ResultStr>.unchanged(this);
 		}
 	} else if ((bitmap & bitpos) != 0) { // node (not value)
 		final int bitIndex = bitIndex(bitpos);
@@ -1612,7 +1626,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 						mutator, key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
 
 		if (!<nestedResult>.isModified()) {
-			return Result.unchanged(this);
+			return <ts.ResultStr>.unchanged(this);
 		}
 
 		final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> subNodeNew = <nestedResult>.getNode();
@@ -1629,7 +1643,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 				final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator,
 								bitmap ^ bitpos, valmap, editableNodes, payloadArity);
 
-				return Result.modified(thisNew.convertToGenericNode());
+				return <ts.ResultStr>.modified(thisNew.convertToGenericNode());
 			} else {
 				// remove node
 				final Object[] editableNodes = copyAndRemove<if (\map() := ts.ds) {>Pair<}>(this.nodes, bitIndex);
@@ -1637,7 +1651,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 				final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator,
 								bitmap ^ bitpos, valmap, editableNodes, payloadArity);
 
-				return Result.modified(thisNew);
+				return <ts.ResultStr>.modified(thisNew);
 			}
 		}
 		case 1: {
@@ -1654,7 +1668,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 				final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, bitmap,
 								valmap | bitpos, editableNodes, (byte) (payloadArity + 1));
 	
-				return Result.modified(thisNew);
+				return <ts.ResultStr>.modified(thisNew);
 			}
 		}
 		default: {
@@ -1662,20 +1676,20 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 			if (isAllowedToEdit(this.mutator, mutator)) {
 				// no copying if already editable
 				this.nodes[bitIndex] = subNodeNew;
-				return Result.modified(this);
+				return <ts.ResultStr>.modified(this);
 			} else {
 				final Object[] editableNodes = copyAndSet(this.nodes, bitIndex, subNodeNew);
 
 				final <CompactNode(ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = <CompactNode(ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator,
 								bitmap, valmap, editableNodes, payloadArity);
 
-				return Result.modified(thisNew);
+				return <ts.ResultStr>.modified(thisNew);
 			}
 		}
 		}		
 	}
 
-	return Result.unchanged(this);";
+	return <ts.ResultStr>.unchanged(this);";
 
 list[Argument] generateMembers(int n, int m, TrieSpecifics ts) 
 	= [ *payloadTriple(i) | i <- [1..m+1]] 

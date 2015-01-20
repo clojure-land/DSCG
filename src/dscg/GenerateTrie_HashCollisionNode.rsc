@@ -213,28 +213,14 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 		<implOrOverride(ts.CompactNode_convertToGenericNode, "return this;")>
 		
-		<if (\map() := ds) {>
-		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndSetValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <dec(val(ts.valType))>) {
-			throw new UnsupportedOperationException();
-		}
-		<}>
+		<implOrOverride(ts.CompactNode_copyAndSetValue, UNSUPPORTED_OPERATION_EXCEPTION)>
 
-		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <dec(ts.payloadTuple)>) {
-			throw new UnsupportedOperationException();
-		}
+		<implOrOverride(ts.CompactNode_copyAndInsertValue, UNSUPPORTED_OPERATION_EXCEPTION)>
 
-		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>) {
-			throw new UnsupportedOperationException();
-		}
+		<implOrOverride(ts.CompactNode_copyAndRemoveValue, UNSUPPORTED_OPERATION_EXCEPTION)>
 
-		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node) {
-			throw new UnsupportedOperationException();
-		}
-		
+		<implOrOverride(ts.CompactNode_copyAndSetNode, UNSUPPORTED_OPERATION_EXCEPTION)>
+
 		<implOrOverride(ts.CompactNode_copyAndMigrateFromInlineToNode, UNSUPPORTED_OPERATION_EXCEPTION)>
 		
 		<implOrOverride(ts.CompactNode_copyAndMigrateFromNodeToInline, UNSUPPORTED_OPERATION_EXCEPTION)>

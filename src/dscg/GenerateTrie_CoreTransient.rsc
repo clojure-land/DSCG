@@ -319,7 +319,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, n
 		}
 
 		final int keyHash = key.hashCode();
-		<dec(ts.details)>= Result.unchanged();
+		<dec(ts.details)>= <ts.ResultStr>.unchanged();
 		
 		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, improve(keyHash), 0, details<if (useComparator) {>, cmp<}>);
 
@@ -364,7 +364,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, n
 		}
 
 		final int keyHash = key.hashCode();
-		<dec(ts.details)>= Result.unchanged();
+		<dec(ts.details)>= <ts.ResultStr>.unchanged();
 		
 		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, improve(keyHash), 0, details<if (useComparator) {>, cmp<}>);
 
@@ -472,7 +472,7 @@ default str generate_bodyOf_CoreTransient_removed(TrieSpecifics ts, rel[Option,b
 	}
 	
 	final int keyHash = key.hashCode();
-	<dec(ts.details)> = Result.unchanged();
+	<dec(ts.details)> = <ts.ResultStr>.unchanged();
 
 	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.<toString(call(nodeRemovedMethod, 
 					argsOverride = (ts.keyHash: exprFromString("improve(keyHash)"), ts.shift: constant(ts.shift.\type, "0"))))>;
