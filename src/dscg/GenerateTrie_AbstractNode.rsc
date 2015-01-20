@@ -27,6 +27,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 
 		<dec(ts.AbstractNode_updated, asAbstract = true)>
 		<dec(ts.AbstractNode_updatedEquiv, asAbstract = true)>
+
 		<dec(ts.AbstractNode_removed, asAbstract = true)>
 		<dec(ts.AbstractNode_removedEquiv, asAbstract = true)>
 		

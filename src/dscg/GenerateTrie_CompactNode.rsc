@@ -192,8 +192,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	<implOrOverride(ts.AbstractNode_updated, 		generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, setup, equalityDefaultForArguments		))>
 	<implOrOverride(ts.AbstractNode_updatedEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, setup, equalityComparatorForArguments	))>
 
-	<implOrOverride(ts.AbstractNode_removed, 		generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, setup, equalityDefaultForArguments		))>
-	<implOrOverride(ts.AbstractNode_removedEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, setup, equalityComparatorForArguments	))>
+	<implOrOverride(ts.AbstractNode_removed, 		generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, setup, equalityDefaultForArguments, ts.AbstractNode_removed))>
+	<implOrOverride(ts.AbstractNode_removedEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, setup, equalityComparatorForArguments, ts.AbstractNode_removedEquiv))>
 
 	'	/**
 	'	 * @return 0 \<= mask \<= 2^BIT_PARTITION_SIZE - 1
@@ -564,12 +564,12 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 }
 	
 	
-str generate_bodyOf_SpecializedBitmapPositionNode_removed(_, _, _, rel[Option,bool] setup, str(Argument, Argument) eq)	
+str generate_bodyOf_SpecializedBitmapPositionNode_removed(_, _, _, rel[Option,bool] setup, str(Argument, Argument) eq, Method nodeRemovedMethod)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;			
 		
-default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) {
+default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq, Method nodeRemovedMethod) {
 
 	Argument subNode 	= \node(ts.ds, ts.tupleTypes, "subNode");
 	Argument subNodeNew = \node(ts.ds, ts.tupleTypes, "subNodeNew");
@@ -592,8 +592,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 		}
 	} else if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
 		<dec(subNode)> = nodeAt(bitpos);
-		<dec(subNodeNew)> = subNode.removed(
-						mutator, key, keyHash, shift + BIT_PARTITION_SIZE, details<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
+		<dec(subNodeNew)> = subNode.<toString(call(nodeRemovedMethod, argsOverride = (ts.shift: exprFromString("shift + BIT_PARTITION_SIZE"))))>;
 
 		if (!<use(ts.details)>.isModified()) {
 			return this;

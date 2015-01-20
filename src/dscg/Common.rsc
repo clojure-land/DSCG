@@ -244,11 +244,8 @@ data TrieSpecifics
 		Method AbstractNode_updated 		= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details]),
 		Method AbstractNode_updatedEquiv 	= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
 	
-		Method AbstractNode_removed 		= method(compactNodeReturn, "removed", args = [mutator, key(keyType), keyHash, shift, details]),
-		Method AbstractNode_removedEquiv 	= method(compactNodeReturn, "removed", args = [mutator, key(keyType), keyHash, shift, details, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),
-		
-		Method AbstractNode_Multimap_removed 		= method(compactNodeReturn, "removed", args = [mutator, *payloadTuple, keyHash, shift, details], isActive = \map() := ds),
-		Method AbstractNode_Multimap_removedEquiv 	= method(compactNodeReturn, "removed", args = [mutator, *payloadTuple, keyHash, shift, details, comparator], isActive = \map() := ds && isOptionEnabled(setup, methodsWithComparator())),
+		Method AbstractNode_removed 		= method(compactNodeReturn, "removed", args = [mutator, *__payloadTuple_Core_remove(ds, tupleTypes), keyHash, shift, details]),
+		Method AbstractNode_removedEquiv 	= method(compactNodeReturn, "removed", args = [mutator, *__payloadTuple_Core_remove(ds, tupleTypes), keyHash, shift, details, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),
 				
 		/* GENERATE_TRIE_CORE */
 		str coreClassName = "Trie<toString(ds)><classNamePostfix>",
@@ -287,11 +284,11 @@ data TrieSpecifics
 		Method CoreTransient_insertOrPutAll      = method(\return(primitive("boolean")), "<insertOrPutMethodName(ds)>All",  			args = [__weirdArgument], 				visibility = "public"),
 		Method CoreTransient_insertOrPutAllEquiv = method(\return(primitive("boolean")), "<insertOrPutMethodName(ds)>AllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
 
-		Method Core_removed 		= method(coreInterfaceReturn, "__remove",  			args = [primitiveToClassArgument(key(keyType))], 				visibility = "public"),
-		Method Core_removedEquiv 	= method(coreInterfaceReturn, "__removeEquivalent", args = [primitiveToClassArgument(key(keyType)), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),														
+		Method Core_removed 		= method(coreInterfaceReturn, "__remove",  			args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument) ], 				visibility = "public"),
+		Method Core_removedEquiv 	= method(coreInterfaceReturn, "__removeEquivalent", args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),														
 		
-		Method CoreTransient_removed 		= method(\return(primitive("boolean")), "__remove",  			args = [primitiveToClassArgument(key(keyType))], 				visibility = "public"),
-		Method CoreTransient_removedEquiv 	= method(\return(primitive("boolean")), "__removeEquivalent", args = [primitiveToClassArgument(key(keyType)), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),														
+		Method CoreTransient_removed 		= method(\return(primitive("boolean")), "__remove",  			args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument) ], 				visibility = "public"),
+		Method CoreTransient_removedEquiv 	= method(\return(primitive("boolean")), "__removeEquivalent", args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument), comparator ], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),														
 
 		Method Core_containsKey 		= method(\return(primitive("boolean")), "<containsKeyMethodName(ds)>",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public"),
 		Method Core_containsKeyEquiv 	= method(\return(primitive("boolean")), "<containsKeyMethodName(ds)>Equivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
@@ -956,6 +953,10 @@ list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bi
 	= [ slot(i) | i <- [0..1*m + n]]
 when (ds == \set()) 
 		&& isOptionEnabled(setup,useUntypedVariables());
+
+list[Argument] __payloadTuple_Core_remove(ds:\map(multi = true), tupleTypes:[keyType, valType, *_]) = [ key(keyType), val(valType) ];
+list[Argument] __payloadTuple_Core_remove(ds:\map(multi = false), tupleTypes:[keyType, *_]) = [ key(keyType) ];
+list[Argument] __payloadTuple_Core_remove(ds:\set(), tupleTypes:[keyType, *_])= [ key(keyType) ];
 
 list[Argument] __payloadTuple(ds:\map(), tupleTypes:[keyType, valType, *_]) = [ key(keyType), val(valType) ];
 list[Argument] __payloadTuple(ds:\set(), tupleTypes:[keyType, *_])= [ key(keyType) ];

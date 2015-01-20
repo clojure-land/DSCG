@@ -129,91 +129,9 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "__remove", args = [field(specific("Immutable<toString(ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ds))>")], useComparator = true )>
 		<}>
 		
-		@Override
-		public boolean __remove(<dec(primitiveToClassArgument(key(ts.keyType)))>) {
-			if (mutator.get() == null) {
-				throw new IllegalStateException(\"Transient already frozen.\");
-
-			}
-
-			final int keyHash = key.hashCode();
-			<dec(ts.details)> = Result.unchanged();
-		
-			<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(mutator, key, improve(keyHash), 0, <use(ts.details)>);
-
-			if (<use(ts.details)>.isModified()) {
-				<if (\map() := ds) {>				
-					assert <use(ts.details)>.hasReplacedValue();
-					final int valHash = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
+		<implOrOverride(ts.CoreTransient_removed, 		generate_bodyOf_CoreTransient_removed(ts, setup, ts.AbstractNode_removed))>
+		<implOrOverride(ts.CoreTransient_removedEquiv,	generate_bodyOf_CoreTransient_removed(ts, setup, ts.AbstractNode_removedEquiv))>		
 	
-					rootNode = newRootNode;
-					hashCode -= keyHash ^ valHash;
-					cachedSize -= 1;
-	
-					if (DEBUG) {
-						assert checkHashCodeAndSize(hashCode, cachedSize);
-					}
-					return true;
-				<} else {>
-					rootNode = newRootNode;
-					hashCode -= keyHash;
-					cachedSize -= 1;
-	
-					if (DEBUG) {
-						assert checkHashCodeAndSize(hashCode, cachedSize);
-					}
-					return true;				
-				<}>
-			}
-
-			if (DEBUG) {
-				assert checkHashCodeAndSize(hashCode, cachedSize);
-			}
-			return false;
-		}
-
-		@Override
-		public boolean __removeEquivalent(<dec(primitiveToClassArgument(key(ts.keyType)))>, Comparator\<Object\> cmp) {
-			if (mutator.get() == null) {
-				throw new IllegalStateException(\"Transient already frozen.\");
-			}
-
-			final int keyHash = key.hashCode();
-			<dec(ts.details)> = Result.unchanged();
-		
-			<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(mutator, key, improve(keyHash), 0, <use(ts.details)>, cmp);
-
-			if (<use(ts.details)>.isModified()) {
-				<if (\map() := ds) {>				
-					assert <use(ts.details)>.hasReplacedValue();
-					final int valHash = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
-	
-					rootNode = newRootNode;
-					hashCode -= keyHash ^ valHash;
-					cachedSize -= 1;
-	
-					if (DEBUG) {
-						assert checkHashCodeAndSize(hashCode, cachedSize);
-					}
-					return true;
-				<} else {>
-					rootNode = newRootNode;
-					hashCode -= keyHash;
-					cachedSize -= 1;
-	
-					if (DEBUG) {
-						assert checkHashCodeAndSize(hashCode, cachedSize);
-					}
-					return true;				
-				<}>
-			}
-
-			if (DEBUG) {
-				assert checkHashCodeAndSize(hashCode, cachedSize);
-			}
-			return false;						
-		}
-
 		<if (ds == \set()) {>
 		@Override
 		public boolean containsAll(Collection\<?\> c) {
@@ -331,17 +249,24 @@ str generateCoreTransientClassString(ts:___expandedTrieSpecifics(ds, bitPartitio
 				throw new UnsupportedOperationException();
 			}<}>
 
+			<if (\map(multi = true) := ts.ds) {>
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+			<} else {>
 			/*
 			 * TODO: test removal with iteration rigorously
 			 */
 			@Override
-			public void remove() {				
+			public void remove() {
 				boolean success = <uncapitalize(className)>.__remove(lastKey);
 				
 				if (!success) {
 					throw new IllegalStateException(\"Key from iteration couldn\'t be deleted.\"); 
 				}				
 			}
+			<}>
 		}
 
 		<implOrOverride(ts.jul_Map_keySet, generate_bodyOf_jul_Map_keySet(ts, ts.coreTransientClassName))>
@@ -541,3 +466,44 @@ str allToSingle(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound),
 	;		
 }
 
+default str generate_bodyOf_CoreTransient_removed(TrieSpecifics ts, rel[Option,bool] setup, Method nodeRemovedMethod) =
+	"if (mutator.get() == null) {
+		throw new IllegalStateException(\"Transient already frozen.\");
+	}
+	
+	final int keyHash = key.hashCode();
+	<dec(ts.details)> = Result.unchanged();
+
+	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.<toString(call(nodeRemovedMethod, 
+					argsOverride = (ts.keyHash: exprFromString("improve(keyHash)"), ts.shift: constant(ts.shift.\type, "0"))))>;
+	
+	if (<use(ts.details)>.isModified()) {
+		<if (ts.ds == \set()) {>
+			rootNode = newRootNode;
+			hashCode -= keyHash;
+			cachedSize -= 1;
+
+			if (DEBUG) {
+				assert checkHashCodeAndSize(hashCode, cachedSize);
+			}
+			return true;
+		<} else {>
+			assert <use(ts.details)>.hasReplacedValue();
+			final int valHash = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
+
+			rootNode = newRootNode;
+			hashCode -= keyHash ^ valHash;
+			cachedSize -= 1;
+
+			if (DEBUG) {
+				assert checkHashCodeAndSize(hashCode, cachedSize);
+			}
+			return true;		
+		<}>
+	}
+
+	if (DEBUG) {
+		assert checkHashCodeAndSize(hashCode, cachedSize);
+	}
+	return false;"
+	;

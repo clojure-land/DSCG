@@ -163,8 +163,8 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	<implOrOverride(ts.Core_updated, 		generate_bodyOf_Core_updated(ts, setup, equalityDefaultForArguments		))>
 	<implOrOverride(ts.Core_updatedEquiv,	generate_bodyOf_Core_updated(ts, setup, equalityComparatorForArguments	))>
 
-	<implOrOverride(ts.Core_removed, 		generate_bodyOf_Core_removed(ts, setup, equalityDefaultForArguments		))>
-	<implOrOverride(ts.Core_removedEquiv,	generate_bodyOf_Core_removed(ts, setup, equalityComparatorForArguments	))>
+	<implOrOverride(ts.Core_removed, 		generate_bodyOf_Core_removed(ts, setup, ts.AbstractNode_removed))>
+	<implOrOverride(ts.Core_removedEquiv,	generate_bodyOf_Core_removed(ts, setup, ts.AbstractNode_removedEquiv))>
 
 	<implOrOverride(ts.Core_containsKey, 		generate_bodyOf_Core_containsKey(ts, setup, equalityDefaultForArguments		))>
 	<implOrOverride(ts.Core_containsKeyEquiv,	generate_bodyOf_Core_containsKey(ts, setup, equalityComparatorForArguments	))>
@@ -499,13 +499,15 @@ default str generate_bodyOf_Core_updated(TrieSpecifics ts, rel[Option,bool] setu
 	;
 }
 
-default str generate_bodyOf_Core_removed(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq, 
-				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
+default str generate_bodyOf_Core_removed(TrieSpecifics ts, rel[Option,bool] setup, Method nodeRemovedMethod) =
 	"final int keyHash = key.hashCode();
 	<dec(ts.details)> = Result.unchanged();
-	
-	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.removed(null, key, improve(keyHash), 0, <use(ts.details)><optionalComparatorArgument>);
 
+	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.<toString(call(nodeRemovedMethod, 
+					argsOverride = (ts.mutator: NULL(),
+								ts.keyHash: exprFromString("improve(keyHash)"),
+								ts.shift: constant(ts.shift.\type, "0"))))>;
+	
 	if (<use(ts.details)>.isModified()) {
 		<if (ts.ds == \set()) {>
 			return new <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)>(newRootNode, hashCode - keyHash, cachedSize - 1);
