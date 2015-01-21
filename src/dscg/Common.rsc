@@ -240,8 +240,8 @@ data TrieSpecifics
 		Method AbstractNode_containsKey 		= method(\return(primitive("boolean")), "containsKey", args = [key(keyType), keyHash, shift]),
 		Method AbstractNode_containsKeyEquiv 	= method(\return(primitive("boolean")), "containsKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
 	
-		Method AbstractNode_findByKey 		= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift], isActive = \map(multi = true) != ds),
-		Method AbstractNode_findByKeyEquiv 	= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift, comparator], isActive = \map(multi = true) != ds && isOptionEnabled(setup, methodsWithComparator())),		
+		Method AbstractNode_findByKey 		= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift]),
+		Method AbstractNode_findByKeyEquiv 	= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
 		
 		Method AbstractNode_updated 		= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details]),
 		Method AbstractNode_updatedEquiv 	= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
@@ -295,8 +295,8 @@ data TrieSpecifics
 		Method Core_containsKey 		= method(\return(primitive("boolean")), "<containsKeyMethodName(ds)>",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public"),
 		Method Core_containsKeyEquiv 	= method(\return(primitive("boolean")), "<containsKeyMethodName(ds)>Equivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
 
-		Method Core_get 		= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "get",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public", isActive = \map(multi = true) != ds),
-		Method Core_getEquiv 	= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "getEquivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = \map(multi = true) != ds && isOptionEnabled(setup, methodsWithComparator())),
+		Method Core_get 		= method(\return(dsAtFunction__range_type(ds, tupleTypes)), "get",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public"),
+		Method Core_getEquiv 	= method(\return(dsAtFunction__range_type(ds, tupleTypes)), "getEquivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
 
 		Method CoreCommon_containsValue 		= method(\return(primitive("boolean")), "containsValue",  			args = [primitiveToClassArgument(field(object(), "o"))], 				visibility = "public", isActive = \map() := ds),
 		Method CoreCommon_containsValueEquiv 	= method(\return(primitive("boolean")), "containsValueEquivalent", 	args = [primitiveToClassArgument(field(object(), "o")), comparator], 	visibility = "public", isActive = \map() := ds && isOptionEnabled(setup, methodsWithComparator())),													
@@ -370,8 +370,10 @@ data TrieSpecifics
 		Method CompactNode_nodeIterator = method(\return(generic("Iterator\<? extends <CompactNode(ds)><GenericsStr>\>")), "nodeIterator", isActive = !isOptionEnabled(setup, useFixedStackIterator())),
 
 		Method AbstractNode_getKey = method(\return(keyType), "getKey", args = [index]),
-		Method AbstractNode_getValue = method(\return(__returnTypeOf_AbstractNode_getValue(ds, tupleTypes)), "getValue", args = [index], isActive = \map() := ds),
+		Method AbstractNode_getValue = method(\return(__payloadTupleArgAtNode(ds, tupleTypes, 1).\type), "getValue", args = [index], isActive = \map() := ds),
 		Method AbstractNode_getKeyValueEntry = method(\return(generic("java.util.Map.Entry<GenericsExpanded(ds, tupleTypes)>")), "getKeyValueEntry", args = [index], isActive = \map() := ds),
+	
+		Method AbstractNode__getValueAsCollection = method(\return(__payloadTupleArgAtColl(ds, tupleTypes, 1).\type), "getValue", args = [index], isActive = \map() := ds),	
 	
 		/***/
 		Method AbstractNode_hasPayload = method(\return(primitive("boolean")), "hasPayload"),
@@ -872,10 +874,7 @@ default str ResultGenerics(DataStructure _) { throw "Ahhh"; }
 str ResultGenericsDec(DataStructure ds:\map()) = "\<K <GenericsDecExtentionForPrimitives(keyType)>, V <GenericsDecExtentionForPrimitives(valType)>, ? extends <CompactNode(ds)><ts.GenericsStr>\>";
 str ResultGenericsDec(DataStructure ds:\set()) = "\<K <GenericsDecExtentionForPrimitives(keyType)>, Void, ? extends <CompactNode(ds)><ts.GenericsStr>\>";
 
-
-str MapsToGenerics(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<toString(primitiveToClass(valType))>\>";
-str MapsToGenerics(DataStructure ds:\set(), tupleTypes:[keyType, *_])    = "\<<toString(primitiveToClass(keyType))>\>";
-str MapsToGenerics(DataStructure ds:\vector(), tupleTypes:[keyType, valType, *_] ) = "\<<toString(primitiveToClass(valType))>\>";
+str MapsToGenerics(DataStructure ds, tupleTypes) = "\<<toString(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes)))>\>";
 default str MapsToGenerics(DataStructure _, list[Type] _) { throw "Ahhh"; }
 /***/
 Type dsAtFunction__domain_type(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = keyType;
@@ -883,10 +882,11 @@ Type dsAtFunction__domain_type(DataStructure ds:\set(), tupleTypes:[keyType, *_]
 Type dsAtFunction__domain_type(DataStructure ds:\vector(), tupleTypes:[keyType, valType, *_]) = keyType;
 default Type dsAtFunction__domain_type(_) { throw "Ahhh"; }
 /***/
-Type dsAtFunction__range_type(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = valType;
-Type dsAtFunction__range_type(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = keyType;
-Type dsAtFunction__range_type(DataStructure ds:\vector(), tupleTypes:[keyType, valType, *_]) = valType;
+Type dsAtFunction__range_type(DataStructure ds:\map(), tupleTypes) = __payloadTupleArgAtColl(ds, tupleTypes, 1).\type;
+Type dsAtFunction__range_type(DataStructure ds:\set(), tupleTypes) = __payloadTupleArgAtColl(ds, tupleTypes, 0).\type;
+Type dsAtFunction__range_type(DataStructure ds:\vector(), tupleTypes) = __payloadTupleArgAtColl(ds, tupleTypes, 1).\type;
 default Type dsAtFunction__range_type(_, _) { throw "Ahhh"; }
+
 
 str dsAtFunction__range_getter_name(DataStructure ds:\map()) = "getValue";
 str dsAtFunction__range_getter_name(DataStructure ds:\set()) = "getKey";
@@ -988,13 +988,36 @@ list[Argument] __payloadTuple_Core_remove(ds:\map(multi = true), tupleTypes:[key
 list[Argument] __payloadTuple_Core_remove(ds:\map(multi = false), tupleTypes:[keyType, *_]) = [ key(keyType) ];
 list[Argument] __payloadTuple_Core_remove(ds:\set(), tupleTypes:[keyType, *_])= [ key(keyType) ];
 
+list[Argument] __payloadTupleAtColl(ds:\map(multi = true), tupleTypes:[keyType, valType, *_]) = [ key(keyType), field(generic("ImmutableSet<Generics(\set(), [ valType ])>"), "valColl") ];
+list[Argument] __payloadTupleAtColl(ds:\map(multi = false), tupleTypes:[keyType, valType, *_]) = [ key(keyType), val(valType) ];
+list[Argument] __payloadTupleAtColl(ds:\set(), tupleTypes:[keyType, *_])= [ key(keyType) ];
+/***/
+Argument __payloadTupleArgAtColl(DataStructure ds, list[Type] tupleTypes, int idx) {
+	list[Argument] argList = __payloadTupleAtColl(ds, tupleTypes);
+	
+	if (argList[idx]?) {
+		return argList[idx];
+	} else {
+		return null;
+	}
+}
+
 list[Argument] __payloadTupleAtNode(ds:\map(multi = true), tupleTypes:[keyType, valType, *_]) = [ key(keyType), \inode(\set(), [ valType ], "valNode") ];
 list[Argument] __payloadTupleAtNode(ds:\map(multi = false), tupleTypes:[keyType, valType, *_]) = [ key(keyType), val(valType) ];
 list[Argument] __payloadTupleAtNode(ds:\set(), tupleTypes:[keyType, *_])= [ key(keyType) ];
+/***/
+Argument __payloadTupleArgAtNode(DataStructure ds, list[Type] tupleTypes, int idx) {
+	list[Argument] argList = __payloadTupleAtNode(ds, tupleTypes);
+	
+	if (argList[idx]?) {
+		return argList[idx];
+	} else {
+		return null;
+	}
+}
 
-
-Argument collTupleArg(TrieSpecifics ts, int idx) = __payloadTuple(ts.ds, ts.tupleTypes)[idx];
-list[Argument] collTupleArgs(TrieSpecifics ts) = __payloadTuple(ts.ds, ts.tupleTypes);
+Argument collTupleArg(TrieSpecifics ts, int idx) = __payloadTupleArgAtColl(ts.ds, ts.tupleTypes, idx);
+list[Argument] collTupleArgs(TrieSpecifics ts) = __payloadTupleAtColl(ts.ds, ts.tupleTypes);
 
 Argument nodeTupleArg(TrieSpecifics ts, int idx) = __payloadTupleAtNode(ts.ds, ts.tupleTypes)[idx];
 list[Argument] nodeTupleArgs(TrieSpecifics ts) = __payloadTupleAtNode(ts.ds, ts.tupleTypes);
