@@ -1005,6 +1005,8 @@ list[Type] nodeTupleTypes(TrieSpecifics ts) = [ arg.\type | arg <- nodeTupleArgs
 // TODO for getter and \return
 list[Argument] appendToName(list[str] appendices, Argument prototypeArgument:field(Type \type, str name)) = mapper(appendices, Argument(str appendix) { return field(\type, "<name><appendix>"); }); 
 
+Argument appendToName(Argument arg, str appendix) = appendToName([arg], appendix)[0];
+
 list[Argument] appendToName(list[Argument] arguments, str appendix) 
 	= [ updateName(arg, str(str argName) { return "<argName><appendix>"; }) | arg <- arguments];
 

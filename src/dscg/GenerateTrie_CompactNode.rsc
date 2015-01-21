@@ -518,7 +518,7 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq) =
 when \map(multi = false) := ts.ds;
 
 str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
-	"<dec(field(__returnTypeOf_AbstractNode_getValue(ts.ds, ts.tupleTypes), "valNode"))> = getValue(dataIndex);
+	"<dec(nodeTupleArg(ts, 1))> = getValue(dataIndex);
 	'
 	'final int valHash = <hashCode(val(ts.valType))>;
 	'if(valNode.<toString(call(tsSet.AbstractNode_containsKey, 
@@ -526,7 +526,7 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecif
 	'	return this;
 	'} else {
 	'	// add new mapping
-	'	<dec(field(__returnTypeOf_AbstractNode_getValue(ts.ds, ts.tupleTypes), "valNodeNew"))> = valNode.<toString(call(tsSet.AbstractNode_updated, 
+	'	<dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_updated, 
 					argsOverride = (tsSet.mutator: NULL(), 
 						key(tsSet.keyType): useExpr(val(ts.valType)), 
 						tsSet.keyHash: exprFromString("improve(valHash)"), 
@@ -534,7 +534,7 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecif
 						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
 	'
 	'	details.modified();
-	'	return copyAndSetValue(mutator, bitpos, valNodeNew);
+	'	return copyAndSetValue(mutator, bitpos, <use(appendToName(nodeTupleArg(ts, 1), "New"))>);
 	'}" 
 when \map(multi = true) := ts.ds;	
 
@@ -676,6 +676,41 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	;
 }
 	
+
+default str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq) =
+	"<if (\map() := ds) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex); details.updated(currentVal);<} else {>details.modified();<}>
+	
+	<removed_value_block1(ts, setup)> else <if (isOptionEnabled(setup,useSpecialization())) {><removed_value_block2(ts, setup)> else<}> {					
+		return copyAndRemoveValue(mutator, bitpos);
+	}";
+	
+str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+	"<dec(nodeTupleArg(ts, 1))> = getValue(dataIndex); 
+	'
+	'final int valHash = <hashCode(val(ts.valType))>;
+	'if(<use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_containsKey, 
+					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: exprFromString("improve(valHash)"), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
+	'	details.updated(<use(val(ts.valType))>);
+	'	
+	'	// remove mapping
+	'	<dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_removed, 
+					argsOverride = (tsSet.mutator: NULL(), 
+						key(tsSet.keyType): useExpr(val(ts.valType)), 
+						tsSet.keyHash: exprFromString("improve(valHash)"), 
+						tsSet.shift: constant(tsSet.shift.\type, "0"),
+						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
+	'
+	'	if (<use(appendToName(nodeTupleArg(ts, 1), "New"))>.arity() == 0) {
+	'		<removed_value_block1(ts, ts.setup)> else <if (isOptionEnabled(ts.setup,useSpecialization())) {><removed_value_block2(ts, ts.setup)> else<}> {					
+	'			return copyAndRemoveValue(mutator, bitpos);
+	'		}
+	'	} else {
+	'		return copyAndSetValue(mutator, bitpos, <use(appendToName(nodeTupleArg(ts, 1), "New"))>);		
+	'	}	
+	'} else {	
+	'	return this;
+	'}" 
+when \map(multi = true) := ts.ds;
 	
 str generate_bodyOf_SpecializedBitmapPositionNode_removed(_, _, _, rel[Option,bool] setup, str(Argument, Argument) eq, Method nodeRemovedMethod)	
 	= "throw new UnsupportedOperationException();"
@@ -695,11 +730,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 		<dec(field(primitive("int"), "dataIndex"))> = dataIndex(bitpos);
 		
 		if (<eq(key(ts.keyType, "getKey(dataIndex)"), key(ts.keyType))>) {
-			<if (\map() := ds) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex); details.updated(currentVal);<} else {>details.modified();<}>			
-		
-			<removed_value_block1(ts, setup)> else <if (isOptionEnabled(setup,useSpecialization())) {><removed_value_block2(ts, setup)> else<}> {					
-				return copyAndRemoveValue(mutator, bitpos);
-			}
+			<removedOn_TupleFound(ts, eq)>
 		} else {		
 			return this;
 		}
