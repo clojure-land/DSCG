@@ -134,20 +134,21 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 		<implOrOverride(ts.CompactNode_convertToGenericNode, "return this;")>
 
 		<implOrOverride(ts.CompactNode_copyAndSetValue, 
-			"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
+			str() { return "<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
 			
 			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (isAllowedToEdit(this.mutator, mutator)) {
 				// no copying if already editable
-				this.nodes[<use(field(primitive("int"), "idx"))>] = val;
+				this.nodes[<use(field(primitive("int"), "idx"))>] = <use(nodeTupleArg(ts, 1))>;
 				return this;
 			} else {<}>
 				<dec(field(asArray(object()), "src"))> = this.nodes;
-				<arraycopyAndSetTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), 1, [val(ts.valType)], field(primitive("int"), "idx"))>
+				<arraycopyAndSetTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), 1, [ nodeTupleArg(ts, 1) ], field(primitive("int"), "idx"))>
 				
 				return <toString(call(ts.nodeOf_BitmapIndexedNode, 
 								argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),
 												ts.bitmapField: useExpr(ts.bitmapMethod), ts.valmapField: useExpr(ts.valmapMethod))))>;
-			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>")>
+			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>";}
+		)>
 
 		<noop(ts.CompactNode_copyAndSetValue,
 			
@@ -189,7 +190,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			
 			<dec(field(asArray(object()), "src"))> = this.nodes;
-			<arraycopyAndInsertTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), tupleLength(ts.ds), ts.payloadTuple, field(primitive("int"), "idx"))>
+			<arraycopyAndInsertTuple(field(asArray(object()), "src"), field(asArray(object()), "dst"), tupleLength(ts.ds), nodeTupleArgs(ts), field(primitive("int"), "idx"))>
 
 			return <toString(call(ts.nodeOf_BitmapIndexedNode, 
 							argsOverride = (ts.BitmapIndexedNode_contentArray: useExpr(field(asArray(object()), "dst")),

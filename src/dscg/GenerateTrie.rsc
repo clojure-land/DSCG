@@ -156,14 +156,14 @@ void doGenerate(TrieConfig cfg, str overideClassNamePostfixWith = "") {
 	TrieSpecifics ts = expandConfiguration(cfg, overideClassNamePostfixWith);
 	
 	list[str] innerClassStrings = doGenerateInnerClassStrings(ts);
-	if (\map(multi = true) := ts.ds) {
-		TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts);
-		
-		innerClassStrings = innerClassStrings
-		+ [ generateResultClassString(tsSet, ts.setup) ]
-		+ [ generateAbstractNodeClassString(tsSet)]		
-		+ [ generateCompactNodeClassString(tsSet, ts.setup)];
-	}	
+	//if (\map(multi = true) := ts.ds) {
+	//	TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts);
+	//	
+	//	innerClassStrings = innerClassStrings
+	//	+ [ generateResultClassString(tsSet, ts.setup) ]
+	//	+ [ generateAbstractNodeClassString(tsSet)]		
+	//	+ [ generateCompactNodeClassString(tsSet, ts.setup)];
+	//}	
 		
 	list[str] classStrings = [ generateCoreClassString(ts, ts.setup, intercalate("\n", innerClassStrings))];			
 		

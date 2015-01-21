@@ -331,7 +331,7 @@ data TrieSpecifics
 		Method CompactNode_mergeNodeAndKeyValPair = function(compactNodeClassReturn, "mergeNodeAndKeyValPair", args = [ \inode(ds, tupleTypes, 0), keyHash0, *__payloadTupleAtNode(ds, tupleTypes, 1), keyHash1, shift ], generics = GenericsStr, isActive = false),
 				
 		Method CompactNode_copyAndRemoveValue = method(compactNodeClassReturn, "copyAndRemoveValue", args = [mutator, bitposField]),
-		Method CompactNode_copyAndInsertValue = method(compactNodeClassReturn, "copyAndInsertValue", args = [mutator, bitposField, *payloadTuple]),
+		Method CompactNode_copyAndInsertValue = method(compactNodeClassReturn, "copyAndInsertValue", args = [mutator, bitposField, *__payloadTupleAtNode(ds, tupleTypes)]),
 		Method CompactNode_copyAndSetValue = method(compactNodeClassReturn, "copyAndSetValue", lazyArgs = list[Argument]() { return [mutator, bitposField, __payloadTupleAtNode(ds, tupleTypes)[1] ]; }, isActive = \map() := ds),		
 		Method CompactNode_copyAndSetNode = method(compactNodeClassReturn, "copyAndSetNode", args = [mutator, bitposField, \node(ds, tupleTypes)]),		
 		Method CompactNode_copyAndInsertNode = method(compactNodeClassReturn, "copyAndInsertNode", args = [mutator, bitposField, \node(ds, tupleTypes)], isActive = false),
@@ -724,6 +724,20 @@ data OverwriteType
 str implOrOverride(Method m:method, Statement bodyStmt, OverwriteType doOverride = override(), list[Annotation] annotations = []) = implOrOverride(m, toString(bodyStmt), doOverride = doOverride);
 str implOrOverride(Method m:method, Expression bodyExpr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = implOrOverride(m, toString(bodyExpr), doOverride = doOverride);
 
+str implOrOverride(m, str() lazyBodyStr, OverwriteType __doOverride = override(), list[Annotation] __annotations = []) {
+	if (m.isActive) { 
+		return implOrOverride(m, lazyBodyStr(), doOverride = __doOverride, annotations = __annotations);
+	} else { 
+		return "";
+	}
+}
+
+str implOrOverride(m, str() lazyBodyStr, OverwriteType __doOverride = override(), list[Annotation] __annotations = []) 
+	= ""
+when !m.isActive
+	;	
+	
+
 str implOrOverride(m:method(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
 	<if (doOverride == \override()) {>@Override<}>
@@ -941,26 +955,25 @@ list[Argument] metadataArguments(TrieSpecifics ts)
 	;
 
 list[Argument] typedContentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup)
-	= [ *__payloadTuple(ts.ds, ts.tupleTypes, i) | i <- [1..m+1]] 
+	= [ *appendToName(nodeTupleArgs(ts), "<i>") | i <- [1..m+1]] 
 	+ [ \node(ts.ds, ts.tupleTypes, i) | i <- [1..n+1]]
 	;
 
 list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
-	= [ key(ts.keyType, i), val(ts.valType, i) | i <- [1..m+1]] 
-	+ [ \node(ts.ds, ts.tupleTypes, i)   | i <- [1..n+1]]
-when (\map() := ds || ds == \vector()) 
-		&& !isOptionEnabled(setup,useUntypedVariables());
+	= [ *appendToName(nodeTupleArgs(ts), "<i>") | i <- [1..m+1]] 
+	+ [ \node(ts.ds, ts.tupleTypes, i) | i <- [1..n+1]]
+when !isOptionEnabled(setup,useUntypedVariables());
 
 list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
 	= [ slot(i) | i <- [0..2*m + n]]
 when (\map() := ds || ds == \vector()) 
 		&& isOptionEnabled(setup,useUntypedVariables());
 
-list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
-	= [ key(ts.keyType, i)         | i <- [1..m+1]] 
-	+ [ \node(ts.ds, ts.tupleTypes, i)   | i <- [1..n+1]]
-when (ds == \set()) 
-		&& !isOptionEnabled(setup,useUntypedVariables());	
+//list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
+//	= [ key(ts.keyType, i)         | i <- [1..m+1]] 
+//	+ [ \node(ts.ds, ts.tupleTypes, i)   | i <- [1..n+1]]
+//when (ds == \set()) 
+//		&& !isOptionEnabled(setup,useUntypedVariables());	
 
 list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
 	= [ slot(i) | i <- [0..1*m + n]]
@@ -968,7 +981,7 @@ when (ds == \set())
 		&& isOptionEnabled(setup,useUntypedVariables());
 
 Type __returnTypeOf_AbstractNode_getValue(ds:\map(multi = true), list[Type] tupleTypes:[_, valType, *_]) = generic("<AbstractNode(\set())><MapsToGenerics(ds, tupleTypes)>");
-Type __returnTypeOf_AbstractNode_getValue(ds:\map(multi = false), list[Type] tupleTypes:[_, valType, *_]) = val(valType);
+Type __returnTypeOf_AbstractNode_getValue(ds:\map(multi = false), list[Type] tupleTypes:[_, valType, *_]) = valType;
 Type __returnTypeOf_AbstractNode_getValue(ds:\set, list[Type] tupleTypes) = unknown();
 
 list[Argument] __payloadTuple_Core_remove(ds:\map(multi = true), tupleTypes:[keyType, valType, *_]) = [ key(keyType), val(valType) ];
@@ -979,6 +992,25 @@ list[Argument] __payloadTupleAtNode(ds:\map(multi = true), tupleTypes:[keyType, 
 list[Argument] __payloadTupleAtNode(ds:\map(multi = false), tupleTypes:[keyType, valType, *_]) = [ key(keyType), val(valType) ];
 list[Argument] __payloadTupleAtNode(ds:\set(), tupleTypes:[keyType, *_])= [ key(keyType) ];
 
+
+Argument collTupleArg(TrieSpecifics ts, int idx) = __payloadTuple(ts.ds, ts.tupleTypes)[idx];
+list[Argument] collTupleArgs(TrieSpecifics ts) = __payloadTuple(ts.ds, ts.tupleTypes);
+
+Argument nodeTupleArg(TrieSpecifics ts, int idx) = __payloadTupleAtNode(ts.ds, ts.tupleTypes)[idx];
+list[Argument] nodeTupleArgs(TrieSpecifics ts) = __payloadTupleAtNode(ts.ds, ts.tupleTypes);
+
+Type nodeTupleType(TrieSpecifics ts, int idx) = nodeTupleArg(ts, idx).\type;
+list[Type] nodeTupleTypes(TrieSpecifics ts) = [ arg.\type | arg <- nodeTupleArgs(ts) ];
+
+// TODO for getter and \return
+list[Argument] appendToName(list[str] appendices, Argument prototypeArgument:field(Type \type, str name)) = mapper(appendices, Argument(str appendix) { return field(\type, "<name><appendix>"); }); 
+
+list[Argument] appendToName(list[Argument] arguments, str appendix) 
+	= [ updateName(arg, str(str argName) { return "<argName><appendix>"; }) | arg <- arguments];
+
+Argument updateName(Argument arg:field(Type argType, str argName), str(str argName) nameUpdater) = field(argType, nameUpdater(argName));
+Argument updateType(Argument arg:field(Type argType, str argName), Type(Type argType) typeUpdater) = field(typeUpdater(argType), argName);  
+ 
 list[Argument] __payloadTupleAtNode(ds:\map(multi = true), tupleTypes:[keyType, valType, *_], int i) = [ key(keyType, i), \inode(\set(), [ valType ], "valNode<i>") ];
 list[Argument] __payloadTupleAtNode(ds:\map(multi = false), tupleTypes:[keyType, valType, *_], int i) = [ key(keyType, i), val(valType, i) ];
 list[Argument] __payloadTupleAtNode(ds:\set(), tupleTypes:[keyType, *_], int i)= [ key(keyType, i) ];

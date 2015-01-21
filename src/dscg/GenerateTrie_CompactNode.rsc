@@ -34,7 +34,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	int m = 0; // TODO: remove
 
 	return
-	"private static abstract class <className><Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ds)>Node<Generics(ts.ds, ts.tupleTypes)> {
+	"protected static abstract class <className><Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ds)>Node<Generics(ts.ds, ts.tupleTypes)> {
 		
 		<dec(field(primitive("int"), "HASH_CODE_LENGTH"), constant(primitive("int"), "32"), isStatic = true, isFinal = true)>;
 		
@@ -78,17 +78,17 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 			return inv1 && inv2 && inv3 && inv4 && inv5;
 		}
 
-		<dec(ts.CompactNode_copyAndSetValue, asAbstract = true)>
-
-	'	abstract <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndInsertValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <dec(ts.payloadTuple)>);
-	
-	'	abstract <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndRemoveValue(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>);
-
-	'	abstract <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndSetNode(AtomicReference\<Thread\> mutator, <dec(ts.bitposField)>, <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> <nodeName>);
-
 		<implOrOverride(ts.CompactNode_copyAndInsertNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = new())>
 		
 		<implOrOverride(ts.CompactNode_copyAndRemoveNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = new())>
+
+		<dec(ts.CompactNode_copyAndSetValue, asAbstract = true)>
+
+		<dec(ts.CompactNode_copyAndInsertValue, asAbstract = true)>
+	
+		<dec(ts.CompactNode_copyAndRemoveValue, asAbstract = true)>
+	
+		<dec(ts.CompactNode_copyAndSetNode, asAbstract = true)>
 	
 		<dec(ts.CompactNode_copyAndMigrateFromInlineToNode, asAbstract = true)>
 		
@@ -140,11 +140,11 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	<}>
 
 	<if (!isOptionEnabled(setup,useSpecialization())) {>
-	'	static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>, <dec(ts.payloadTuple)>) {
+	'	static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>, <dec(nodeTupleArgs(ts))>) {
 	'		assert <use(bitmapField)> == 0;	
 	'		return <toString(call(ts.nodeOf_BitmapIndexedNode, 
 				argsOverride = (ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.bitmapField.\type, "0")),						
-								ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(ts.payloadTuple)> }"),
+								ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(nodeTupleArgs(ts))> }"),
 								ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "1")),
 								ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "0")))))>;
 	'	}
@@ -252,7 +252,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	
 	'}
 	
-	private static abstract class <className_compactNode(ts, setup, true, true)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
+	protected static abstract class <className_compactNode(ts, setup, true, true)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
 
 		private <dec(ts.bitmapField)>;
 		private <dec(ts.valmapField)>;
@@ -275,7 +275,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	}
 
 	<if (isOptionEnabled(setup,useSpecialization())) {>
-	private static abstract class <className_compactNode(ts, setup, true, false)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
+	protected static abstract class <className_compactNode(ts, setup, true, false)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
 
 		private <dec(ts.bitmapField)>;
 
@@ -295,7 +295,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 	}
 
-	private static abstract class <className_compactNode(ts, setup, false, true)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
+	protected static abstract class <className_compactNode(ts, setup, false, true)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
 
 		private <dec(ts.valmapField)>;
 
@@ -315,7 +315,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 	}
 	
-	private static abstract class <className_compactNode(ts, setup, false, false)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
+	protected static abstract class <className_compactNode(ts, setup, false, false)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
 
 		<className_compactNode(ts, setup, false, false)>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
 		}
@@ -348,10 +348,10 @@ str generate_bodyOf_mergeTwoValues(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	"<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask0))))> | <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask1))))>);
 	' 
 	'if (mask0 \< mask1) {
-	'	return nodeOf(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, <use(valmapField)>, <use(__payloadTuple(ts.ds, ts.tupleTypes, 0))>, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>);
+	'	return nodeOf(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, <use(valmapField)>, <use(appendToName(nodeTupleArgs(ts), "0") + appendToName(nodeTupleArgs(ts), "1"))>);
 	'} else {
-	'	return nodeOf(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, <use(valmapField)>, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, <use(__payloadTuple(ts.ds, ts.tupleTypes, 0))>);
-	'}";	
+	'	return nodeOf(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, <use(valmapField)>, <use(appendToName(nodeTupleArgs(ts), "1") + appendToName(nodeTupleArgs(ts), "0"))>);
+	'}";
 
 /*
  *	Both <call> invocatiosn in the body have similar data; only content array differs.
@@ -364,7 +364,7 @@ str generate_bodyOf_mergeTwoValues(ts:___expandedTrieSpecifics(ds, bitPartitionS
 				argsOverride = (ts.mutator: NULL(),								
 								ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.bitmapField.\type, "0")), 
 								ts.valmapField: useExpr(ts.valmapField),
-								ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(__payloadTuple(ts.ds, ts.tupleTypes, 0))>, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))> }"),
+								ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(appendToName(nodeTupleArgs(ts), "0") + appendToName(nodeTupleArgs(ts), "1"))> }"),
 								ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "2")),
 								ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "0")))))>;
 	'} else {
@@ -372,7 +372,7 @@ str generate_bodyOf_mergeTwoValues(ts:___expandedTrieSpecifics(ds, bitPartitionS
 				argsOverride = (ts.mutator: NULL(),								
 								ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.bitmapField.\type, "0")), 
 								ts.valmapField: useExpr(ts.valmapField),
-								ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, <use(__payloadTuple(ts.ds, ts.tupleTypes, 0))> }"),
+								ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(appendToName(nodeTupleArgs(ts), "1") + appendToName(nodeTupleArgs(ts), "0"))> }"),
 								ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "2")),
 								ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "0")))))>;	
 	'}";	
@@ -501,11 +501,11 @@ str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___
 	
 default str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) { throw "Ahhh"; }		
 	
-str updatedOn_keysEqual(TrieSpecifics ts, str(Argument, Argument) eq) = 
+str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq) = 
 	"return this;" 
 when \set() := ts.ds;	
 	
-str updatedOn_keysEqual(TrieSpecifics ts, str(Argument, Argument) eq) = 
+str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq) = 
 	"<dec(val(ts.valType, "currentVal"))> = getValue(dataIndex);
 	'
 	'if (<eq(val(ts.valType, "currentVal"), val(ts.valType))>) {
@@ -517,7 +517,7 @@ str updatedOn_keysEqual(TrieSpecifics ts, str(Argument, Argument) eq) =
 	'}" 
 when \map(multi = false) := ts.ds;
 
-str updatedOn_keysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"<dec(field(__returnTypeOf_AbstractNode_getValue(ts.ds, ts.tupleTypes), "valNode"))> = getValue(dataIndex);
 	'
 	'final int valHash = <hashCode(val(ts.valType))>;
@@ -565,6 +565,29 @@ str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq, TrieSp
 	'details.modified();
 	'return copyAndMigrateFromInlineToNode(mutator, bitpos, subNodeNew);" 
 when \map(multi = true) := ts.ds;
+
+
+
+
+
+
+default str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq) = 
+	"<use(ts.details)>.modified();
+	'return copyAndInsertValue(mutator, bitpos, key<if (\map() := ts.ds) {>, val<}>);";
+		
+str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+	"final int valHash = <hashCode(val(ts.valType))>;
+	'<dec(field(__returnTypeOf_AbstractNode_getValue(ts.ds, ts.tupleTypes), "valNode"))> = CompactSetNode.EMPTY_NODE.<toString(call(tsSet.AbstractNode_updated, 
+					argsOverride = (tsSet.mutator: NULL(), 
+						key(tsSet.keyType): useExpr(val(ts.valType)), 
+						tsSet.keyHash: exprFromString("improve(valHash)"), 
+						tsSet.shift: constant(tsSet.shift.\type, "0"),
+						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
+	'
+	'details.modified();
+	'return copyAndInsertValue(mutator, bitpos, <use(nodeTupleArgs(ts))>);"
+when \map(multi = true) := ts.ds;
+
 
 /*
 default str generate_bodyOf_Core_updated(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq) {
@@ -633,7 +656,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'	<dec(key(ts.keyType, "currentKey"))> = getKey(dataIndex);
 	'
 	'	if (<eq(key(ts.keyType, "currentKey"), key(ts.keyType))>) {
-	'		<updatedOn_keysEqual(ts, eq)>				
+	'		<updatedOn_KeysEqual(ts, eq)>				
 	'	} else {
 	'		<updatedOn_KeysDifferent(ts, eq)>					
 	'	}
@@ -648,8 +671,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 	'	}
 	'} else {
 	'	// no value
-	'	<use(ts.details)>.modified();
-	'	return copyAndInsertValue(mutator, bitpos, key<if (\map() := ds) {>, val<}>);
+	'	<updatedOn_NoTuple(ts, eq)>
 	'}"
 	;
 }
@@ -907,8 +929,8 @@ default str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts) =
 	"assert !(<equalityDefaultForArguments(key(ts.keyType, "key0"), key(ts.keyType, "key1"))>);
 	
 		if (<use(ts.shift)> \>= HASH_CODE_LENGTH) {
-		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<toString(ts.keyType)>[]) new <if (isPrimitive(ts.keyType)) {><toString(ts.keyType)><} else {>Object<}>[] { key0, key1 }
-						<if (\map() := ts.ds) {>, (<toString(ts.valType)>[]) new <if (isPrimitive(ts.valType)) {><toString(ts.valType)><} else {>Object<}>[] { val0, val1 }<}>);
+		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<toString(nodeTupleType(ts, 0))>[]) new <if (isPrimitive(nodeTupleArg(ts, 0))) {><toString(nodeTupleType(ts, 0))><} else {>Object<}>[] { <use(appendToName([ "0", "1" ], nodeTupleArg(ts, 0)))> }
+						<if (\map() := ts.ds) {>, (<toString(nodeTupleType(ts, 1))>[]) new <if (isPrimitive(nodeTupleArg(ts, 1))) {><toString(nodeTupleType(ts, 1))><} else {>Object<}>[] { <use(appendToName([ "0", "1" ], nodeTupleArg(ts, 1)))> }<}>);
 	}
 
 	<dec(ts.mask0)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;

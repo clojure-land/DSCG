@@ -27,13 +27,18 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 
 	hashCollisionClassName = "HashCollision<toString(ts.ds)>Node<classNamePostfix>";
 
+	arrays = [ field(asArray(nodeTupleArg(ts, 0).\type), "keys") ];
+	if (\map() := ds) {
+		arrays = arrays + [ field(asArray(nodeTupleArg(ts, 1).\type), "vals")];
+	}
+
 	return  
 	"private static final class <hashCollisionClassName><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
-		private <dec(field(asArray(ts.keyType), "keys"))>;		
-		<if (\map() := ds) {>private <dec(field(asArray(ts.valType), "vals"))>;<}>
+		private <dec(arrays[0])>;		
+		<if (\map() := ds) {>private <dec(arrays[1])>;<}>
 		private final int hash;
 
-		<hashCollisionClassName>(final int hash, <dec(field(asArray(ts.keyType), "keys"))><if (\map() := ds) {>, <dec(field(asArray(ts.valType), "vals"))><}>) {
+		<hashCollisionClassName>(final int hash, <dec(arrays[0])><if (\map() := ds) {>, <dec(arrays[1])><}>) {
 			this.keys = keys;
 			<if (\map() := ds) {>this.vals = vals;<}>
 			this.hash = hash;
@@ -119,12 +124,8 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 			return keys[index];
 		}
 
-		<if (\map() := ds) {>
-		@Override
-		<toString(ts.valType)> getValue(int index) {
-			return vals[index];
-		}
-		<}>
+		<implOrOverride(ts.AbstractNode_getValue, 
+			"return vals[index];")>		
 
 		<if (\map() := ds) {>
 		@Override
