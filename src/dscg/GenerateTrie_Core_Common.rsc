@@ -256,9 +256,9 @@ if (other instanceof <toString(ts.ds)>) {
 				return false;
 			} else {
 				@SuppressWarnings(\"unchecked\")
-				<dec(val(ts.valType))> = (<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>) entry.getValue();
+				<dec(collTupleArg(ts, 1))> = (<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>) entry.getValue();
 
-				if (!result.get().equals(val)) {
+				if (!result.get().equals(<use(collTupleArg(ts, 1))>)) {
 					return false;
 				}
 			}

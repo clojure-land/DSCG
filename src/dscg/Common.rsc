@@ -373,7 +373,10 @@ data TrieSpecifics
 		Method AbstractNode_getValue = method(\return(__payloadTupleArgAtNode(ds, tupleTypes, 1).\type), "getValue", args = [index], isActive = \map() := ds),
 		Method AbstractNode_getKeyValueEntry = method(\return(generic("java.util.Map.Entry<GenericsExpanded(ds, tupleTypes)>")), "getKeyValueEntry", args = [index], isActive = \map() := ds),
 	
-		Method AbstractNode__getValueAsCollection = method(\return(__payloadTupleArgAtColl(ds, tupleTypes, 1).\type), "getValue", args = [index], isActive = \map() := ds),	
+		Method CompactNode_keyAt = method(\return(keyType), "keyAt", args = [index]),
+		Method CompactNode_valueAt = method(\return(__payloadTupleArgAtNode(ds, tupleTypes, 1).\type), "valueAt", args = [index], isActive = \map() := ds),
+	
+		Method AbstractNode__getValueAsCollection = method(\return(__payloadTupleArgAtColl(ds, tupleTypes, 1).\type), "getBoxedValue", args = [index], isActive = \map() := ds),	
 	
 		/***/
 		Method AbstractNode_hasPayload = method(\return(primitive("boolean")), "hasPayload"),
@@ -887,6 +890,10 @@ Type dsAtFunction__range_type(DataStructure ds:\set(), tupleTypes) = __payloadTu
 Type dsAtFunction__range_type(DataStructure ds:\vector(), tupleTypes) = __payloadTupleArgAtColl(ds, tupleTypes, 1).\type;
 default Type dsAtFunction__range_type(_, _) { throw "Ahhh"; }
 
+Type dsAtFunction__range_type_of_tuple(DataStructure ds:\map(), tupleTypes) = __payloadTuple(ds, tupleTypes)[1].\type;
+Type dsAtFunction__range_type_of_tuple(DataStructure ds:\set(), tupleTypes) = __payloadTuple(ds, tupleTypes)[0].\type;
+Type dsAtFunction__range_type_of_tuple(DataStructure ds:\vector(), tupleTypes) = __payloadTuple(ds, tupleTypes)[1].\type;
+default Type dsAtFunction__range_type_of_tuple(_, _) { throw "Ahhh"; }
 
 str dsAtFunction__range_getter_name(DataStructure ds:\map()) = "getValue";
 str dsAtFunction__range_getter_name(DataStructure ds:\set()) = "getKey";
@@ -980,10 +987,6 @@ list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bi
 when (ds == \set()) 
 		&& isOptionEnabled(setup,useUntypedVariables());
 
-Type __returnTypeOf_AbstractNode_getValue(ds:\map(multi = true), list[Type] tupleTypes:[_, valType, *_]) = generic("<AbstractNode(\set())><MapsToGenerics(ds, tupleTypes)>");
-Type __returnTypeOf_AbstractNode_getValue(ds:\map(multi = false), list[Type] tupleTypes:[_, valType, *_]) = valType;
-Type __returnTypeOf_AbstractNode_getValue(ds:\set, list[Type] tupleTypes) = unknown();
-
 list[Argument] __payloadTuple_Core_remove(ds:\map(multi = true), tupleTypes:[keyType, valType, *_]) = [ key(keyType), val(valType) ];
 list[Argument] __payloadTuple_Core_remove(ds:\map(multi = false), tupleTypes:[keyType, *_]) = [ key(keyType) ];
 list[Argument] __payloadTuple_Core_remove(ds:\set(), tupleTypes:[keyType, *_])= [ key(keyType) ];
@@ -1016,11 +1019,28 @@ Argument __payloadTupleArgAtNode(DataStructure ds, list[Type] tupleTypes, int id
 	}
 }
 
+//list[Argument] __payloadTupleAtNode(ds:\map(multi = true), tupleTypes:[keyType, valType, *_]) = [ key(keyType), \inode(\set(), [ valType ], "valNode") ];
+//list[Argument] __payloadTupleAtNode(ds:\map(multi = false), tupleTypes:[keyType, valType, *_]) = [ key(keyType), val(valType) ];
+//list[Argument] __payloadTupleAtNode(ds:\set(), tupleTypes:[keyType, *_])= [ key(keyType) ];
+///***/
+//Argument __payloadTupleArgAtNode(DataStructure ds, list[Type] tupleTypes, int idx) {
+//	list[Argument] argList = __payloadTupleAtNode(ds, tupleTypes);
+//	
+//	if (argList[idx]?) {
+//		return argList[idx];
+//	} else {
+//		return null;
+//	}
+//}
+
 Argument collTupleArg(TrieSpecifics ts, int idx) = __payloadTupleArgAtColl(ts.ds, ts.tupleTypes, idx);
 list[Argument] collTupleArgs(TrieSpecifics ts) = __payloadTupleAtColl(ts.ds, ts.tupleTypes);
 
 Argument nodeTupleArg(TrieSpecifics ts, int idx) = __payloadTupleAtNode(ts.ds, ts.tupleTypes)[idx];
 list[Argument] nodeTupleArgs(TrieSpecifics ts) = __payloadTupleAtNode(ts.ds, ts.tupleTypes);
+
+Argument payloadTupleArg(TrieSpecifics ts, int idx) = __payloadTuple(ts.ds, ts.tupleTypes)[idx];
+list[Argument] payloadTupleArgs(TrieSpecifics ts) = __payloadTuple(ts.ds, ts.tupleTypes);
 
 Type nodeTupleType(TrieSpecifics ts, int idx) = nodeTupleArg(ts, idx).\type;
 list[Type] nodeTupleTypes(TrieSpecifics ts) = [ arg.\type | arg <- nodeTupleArgs(ts) ];
@@ -1035,6 +1055,9 @@ list[Argument] appendToName(list[Argument] arguments, str appendix)
 
 Argument updateName(Argument arg:field(Type argType, str argName), str(str argName) nameUpdater) = field(argType, nameUpdater(argName));
 Argument updateType(Argument arg:field(Type argType, str argName), Type(Type argType) typeUpdater) = field(typeUpdater(argType), argName);  
+
+Argument replaceName(Argument arg:field(Type argType, str argName), str argNameNew) = field(argType, argNameNew);
+Argument replaceType(Argument arg:field(Type argType, str argName), Type argTypeNew) = field(argTypeNew, argName);
  
 list[Argument] __payloadTupleAtNode(ds:\map(multi = true), tupleTypes:[keyType, valType, *_], int i) = [ key(keyType, i), \inode(\set(), [ valType ], "valNode<i>") ];
 list[Argument] __payloadTupleAtNode(ds:\map(multi = false), tupleTypes:[keyType, valType, *_], int i) = [ key(keyType, i), val(valType, i) ];

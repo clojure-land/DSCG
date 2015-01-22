@@ -167,14 +167,16 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	<implOrOverride(ts.CompactNode_nodeIndex,
 		"return <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___bitmapMethod(bitPartitionSize))> & (bitpos - 1));", doOverride = new())>
 
-	<toString(ts.keyType)> keyAt(<dec(ts.bitposField)>) {
-		return getKey(dataIndex(bitpos)); 
-	}
-
-	<if (\map() := ts.ds) {>
-	<toString(__returnTypeOf_AbstractNode_getValue(ts.ds, ts.tupleTypes))> valAt(<dec(ts.bitposField)>) {
-		return getValue(dataIndex(bitpos)); 
-	}
+	<if(false) {>
+//	<toString(ts.keyType)> keyAt(<dec(ts.bitposField)>) {
+//		return getKey(dataIndex(bitpos)); 
+//	}
+//
+//	<if (\map() := ts.ds) {>
+//	<toString(__returnTypeOf_AbstractNode_getValue(ts.ds, ts.tupleTypes))> valAt(<dec(ts.bitposField)>) {
+//		return getValue(dataIndex(bitpos)); 
+//	}
+//	<}>
 	<}>
 
 	<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeAt(<dec(ts.bitposField)>) {
@@ -457,10 +459,11 @@ str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___
 	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
 
 	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
-	'	if (<eq(key(ts.keyType, "keyAt(bitpos)"), key(ts.keyType))>) {
-	'		<dec(val(ts.valType, "_val"))> = valAt(bitpos);
+	'	<dec(ts.index)> = dataIndex(bitpos);
+	'	if (<eq(key(ts.keyType, "getKey(<use(ts.index)>)"), key(ts.keyType))>) {
+	'		<dec(collTupleArg(ts, 1))> = <toString(call(ts.AbstractNode__getValueAsCollection))>;
 	'
-	'		return Optional.of(<use(key(ts.keyType, "_val"))>);
+	'		return Optional.of(<use(collTupleArg(ts, 1))>);
 	'	}
 	'
 	'	return Optional.empty();
@@ -552,15 +555,15 @@ default str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq
 		
 str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"final int valHash = <hashCode(val(ts.valType))>;
-	'<dec(field(__returnTypeOf_AbstractNode_getValue(ts.ds, ts.tupleTypes), "valNode"))> = CompactSetNode.EMPTY_NODE.<toString(call(tsSet.AbstractNode_updated, 
+	'<dec(nodeTupleArg(ts, 1))> = CompactSetNode.EMPTY_NODE.<toString(call(tsSet.AbstractNode_updated, 
 					argsOverride = (tsSet.mutator: NULL(), 
 						key(tsSet.keyType): useExpr(val(ts.valType)), 
 						tsSet.keyHash: exprFromString("improve(valHash)"), 
 						tsSet.shift: constant(tsSet.shift.\type, "0"),
 						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
 	'
-	'<dec(val(__returnTypeOf_AbstractNode_getValue(ts.ds, ts.tupleTypes), "currentVal"))> = getValue(dataIndex);
-	'final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentVal, improve(<hashCode(key(ts.keyType, "currentKey"))>), key, valNode, keyHash, shift + BIT_PARTITION_SIZE);
+	'<dec(replaceName(nodeTupleArg(ts, 1), "currentValNode"))> = getValue(dataIndex);
+	'final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentValNode, improve(<hashCode(key(ts.keyType, "currentKey"))>), key, valNode, keyHash, shift + BIT_PARTITION_SIZE);
 	'
 	'details.modified();
 	'return copyAndMigrateFromInlineToNode(mutator, bitpos, subNodeNew);" 
@@ -577,7 +580,7 @@ default str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq) =
 		
 str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"final int valHash = <hashCode(val(ts.valType))>;
-	'<dec(field(__returnTypeOf_AbstractNode_getValue(ts.ds, ts.tupleTypes), "valNode"))> = CompactSetNode.EMPTY_NODE.<toString(call(tsSet.AbstractNode_updated, 
+	'<dec(nodeTupleArg(ts, 1))> = CompactSetNode.EMPTY_NODE.<toString(call(tsSet.AbstractNode_updated, 
 					argsOverride = (tsSet.mutator: NULL(), 
 						key(tsSet.keyType): useExpr(val(ts.valType)), 
 						tsSet.keyHash: exprFromString("improve(valHash)"), 

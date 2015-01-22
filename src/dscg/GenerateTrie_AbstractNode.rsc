@@ -67,9 +67,11 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 	
 	
 		<dec(ts.AbstractNode_getKey, asAbstract = true)>
-		<dec(ts.AbstractNode_getValue, asAbstract = true)>				
+		<dec(ts.AbstractNode_getValue, asAbstract = true)>
 		<dec(ts.AbstractNode_getKeyValueEntry, asAbstract = true)>	
 	
+		<dec(ts.AbstractNode__getValueAsCollection, asAbstract = true)>
+			
 		<dec(ts.AbstractNode_hasPayload, asAbstract = true)>
 		<dec(ts.AbstractNode_payloadArity, asAbstract = true)>
 
