@@ -13,7 +13,7 @@ module dscg::GenerateTrie_Core_Common
 
 import List;
 import String;
-import dscg::Common;
+extend dscg::Common;
 
 str generate_checkHashCodeAndSize(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
 	"
@@ -95,12 +95,12 @@ when \map() := ts.ds
 default str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) = "";
 
 str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) = 
-	"Collection\<<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>\> values = null;
+	"Collection\<<toString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\> values = null;
 	'
 	'if (values == null) {
-	'	values = new AbstractCollection\<<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>\>() {
+	'	values = new AbstractCollection\<<toString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\>() {
 	'		@Override
-	'		public Iterator\<<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>\> iterator() {
+	'		public Iterator\<<toString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\> iterator() {
 	'			return <enclosingClass>.this.valueIterator();
 	'		}
 	'
@@ -296,4 +296,52 @@ default str generate_bodyOf_CoreCommon_containsValue(TrieSpecifics ts, rel[Optio
 		}
 		return false;"
 	;
+
+
+
+
+
+data PredefOp = valueCollectionsSpliterator();
+
+Method getDef(TrieSpecifics ts, valueCollectionsSpliterator(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) 
+	= method(\return(generic("Spliterator\<<toString(primitiveToClass(dsAtFunction__range_type(ts)))>\>")), "valueCollectionsSpliterator", visibility = "private", isActive = \map(multi = true) := ts.ds)
+when core(_) := ts.artifact;
+
+str generate_bodyOf(ts, valueCollectionsSpliterator()) = 
+	"/* TODO: specialize between mutable / immutable ({@see Spliterator.IMMUTABLE}) */
+	'int characteristics = Spliterator.NONNULL | Spliterator.SIZED | Spliterator.SUBSIZED;
+	'return Spliterators.spliterator(new <toString(ts.ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode), size(), characteristics);"
+when core(_) := ts.artifact;
+
+
+
+
+
+data PredefOp = valueCollectionsStream();
+
+Method getDef(TrieSpecifics ts, valueCollectionsStream(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) 
+	= method(\return(generic("Stream\<<toString(primitiveToClass(dsAtFunction__range_type(ts)))>\>")), "valueCollectionsStream", visibility = "private", isActive = \map(multi = true) := ts.ds)
+when core(_) := ts.artifact;
 	
+str generate_bodyOf(ts, valueCollectionsStream()) = 
+	"boolean isParallel = false;
+	'return StreamSupport.stream(valueCollectionsSpliterator(), isParallel);"
+when core(_) := ts.artifact;
+
+
+
+
+
+data PredefOp = valueIterator();
+
+Method getDef(TrieSpecifics ts, valueIterator())
+	= method(\return(generic("Iterator\<<toString(primitiveToClass(ts.valType))>\>")), "valueIterator", visibility = "public", isActive = \map() := ts.ds)
+when core(_) := ts.artifact;
+
+str generate_bodyOf(ts, valueIterator()) = 
+	"return new <toString(ts.ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);"
+when core(_) := ts.artifact && \map(multi = false) := ts.ds;
+
+str generate_bodyOf(ts, valueIterator()) = 
+	"return valueCollectionsStream().flatMap(Set::stream).iterator();"
+when core(_) := ts.artifact && \map(multi = true) := ts.ds;

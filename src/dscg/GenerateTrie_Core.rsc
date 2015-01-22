@@ -13,10 +13,12 @@ module dscg::GenerateTrie_Core
 
 import List;
 import String;
-import dscg::Common;
+extend dscg::Common;
 import dscg::GenerateTrie_Core_Common;
 
-str generateCoreClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str innerClassesString) {
+str generateCoreClassString(tsSuper, rel[Option,bool] setup, str innerClassesString) {
+	
+	TrieSpecifics ts = setArtifact(tsSuper, core(immutable()));
 	
 	str emptyCollectionConstantName = "EMPTY_<toUpperCase(toString(ts.ds))>";
 	str emptyTrieNodeConstantName   = "EMPTY_NODE";
@@ -55,6 +57,11 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
 
 @SuppressWarnings(\"rawtypes\")
 public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
@@ -82,7 +89,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		return <ts.coreClassName>.<emptyCollectionConstantName>;
 	}
 
-	<if (\map() := ds) {>
+	<if (\map() := ts.ds) {>
 	<toString(UNCHECKED_ANNOTATION())>
 	public static final <Generics(ts.ds, ts.tupleTypes)> Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> of(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
@@ -102,7 +109,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	}
 	<}>
 	
-	<if (ds == \set()) {>
+	<if (ts.ds == \set()) {>
 	<toString(UNCHECKED_ANNOTATION())>
 	public static final <Generics(ts.ds, ts.tupleTypes)> Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> of(<toString(ts.keyType)>... keys) {
 		Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>;
@@ -120,7 +127,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		return <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 	}
 
-	<if (\map() := ds) {>
+	<if (\map() := ts.ds) {>
 	<toString(UNCHECKED_ANNOTATION())>
 	public static final <Generics(ts.ds, ts.tupleTypes)> Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> transientOf(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
@@ -141,7 +148,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	}
 	<}>
 	
-	<if (ds == \set()) {>
+	<if (ts.ds == \set()) {>
 	<toString(UNCHECKED_ANNOTATION())>
 	public static final <Generics(ts.ds, ts.tupleTypes)> Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> transientOf(<toString(ts.keyType)>... keys) {
 		final Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
@@ -223,7 +230,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	<implOrOverride(ts.CoreCommon_isEmpty,
 		"return cachedSize == 0;")>
 
-	<if (ds == \set()) {>
+	<if (ts.ds == \set()) {>
 	@Override
 	public Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)> iterator() {
 		return keyIterator();
@@ -235,17 +242,18 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		<generate_bodyOf_keyIterator(ts, ts.setup)>
 	}
 
-	<if (\map() := ds) {>
-	@Override
-	public Iterator\<<toString(primitiveToClass(ts.valType))>\> valueIterator() {
-		return new <toString(ts.ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);
-	}
+	<impl(ts, valueIterator())>
 
+	<if (\map() := ts.ds) {>
 	@Override
 	public Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entryIterator() {
 		return new <toString(ts.ds)>EntryIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);
 	}
 	<}>
+
+	<impl(ts, valueCollectionsSpliterator())>
+
+	<impl(ts, valueCollectionsStream())>
 
 	<implOrOverride(ts.jul_Map_keySet, generate_bodyOf_jul_Map_keySet(ts, ts.coreClassName))>
 		
@@ -378,7 +386,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	 */
 	protected int[][] arityCombinationsHistogram() {
 		final Iterator\<<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>\> it = nodeIterator();
-		final int[][] sumArityCombinations = new int[<nMax+1>][<nMax+1>];
+		final int[][] sumArityCombinations = new int[<ts.nMax+1>][<ts.nMax+1>];
 
 		while (it.hasNext()) {
 			final <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node = it.next();
@@ -393,9 +401,9 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	 */
 	protected int[] arityHistogram() {
 		final int[][] sumArityCombinations = arityCombinationsHistogram();
-		final int[] sumArity = new int[<nMax+1>];
+		final int[] sumArity = new int[<ts.nMax+1>];
 
-		final int maxArity = <nMax>; // TODO: factor out constant
+		final int maxArity = <ts.nMax>; // TODO: factor out constant
 
 		for (int j = 0; j \<= maxArity; j++) {
 			for (int maxRestArity = maxArity - j, k = 0; k \<= maxRestArity - j; k++) {
@@ -414,14 +422,14 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		final int[] sumArity = arityHistogram();
 		final int sumNodes = getNodeCount();
 
-		final int[] cumsumArity = new int[<nMax+1>];
-		for (int cumsum = 0, i = 0; i \< <nMax+1>; i++) {
+		final int[] cumsumArity = new int[<ts.nMax+1>];
+		for (int cumsum = 0, i = 0; i \< <ts.nMax+1>; i++) {
 			cumsum += sumArity[i];
 			cumsumArity[i] = cumsum;
 		}
 
 		final float threshhold = 0.01f; // for printing results
-		for (int i = 0; i \< <nMax+1>; i++) {
+		for (int i = 0; i \< <ts.nMax+1>; i++) {
 			float arityPercentage = (float) (sumArity[i]) / sumNodes;
 			float cumsumArityPercentage = (float) (cumsumArity[i]) / sumNodes;
 

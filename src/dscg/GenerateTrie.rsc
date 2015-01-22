@@ -22,7 +22,6 @@ import dscg::GenerateImmutableMap;
 import dscg::GenerateTrie_Optional;
 import dscg::GenerateTrie_Result;
 
-import dscg::GenerateTrie_ImmutableInterface;
 import dscg::GenerateTrie_AbstractAnyNode;
 import dscg::GenerateTrie_AbstractNode;
 import dscg::GenerateTrie_CompactNode;
@@ -34,6 +33,7 @@ import dscg::GenerateTrie_NodeIterator;
 import dscg::GenerateTrie_Core_Common;
 import dscg::GenerateTrie_Core;
 import dscg::GenerateTrie_CoreTransient;
+import dscg::GenerateTrie_ImmutableInterface;
 
 data TrieConfig 
 	= hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes, SpecializationConfig specializationConfig);
@@ -149,7 +149,7 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 		<usePathCompression(),false>	
 	}; // { compactionViaFieldToMethod() };
 
-	return trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup);
+	return trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup, unknownArtifact());
 }
 
 void doGenerate(TrieConfig cfg, str overideClassNamePostfixWith = "") {
@@ -186,7 +186,7 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 
 	innerClassStrings 
 		= innerClassStrings
-		+ [ generateHashCollisionNodeClassString(ts, ts.setup, ts.classNamePostfix)]
+		// + [ generateHashCollisionNodeClassString(ts, ts.setup, ts.classNamePostfix)] // temporarily off
 		+ [ generateIteratorClassString(ts, ts.setup)] // , classNamePostfix
 		;
 	

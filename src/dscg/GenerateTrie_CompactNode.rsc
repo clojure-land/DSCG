@@ -461,7 +461,7 @@ str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___
 	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
 	'	<dec(ts.index)> = dataIndex(bitpos);
 	'	if (<eq(key(ts.keyType, "getKey(<use(ts.index)>)"), key(ts.keyType))>) {
-	'		<dec(collTupleArg(ts, 1))> = <toString(call(ts.AbstractNode__getValueAsCollection))>;
+	'		<dec(collTupleArg(ts, 1))> = <toString(call(ts.AbstractNode_getValue))>; // AbstractNode__getValueAsCollection 
 	'
 	'		return Optional.of(<use(collTupleArg(ts, 1))>);
 	'	}
@@ -524,17 +524,21 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecif
 	"<dec(nodeTupleArg(ts, 1))> = getValue(dataIndex);
 	'
 	'final int valHash = <hashCode(val(ts.valType))>;
-	'if(valNode.<toString(call(tsSet.AbstractNode_containsKey, 
+	'// if(<use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_containsKey, 
 					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: exprFromString("improve(valHash)"), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
+	'if(<use(collTupleArg(ts, 1))>.<toString(call(tsSet.Core_containsKey, 
+					argsOverride = (tsSet.stdObjectArg: useExpr(val(ts.valType)))))>) {
 	'	return this;
 	'} else {
 	'	// add new mapping
-	'	<dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_updated, 
+	'	// <dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_updated, 
 					argsOverride = (tsSet.mutator: NULL(), 
 						key(tsSet.keyType): useExpr(val(ts.valType)), 
 						tsSet.keyHash: exprFromString("improve(valHash)"), 
 						tsSet.shift: constant(tsSet.shift.\type, "0"),
 						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
+	'	<dec(appendToName(collTupleArg(ts, 1), "New"))> = <use(collTupleArg(ts, 1))>.<toString(call(tsSet.Core_updated, 
+					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)))))>;
 	'
 	'	details.modified();
 	'	return copyAndSetValue(mutator, bitpos, <use(appendToName(nodeTupleArg(ts, 1), "New"))>);
@@ -555,15 +559,16 @@ default str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq
 		
 str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"final int valHash = <hashCode(val(ts.valType))>;
-	'<dec(nodeTupleArg(ts, 1))> = CompactSetNode.EMPTY_NODE.<toString(call(tsSet.AbstractNode_updated, 
+	'// <dec(nodeTupleArg(ts, 1))> = CompactSetNode.EMPTY_NODE.<toString(call(tsSet.AbstractNode_updated, 
 					argsOverride = (tsSet.mutator: NULL(), 
 						key(tsSet.keyType): useExpr(val(ts.valType)), 
 						tsSet.keyHash: exprFromString("improve(valHash)"), 
 						tsSet.shift: constant(tsSet.shift.\type, "0"),
 						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
+	' <dec(collTupleArg(ts, 1))> = <tsSet.coreClassName>.of(<use(val(ts.valType))>);
 	'
 	'<dec(replaceName(nodeTupleArg(ts, 1), "currentValNode"))> = getValue(dataIndex);
-	'final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentValNode, improve(<hashCode(key(ts.keyType, "currentKey"))>), key, valNode, keyHash, shift + BIT_PARTITION_SIZE);
+	'final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentValNode, improve(<hashCode(key(ts.keyType, "currentKey"))>), key, <use(collTupleArg(ts, 1))>, keyHash, shift + BIT_PARTITION_SIZE);
 	'
 	'details.modified();
 	'return copyAndMigrateFromInlineToNode(mutator, bitpos, subNodeNew);" 
@@ -580,12 +585,13 @@ default str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq) =
 		
 str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"final int valHash = <hashCode(val(ts.valType))>;
-	'<dec(nodeTupleArg(ts, 1))> = CompactSetNode.EMPTY_NODE.<toString(call(tsSet.AbstractNode_updated, 
+	'// <dec(nodeTupleArg(ts, 1))> = CompactSetNode.EMPTY_NODE.<toString(call(tsSet.AbstractNode_updated, 
 					argsOverride = (tsSet.mutator: NULL(), 
 						key(tsSet.keyType): useExpr(val(ts.valType)), 
 						tsSet.keyHash: exprFromString("improve(valHash)"), 
 						tsSet.shift: constant(tsSet.shift.\type, "0"),
 						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
+	' <dec(collTupleArg(ts, 1))> = <tsSet.coreClassName>.of(<use(val(ts.valType))>);
 	'
 	'details.modified();
 	'return copyAndInsertValue(mutator, bitpos, <use(nodeTupleArgs(ts))>);"
@@ -691,19 +697,23 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 	"<dec(nodeTupleArg(ts, 1))> = getValue(dataIndex); 
 	'
 	'final int valHash = <hashCode(val(ts.valType))>;
-	'if(<use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_containsKey, 
+	'// if(<use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_containsKey, 
 					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: exprFromString("improve(valHash)"), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
+	' if(<use(collTupleArg(ts, 1))>.<toString(call(tsSet.Core_containsKey, 
+					argsOverride = (tsSet.stdObjectArg: useExpr(val(ts.valType)))))>) {
 	'	details.updated(<use(val(ts.valType))>);
 	'	
 	'	// remove mapping
-	'	<dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_removed, 
+	'	// <dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_removed, 
 					argsOverride = (tsSet.mutator: NULL(), 
 						key(tsSet.keyType): useExpr(val(ts.valType)), 
 						tsSet.keyHash: exprFromString("improve(valHash)"), 
 						tsSet.shift: constant(tsSet.shift.\type, "0"),
 						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
-	'
-	'	if (<use(appendToName(nodeTupleArg(ts, 1), "New"))>.arity() == 0) {
+	'	<dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.Core_removed, 
+					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)))))>;
+	'	
+	'	if (<use(appendToName(nodeTupleArg(ts, 1), "New"))>.size() == 0) { // earlier: arity() == 0
 	'		<removed_value_block1(ts, ts.setup)> else <if (isOptionEnabled(ts.setup,useSpecialization())) {><removed_value_block2(ts, ts.setup)> else<}> {					
 	'			return copyAndRemoveValue(mutator, bitpos);
 	'		}
@@ -962,9 +972,10 @@ default str generate_bodyOf_bitpos(TrieSpecifics ts, Method decleration) =
 default str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts) = 
 	"assert !(<equalityDefaultForArguments(key(ts.keyType, "key0"), key(ts.keyType, "key1"))>);
 	
-		if (<use(ts.shift)> \>= HASH_CODE_LENGTH) {
-		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<toString(nodeTupleType(ts, 0))>[]) new <if (isPrimitive(nodeTupleArg(ts, 0))) {><toString(nodeTupleType(ts, 0))><} else {>Object<}>[] { <use(appendToName([ "0", "1" ], nodeTupleArg(ts, 0)))> }
-						<if (\map() := ts.ds) {>, (<toString(nodeTupleType(ts, 1))>[]) new <if (isPrimitive(nodeTupleArg(ts, 1))) {><toString(nodeTupleType(ts, 1))><} else {>Object<}>[] { <use(appendToName([ "0", "1" ], nodeTupleArg(ts, 1)))> }<}>);
+	if (<use(ts.shift)> \>= HASH_CODE_LENGTH) {
+		throw new IllegalStateException(\"Hash collision not yet fixed.\");
+		//return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<toString(nodeTupleType(ts, 0))>[]) new <if (isPrimitive(nodeTupleArg(ts, 0))) {><toString(nodeTupleType(ts, 0))><} else {>Object<}>[] { <use(appendToName([ "0", "1" ], nodeTupleArg(ts, 0)))> }
+		//				<if (\map() := ts.ds) {>, (<toString(nodeTupleType(ts, 1))>[]) new <if (isPrimitive(nodeTupleArg(ts, 1))) {><toString(nodeTupleType(ts, 1))><} else {>Object<}>[] { <use(appendToName([ "0", "1" ], nodeTupleArg(ts, 1)))> }<}>);
 	}
 
 	<dec(ts.mask0)> = <toString(call(ts.CompactNode_mask, argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;

@@ -13,6 +13,7 @@ module dscg::GenerateTrie_ImmutableInterface
 
 import dscg::Common;
 import dscg::GenerateTrie;
+import dscg::GenerateTrie_Core_Common;
 
 str copyrightHeaderWithPackageAndImports = 
 "/*******************************************************************************
@@ -73,7 +74,7 @@ str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) =
 	<dec(ts.Core_retainAllEquiv)>
 	
 	<dec(ts.Core_keyIterator)>
-	<dec(ts.Core_valueIterator)>
+	<dec(getDef(setArtifact(ts, core(immutable())), valueIterator()))>
 	<dec(ts.Core_entryIterator)>
 	
 	<dec(ts.Core_isTransientSupported)>	
@@ -122,7 +123,7 @@ str generate_bodyOf_TransientInterface(TrieSpecifics ts) =
 	<dec(ts.CoreTransient_retainAllEquiv)>
 	
 	<dec(ts.Core_keyIterator)>
-	<dec(ts.Core_valueIterator)>
+	<dec(getDef(setArtifact(ts, core(transient())), valueIterator()))>
 	<dec(ts.Core_entryIterator)>
 		
 	<dec(ts.CoreTransient_freeze)>	
