@@ -31,7 +31,7 @@ public str targetFolder = "src/<replaceAll(targetBasePackage, ".", "/")>";
 
 /* DATA SECTION */
 data DataStructure
-	= \map(bool multi = false)
+	= \map(bool multi = false, DataStructure multiValueSemantics = \set())
 	| \set()
 	| \vector()
 	;
@@ -190,7 +190,12 @@ when __def.isActive;
 
 data Artifact
 	= unknownArtifact()
-	| core(UpdateSemantic updateSemantic);
+	| core(UpdateSemantic updateSemantic)
+	| trieNode(TrieNodeType trieNodeType);
+
+data TrieNodeType
+	= abstractNode()
+	| compactNode();
 	
 data UpdateSemantic
 	= immutable()
@@ -200,7 +205,7 @@ data UpdateSemantic
 data PredefOp
 	= noop();
 
-default Method getDef(TrieSpecifics ts, PredefOp op) { throw "Ahhh"; } // TODO noop
+default Method getDef(TrieSpecifics ts, PredefOp op) { throw "Not found <op> in context <ts.artifact> for <ts.ds>"; } // TODO noop
 
 default str generate_bodyOf(TrieSpecifics ts, PredefOp op) = "";
 
@@ -749,13 +754,13 @@ default Argument asField(Argument a) { throw "You forgot <a>!"; }
 /***/
 list[Argument] asFieldList(list[Argument] xs) = mapper(xs, asField);
 
-str toString(\map(multi = false)) = "Map";
-str toString(\map(multi = true)) = "Multimap";
-str toString(\set()) = "Set";
-str toString(\vector()) = "Vector";
+str toString(ds:\map(multi = false)) = "Map";
+str toString(ds:\map(multi = true)) = "<toString(ds.multiValueSemantics)>Multimap";
+str toString(ds:\set()) = "Set";
+str toString(ds:\vector()) = "Vector";
 default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 
-str dec(Method m:method, bool asAbstract = false) = "<if (asAbstract) {>abstract <}><toString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>);" when m.isActive;
+str dec(Method m:method, bool asAbstract = false) = "<if (asAbstract) {>abstract <}> <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>);" when m.isActive;
 str dec(Method m:method, bool asAbstract = false) = "" when !m.isActive;
 default str dec(Method m, bool asAbstract = false) { throw "You forgot <m>!"; }
 
@@ -1152,3 +1157,84 @@ default str noop(_, _) = "";
 
 str immutableInterfaceName(DataStructure ds) = "Immutable<toString(ds)>";
 str transientInterfaceName(DataStructure ds) = "Transient<toString(ds)>"; 
+
+
+
+
+
+data PredefOp = getTuple();
+
+Method getDef(TrieSpecifics ts, getTuple())
+	= method(\return(generic("T")), "getTuple", args = [ ts.index, field(generic("BiFunction\<K, V, T\>"), "tupleOf") ], generics = "\<T\>", isActive = true) // \map(multi = true) := ts.ds
+; // when trieNode(_) := ts.artifact;
+
+str generate_bodyOf(TrieSpecifics ts, getTuple()) = 
+	"return tupleOf.apply((<toString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<toString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);"
+; // when trieNode(_) := ts.artifact;
+
+
+
+
+
+data PredefOp = valueIterator();
+
+Method getDef(TrieSpecifics ts, valueIterator())
+	= method(\return(generic("Iterator\<<toString(primitiveToClass(ts.valType))>\>")), "valueIterator", visibility = "public", isActive = \map() := ts.ds)
+when core(_) := ts.artifact;
+
+str generate_bodyOf(ts, op:valueIterator()) = generate_bodyOf_CoreCommon_valueIterator(ts, op); 
+
+default str generate_bodyOf_CoreCommon_valueIterator(_, _) { throw "Ahhh"; }
+
+str generate_bodyOf_CoreCommon_valueIterator(ts, valueIterator()) = 
+	"return new <toString(ts.ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);"
+when core(_) := ts.artifact && \map(multi = false) := ts.ds;
+
+str generate_bodyOf_CoreCommon_valueIterator(ts, valueIterator()) = 
+	"return valueCollectionsStream().flatMap(Set::stream).iterator();"
+when core(_) := ts.artifact && \map(multi = true) := ts.ds;
+
+
+
+
+
+data PredefOp = valueCollectionsSpliterator();
+
+Method getDef(TrieSpecifics ts, valueCollectionsSpliterator(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) 
+	= method(\return(generic("Spliterator\<<toString(primitiveToClass(dsAtFunction__range_type(ts)))>\>")), "valueCollectionsSpliterator", visibility = "private", isActive = \map(multi = true) := ts.ds)
+when core(_) := ts.artifact;
+
+str generate_bodyOf(ts, valueCollectionsSpliterator()) = 
+	"/* TODO: specialize between mutable / immutable ({@see Spliterator.IMMUTABLE}) */
+	'int characteristics = Spliterator.NONNULL | Spliterator.SIZED | Spliterator.SUBSIZED;
+	'return Spliterators.spliterator(new <toString(ts.ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode), size(), characteristics);"
+when core(_) := ts.artifact;
+
+
+
+
+
+data PredefOp = valueCollectionsStream();
+
+Method getDef(TrieSpecifics ts, valueCollectionsStream(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) 
+	= method(\return(generic("Stream\<<toString(primitiveToClass(dsAtFunction__range_type(ts)))>\>")), "valueCollectionsStream", visibility = "private", isActive = \map(multi = true) := ts.ds)
+when core(_) := ts.artifact;
+	
+str generate_bodyOf(ts, valueCollectionsStream()) = 
+	"boolean isParallel = false;
+	'return StreamSupport.stream(valueCollectionsSpliterator(), isParallel);"
+when core(_) := ts.artifact;
+
+
+
+
+
+data PredefOp = tupleIterator();
+
+Method getDef(TrieSpecifics ts, tupleIterator())
+	= method(\return(generic("Iterator\<T\>")), "tupleIterator", args = [ field(generic("BiFunction\<K, V, T\>"), "tupleOf") ], visibility = "public", generics = "\<T\>", isActive = \map(multi = true) := ts.ds)
+when core(_) := ts.artifact;
+
+str generate_bodyOf(ts, tupleIterator()) = 
+	"return new <toString(ts.ds)>TupleIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode, tupleOf);"
+when core(_) := ts.artifact;

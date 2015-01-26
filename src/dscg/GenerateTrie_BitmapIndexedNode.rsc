@@ -60,6 +60,8 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			"return entryOf((<toString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<toString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);",
 			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.keyType) && !isPrimitive(ts.valType)) ])>
 
+		<impl(ts, getTuple())>
+
 		<implOrOverride(ts.CompactNode_getNode, generate_bodyOf_getNode(ts),
 			annotations = [ UNCHECKED_ANNOTATION() ])>
 

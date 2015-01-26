@@ -250,6 +250,8 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		return new <toString(ts.ds)>EntryIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);
 	}
 	<}>
+	
+	<impl(ts, tupleIterator())>
 
 	<impl(ts, valueCollectionsSpliterator())>
 

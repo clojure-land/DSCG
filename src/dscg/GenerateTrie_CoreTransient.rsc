@@ -220,6 +220,11 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		}
 		<}>
 
+		/*
+		 * NOTE: iterator does not support removal
+		 */
+		<impl(ts, tupleIterator())>
+
 		<impl(ts, valueCollectionsSpliterator())>
 	
 		<impl(ts, valueCollectionsStream())>
@@ -430,7 +435,7 @@ str insertOrPutAll(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax
 	public boolean <methodName>(<dec(filterArgs(args))>) {
 		boolean modified = false;
 
-		for (Map.Entry<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)> entry : <toLowerCase(toString(ts.ds))>.entrySet()) {
+		for (Map.Entry<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)> entry : <uncapitalize(toString(ts.ds))>.entrySet()) {
 			final boolean isPresent = containsKey<if (useComparator) {>Equivalent<}>(entry.getKey()<if (useComparator) {>, cmp<}>);
 			<dec(primitiveToClassArgument(val(ts.valType, "replaced")))> = __put<if (useComparator) {>Equivalent<}>(entry.getKey(), entry.getValue()<if (useComparator) {>, cmp<}>);
 

@@ -178,5 +178,33 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		}<}>
 	}
 	<}>
+	
+	<if (\map(multi = true) := ds) {>
+	private static final class <toString(ts.ds)>TupleIterator\<K, V, T\> extends Abstract<toString(ts.ds)>Iterator\<K, V\> implements
+			<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator\<Map.Entry<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>, <toString(primitiveToClass(ts.keyType))>\><} else {>Iterator\<T\><}> {
+
+		final BiFunction\<K, V, T\> tupleOf;
+
+		<toString(ts.ds)>TupleIterator(<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> rootNode, final BiFunction\<K, V, T\> tupleOf) {
+			super(rootNode);
+			this.tupleOf = tupleOf;
+		}
+
+		@Override
+		public T next() {
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			} else {
+				return currentValueNode.getTuple(currentValueCursor++, tupleOf);
+			}
+		}
+
+		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
+		@Override
+		public <toString(primitiveToClass(ts.keyType))> get() {
+			throw new UnsupportedOperationException();
+		}<}>
+	}		
+	<}>
 	"
 	;
