@@ -59,6 +59,9 @@ str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) =
 	<dec(ts.CoreCommon_containsValue)>
 	<dec(ts.CoreCommon_containsValueEquiv)>
 	
+	<dec(getDef(setArtifact(ts, core(immutable())), containsEntry()))>
+	<dec(getDef(setArtifact(ts, core(immutable())), containsEntry(customComparator = true)))>
+	
 	<dec(ts.Core_updated)>
 	<dec(ts.Core_updatedEquiv)>
 	
@@ -76,7 +79,7 @@ str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) =
 	
 	<dec(ts.Core_keyIterator)>
 	<dec(getDef(setArtifact(ts, core(immutable())), valueIterator()))>
-	<dec(ts.Core_entryIterator)>
+	<dec(getDef(setArtifact(ts, core(immutable())), entryIterator()))>
 	<dec(getDef(setArtifact(ts, core(immutable())), tupleIterator()))>
 	
 	<dec(ts.Core_isTransientSupported)>	
@@ -105,7 +108,10 @@ str generate_bodyOf_TransientInterface(TrieSpecifics ts) =
 	
 	<dec(ts.CoreCommon_containsValue)>
 	<dec(ts.CoreCommon_containsValueEquiv)>	
-
+	
+	<dec(getDef(setArtifact(ts, core(transient())), containsEntry()))>
+	<dec(getDef(setArtifact(ts, core(transient())), containsEntry(customComparator = true)))>	
+	
 	<dec(ts.CoreTransient_insert)>
 	<dec(ts.CoreTransient_insertEquiv)>
 
@@ -126,7 +132,7 @@ str generate_bodyOf_TransientInterface(TrieSpecifics ts) =
 	
 	<dec(ts.Core_keyIterator)>
 	<dec(getDef(setArtifact(ts, core(transient())), valueIterator()))>
-	<dec(ts.Core_entryIterator)>
+	<dec(getDef(setArtifact(ts, core(transient())), entryIterator()))>
 	<dec(getDef(setArtifact(ts, core(transient())), tupleIterator()))>
 		
 	<dec(ts.CoreTransient_freeze)>	

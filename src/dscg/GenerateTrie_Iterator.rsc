@@ -128,7 +128,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		@Override
 		public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
 			throw new UnsupportedOperationException();
-		}<}>
+		}<}>		
 	}
 
 	<if (\map() := ds) {>
@@ -175,7 +175,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		@Override
 		public <toString(primitiveToClass(ts.keyType))> get() {
 			throw new UnsupportedOperationException();
-		}<}>
+		}<}>		
 	}
 	<}>
 	
@@ -185,17 +185,36 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 
 		final BiFunction\<K, V, T\> tupleOf;
 
+		K currentKey = null;
+		Iterator\<V\> currentSetIterator = Collections.emptyIterator();
+
 		<toString(ts.ds)>TupleIterator(<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> rootNode, final BiFunction\<K, V, T\> tupleOf) {
 			super(rootNode);
 			this.tupleOf = tupleOf;
 		}
 
-		@Override
+		public boolean hasNext() {
+			if (currentSetIterator.hasNext()) {
+				return true; 				
+			} else {
+				if (super.hasNext()) {
+					currentKey = currentValueNode.getKey(currentValueCursor);
+					currentSetIterator = currentValueNode.getValue(currentValueCursor).iterator();
+					currentValueCursor++;
+					
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
+
+		@Override		
 		public T next() {
 			if (!hasNext()) {
 				throw new NoSuchElementException();
 			} else {
-				return currentValueNode.getTuple(currentValueCursor++, tupleOf);
+				return tupleOf.apply(currentKey, currentSetIterator.next());
 			}
 		}
 
@@ -203,8 +222,8 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		@Override
 		public <toString(primitiveToClass(ts.keyType))> get() {
 			throw new UnsupportedOperationException();
-		}<}>
-	}		
+		}<}>		
+	}
 	<}>
 	"
 	;

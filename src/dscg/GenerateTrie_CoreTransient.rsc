@@ -81,6 +81,9 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		
 		<implOrOverride(ts.CoreCommon_containsValue, 		generate_bodyOf_CoreCommon_containsValue(ts, setup, equalityDefaultForArguments		))>
 		<implOrOverride(ts.CoreCommon_containsValueEquiv,	generate_bodyOf_CoreCommon_containsValue(ts, setup, equalityComparatorForArguments	))>		
+
+		<impl(ts, containsEntry())>
+		<impl(ts, containsEntry(customComparator = true))>
 		
 		@Override
 		public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get(Object o) {

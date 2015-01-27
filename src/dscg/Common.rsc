@@ -278,7 +278,7 @@ data TrieSpecifics
 		Method AbstractNode_containsKeyEquiv 	= method(\return(primitive("boolean")), "containsKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
 	
 		Method AbstractNode_findByKey 		= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift]),
-		Method AbstractNode_findByKeyEquiv 	= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
+		Method AbstractNode_findByKeyEquiv 	= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),
 		
 		Method AbstractNode_updated 		= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details]),
 		Method AbstractNode_updatedEquiv 	= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
@@ -296,7 +296,9 @@ data TrieSpecifics
 		str bitmapIndexedNodeClassName = "BitmapIndexed<toString(ds)>Node",
 		str hashCollisionClassName = "HashCollision<toString(ds)>Node<classNamePostfix>",		
 				
-		Argument stdObjectArg =  field(object(), "o"),				
+		Argument stdObjectArg =  field(object(), "o"),
+		Argument stdObjectArg0 =  field(object(), "o0"),
+		Argument stdObjectArg1 =  field(object(), "o1"),				
 				
 		Argument coreClassReturn = \return(generic("<coreClassName><GenericsStr>")),
 		Argument coreInterfaceReturn = \return(generic("<coreInterfaceName><GenericsExpanded(ds, tupleTypes)>")),
@@ -361,7 +363,7 @@ data TrieSpecifics
 		
 		Method Core_keyIterator = method(\return(generic("Iterator\<<toString(primitiveToClass(keyType))>\>")), "keyIterator", visibility = "public", isActive = true),
 		// moved: Method Core_valueIterator = method(\return(generic("Iterator\<<toString(primitiveToClass(valType))>\>")), "valueIterator", visibility = "public", isActive = \map() := ds),
-		Method Core_entryIterator = method(\return(generic("Iterator\<Map.Entry<GenericsStr>\>")), "entryIterator", visibility = "public", isActive = \map() := ds),
+		// moved: Method Core_entryIterator = method(\return(generic("Iterator\<Map.Entry<GenericsStr>\>")), "entryIterator", visibility = "public", isActive = \map() := ds),
 		
 		Method CompactNode_nodeMap 	= method(bitmapField, bitmapField.name),
 		Method CompactNode_dataMap 	= method(valmapField, valmapField.name),
@@ -1198,6 +1200,28 @@ when core(_) := ts.artifact && \map(multi = true) := ts.ds;
 
 
 
+data PredefOp = entryIterator();
+
+Method getDef(TrieSpecifics ts, entryIterator())
+	= method(\return(generic("Iterator\<Map.Entry<ts.GenericsStr>\>")), "entryIterator", visibility = "public", isActive = \map() := ts.ds)
+when core(_) := ts.artifact;
+
+str generate_bodyOf(ts, op:entryIterator()) = generate_bodyOf_CoreCommon_entryIterator(ts, op); 
+
+default str generate_bodyOf_CoreCommon_entryIterator(_, _) { throw "Ahhh"; }
+
+str generate_bodyOf_CoreCommon_entryIterator(ts, entryIterator()) = 
+	"return new <toString(ts.ds)>EntryIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);"
+when core(_) := ts.artifact && \map(multi = false) := ts.ds;
+
+str generate_bodyOf_CoreCommon_entryIterator(ts, entryIterator()) = 
+	"return new <toString(ts.ds)>TupleIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode, AbstractSpecialisedImmutableMap::entryOf);"
+when core(_) := ts.artifact && \map(multi = true) := ts.ds;
+
+
+
+
+
 data PredefOp = valueCollectionsSpliterator();
 
 Method getDef(TrieSpecifics ts, valueCollectionsSpliterator(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) 
@@ -1238,3 +1262,47 @@ when core(_) := ts.artifact;
 str generate_bodyOf(ts, tupleIterator()) = 
 	"return new <toString(ts.ds)>TupleIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode, tupleOf);"
 when core(_) := ts.artifact;
+
+
+
+
+
+data PredefOp = containsEntry(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, containsEntry(customComparator = false))
+	= method(\return(primitive("boolean")), "containsEntry", args = [ primitiveToClassArgument(ts.stdObjectArg0), primitiveToClassArgument(ts.stdObjectArg1) ], visibility = "public", isActive = \map(multi = true) := ts.ds)
+when core(_) := ts.artifact;
+
+Method getDef(TrieSpecifics ts, containsEntry(customComparator = true))
+	= method(\return(primitive("boolean")), "containsEntryEquivalent", 	args = [ primitiveToClassArgument(ts.stdObjectArg0), primitiveToClassArgument(ts.stdObjectArg1), ts.comparator ], visibility = "public", isActive = \map(multi = true) := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
+when core(_) := ts.artifact;
+
+/* TODO: call correct findByKey (propagate customComparator) */
+str generate_bodyOf(ts, containsEntry(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+	"try {
+		<toString(UNCHECKED_ANNOTATION())>
+		<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o0;
+		<toString(UNCHECKED_ANNOTATION())>
+		<dec(val(ts.valType))> = (<toString(ts.valType)>) o1;
+		final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.<toString(call(ts.AbstractNode_findByKey, 
+					argsOverride = (ts.keyHash: exprFromString("improve(<hashCode(key(ts.keyType))>)"), ts.shift: constant(ts.shift.\type, "0"))))>;
+
+		if (result.isPresent()) {
+			return result.get().<toString(call(tsSet.Core_containsKey, argsOverride = (tsSet.stdObjectArg: useExpr(val(ts.valType)))))>;
+		} else {
+			return false;
+		}			
+	} catch (ClassCastException unused) {
+		return false;
+	}"
+when core(_) := ts.artifact;
+
+
+
+
+
+data PredefOp = abstractNode_getKeyValueEntry();
+
+Method getDef(TrieSpecifics ts, abstractNode_getKeyValueEntry())
+	= method(\return(generic("java.util.Map.Entry\<<intercalate(", ", mapper(nodeTupleTypes(ts, tupleTypes), primitiveToClass o toString))>\>")), "getKeyValueEntry", args = [index], isActive = \map() := ts.ds)
+when trieNode(_) := ts.artifact;
