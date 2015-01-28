@@ -177,9 +177,20 @@ data Method
 	| function(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "")
 	| constructor(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "");
 
+Method javaConstructor(Type classType, list[Argument] args = [])
+	= constructor();	
+	
+/*
+
+constructor(Argument returnArg, "<classnamePrefixFor(ts.artifact)><toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>", list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "");
+javaClass(str name, 
 
 
 
+*/
+
+
+default str impl(TrieSpecifics ts, PredefOp op) = "";
 
 str impl(TrieSpecifics ts, PredefOp op, Method __def = getDef(ts, op)) 
 	= implOrOverride(__def, generate_bodyOf(ts, op), doOverride = \new())
@@ -210,7 +221,9 @@ default Method getDef(TrieSpecifics ts, PredefOp op) { throw "Not found <op> in 
 default str generate_bodyOf(TrieSpecifics ts, PredefOp op) = "";
 
 
-
+default str classnamePrefixFor(Artifact a) { throw "Not supported: <a>."; } 
+str classnamePrefixFor(core(immutable())) = "";
+str classnamePrefixFor(core(transient())) = "Transient";
 
 
 data Option // TODO: finish!
@@ -289,6 +302,7 @@ data TrieSpecifics
 		/* GENERATE_TRIE_CORE */
 		str coreClassName = "Trie<toString(ds)><classNamePostfix>",
 		str coreInterfaceName = "Immutable<toString(ds)>",
+		str coreSpecializedClassName = "AbstractSpecialisedImmutable<toString(ds)>",		
 		str coreTransientClassName = "TransientTrie<toString(ds)><classNamePostfix>",
 		str coreTransientInterfaceName = "TransientImmutable<toString(ds)>",
 		str abstractAnyNodeClassName = "INode",
@@ -1178,6 +1192,40 @@ str generate_bodyOf(TrieSpecifics ts, getTuple()) =
 
 
 
+data PredefOp = iterator();
+
+Method getDef(TrieSpecifics ts, iterator())
+	= method(\return(generic("Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)>")), "iterator", visibility = "public", isActive = ts.ds == \set())
+when core(_) := ts.artifact;
+
+str generate_bodyOf(ts, iterator()) = "return keyIterator();"; 
+
+
+
+
+
+data PredefOp = keyIterator();
+
+Method getDef(TrieSpecifics ts, keyIterator())
+	= method(\return(generic("Iterator\<<toString(primitiveToClass(ts.keyType))>\>")), "keyIterator", visibility = "public")
+when core(_) := ts.artifact && !isOptionEnabled(ts.setup, useSupplierIterator());
+
+Method getDef(TrieSpecifics ts, keyIterator())
+	= method(\return(generic("SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>")), "keyIterator", visibility = "public")
+when core(_) := ts.artifact && isOptionEnabled(ts.setup, useSupplierIterator());
+
+str generate_bodyOf(ts, op:keyIterator()) = generate_bodyOf_CoreCommon_keyIterator(ts, ts.setup); 
+
+str generate_bodyOf_CoreCommon_keyIterator(TrieSpecifics ts, rel[Option,bool] setup:{_*, <useFixedStackIterator(),true>}) = 
+	"return new <classnamePrefixFor(ts.artifact)><toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);";
+	
+default str generate_bodyOf_CoreCommon_keyIterator(TrieSpecifics ts, rel[Option,bool] setup) =
+	"return new <classnamePrefixFor(ts.artifact)><ts.coreClassName>Iterator<InferredGenerics(ts.ds, ts.tupleTypes)>((Compact<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)>) rootNode);";
+
+
+
+
+
 data PredefOp = valueIterator();
 
 Method getDef(TrieSpecifics ts, valueIterator())
@@ -1189,7 +1237,7 @@ str generate_bodyOf(ts, op:valueIterator()) = generate_bodyOf_CoreCommon_valueIt
 default str generate_bodyOf_CoreCommon_valueIterator(_, _) { throw "Ahhh"; }
 
 str generate_bodyOf_CoreCommon_valueIterator(ts, valueIterator()) = 
-	"return new <toString(ts.ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);"
+	"return new <classnamePrefixFor(ts.artifact)><toString(ts.ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);"
 when core(_) := ts.artifact && \map(multi = false) := ts.ds;
 
 str generate_bodyOf_CoreCommon_valueIterator(ts, valueIterator()) = 
@@ -1211,11 +1259,11 @@ str generate_bodyOf(ts, op:entryIterator()) = generate_bodyOf_CoreCommon_entryIt
 default str generate_bodyOf_CoreCommon_entryIterator(_, _) { throw "Ahhh"; }
 
 str generate_bodyOf_CoreCommon_entryIterator(ts, entryIterator()) = 
-	"return new <toString(ts.ds)>EntryIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);"
+	"return new <classnamePrefixFor(ts.artifact)><toString(ts.ds)>EntryIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);"
 when core(_) := ts.artifact && \map(multi = false) := ts.ds;
 
 str generate_bodyOf_CoreCommon_entryIterator(ts, entryIterator()) = 
-	"return new <toString(ts.ds)>TupleIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode, AbstractSpecialisedImmutableMap::entryOf);"
+	"return new <classnamePrefixFor(ts.artifact)><toString(ts.ds)>TupleIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode, AbstractSpecialisedImmutableMap::entryOf);"
 when core(_) := ts.artifact && \map(multi = true) := ts.ds;
 
 
@@ -1260,7 +1308,7 @@ Method getDef(TrieSpecifics ts, tupleIterator())
 when core(_) := ts.artifact;
 
 str generate_bodyOf(ts, tupleIterator()) = 
-	"return new <toString(ts.ds)>TupleIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode, tupleOf);"
+	"return new <classnamePrefixFor(ts.artifact)><toString(ts.ds)>TupleIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode, tupleOf);"
 when core(_) := ts.artifact;
 
 

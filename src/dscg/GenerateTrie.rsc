@@ -1712,7 +1712,7 @@ str generate_valNodeOf_factoryMethod(1, 0, ts:___expandedTrieSpecifics(ds, bitPa
 //Method CompactNode_factoryMethod(int n, int m, TrieSpecifics ts) {
 //	// TODO: remove code duplication
 //	members = generateMembers(n, m);
-//	constructorArgs = field(specific("AtomicReference\<Thread\>"), "mutator") + members;
+//	constructorArgs = ts.mutator + members;
 //
 //	className = "<toString(ds)><m>To<n>Node";
 //	
@@ -1724,7 +1724,7 @@ str generate_valNodeOf_factoryMethod(1, 0, ts:___expandedTrieSpecifics(ds, bitPa
 str generate_valNodeOf_factoryMethod(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) {
 	// TODO: remove code duplication
 	members = generateMembers(n, m);
-	constructorArgs = field(specific("AtomicReference\<Thread\>"), "mutator") + members;
+	constructorArgs = ts.mutator + members;
 
 	className = "<toString(ds)><m>To<n>Node";
 
@@ -1791,7 +1791,7 @@ str generate_valNodeOf_factoryMethod(int n, int m, ts:___expandedTrieSpecifics(d
 	
 str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) {
 	members = generateMembers(n, m);
-	constructorArgs = field(specific("AtomicReference\<Thread\>"), "mutator") + members;
+	constructorArgs = ts.mutator + members;
 
 	className = "<toString(ds)><m>To<n>Node";
 
@@ -2064,7 +2064,7 @@ default str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
 	;
 
 str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix, int mn = tupleLength(ds)*m+n) {
-	constructorArgs = field(specific("AtomicReference\<Thread\>"), "mutator") + metadataArguments(ts) + contentArguments(n, m, ts, setup);
+	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, setup);
 
 	extendsClassName = "<if (isOptionEnabled(setup,useUntypedVariables())) {><className_compactNode(ts, setup, true, true)><} else {><className_compactNode(ts, setup, n != 0, m != 0)><}>";
 

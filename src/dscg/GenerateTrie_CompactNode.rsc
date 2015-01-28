@@ -565,7 +565,7 @@ str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq, TrieSp
 						tsSet.keyHash: exprFromString("improve(valHash)"), 
 						tsSet.shift: constant(tsSet.shift.\type, "0"),
 						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
-	' <dec(collTupleArg(ts, 1))> = <tsSet.coreClassName>.of(<use(val(ts.valType))>);
+	' <dec(collTupleArg(ts, 1))> = <tsSet.coreSpecializedClassName>.setOf(<use(val(ts.valType))>);
 	'
 	'<dec(replaceName(nodeTupleArg(ts, 1), "currentValNode"))> = getValue(dataIndex);
 	'final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentValNode, improve(<hashCode(key(ts.keyType, "currentKey"))>), key, <use(collTupleArg(ts, 1))>, keyHash, shift + BIT_PARTITION_SIZE);
@@ -591,7 +591,7 @@ str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecific
 						tsSet.keyHash: exprFromString("improve(valHash)"), 
 						tsSet.shift: constant(tsSet.shift.\type, "0"),
 						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
-	' <dec(collTupleArg(ts, 1))> = <tsSet.coreClassName>.of(<use(val(ts.valType))>);
+	' <dec(collTupleArg(ts, 1))> = <tsSet.coreSpecializedClassName>.setOf(<use(val(ts.valType))>);
 	'
 	'details.modified();
 	'return copyAndInsertValue(mutator, bitpos, <use(nodeTupleArgs(ts))>);"

@@ -232,18 +232,8 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 
 	<implOrOverride(ts.CoreCommon_isEmpty,
 		"return cachedSize == 0;")>
-
-	<if (ts.ds == \set()) {>
-	@Override
-	public Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)> iterator() {
-		return keyIterator();
-	}
-	<}>
-		
-	@Override
-	public <if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<toString(primitiveToClass(ts.keyType))>\><}> keyIterator() {
-		<generate_bodyOf_keyIterator(ts, ts.setup)>
-	}
+	
+	<impl(ts, keyIterator())>
 
 	<impl(ts, valueIterator())>
 
@@ -463,16 +453,7 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	<innerClassesString>
 		
 }";
-}
-
-str generate_bodyOf_keyIterator(TrieSpecifics ts, rel[Option,bool] setup:{_*, <useFixedStackIterator(),true>}) = 
-	"return new <toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);"
-	;
-	
-default str generate_bodyOf_keyIterator(TrieSpecifics ts, rel[Option,bool] setup) =
-	"return new <ts.coreClassName>Iterator<InferredGenerics(ts.ds, ts.tupleTypes)>((Compact<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)>) rootNode);"
-	;
-	
+}	
 	
 default str generate_bodyOf_Core_updated(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq) {
 

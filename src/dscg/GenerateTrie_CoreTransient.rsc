@@ -195,37 +195,14 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		<implOrOverride(ts.CoreCommon_isEmpty,
 			"return cachedSize == 0;")>
 
-		<if (ts.ds == \set()) {>
-		@Override
-		public Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)> iterator() {
-			return keyIterator();
-		}
-		<}>
+		<impl(ts, iterator())>
 
-		@Override
-		public <if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<toString(primitiveToClass(ts.keyType))>\><}> keyIterator() {
-			return new Transient<toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(this);
-		}
+		<impl(ts, keyIterator())>
 
-		/*
-		 * NOTE: iterator does not support removal
-		 */
 		<impl(ts, valueIterator())>
 
-		<if (\map() := ts.ds) {>
-		/*
-		 * NOTE: iterator does not support removal
-		 */
-		@Override
-		public Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entryIterator() {
-			// return new TrieMapEntryIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(keyIterator());
-			return new <toString(ts.ds)>EntryIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode);
-		}
-		<}>
+		<impl(ts, entryIterator())>
 
-		/*
-		 * NOTE: iterator does not support removal
-		 */
 		<impl(ts, tupleIterator())>
 
 		<impl(ts, valueCollectionsSpliterator())>
@@ -318,7 +295,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, n
 
 	list[Argument] filterArgs(list[Argument] args) {
 		if (useComparator) {
-			return args + field(specific("Comparator\<Object\>"), "cmp");
+			return args + ts.comparator;
 		} else {
 			return args;
 		}
@@ -363,7 +340,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, n
 	
 	list[Argument] filterArgs(list[Argument] args) {
 		if (useComparator) {
-			return args + field(specific("Comparator\<Object\>"), "cmp");
+			return args + ts.comparator;
 		} else {
 			return args;
 		}
@@ -426,7 +403,7 @@ str insertOrPutAll(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax
 	
 	list[Argument] filterArgs(list[Argument] args) {
 		if (useComparator) {
-			return args + field(specific("Comparator\<Object\>"), "cmp");
+			return args + ts.comparator;
 		} else {
 			return args;
 		}
@@ -458,7 +435,7 @@ str allToSingle(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound),
 
 	list[Argument] filterArgs(list[Argument] args) {
 		if (useComparator) {
-			return args + field(specific("Comparator\<Object\>"), "cmp");
+			return args + ts.comparator;
 		} else {
 			return args;
 		}
