@@ -79,7 +79,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 
 		@Deprecated
 		<implOrOverride(ts.AbstractNode_payloadIterator, 
-			"return new <if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<toString(primitiveToClass(ts.keyType))>\><}>() {
+			"return new <if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}>() {
 
 				int nextIndex = 0;
 				final int payloadArity = <AbstractNode(ts.ds)>.this.payloadArity();
@@ -100,7 +100,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 				}
 
 				@Override
-				public <toString(primitiveToClass(ts.keyType))> next() {
+				public <typeToString(primitiveToClass(ts.keyType))> next() {
 					if (!hasNext())
 						throw new NoSuchElementException();
 					return <AbstractNode(ts.ds)>.this.getKey(nextIndex++);
@@ -126,7 +126,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 		<implOrOverride(ts.AbstractNode_arity, "return payloadArity() + nodeArity();", doOverride = new())>
 
 		<implOrOverride(ts.AbstractNode_size, 
-			"final Iterator\<<toString(primitiveToClass(ts.keyType))>\> it = new <toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(this);
+			"final Iterator\<<typeToString(primitiveToClass(ts.keyType))>\> it = new <toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(this);
 
 			int size = 0;
 			while (it.hasNext()) {

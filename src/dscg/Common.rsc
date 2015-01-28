@@ -39,9 +39,10 @@ data DataStructure
 data Type 
 	= unknown  (bool isArray = false)
 	| \void    (bool isArray = false)
-	| object   (bool isArray = false)
-	| generic  (str \type, bool isArray = false)
-	| specific (str \type, bool isArray = false)
+	//| object   (bool isArray = false)
+	| generic  (str typePlaceholder, bool isArray = false)
+	| specific (str typeName, list[Type] typeArguments = [], bool isArray = false)
+	//| specificWithGenerics(str typeName, list[Type] typeArguments, bool isArray = false)
 	//| primitiveByte()
 	//| primitiveShort()
 	//| primitiveInt()
@@ -49,15 +50,18 @@ data Type
 	| primitive(str \type, bool isArray = false)
 	| ___primitive(str \type, bool isArray = false)
 	;
+	
+default Type object(bool isArray = false) = specific("Object", isArray = isArray);	 	
 
-str toString(t:unknown()) = "???<if (t.isArray) {>[]<}>";
-str toString(t:\void()) = "void<if (t.isArray) {>[]<}>";
-str toString(t:object()) = "java.lang.Object<if (t.isArray) {>[]<}>";
-str toString(t:generic  (str \type)) = "<\type><if (t.isArray) {>[]<}>";
-str toString(t:specific (str \type)) = "<\type><if (t.isArray) {>[]<}>";
-str toString(t:primitive(str \type)) = "<\type><if (t.isArray) {>[]<}>";
-str toString(t:___primitive(str \type)) = "<\type><if (t.isArray) {>[]<}>";
-default str toString(Type _) { throw "Ahhh"; } 
+str typeToString(t:unknown()) = "???<if (t.isArray) {>[]<}>";
+str typeToString(t:\void()) = "void<if (t.isArray) {>[]<}>";
+str typeToString(t:object()) = "java.lang.Object<if (t.isArray) {>[]<}>";
+str typeToString(t:generic  (str \type)) = "<\type><if (t.isArray) {>[]<}>";
+str typeToString(t:specific (str typeName, typeArguments = [])) = "<\typeName><if (t.isArray) {>[]<}>";
+str typeToString(t:specific (str typeName, typeArguments = typeArguments)) = "<typeName>\<<intercalate(", ", mapper(t.typeArguments, typeToString))>\><if (t.isArray) {>[]<}>";
+str typeToString(t:primitive(str \type)) = "<\type><if (t.isArray) {>[]<}>";
+str typeToString(t:___primitive(str \type)) = "<\type><if (t.isArray) {>[]<}>";
+default str typeToString(Type t) { throw "Ahhh: <t>"; } 
 
 data Argument
 	= field (Type \type, str name)
@@ -261,7 +265,7 @@ data TrieSpecifics
 		str GenericsStr = Generics(ds, tupleTypes),		
 		str MapsToGenericsStr = MapsToGenerics(ds, tupleTypes),
 		
-		Type mutatorType = specific("AtomicReference\<Thread\>"),
+		Type mutatorType = specific("AtomicReference", typeArguments = [ specific("Thread") ]),
 		Argument mutator = field(mutatorType, "mutator"),
 		
 		list[Argument] payloadTuple = __payloadTuple(ds, tupleTypes),
@@ -275,7 +279,7 @@ data TrieSpecifics
 		
 		Argument shift = field(primitive("int"), "shift"),
 		Argument details = field(generic("<ResultStr><GenericsStr>"), "details"),
-		Argument comparator = field(specific("Comparator\<Object\>"), "cmp"),
+		Argument comparator = field(specific("Comparator", typeArguments = [ object() ]), "cmp"),
 		Argument index = field(primitive("int"), "index"),
 
 		Argument BitmapIndexedNode_contentArray = field(object(isArray = true), "nodes"),
@@ -329,8 +333,8 @@ data TrieSpecifics
 		Method CoreTransient_insert 		= method(\return(primitive("boolean")), "<insertOrPutMethodName(\set())>",  			args = [*mapper(payloadTuple, primitiveToClassArgument)], visibility = "public", isActive = ds == \set()),
 		Method CoreTransient_insertEquiv 	= method(\return(primitive("boolean")), "<insertOrPutMethodName(\set())>Equivalent", 	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
 
-		Method CoreTransient_put 		= method(\return(generic("<toString(primitiveToClass(valType))>")), "<insertOrPutMethodName(\map())>",				args = [*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public", isActive = \map() := ds),
-		Method CoreTransient_putEquiv 	= method(\return(generic("<toString(primitiveToClass(valType))>")), "<insertOrPutMethodName(\map())>Equivalent",	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public", isActive = \map() := ds && isOptionEnabled(setup, methodsWithComparator())),
+		Method CoreTransient_put 		= method(\return(generic("<typeToString(primitiveToClass(valType))>")), "<insertOrPutMethodName(\map())>",				args = [*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public", isActive = \map() := ds),
+		Method CoreTransient_putEquiv 	= method(\return(generic("<typeToString(primitiveToClass(valType))>")), "<insertOrPutMethodName(\map())>Equivalent",	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public", isActive = \map() := ds && isOptionEnabled(setup, methodsWithComparator())),
 
 		Argument __weirdArgument = field(generic("<if (ds == \set()) {>Immutable<}><toString(ds)><GenericsExpandedUpperBounded(ds, tupleTypes)>"), "<uncapitalize(toString(ds))>"),
 		Argument __anotherWeirdArgument = field(generic("<toString(ds)><GenericsExpandedUpperBounded(ds, tupleTypes)>"), "<uncapitalize(toString(ds))>"),
@@ -375,8 +379,8 @@ data TrieSpecifics
 		Method Core_asTransient = method(coreTransientInterfaceReturn, "asTransient", visibility = "public"),
 		Method CoreTransient_freeze = method(coreImmutableInterfaceReturn, "freeze", visibility = "public"),
 		
-		Method Core_keyIterator = method(\return(generic("Iterator\<<toString(primitiveToClass(keyType))>\>")), "keyIterator", visibility = "public", isActive = true),
-		// moved: Method Core_valueIterator = method(\return(generic("Iterator\<<toString(primitiveToClass(valType))>\>")), "valueIterator", visibility = "public", isActive = \map() := ds),
+		Method Core_keyIterator = method(\return(generic("Iterator\<<typeToString(primitiveToClass(keyType))>\>")), "keyIterator", visibility = "public", isActive = true),
+		// moved: Method Core_valueIterator = method(\return(generic("Iterator\<<typeToString(primitiveToClass(valType))>\>")), "valueIterator", visibility = "public", isActive = \map() := ds),
 		// moved: Method Core_entryIterator = method(\return(generic("Iterator\<Map.Entry<GenericsStr>\>")), "entryIterator", visibility = "public", isActive = \map() := ds),
 		
 		Method CompactNode_nodeMap 	= method(bitmapField, bitmapField.name),
@@ -438,7 +442,7 @@ data TrieSpecifics
 		Method AbstractNode_hasPayload = method(\return(primitive("boolean")), "hasPayload"),
 		Method AbstractNode_payloadArity = method(\return(primitive("int")), "payloadArity"),
 		/***/
-		Method AbstractNode_payloadIterator = method(\return(generic(isOptionEnabled(setup, useSupplierIterator()) ? "SupplierIterator<SupplierIteratorGenerics(ds, tupleTypes)>" : "Iterator\<<toString(primitiveToClass(keyType))>\>")), "payloadIterator", isActive = !isOptionEnabled(setup, useFixedStackIterator())),	
+		Method AbstractNode_payloadIterator = method(\return(generic(isOptionEnabled(setup, useSupplierIterator()) ? "SupplierIterator<SupplierIteratorGenerics(ds, tupleTypes)>" : "Iterator\<<typeToString(primitiveToClass(keyType))>\>")), "payloadIterator", isActive = !isOptionEnabled(setup, useFixedStackIterator())),	
 
 		Method AbstractNode_hasSlots = method(\return(primitive("boolean")), "hasSlots", isActive = true), // isOptionEnabled(setup,useUntypedVariables()
 		Method AbstractNode_slotArity = method(\return(primitive("int")), "slotArity", isActive = true), // isOptionEnabled(setup,useUntypedVariables())		
@@ -451,8 +455,8 @@ data TrieSpecifics
 
 		Method Multimap_remove = method(\return(primitiveToClass(valType)), "remove", args = [ field(object(), "<keyName>"), field(object(), "<valName>") ], visibility = "public", isActive = \map(multi = true) := ds),
 
-		Method jul_Map_keySet = method(\return(generic("Set\<<toString(primitiveToClass(dsAtFunction__domain_type(ds, tupleTypes)))>\>")), "keySet", visibility = "public", isActive = \map() := ds),
-		Method jul_Map_values = method(\return(generic("Collection\<<toString(primitiveToClass(dsAtFunction__range_type_of_tuple(ds, tupleTypes)))>\>")), "values", visibility = "public", isActive = \map() := ds),
+		Method jul_Map_keySet = method(\return(generic("Set\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ds, tupleTypes)))>\>")), "keySet", visibility = "public", isActive = \map() := ds),
+		Method jul_Map_values = method(\return(generic("Collection\<<typeToString(primitiveToClass(dsAtFunction__range_type_of_tuple(ds, tupleTypes)))>\>")), "values", visibility = "public", isActive = \map() := ds),
 		Method jul_Map_entrySet = method(\return(generic("Set\<java.util.Map.Entry<GenericsExpanded(ds, tupleTypes)>\>")), "entrySet", visibility = "public", isActive = \map() := ds),
 				
 		Method jul_Set_add = method(\return(primitive("boolean")), "add", args = [ key(primitiveToClass(keyType)) ], visibility = "public", isActive = ds == \set()),		
@@ -502,7 +506,7 @@ TrieSpecifics setArtifact(TrieSpecifics ts, Artifact artifact)
 
 list[Argument] calculateArgsFilter(rel[Option,bool] setup) {
 	// TODO: code duplication: get rid of!	
-	Type mutatorType = specific("AtomicReference\<Thread\>");
+	Type mutatorType = specific("AtomicReference", typeArguments = [ specific("Thread") ]);
 	Argument mutator = field(mutatorType, "mutator");
 	Argument BitmapIndexedNode_payloadArity = field(primitive("byte"), "payloadArity");
 	Argument BitmapIndexedNode_nodeArity = field(primitive("byte"), "nodeArity");
@@ -543,7 +547,7 @@ Type primitive(str \type:"long", bool isArray = false)  = ___primitive(\type, is
 default Type primitive(str _, bool _) { throw "Ahhh"; }
 
 Type asArray(unknown(isArray = false)) = unknown(isArray = true);
-Type asArray(object(isArray = false)) = object(isArray = true);
+//Type asArray(object(isArray = false)) = object(isArray = true);
 Type asArray(generic(\type, isArray = false)) = generic(\type, isArray = true);
 Type asArray(specific(\type, isArray = false)) = specific(\type, isArray = true);
 Type asArray(primitive(\type, isArray = false)) = primitive(\type, isArray = true);
@@ -552,7 +556,7 @@ Type asArray(___primitive(\type, isArray = false)) = ___primitive(\type, isArray
 default Type asArray(Type \type) { throw "Ahhh"; }
 
 Type asSingle(unknown(isArray = true)) = unknown(isArray = false);
-Type asSingle(object(isArray = true)) = object(isArray = false);
+//Type asSingle(object(isArray = true)) = object(isArray = false);
 Type asSingle(generic(\type, isArray = true)) = generic(\type, isArray = false);
 Type asSingle(specific(\type, isArray = true)) = specific(\type, isArray = false);
 Type asSingle(primitive(\type, isArray = true)) = primitive(\type, isArray = false);
@@ -696,7 +700,7 @@ str eval(Expression e) =
 when e is bitwiseXor;
 
 str eval(Expression e) = 
-	"(<toString(e.\type)>) (<eval(e.e)>)"
+	"(<typeToString(e.\type)>) (<eval(e.e)>)"
 when e is cast;
 
 str eval(Expression e) = 
@@ -741,15 +745,15 @@ str use(Argument a) {
 
 str dec(Argument a, bool isFinal = true) {
 	switch (a) {
-		case field (tp, nm): return "<if (isFinal) {>final <}><toString(tp)> <nm>";
-		case getter(tp, nm): return  "abstract <toString(tp)> <nm>()";		
-		case \return(tp): return  "<toString(tp)>";
+		case field (tp, nm): return "<if (isFinal) {>final <}><typeToString(tp)> <nm>";
+		case getter(tp, nm): return  "abstract <typeToString(tp)> <nm>()";		
+		case \return(tp): return  "<typeToString(tp)>";
 		default: throw "WHAT?";
 	}
 }
 
 str dec(Argument a:field(tp, nm), Expression init, bool isFinal = true, bool isStatic = false) =
-	"<if (isStatic) {>static <}><if (isFinal) {>final <}><toString(tp)> <nm> = <toString(init)>";
+	"<if (isStatic) {>static <}><if (isFinal) {>final <}><typeToString(tp)> <nm> = <toString(init)>";
 
 /*
 str dec(Argument::field (_, _)) = "final  _";
@@ -776,7 +780,7 @@ str toString(ds:\set()) = "Set";
 str toString(ds:\vector()) = "Vector";
 default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 
-str dec(Method m:method, bool asAbstract = false) = "<if (asAbstract) {>abstract <}> <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>);" when m.isActive;
+str dec(Method m:method, bool asAbstract = false) = "<if (asAbstract) {>abstract <}> <m.generics> <typeToString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>);" when m.isActive;
 str dec(Method m:method, bool asAbstract = false) = "" when !m.isActive;
 default str dec(Method m, bool asAbstract = false) { throw "You forgot <m>!"; }
 
@@ -806,7 +810,7 @@ when !m.isActive
 str implOrOverride(m:method(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
 	<if (doOverride == \override()) {>@Override<}>
-	<m.visibility> <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>) {
+	<m.visibility> <m.generics> <typeToString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>) {
 		<bodyStr>
 	}
 	"
@@ -815,7 +819,7 @@ when m.isActive
 
 str implOrOverride(m:function(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
-	'<m.visibility> static final <m.generics> <toString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>) {
+	'<m.visibility> static final <m.generics> <typeToString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>) {
 	'	<bodyStr>
 	'}"
 when m.isActive
@@ -888,15 +892,15 @@ list[Argument] subnodePair(int i) = [ nodePos(i), \node(ts.ds, ts.tupleTypes, i)
 @memo str CompactNode(DataStructure ds) = "Compact<toString(ds)>Node";
 
 str Generics(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "" when !isGeneric(keyType) && !isGeneric(valType);
-str Generics(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<toString(primitiveToClass(keyType))>, <toString(primitiveToClass(valType))>\>" when isGeneric(keyType) && isGeneric(valType);
-str Generics(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<toString(primitiveToClass(valType))>\>" when  !isGeneric(keyType) && isGeneric(valType);
-str Generics(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<toString(primitiveToClass(keyType))>\>" when isGeneric(keyType) &&  !isGeneric(valType);
+str Generics(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<typeToString(primitiveToClass(keyType))>, <typeToString(primitiveToClass(valType))>\>" when isGeneric(keyType) && isGeneric(valType);
+str Generics(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<typeToString(primitiveToClass(valType))>\>" when  !isGeneric(keyType) && isGeneric(valType);
+str Generics(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<typeToString(primitiveToClass(keyType))>\>" when isGeneric(keyType) &&  !isGeneric(valType);
 /***/
 str Generics(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "" when !isGeneric(keyType);
-str Generics(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<<toString(primitiveToClass(keyType))>\>" when isGeneric(keyType);
+str Generics(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<<typeToString(primitiveToClass(keyType))>\>" when isGeneric(keyType);
 /***/
 str Generics(DataStructure ds:\vector()) = "" when !isGeneric(valType);
-str Generics(DataStructure ds:\vector()) = "\<<toString(primitiveToClass(valType))>\>" when isGeneric(valType);
+str Generics(DataStructure ds:\vector()) = "\<<typeToString(primitiveToClass(valType))>\>" when isGeneric(valType);
 /***/
 default str Generics(DataStructure _, list[Type] _) { throw "Ahhh"; }
 
@@ -907,21 +911,21 @@ default str InferredGenerics(DataStructure _, list[Type] _) = "\<\>";
 /*
  * Expansion to the maximal length of generics for a data type.
  */
-str GenericsExpanded(DataStructure ds:\vector(), tupleTypes:[keyType, valType, *_]) = "\<<toString(primitiveToClass(keyType))>, <toString(primitiveToClass(valType))>\>";
-str GenericsExpanded(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<toString(primitiveToClass(keyType))>, <toString(primitiveToClass(valType))>\>";
-str GenericsExpanded(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<<toString(primitiveToClass(keyType))>\>";
+str GenericsExpanded(DataStructure ds:\vector(), tupleTypes:[keyType, valType, *_]) = "\<<typeToString(primitiveToClass(keyType))>, <typeToString(primitiveToClass(valType))>\>";
+str GenericsExpanded(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<typeToString(primitiveToClass(keyType))>, <typeToString(primitiveToClass(valType))>\>";
+str GenericsExpanded(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<<typeToString(primitiveToClass(keyType))>\>";
 
-str UnifiedGenericsExpanded(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<toString(primitiveToClass(keyType))>, <toString(primitiveToClass(valType))>\>";
-str UnifiedGenericsExpanded(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<<toString(primitiveToClass(keyType))>, java.lang.Void\>";
-str UnifiedGenericsExpanded(DataStructure ds:\vector(), tupleTypes:[keyType, valType, *_]) = "\<<toString(primitiveToClass(keyType))>, <toString(primitiveToClass(valType))>\>";
+str UnifiedGenericsExpanded(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<typeToString(primitiveToClass(keyType))>, <typeToString(primitiveToClass(valType))>\>";
+str UnifiedGenericsExpanded(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<<typeToString(primitiveToClass(keyType))>, java.lang.Void\>";
+str UnifiedGenericsExpanded(DataStructure ds:\vector(), tupleTypes:[keyType, valType, *_]) = "\<<typeToString(primitiveToClass(keyType))>, <typeToString(primitiveToClass(valType))>\>";
 default str UnifiedGenericsExpanded(DataStructure _, _) { throw "Ahhh"; }
 
 
-str GenericsExpandedReversed(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<toString(primitiveToClass(valType))>, <toString(primitiveToClass(keyType))>\>";
+str GenericsExpandedReversed(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<typeToString(primitiveToClass(valType))>, <typeToString(primitiveToClass(keyType))>\>";
 str GenericsExpandedReversed(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = GenericsExpanded(ds, tupleTypes);
 
-str GenericsExpandedUpperBounded(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<? extends <toString(primitiveToClass(keyType))>, ? extends <toString(primitiveToClass(valType))>\>";
-str GenericsExpandedUpperBounded(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<? extends <toString(primitiveToClass(keyType))>\>";
+str GenericsExpandedUpperBounded(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<? extends <typeToString(primitiveToClass(keyType))>, ? extends <typeToString(primitiveToClass(valType))>\>";
+str GenericsExpandedUpperBounded(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<? extends <typeToString(primitiveToClass(keyType))>\>";
 
 str GenericsDec(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<K <GenericsDecExtentionForPrimitives(key(keyType))>, V <GenericsDecExtentionForPrimitives(val(valType))>\>";
 str GenericsDec(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<K <GenericsDecExtentionForPrimitives(key(keyType))>\>";
@@ -929,15 +933,15 @@ str GenericsDec(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<K <Gener
 str GenericsDecExtentionForPrimitives(Argument a) = "extends <primitiveToClass(a)>" when !isGeneric(a);
 default str GenericsDecExtentionForPrimitives(Argument _) = "";
 
-str ResultGenerics(DataStructure ds:\map()) = "\<<toString(primitiveToClass(keyType))>, <toString(primitiveToClass(valType))>, ? extends <CompactNode(ds)><ts.GenericsStr>\>";
-str ResultGenerics(DataStructure ds:\vector()) = "\<<toString(primitiveToClass(keyType))>, <toString(primitiveToClass(valType))>, ? extends <CompactNode(ds)><ts.GenericsStr>\>";
-str ResultGenerics(DataStructure ds:\set()) = "\<<toString(primitiveToClass(keyType))>, Void, ? extends <CompactNode(ds)><ts.GenericsStr>\>";
+str ResultGenerics(DataStructure ds:\map()) = "\<<typeToString(primitiveToClass(keyType))>, <typeToString(primitiveToClass(valType))>, ? extends <CompactNode(ds)><ts.GenericsStr>\>";
+str ResultGenerics(DataStructure ds:\vector()) = "\<<typeToString(primitiveToClass(keyType))>, <typeToString(primitiveToClass(valType))>, ? extends <CompactNode(ds)><ts.GenericsStr>\>";
+str ResultGenerics(DataStructure ds:\set()) = "\<<typeToString(primitiveToClass(keyType))>, Void, ? extends <CompactNode(ds)><ts.GenericsStr>\>";
 default str ResultGenerics(DataStructure _) { throw "Ahhh"; }
 
 str ResultGenericsDec(DataStructure ds:\map()) = "\<K <GenericsDecExtentionForPrimitives(keyType)>, V <GenericsDecExtentionForPrimitives(valType)>, ? extends <CompactNode(ds)><ts.GenericsStr>\>";
 str ResultGenericsDec(DataStructure ds:\set()) = "\<K <GenericsDecExtentionForPrimitives(keyType)>, Void, ? extends <CompactNode(ds)><ts.GenericsStr>\>";
 
-str MapsToGenerics(DataStructure ds, tupleTypes) = "\<<toString(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes)))>\>";
+str MapsToGenerics(DataStructure ds, tupleTypes) = "\<<typeToString(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes)))>\>";
 default str MapsToGenerics(DataStructure _, list[Type] _) { throw "Ahhh"; }
 /***/
 Type dsAtFunction__domain_type(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = keyType;
@@ -965,7 +969,7 @@ default str dsAtFunction__range_getter_name(_) { throw "Ahhh"; }
 
 str SupplierIteratorGenerics(DataStructure ds:\vector(), tupleTypes:[keyType, valType, *_]) = GenericsExpanded(ds, tupleTypes);
 str SupplierIteratorGenerics(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = GenericsExpanded(ds, tupleTypes);
-str SupplierIteratorGenerics(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<<toString(primitiveToClass(keyType))>, <toString(primitiveToClass(keyType))>\>";
+str SupplierIteratorGenerics(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<<typeToString(primitiveToClass(keyType))>, <typeToString(primitiveToClass(keyType))>\>";
 
 str SupplierIteratorGenericsReversed(DataStructure ds, list[Type] tupleTypes) = GenericsExpandedReversed(ds, tupleTypes);
 
@@ -1185,7 +1189,7 @@ Method getDef(TrieSpecifics ts, getTuple())
 ; // when trieNode(_) := ts.artifact;
 
 str generate_bodyOf(TrieSpecifics ts, getTuple()) = 
-	"return tupleOf.apply((<toString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<toString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);"
+	"return tupleOf.apply((<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<typeToString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);"
 ; // when trieNode(_) := ts.artifact;
 
 
@@ -1207,7 +1211,7 @@ str generate_bodyOf(ts, iterator()) = "return keyIterator();";
 data PredefOp = keyIterator();
 
 Method getDef(TrieSpecifics ts, keyIterator())
-	= method(\return(generic("Iterator\<<toString(primitiveToClass(ts.keyType))>\>")), "keyIterator", visibility = "public")
+	= method(\return(generic("Iterator\<<typeToString(primitiveToClass(ts.keyType))>\>")), "keyIterator", visibility = "public")
 when core(_) := ts.artifact && !isOptionEnabled(ts.setup, useSupplierIterator());
 
 Method getDef(TrieSpecifics ts, keyIterator())
@@ -1229,7 +1233,7 @@ default str generate_bodyOf_CoreCommon_keyIterator(TrieSpecifics ts, rel[Option,
 data PredefOp = valueIterator();
 
 Method getDef(TrieSpecifics ts, valueIterator())
-	= method(\return(generic("Iterator\<<toString(primitiveToClass(ts.valType))>\>")), "valueIterator", visibility = "public", isActive = \map() := ts.ds)
+	= method(\return(generic("Iterator\<<typeToString(primitiveToClass(ts.valType))>\>")), "valueIterator", visibility = "public", isActive = \map() := ts.ds)
 when core(_) := ts.artifact;
 
 str generate_bodyOf(ts, op:valueIterator()) = generate_bodyOf_CoreCommon_valueIterator(ts, op); 
@@ -1273,7 +1277,7 @@ when core(_) := ts.artifact && \map(multi = true) := ts.ds;
 data PredefOp = valueCollectionsSpliterator();
 
 Method getDef(TrieSpecifics ts, valueCollectionsSpliterator(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) 
-	= method(\return(generic("Spliterator\<<toString(primitiveToClass(dsAtFunction__range_type(ts)))>\>")), "valueCollectionsSpliterator", visibility = "private", isActive = \map(multi = true) := ts.ds)
+	= method(\return(generic("Spliterator\<<typeToString(primitiveToClass(dsAtFunction__range_type(ts)))>\>")), "valueCollectionsSpliterator", visibility = "private", isActive = \map(multi = true) := ts.ds)
 when core(_) := ts.artifact;
 
 str generate_bodyOf(ts, valueCollectionsSpliterator()) = 
@@ -1289,7 +1293,7 @@ when core(_) := ts.artifact;
 data PredefOp = valueCollectionsStream();
 
 Method getDef(TrieSpecifics ts, valueCollectionsStream(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) 
-	= method(\return(generic("Stream\<<toString(primitiveToClass(dsAtFunction__range_type(ts)))>\>")), "valueCollectionsStream", visibility = "private", isActive = \map(multi = true) := ts.ds)
+	= method(\return(generic("Stream\<<typeToString(primitiveToClass(dsAtFunction__range_type(ts)))>\>")), "valueCollectionsStream", visibility = "private", isActive = \map(multi = true) := ts.ds)
 when core(_) := ts.artifact;
 	
 str generate_bodyOf(ts, valueCollectionsStream()) = 
@@ -1329,9 +1333,9 @@ when core(_) := ts.artifact;
 str generate_bodyOf(ts, containsEntry(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"try {
 		<toString(UNCHECKED_ANNOTATION())>
-		<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o0;
+		<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o0;
 		<toString(UNCHECKED_ANNOTATION())>
-		<dec(val(ts.valType))> = (<toString(ts.valType)>) o1;
+		<dec(val(ts.valType))> = (<typeToString(ts.valType)>) o1;
 		final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.<toString(call(ts.AbstractNode_findByKey, 
 					argsOverride = (ts.keyHash: exprFromString("improve(<hashCode(key(ts.keyType))>)"), ts.shift: constant(ts.shift.\type, "0"))))>;
 

@@ -46,18 +46,18 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			<if (isOptionEnabled(ts.setup,useSpecialization()) && ts.nBound < ts.nMax) {>assert arity() \> <ts.nBound>;<}>assert nodeInvariant();")>					
 		
 		<implOrOverride(ts.AbstractNode_getKey,
-			"return (<toString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index];"
+			"return (<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index];"
 			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.keyType)) ])>
 
 		<implOrOverride(ts.AbstractNode_getValue,
-			"return (<toString((nodeTupleType(ts, 1)))>) nodes[<use(tupleLengthConstant)> * index + 1];"
+			"return (<typeToString((nodeTupleType(ts, 1)))>) nodes[<use(tupleLengthConstant)> * index + 1];"
 			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.valType)) ])>
 	
 		<implOrOverride(ts.AbstractNode__getValueAsCollection, 
 			UNSUPPORTED_OPERATION_EXCEPTION)>
 	
 		<implOrOverride(ts.AbstractNode_getKeyValueEntry, 
-			"return entryOf((<toString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<toString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);",
+			"return entryOf((<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<typeToString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);",
 			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.keyType) && !isPrimitive(ts.valType)) ])>
 
 		<impl(ts, getTuple())>
@@ -264,8 +264,8 @@ list[Argument] headPayloadTuple(DataStructure ds:\set(), list[Type] tupleTypes:[
 default str generate_removeInplaceValueAndConvertToSpecializedNode(TrieSpecifics ts) =
 	"	final int valIndex = dataIndex(bitpos);
 	'
-	'	<dec(ts.bitmapField)> = (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)>);
-	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)>);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
 	'
 	'	switch(payloadArity()) { // 0 \<= payloadArity \<= <ts.nBound+1> // or ts.nMax
 	'	<for (m <- [1..ts.nBound+2], m <= ts.nMax, n <- [ts.nBound+1-m]) {>case <m>: {

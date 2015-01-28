@@ -57,12 +57,12 @@ when \map() := ds || ds == vector()
 default str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass) = "";
 
 str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass) =
-	"Set\<<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\> keySet = null;
+	"Set\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\> keySet = null;
 	'
 	'if (keySet == null) {
-	'	keySet = new AbstractSet\<<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\>() {
+	'	keySet = new AbstractSet\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\>() {
 	'		@Override
-	'		public Iterator\<<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\> iterator() {
+	'		public Iterator\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\> iterator() {
 	'			return <enclosingClass>.this.keyIterator();
 	'		}
 	'
@@ -95,12 +95,12 @@ when \map() := ts.ds
 default str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) = "";
 
 str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) = 
-	"Collection\<<toString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\> values = null;
+	"Collection\<<typeToString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\> values = null;
 	'
 	'if (values == null) {
-	'	values = new AbstractCollection\<<toString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\>() {
+	'	values = new AbstractCollection\<<typeToString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\>() {
 	'		@Override
-	'		public Iterator\<<toString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\> iterator() {
+	'		public Iterator\<<typeToString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\> iterator() {
 	'			return <enclosingClass>.this.valueIterator();
 	'		}
 	'
@@ -249,14 +249,14 @@ if (other instanceof <toString(ts.ds)>) {
 
 		try {
 			@SuppressWarnings(\"unchecked\")
-			<dec(key(ts.keyType))> = (<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>) entry.getKey();
+			<dec(key(ts.keyType))> = (<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>) entry.getKey();
 			final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(key, improve(<hashCode(key(ts.keyType))>), 0);
 
 			if (!result.isPresent()) {
 				return false;
 			} else {
 				@SuppressWarnings(\"unchecked\")
-				<dec(collTupleArg(ts, 1))> = (<toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>) entry.getValue();
+				<dec(collTupleArg(ts, 1))> = (<typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>) entry.getValue();
 
 				if (!result.get().equals(<use(collTupleArg(ts, 1))>)) {
 					return false;
@@ -289,7 +289,7 @@ default str generate_fragmentOf_CoreCommon_equals(TrieSpecifics ts) { throw "Ahh
 		
 default str generate_bodyOf_CoreCommon_containsValue(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
-	"	for (Iterator\<<toString(primitiveToClass(ts.valType))>\> iterator = valueIterator(); iterator.hasNext();) {
+	"	for (Iterator\<<typeToString(primitiveToClass(ts.valType))>\> iterator = valueIterator(); iterator.hasNext();) {
 			if (iterator.next().equals(o)) {
 				return true;
 			}

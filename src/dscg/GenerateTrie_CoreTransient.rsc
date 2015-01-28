@@ -61,7 +61,7 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		public boolean <containsKeyMethodName(ts.ds)>(Object o) {
 			try {
 				<toString(UNCHECKED_ANNOTATION())>
-				<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
+				<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
 				return rootNode.containsKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0);			
 			} catch (ClassCastException unused) {
 				return false;
@@ -72,7 +72,7 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		public boolean <containsKeyMethodName(ts.ds)>Equivalent(Object o, Comparator\<Object\> cmp) {
 			try {
 				<toString(UNCHECKED_ANNOTATION())>
-				<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
+				<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
 				return rootNode.containsKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0, cmp);			
 			} catch (ClassCastException unused) {
 				return false;
@@ -86,10 +86,10 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		<impl(ts, containsEntry(customComparator = true))>
 		
 		@Override
-		public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get(Object o) {
+		public <typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get(Object o) {
 			try {
 				<toString(UNCHECKED_ANNOTATION())>
-				<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
+				<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
 				final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0);
 		
 				if (result.isPresent()) {
@@ -103,10 +103,10 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		}		
 			
 		@Override
-		public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> getEquivalent(Object o, Comparator\<Object\> cmp) {
+		public <typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> getEquivalent(Object o, Comparator\<Object\> cmp) {
 			try {
 				<toString(UNCHECKED_ANNOTATION())>
-				<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
+				<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
 				final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0, cmp);
 		
 				if (result.isPresent()) {
@@ -214,10 +214,10 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		 * depth first recursively.
 		 */
 		private static class Transient<toString(ts.ds)>KeyIterator<Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ts.ds)>Iterator<Generics(ts.ds, ts.tupleTypes)> implements
-				<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<toString(primitiveToClass(ts.keyType))>\><}> {
+				<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}> {
 
 			final <className><Generics(ts.ds, ts.tupleTypes)> <uncapitalize(className)>;
-			<toString(primitiveToClass(ts.keyType))> lastKey;
+			<typeToString(primitiveToClass(ts.keyType))> lastKey;
 
 			Transient<toString(ts.ds)>KeyIterator(<className><Generics(ts.ds, ts.tupleTypes)> <uncapitalize(className)>) {
 				super(<uncapitalize(className)>.rootNode);
@@ -225,7 +225,7 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 			}
 
 			@Override
-			public <toString(primitiveToClass(ts.keyType))> next() {
+			public <typeToString(primitiveToClass(ts.keyType))> next() {
 				if (!hasNext()) {
 					throw new NoSuchElementException();
 				} else {
@@ -349,7 +349,7 @@ str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, n
 	return
 	"
 	@Override
-	public <toString(primitiveToClass(ts.valType))> <methodName>(<dec(filterArgs(args))>) {
+	public <typeToString(primitiveToClass(ts.valType))> <methodName>(<dec(filterArgs(args))>) {
 		if (mutator.get() == null) {
 			throw new IllegalStateException(\"Transient already frozen.\");
 		}

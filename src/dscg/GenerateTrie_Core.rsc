@@ -99,8 +99,8 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>;
 
 		for (int i = 0; i \< keyValuePairs.length; i += 2) {
-			<dec(key(ts.keyType))> = (<toString(ts.keyType)>) keyValuePairs[i];
-			<dec(val(ts.valType))> = (<toString(ts.valType)>) keyValuePairs[i + 1];
+			<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) keyValuePairs[i];
+			<dec(val(ts.valType))> = (<typeToString(ts.valType)>) keyValuePairs[i + 1];
 
 			result = result.<insertOrPutMethodName(ts.ds)>(<use(ts.payloadTuple)>);
 		}
@@ -138,8 +138,8 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 		final Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 
 		for (int i = 0; i \< keyValuePairs.length; i += 2) {
-			<dec(key(ts.keyType))> = (<toString(ts.keyType)>) keyValuePairs[i];
-			<dec(val(ts.valType))> = (<toString(ts.valType)>) keyValuePairs[i + 1];
+			<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) keyValuePairs[i];
+			<dec(val(ts.valType))> = (<typeToString(ts.valType)>) keyValuePairs[i + 1];
 
 			result.<insertOrPutMethodName(ts.ds)>(<use(ts.payloadTuple)>);
 		}
@@ -515,7 +515,7 @@ default str generate_bodyOf_Core_containsKey(TrieSpecifics ts, rel[Option,bool] 
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
 	"try {
 		<toString(UNCHECKED_ANNOTATION())>
-		<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
+		<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
 		return rootNode.containsKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0<optionalComparatorArgument>);			
 	} catch (ClassCastException unused) {
 		return false;
@@ -526,7 +526,7 @@ default str generate_bodyOf_Core_get(TrieSpecifics ts, rel[Option,bool] setup, s
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
 	"	try {
 			<toString(UNCHECKED_ANNOTATION())>
-			<dec(key(ts.keyType))> = (<toString(ts.keyType)>) o;
+			<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
 			final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0<optionalComparatorArgument>);
 	
 			if (result.isPresent()) {
