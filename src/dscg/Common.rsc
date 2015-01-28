@@ -583,15 +583,15 @@ Argument slot(str name)		= field(object(), "<name>");
 Argument nodePos(int i) = field("byte", "<nodePosName><i>");
 
 // implementation node
-Argument \node(DataStructure ds, list[Type] tupleTypes)			= field(specific("<CompactNode(ds)><Generics(ds, tupleTypes)>"), "<nodeName>");
-Argument \node(DataStructure ds, list[Type] tupleTypes, int i) 	= field(specific("<CompactNode(ds)><Generics(ds, tupleTypes)>"), "<nodeName><i>");
-Argument \node(DataStructure ds, list[Type] tupleTypes, str name)	= field(specific("<CompactNode(ds)><Generics(ds, tupleTypes)>"), name);
+Argument \node(DataStructure ds, list[Type] tupleTypes)				= \node(ds, tupleTypes, "<nodeName>");
+Argument \node(DataStructure ds, list[Type] tupleTypes, int i) 		= \node(ds, tupleTypes, "<nodeName><i>");
+Argument \node(DataStructure ds, list[Type] tupleTypes, str name)	= field(specific("<CompactNode(ds)>", typeArguments = [ arg.\type | arg <- __payloadTuple(ds, tupleTypes), generic(_) := arg.\type ]), name);
 default Argument \node(DataStructure ds, _) { throw "Ahhh"; }
 
 //interface node
-Argument \inode(DataStructure ds, list[Type] tupleTypes)			= field(specific("<AbstractNode(ds)><Generics(ds, tupleTypes)>"), "<nodeName>");
-Argument \inode(DataStructure ds, list[Type] tupleTypes, int i) 	= field(specific("<AbstractNode(ds)><Generics(ds, tupleTypes)>"), "<nodeName><i>");
-Argument \inode(DataStructure ds, list[Type] tupleTypes, str name)	= field(specific("<AbstractNode(ds)><Generics(ds, tupleTypes)>"), name);
+Argument \inode(DataStructure ds, list[Type] tupleTypes)			= \inode(ds, tupleTypes, "<nodeName>");
+Argument \inode(DataStructure ds, list[Type] tupleTypes, int i) 	= \inode(ds, tupleTypes, "<nodeName><i>");
+Argument \inode(DataStructure ds, list[Type] tupleTypes, str name)	= field(specific("<AbstractNode(ds)>", typeArguments = [ arg.\type | arg <- __payloadTuple(ds, tupleTypes), generic(_) := arg.\type ]), name);
 default Argument \inode(DataStructure ds, _) { throw "Ahhh"; }
 
 public Argument bitmapField = field("nodeMap");
