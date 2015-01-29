@@ -18,7 +18,10 @@ import dscg::Common;
 // TODO: remove!!!
 str emptyTrieNodeConstantName = "EMPTY_NODE";
 
-str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) {
+str generateCompactNodeClassString(tsSuper) { // ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup
+	
+	TrieSpecifics ts = setArtifact(tsSuper, trieNode(compactNode()));
+	
 	abstractMembers = [ bitmapMethod, valmapMethod ];
 	concreteMembers = [];
 	
@@ -34,12 +37,12 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	int m = 0; // TODO: remove
 
 	return
-	"protected static abstract class <className><Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ds)>Node<Generics(ts.ds, ts.tupleTypes)> {
+	"protected static abstract class <className><Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ts.ds)>Node<Generics(ts.ds, ts.tupleTypes)> {
 		
 		<dec(field(primitive("int"), "HASH_CODE_LENGTH"), constant(primitive("int"), "32"), isStatic = true, isFinal = true)>;
 		
-		<dec(field(primitive("int"), "BIT_PARTITION_SIZE"), constant(primitive("int"), "<bitPartitionSize>"), isStatic = true, isFinal = true)>;
-		<dec(field(primitive("int"), "BIT_PARTITION_MASK"), constant(primitive("int"), "0b<for (i <- [1..bitPartitionSize+1]) {>1<}>"), isStatic = true, isFinal = true)>;
+		<dec(field(primitive("int"), "BIT_PARTITION_SIZE"), constant(primitive("int"), "<ts.bitPartitionSize>"), isStatic = true, isFinal = true)>;
+		<dec(field(primitive("int"), "BIT_PARTITION_MASK"), constant(primitive("int"), "0b<for (i <- [1..ts.bitPartitionSize+1]) {>1<}>"), isStatic = true, isFinal = true)>;
 		
 		<implOrOverride(ts.CompactNode_mask, generate_bodyOf_mask(ts, ts.CompactNode_mask))>
 		<implOrOverride(ts.CompactNode_bitpos, generate_bodyOf_bitpos(ts, ts.CompactNode_bitpos))>		
@@ -109,8 +112,8 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'	static final <CompactNode(ts.ds)> <emptyTrieNodeConstantName>;
 
 	'	static {
-	'		<if (isOptionEnabled(setup,useSpecialization())) {>
-				<emptyTrieNodeConstantName> = new <toString(ds)>0To0Node<ts.classNamePostfix><InferredGenerics(ts.ds, ts.tupleTypes)>(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0);
+	'		<if (isOptionEnabled(ts.setup,useSpecialization())) {>
+				<emptyTrieNodeConstantName> = new <toString(ts.ds)>0To0Node<ts.classNamePostfix><InferredGenerics(ts.ds, ts.tupleTypes)>(null, (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0);
 			<} else {>
 		 		<emptyTrieNodeConstantName> = <toString(call(ts.BitmapIndexedNode_constructor, 
 					argsOverride = (ts.mutator: NULL(),								
@@ -127,7 +130,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	<implOrOverride(ts.nodeOf_BitmapIndexedNode,
 		"return <toString(call(ts.BitmapIndexedNode_constructor, inferredGenericsStr = InferredGenerics(ts.ds, ts.tupleTypes)))>;")>	
 	
-	<if (!isOptionEnabled(setup,useSpecialization()) || nBound < nMax) {>
+	<if (!isOptionEnabled(ts.setup,useSpecialization()) || nBound < ts.nMax) {>
 	'	<toString(UNCHECKED_ANNOTATION())>
 	'	static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(AtomicReference\<Thread\> mutator) {
 	'		return <emptyTrieNodeConstantName>;
@@ -135,11 +138,11 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	<} else {>
 	'	// TODO: consolidate and remove
 	'	static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(AtomicReference\<Thread\> mutator) {
-	'		return nodeOf(mutator, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0);
+	'		return nodeOf(mutator, (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0);
 	'	}
 	<}>
 
-	<if (!isOptionEnabled(setup,useSpecialization())) {>
+	<if (!isOptionEnabled(ts.setup,useSpecialization())) {>
 	'	static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>, <dec(nodeTupleArgs(ts))>) {
 	'		assert <use(bitmapField)> == 0;	
 	'		return <toString(call(ts.nodeOf_BitmapIndexedNode, 
@@ -151,21 +154,21 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	<}>
 
 
-	<generate_specializationFactoryMethods(ts, setup)>
+	<generate_specializationFactoryMethods(ts, ts.setup)>
 
 	<implOrOverride(ts.CompactNode_index2,
-		"return <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___anybitmapField(bitPartitionSize))> & (bitpos - 1));", doOverride = new())>
+		"return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___anybitmapField(ts.bitPartitionSize))> & (bitpos - 1));", doOverride = new())>
 	
 	<implOrOverride(ts.CompactNode_index3,
-		"return (<useSafeUnsigned(___anybitmapField(bitPartitionSize))> == -1) 
+		"return (<useSafeUnsigned(___anybitmapField(ts.bitPartitionSize))> == -1) 
 			? mask 
 			: <toString(call(ts.CompactNode_index2))>;", doOverride = new())>
 	
 	<implOrOverride(ts.CompactNode_dataIndex, 
-		"return <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(bitPartitionSize))> & (bitpos - 1));", doOverride = new())>
+		"return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(ts.bitPartitionSize))> & (bitpos - 1));", doOverride = new())>
 
 	<implOrOverride(ts.CompactNode_nodeIndex,
-		"return <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___bitmapMethod(bitPartitionSize))> & (bitpos - 1));", doOverride = new())>
+		"return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___bitmapMethod(ts.bitPartitionSize))> & (bitpos - 1));", doOverride = new())>
 
 	<if(false) {>
 //	<toString(ts.keyType)> keyAt(<dec(ts.bitposField)>) {
@@ -182,29 +185,29 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeAt(<dec(ts.bitposField)>) {
 		return getNode(nodeIndex(bitpos)); 
 	}
-
-	<implOrOverride(ts.AbstractNode_containsKey, 		generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, ts, setup, equalityDefaultForArguments		))>
-	<implOrOverride(ts.AbstractNode_containsKeyEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_containsKey(n, m, ts, setup, equalityComparatorForArguments	))>
-
-	<implOrOverride(ts.AbstractNode_findByKey, 		generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ts, setup, equalityDefaultForArguments	))>
-	<implOrOverride(ts.AbstractNode_findByKeyEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ts, setup, equalityComparatorForArguments	))>
 	
-	<implOrOverride(ts.AbstractNode_updated, 		generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, setup, equalityDefaultForArguments))>
-	<implOrOverride(ts.AbstractNode_updatedEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, setup, equalityComparatorForArguments))>
+	<impl(ts, containsKey())>
+	<impl(ts, containsKey(customComparator = true))>
 
-	<implOrOverride(ts.AbstractNode_removed, 		generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, setup, equalityDefaultForArguments, ts.AbstractNode_removed))>
-	<implOrOverride(ts.AbstractNode_removedEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, setup, equalityComparatorForArguments, ts.AbstractNode_removedEquiv))>
+	<implOrOverride(ts.AbstractNode_findByKey, 		generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ts, ts.setup, equalityDefaultForArguments	))>
+	<implOrOverride(ts.AbstractNode_findByKeyEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ts, ts.setup, equalityComparatorForArguments	))>
+	
+	<implOrOverride(ts.AbstractNode_updated, 		generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, ts.setup, equalityDefaultForArguments))>
+	<implOrOverride(ts.AbstractNode_updatedEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, ts.setup, equalityComparatorForArguments))>
+
+	<implOrOverride(ts.AbstractNode_removed, 		generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, ts.setup, equalityDefaultForArguments, ts.AbstractNode_removed))>
+	<implOrOverride(ts.AbstractNode_removedEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, ts.setup, equalityComparatorForArguments, ts.AbstractNode_removedEquiv))>
 
 	'	/**
 	'	 * @return 0 \<= mask \<= 2^BIT_PARTITION_SIZE - 1
 	'	 */
-	'	static byte recoverMask(<typeToString(chunkSizeToPrimitive(bitPartitionSize))> map, byte i_th) {
-	'		assert 1 \<= i_th && i_th \<= <nMax>;
+	'	static byte recoverMask(<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))> map, byte i_th) {
+	'		assert 1 \<= i_th && i_th \<= <ts.nMax>;
 	'		
 	'		byte cnt1 = 0;
 	'		byte mask = 0;
 	'		
-	'		while (mask \< <nMax>) {
+	'		while (mask \< <ts.nMax>) {
 	'			if ((map & 0x01) == 0x01) {
 	'				cnt1 += 1;
 	'		
@@ -213,7 +216,7 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'				}
 	'			}
 	'		
-	'			map = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (map \>\> 1);
+	'			map = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (map \>\> 1);
 	'			mask += 1;
 	'		}
 	'			
@@ -254,12 +257,12 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	
 	'}
 	
-	protected static abstract class <className_compactNode(ts, setup, true, true)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
+	protected static abstract class <className_compactNode(ts, ts.setup, true, true)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
 
 		private <dec(ts.bitmapField)>;
 		private <dec(ts.valmapField)>;
 
-		<className_compactNode(ts, setup, true, true)>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
+		<className_compactNode(ts, ts.setup, true, true)>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
 			this.<bitmapField.name> = <bitmapField.name>;
 			this.<valmapField.name> = <valmapField.name>;
 		}
@@ -276,12 +279,12 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 	}
 
-	<if (isOptionEnabled(setup,useSpecialization())) {>
-	protected static abstract class <className_compactNode(ts, setup, true, false)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
+	<if (isOptionEnabled(ts.setup,useSpecialization())) {>
+	protected static abstract class <className_compactNode(ts, ts.setup, true, false)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
 
 		private <dec(ts.bitmapField)>;
 
-		<className_compactNode(ts, setup, true, false)>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
+		<className_compactNode(ts, ts.setup, true, false)>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
 			this.<bitmapField.name> = <bitmapField.name>;
 		}
 
@@ -297,11 +300,11 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 	}
 
-	protected static abstract class <className_compactNode(ts, setup, false, true)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
+	protected static abstract class <className_compactNode(ts, ts.setup, false, true)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
 
 		private <dec(ts.valmapField)>;
 
-		<className_compactNode(ts, setup, false, true)>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
+		<className_compactNode(ts, ts.setup, false, true)>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
 			this.<valmapField.name> = <valmapField.name>;
 		}
 
@@ -317,9 +320,9 @@ str generateCompactNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionS
 
 	}
 	
-	protected static abstract class <className_compactNode(ts, setup, false, false)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
+	protected static abstract class <className_compactNode(ts, ts.setup, false, false)><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
 
-		<className_compactNode(ts, setup, false, false)>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
+		<className_compactNode(ts, ts.setup, false, false)>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
 		}
 
 		@Override
@@ -347,19 +350,19 @@ str generate_bodyOf_mergeTwoValues(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'}";
 
 str generate_bodyOf_mergeTwoValues(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionBitmap()) =
-	"<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (<toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask0))))> | <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask1))))>);
+	"<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask0))))> | <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask1))))>);
 	' 
 	'if (mask0 \< mask1) {
-	'	return nodeOf(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, <use(valmapField)>, <use(appendToName(nodeTupleArgs(ts), "0") + appendToName(nodeTupleArgs(ts), "1"))>);
+	'	return nodeOf(null, (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, <use(valmapField)>, <use(appendToName(nodeTupleArgs(ts), "0") + appendToName(nodeTupleArgs(ts), "1"))>);
 	'} else {
-	'	return nodeOf(null, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, <use(valmapField)>, <use(appendToName(nodeTupleArgs(ts), "1") + appendToName(nodeTupleArgs(ts), "0"))>);
+	'	return nodeOf(null, (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, <use(valmapField)>, <use(appendToName(nodeTupleArgs(ts), "1") + appendToName(nodeTupleArgs(ts), "0"))>);
 	'}";
 
 /*
  *	Both <call> invocatiosn in the body have similar data; only content array differs.
  */	
 str generate_bodyOf_mergeTwoValues(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),false>}, Position _) =
-	"<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (<toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask0))))> | <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask1))))>);
+	"<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask0))))> | <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask1))))>);
 	'	
 	'if (mask0 \< mask1) {
 		return <toString(call(ts.nodeOf_BitmapIndexedNode, 
@@ -386,7 +389,7 @@ str generate_bodyOf_mergeOnNextLevel(ts:___expandedTrieSpecifics(ds, bitPartitio
 
 str generate_bodyOf_mergeOnNextLevel(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionBitmap()) =
 	"<dec(ts.bitmapField)> = <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask0))))>;
-	'return nodeOf(null, <use(bitmapField)>, (<toString(chunkSizeToPrimitive(bitPartitionSize))>) 0, node);";		
+	'return nodeOf(null, <use(bitmapField)>, (<toString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, node);";		
 	
 str generate_bodyOf_mergeOnNextLevel(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),false>}, Position _) =
 	"<dec(ts.bitmapField)> = <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask0))))>;
@@ -423,35 +426,10 @@ str generate_bodyOf_mergeNodeAndValue(ts:___expandedTrieSpecifics(ds, bitPartiti
 								ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "1")))))>;";			
 
 default str generate_bodyOf_mergeNodeAndValue(TrieSpecifics _, Option _, Position _) { throw "something went wrong"; }
-
-
-str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(_, _, _, rel[Option,bool] setup, str(Argument, Argument) eq)	
-	= "throw new UnsupportedOperationException();"
-when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
-	;	
 	
-default str generate_bodyOf_SpecializedBitmapPositionNode_containsKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
-	"<dec(ts.mask)> = <toString(call(ts.CompactNode_mask))>;
-	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
-	'
-	'final int dataMap = <use(valmapMethod)>;
-	'if ((dataMap & bitpos) != 0) {
-	'	final int index = index(dataMap, mask, bitpos);
-	'	return <eq(key(ts.keyType, "getKey(index)"), key(ts.keyType))>;
-	'}
-	'
-	'final int nodeMap = <use(bitmapMethod)>;
-	'if ((nodeMap & bitpos) != 0) {
-	'	final int index = index(nodeMap, mask, bitpos);
-	'	return getNode(index).containsKey(<keyName>, <keyName>Hash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
-	'}
-	'
-	'return false;"
-	;
-	
-str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(_, _, _, rel[Option,bool] setup, str(Argument, Argument) eq)	
+str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(_, _, ts, rel[Option,bool] setup, str(Argument, Argument) eq)	
 	= "throw new UnsupportedOperationException();"
-when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
+when !(isOptionEnabled(ts.setup,methodsWithComparator()) || (eq == equalityDefault))
 	;		
 	
 str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
@@ -470,7 +448,7 @@ str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___
 	'}
 	'
 	'if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
-	'	final <AbstractNode(ds)><Generics(ts.ds, ts.tupleTypes)> subNode = nodeAt(bitpos);
+	'	final <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> subNode = nodeAt(bitpos);
 	'
 	'	return subNode.findByKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
 	'}
@@ -494,7 +472,7 @@ str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___
 	'}
 	'
 	'if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
-	'	final <AbstractNode(ds)><Generics(ts.ds, ts.tupleTypes)> subNode = nodeAt(bitpos);
+	'	final <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> subNode = nodeAt(bitpos);
 	'
 	'	return subNode.findByKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
 	'}
@@ -524,7 +502,7 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecif
 	"<dec(nodeTupleArg(ts, 1))> = getValue(dataIndex);
 	'
 	'final int valHash = <hashCode(val(ts.valType))>;
-	'// if(<use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_containsKey, 
+	'// if(<use(nodeTupleArg(ts, 1))>.<toString(call(getDef(tsSet, containsKey()), 
 					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: exprFromString("improve(valHash)"), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
 	'if(<use(collTupleArg(ts, 1))>.<toString(call(getDef(tsSet, containsKey()),
 					argsOverride = (tsSet.stdObjectArg: useExpr(val(ts.valType)))))>) {
@@ -646,9 +624,9 @@ default str generate_bodyOf_Core_containsKey(TrieSpecifics ts, rel[Option,bool] 
 
 */	
 
-str generate_bodyOf_SpecializedBitmapPositionNode_updated(_, _, _, rel[Option,bool] setup, str(Argument, Argument) eq)	
+str generate_bodyOf_SpecializedBitmapPositionNode_updated(_, _, ts, rel[Option,bool] setup, str(Argument, Argument) eq)	
 	= "throw new UnsupportedOperationException();"
-when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
+when !(isOptionEnabled(ts.setup,methodsWithComparator()) || (eq == equalityDefault))
 	;
 	
 default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) {
@@ -689,7 +667,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, 
 default str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq) =
 	"<if (\map() := ds) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex); details.updated(currentVal);<} else {>details.modified();<}>
 	
-	<removed_value_block1(ts, setup)> else <if (isOptionEnabled(setup,useSpecialization())) {><removed_value_block2(ts, setup)> else<}> {					
+	<removed_value_block1(ts, ts.setup)> else <if (isOptionEnabled(ts.setup,useSpecialization())) {><removed_value_block2(ts, ts.setup)> else<}> {					
 		return copyAndRemoveValue(mutator, bitpos);
 	}";
 	
@@ -697,7 +675,7 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 	"<dec(nodeTupleArg(ts, 1))> = getValue(dataIndex); 
 	'
 	'final int valHash = <hashCode(val(ts.valType))>;
-	'// if(<use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_containsKey, 
+	'// if(<use(nodeTupleArg(ts, 1))>.<toString(call(getDef(tsSet, containsKey()), 
 					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: exprFromString("improve(valHash)"), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
 	' if(<use(collTupleArg(ts, 1))>.<toString(call(getDef(tsSet, containsKey()), 
 					argsOverride = (tsSet.stdObjectArg: useExpr(val(ts.valType)))))>) {
@@ -725,9 +703,9 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 	'}" 
 when \map(multi = true) := ts.ds;
 	
-str generate_bodyOf_SpecializedBitmapPositionNode_removed(_, _, _, rel[Option,bool] setup, str(Argument, Argument) eq, Method nodeRemovedMethod)	
+str generate_bodyOf_SpecializedBitmapPositionNode_removed(_, _, ts, rel[Option,bool] setup, str(Argument, Argument) eq, Method nodeRemovedMethod)	
 	= "throw new UnsupportedOperationException();"
-when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
+when !(isOptionEnabled(ts.setup,methodsWithComparator()) || (eq == equalityDefault))
 	;			
 		
 default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq, Method nodeRemovedMethod) {
@@ -760,7 +738,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 			throw new IllegalStateException(\"Sub-node must have at least one element.\"); 
 		}
 		case 1: {
-			<if (isOptionEnabled(setup,useSpecialization())) {>// inline value (move to front)
+			<if (isOptionEnabled(ts.setup,useSpecialization())) {>// inline value (move to front)
 				details.modified();
 				return copyAndMigrateFromNodeToInline(mutator, bitpos, subNodeNew);<} else {>if (this.payloadArity() == 0 && this.nodeArity() == 1) {
 				// escalate (singleton or empty) result
@@ -792,14 +770,14 @@ default str removed_value_block1(ts:___expandedTrieSpecifics(ds, bitPartitionSiz
 	'	 * will a) either become the new root returned, or b)
 	'	 * unwrapped and inlined during returning.
 	'	 */
-	'	final <typeToString(chunkSizeToPrimitive(bitPartitionSize))> newDataMap = (shift == 0) ? (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (<use(valmapMethod)> ^ bitpos)
+	'	final <typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))> newDataMap = (shift == 0) ? (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<use(valmapMethod)> ^ bitpos)
 	'					: <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: call(ts.CompactNode_mask, argsOverride = (ts.shift: constant(primitive("int"), "0"))))))>;
 	'
 	'	if (dataIndex == 0) {
-	'		return <CompactNode(ts.ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) 0,
+	'		return <CompactNode(ts.ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0,
 	'						newDataMap, getKey(1)<if (\map() := ds) {>, getValue(1)<}>);
 	'	} else {
-	'		return <CompactNode(ts.ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) 0,
+	'		return <CompactNode(ts.ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0,
 	'						newDataMap, getKey(0)<if (\map() := ds) {>, getValue(0)<}>);
 	'	}
 	'}";
@@ -823,15 +801,15 @@ str generate_bodyOf_factoryMethod_bitmap(int n:0, int m:0, TrieSpecifics ts, Met
 
 //str generate_valNodeOf_factoryMethod_bitmap(n:1, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, compactionViaFieldToMethod()}) {
 //	// TODO: remove code duplication
-//	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, setup);
+//	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
 //
-//	specializedClassName = "<toString(ds)><m>To<n>Node<ts.classNamePostfix>";
+//	specializedClassName = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
 //
 //	return
 //	"static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 //	'	switch(<use(bitmapMethod)>) {
-//	'	<for (i <- [1..nMax+1]) {>case <oneShiftedLeftBy(i-1)>:
-//	'		return new <toString(ds)><m>To<n>NodeAtMask<i-1><InferredGenerics(ts.ds, ts.tupleTypes)>(<intercalate(", ", mapper(constructorArgs, use))>);
+//	'	<for (i <- [1..ts.nMax+1]) {>case <oneShiftedLeftBy(i-1)>:
+//	'		return new <toString(ts.ds)><m>To<n>NodeAtMask<i-1><InferredGenerics(ts.ds, ts.tupleTypes)>(<intercalate(", ", mapper(constructorArgs, use))>);
 //	'	<}>default:
 //	'		throw new IllegalStateException(\"Index out of range.\");
 //	'	}
@@ -846,7 +824,7 @@ when (n + m) <= ts.nBound
 
 /* TODO: fix argument lists! */
 str generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration) {
-	if (!((n + m) == ts.nBound + 1 && (n + m) < ts.nMax)) {
+	if (!((n + m) == ts.nBound + 1 && (n + m) < ts.ts.nMax)) {
 		fail;
 	}
 
@@ -862,7 +840,7 @@ default str generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts,
 
 str generate_valNodeOf_factoryMethod_bitmap_untyped(mn:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int n = 0, int m = 0) { 
 	// TODO: remove code duplication
-	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, setup);
+	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
 
 	return
 	"static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
@@ -873,15 +851,15 @@ str generate_valNodeOf_factoryMethod_bitmap_untyped(mn:0, ts:___expandedTrieSpec
 
 //str generate_valNodeOf_factoryMethod_bitmap_untyped(n:1, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, compactionViaFieldToMethod()}) {
 //	// TODO: remove code duplication
-//	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, setup);
+//	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
 //
-//	specializedClassName = "<toString(ds)><m>To<n>Node<ts.classNamePostfix>";
+//	specializedClassName = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
 //
 //	return
 //	"static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 //	'	switch(<use(bitmapMethod)>) {
-//	'	<for (i <- [1..nMax+1]) {>case <oneShiftedLeftBy(i-1)>:
-//	'		return new <toString(ds)><m>To<n>NodeAtMask<i-1><InferredGenerics(ts.ds, ts.tupleTypes)>(<intercalate(", ", mapper(constructorArgs, use))>);
+//	'	<for (i <- [1..ts.nMax+1]) {>case <oneShiftedLeftBy(i-1)>:
+//	'		return new <toString(ts.ds)><m>To<n>NodeAtMask<i-1><InferredGenerics(ts.ds, ts.tupleTypes)>(<intercalate(", ", mapper(constructorArgs, use))>);
 //	'	<}>default:
 //	'		throw new IllegalStateException(\"Index out of range.\");
 //	'	}
@@ -891,20 +869,20 @@ str generate_valNodeOf_factoryMethod_bitmap_untyped(mn:0, ts:___expandedTrieSpec
 
 default str generate_valNodeOf_factoryMethod_bitmap_untyped(int mn, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int n = mn, int m = 0) {
 	// TODO: remove code duplication
-	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, setup);
+	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
 
-	if ((mn) <= tupleLength(ds) * nBound) {		
+	if ((mn) <= tupleLength(ts.ds) * nBound) {		
 		return
 		"static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 		'	return new <specializedClassName(n, m, ts)><InferredGenerics(ts.ds, ts.tupleTypes)>(<intercalate(", ", mapper(constructorArgs, use))>);
 		'}
 		"; 
-	} else if ((mn) > tupleLength(ds) * nBound && (mn) <= tupleLength(ds) * nBound + tupleLength(ds) && (mn) < tupleLength(ds) * nMax) {
-		list[Argument] argsForArray = contentArguments(n, m, ts, setup);
+	} else if ((mn) > tupleLength(ts.ds) * nBound && (mn) <= tupleLength(ts.ds) * nBound + tupleLength(ts.ds) && (mn) < tupleLength(ts.ds) * ts.nMax) {
+		list[Argument] argsForArray = contentArguments(n, m, ts, ts.setup);
 
 		return
 		"static final <Generics(ts.ds, ts.tupleTypes)> <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
-		'	return nodeOf(mutator, <bitmapField.name>, <valmapField.name>, new Object[] { <use(argsForArray)> }<if (!isOptionEnabled(ts.setup,useSandwichArrays())) {>, (byte) <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.valmapField)>)<}>);
+		'	return nodeOf(mutator, <bitmapField.name>, <valmapField.name>, new Object[] { <use(argsForArray)> }<if (!isOptionEnabled(ts.setup,useSandwichArrays())) {>, (byte) <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.valmapField)>)<}>);
 		'}
 		";
 	} else {
@@ -914,16 +892,16 @@ default str generate_valNodeOf_factoryMethod_bitmap_untyped(int mn, ts:___expand
 
 
 
-// 		<generate_valNodeOf_factoryMethod_bitmap(i, j, ts, setup)>
+// 		<generate_valNodeOf_factoryMethod_bitmap(i, j, ts, ts.setup)>
 str generate_specializationFactoryMethods(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
 	//  && !(i == nBound + 1)
 
 	"
-	<for(j <- [0..nMax+1], i <- [0..nMax+1], ((i + j) <= nMax && (i + j) <= nBound + 1)) {>
+	<for(j <- [0..ts.nMax+1], i <- [0..ts.nMax+1], ((i + j) <= ts.nMax && (i + j) <= nBound + 1)) {>
 		<implOrOverride(CompactNode_factoryMethod_bitmap(i, j, ts), generate_bodyOf_factoryMethod_bitmap(i, j, ts, CompactNode_factoryMethod_bitmap(i, j, ts)))>
 	<}>
 	"
-when isOptionEnabled(setup,useSpecialization()) && !isOptionEnabled(setup,useUntypedVariables())
+when isOptionEnabled(ts.setup,useSpecialization()) && !isOptionEnabled(ts.setup,useUntypedVariables())
 	;
 	
 /**
@@ -932,11 +910,11 @@ when isOptionEnabled(setup,useSpecialization()) && !isOptionEnabled(setup,useUnt
  */
 str generate_specializationFactoryMethods(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
 	"
-	<for(mn <- [0.. tupleLength(ds) * nMax + 1], mn <= tupleLength(ds) * nBound + tupleLength(ds)) {>
-		<generate_valNodeOf_factoryMethod_bitmap_untyped(mn, ts, setup)>
+	<for(mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * nBound + tupleLength(ts.ds)) {>
+		<generate_valNodeOf_factoryMethod_bitmap_untyped(mn, ts, ts.setup)>
 	<}>
 	"
-when isOptionEnabled(setup,useSpecialization()) && isOptionEnabled(setup,useUntypedVariables())
+when isOptionEnabled(ts.setup,useSpecialization()) && isOptionEnabled(ts.setup,useUntypedVariables())
 	;
 		
 default str generate_specializationFactoryMethods(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = "";

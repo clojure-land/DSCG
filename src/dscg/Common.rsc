@@ -294,9 +294,6 @@ data TrieSpecifics
 		
 		Argument compactNodeReturn = \return(generic("<CompactNode(ds)><GenericsStr>")),
 		Argument optionalRangeReturn = \return(generic("Optional<MapsToGenericsStr>")),
-				
-		Method AbstractNode_containsKey 		= method(\return(primitive("boolean")), "containsKey", args = [key(keyType), keyHash, shift]),
-		Method AbstractNode_containsKeyEquiv 	= method(\return(primitive("boolean")), "containsKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
 	
 		Method AbstractNode_findByKey 		= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift]),
 		Method AbstractNode_findByKeyEquiv 	= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),
@@ -496,7 +493,7 @@ TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound, 
 }
 
 default TrieSpecifics setTrieSpecificsFromRangeOfMap(TrieSpecifics mapTs) = mapTs;
-TrieSpecifics setTrieSpecificsFromRangeOfMap(TrieSpecifics mapTs) = trieSpecifics(\set(), mapTs.bitPartitionSize, mapTs.nBound, mapTs.valType, mapTs.valType, mapTs.classNamePostfix, mapTs.setup, mapTs.artifact) when \map() := mapTs.ds;
+TrieSpecifics setTrieSpecificsFromRangeOfMap(TrieSpecifics mapTs) = trieSpecifics(\set(), mapTs.bitPartitionSize, mapTs.nBound, mapTs.valType, mapTs.valType, mapTs.classNamePostfix, mapTs.setup, unknownArtifact()) when \map() := mapTs.ds;
 
 TrieSpecifics setArtifact(TrieSpecifics ts, Artifact artifact) 
 	= trieSpecifics(ts.ds, ts.bitPartitionSize, ts.nBound, ts.keyType, ts.valType, ts.classNamePostfix, ts.setup, artifact); 
@@ -1335,21 +1332,49 @@ Method getDef(TrieSpecifics ts, containsKey(customComparator = true))
 	= method(\return(primitive("boolean")), "<containsKeyName(ts.ds)>Equivalent", 	args = [ ts.stdObjectArg, ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(_) := ts.artifact || unknownArtifact() := ts.artifact;
 
+Method getDef(TrieSpecifics ts, containsKey(customComparator = false))
+	= method(\return(primitive("boolean")), "<containsKeyName(ts.ds)>", args = [ key(ts.keyType), ts.keyHash, ts.shift ])
+when trieNode(_) := ts.artifact;
+
+Method getDef(TrieSpecifics ts, containsKey(customComparator = true))
+	= method(\return(primitive("boolean")), "<containsKeyName(ts.ds)>", args = [ key(ts.keyType), ts.keyHash, ts.shift, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+when trieNode(_) := ts.artifact;
+
 str containsKeyName(DataStructure ds:\set()) = "contains";
 default str containsKeyName(DataStructure _) = "containsKey"; 
 
-/* TODO: call correct containsKey (propagate customComparator) */
-str generate_bodyOf(ts, containsKey(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+str generate_bodyOf(ts, op:containsKey(), TrieSpecifics tsTrieNode = setArtifact(ts, trieNode(abstractNode()))) = 
 	"try {
 		<toString(UNCHECKED_ANNOTATION())>
 		<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
-		return rootNode.<toString(call(ts.AbstractNode_containsKey, 
+		return rootNode.<toString(call(getDef(tsTrieNode, containsKey(customComparator = op.customComparator)), 
 					argsOverride = (ts.keyHash: exprFromString("improve(<hashCode(key(ts.keyType))>)"), ts.shift: constant(ts.shift.\type, "0"))))>;
-
 	} catch (ClassCastException unused) {
 		return false;
 	}"
 when core(_) := ts.artifact;
+
+// previously used arguments (int n, int m)
+str generate_bodyOf(ts, op:containsKey(),
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
+	"<dec(ts.mask)> = <toString(call(ts.CompactNode_mask))>;
+	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
+	'
+	'final int dataMap = <use(valmapMethod)>;
+	'if ((dataMap & bitpos) != 0) {
+	'	final int index = index(dataMap, mask, bitpos);
+	'	return <eq(key(ts.keyType, "getKey(index)"), key(ts.keyType))>;
+	'}
+	'
+	'final int nodeMap = <use(bitmapMethod)>;
+	'if ((nodeMap & bitpos) != 0) {
+	'	final int index = index(nodeMap, mask, bitpos);
+	'	return getNode(index).<toString(call(getDef(ts, containsKey(customComparator = op.customComparator)), 
+			argsOverride = (ts.shift: plus(useExpr(ts.shift), constant(ts.shift.\type, "BIT_PARTITION_SIZE")))))>;	
+	'}
+	'
+	'return false;"
+when trieNode(compactNode()) := ts.artifact;
 
 
 

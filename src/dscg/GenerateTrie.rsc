@@ -178,7 +178,7 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 		+ [ generateResultClassString(ts, ts.setup) ]
 		+ [ generateAbstractAnyNodeClassString(ts, ts.setup)]
 		+ [ generateAbstractNodeClassString(ts)]		
-		+ [ generateCompactNodeClassString(ts, ts.setup)];
+		+ [ generateCompactNodeClassString(ts)];
 
 	if (!isOptionEnabled(ts.setup, useSpecialization()) || ts.nBound < ts.nMax) {
 		innerClassStrings = innerClassStrings + [ generateBitmapIndexedNodeClassString(ts)];

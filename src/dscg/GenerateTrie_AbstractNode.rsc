@@ -19,8 +19,8 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 
 		static final int TUPLE_LENGTH = <tupleLength(ts.ds)>;
 
-		<dec(ts.AbstractNode_containsKey, asAbstract = true)>
-		<dec(ts.AbstractNode_containsKeyEquiv, asAbstract = true)>
+		<dec(getDef(setArtifact(ts, trieNode(abstractNode())), containsKey()), asAbstract = true)>
+		<dec(getDef(setArtifact(ts, trieNode(abstractNode())), containsKey(customComparator = true)), asAbstract = true)>
 	
 		<dec(ts.AbstractNode_findByKey, asAbstract = true)>
 		<dec(ts.AbstractNode_findByKeyEquiv, asAbstract = true)>
