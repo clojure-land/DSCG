@@ -526,7 +526,7 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecif
 	'final int valHash = <hashCode(val(ts.valType))>;
 	'// if(<use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_containsKey, 
 					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: exprFromString("improve(valHash)"), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
-	'if(<use(collTupleArg(ts, 1))>.<toString(call(tsSet.Core_containsKey, 
+	'if(<use(collTupleArg(ts, 1))>.<toString(call(getDef(tsSet, containsKey()),
 					argsOverride = (tsSet.stdObjectArg: useExpr(val(ts.valType)))))>) {
 	'	return this;
 	'} else {
@@ -699,7 +699,7 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 	'final int valHash = <hashCode(val(ts.valType))>;
 	'// if(<use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_containsKey, 
 					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: exprFromString("improve(valHash)"), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
-	' if(<use(collTupleArg(ts, 1))>.<toString(call(tsSet.Core_containsKey, 
+	' if(<use(collTupleArg(ts, 1))>.<toString(call(getDef(tsSet, containsKey()), 
 					argsOverride = (tsSet.stdObjectArg: useExpr(val(ts.valType)))))>) {
 	'	details.updated(<use(val(ts.valType))>);
 	'	

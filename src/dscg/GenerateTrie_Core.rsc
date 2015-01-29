@@ -173,11 +173,11 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	<implOrOverride(ts.Core_removed, 		generate_bodyOf_Core_removed(ts, setup, ts.AbstractNode_removed))>
 	<implOrOverride(ts.Core_removedEquiv,	generate_bodyOf_Core_removed(ts, setup, ts.AbstractNode_removedEquiv))>
 
-	<implOrOverride(ts.CoreCommon_containsKey, 		generate_bodyOf_CoreCommon_containsKey(ts, setup, equalityDefaultForArguments		))>
-	<implOrOverride(ts.CoreCommon_containsKeyEquiv,	generate_bodyOf_CoreCommon_containsKey(ts, setup, equalityComparatorForArguments	))>
+	<impl(ts, containsKey())>
+	<impl(ts, containsKey(customComparator = true))>
 
-	<implOrOverride(ts.CoreCommon_containsValue, 		generate_bodyOf_CoreCommon_containsValue(ts, setup, equalityDefaultForArguments		))>
-	<implOrOverride(ts.CoreCommon_containsValueEquiv,	generate_bodyOf_CoreCommon_containsValue(ts, setup, equalityComparatorForArguments	))>
+	<impl(ts, containsValue())>
+	<impl(ts, containsValue(customComparator = true))>
 
 	<impl(ts, containsEntry())>
 	<impl(ts, containsEntry(customComparator = true))>

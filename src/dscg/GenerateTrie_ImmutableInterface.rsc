@@ -47,18 +47,18 @@ public interface <immutableInterfaceName(ts.ds)><ts.GenericsStr> extends <toStri
 
 str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) = 
 "
-	<dec(ts.Core_containsKey)>
-	<dec(ts.Core_containsKeyEquiv)>
-
 	<dec(ts.jul_Set_containsAll)>
 	<dec(ts.jul_Set_containsAllEquivalent)>
 
 	<dec(ts.Core_get)>
 	<dec(ts.Core_getEquiv)>
 
-	<dec(ts.CoreCommon_containsValue)>
-	<dec(ts.CoreCommon_containsValueEquiv)>
-	
+	<dec(getDef(setArtifact(ts, core(immutable())), containsKey()))>
+	<dec(getDef(setArtifact(ts, core(immutable())), containsKey(customComparator = true)))>
+
+	<dec(getDef(setArtifact(ts, core(immutable())), containsValue()))>
+	<dec(getDef(setArtifact(ts, core(immutable())), containsValue(customComparator = true)))>
+
 	<dec(getDef(setArtifact(ts, core(immutable())), containsEntry()))>
 	<dec(getDef(setArtifact(ts, core(immutable())), containsEntry(customComparator = true)))>
 	
@@ -97,17 +97,17 @@ public interface <transientInterfaceName(ts.ds)><ts.GenericsStr> extends <toStri
 
 str generate_bodyOf_TransientInterface(TrieSpecifics ts) = 
 "
-	<dec(ts.Core_containsKey)>
-	<dec(ts.Core_containsKeyEquiv)>
-
 	<dec(ts.jul_Set_containsAll)>
 	<dec(ts.jul_Set_containsAllEquivalent)>
 
 	<dec(ts.Core_get)>
 	<dec(ts.Core_getEquiv)>
-	
-	<dec(ts.CoreCommon_containsValue)>
-	<dec(ts.CoreCommon_containsValueEquiv)>	
+
+	<dec(getDef(setArtifact(ts, core(transient())), containsKey()))>
+	<dec(getDef(setArtifact(ts, core(transient())), containsKey(customComparator = true)))>
+
+	<dec(getDef(setArtifact(ts, core(transient())), containsValue()))>
+	<dec(getDef(setArtifact(ts, core(transient())), containsValue(customComparator = true)))>
 	
 	<dec(getDef(setArtifact(ts, core(transient())), containsEntry()))>
 	<dec(getDef(setArtifact(ts, core(transient())), containsEntry(customComparator = true)))>	

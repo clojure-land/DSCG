@@ -57,11 +57,11 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		<implOrOverride(ts.jul_Set_removeAll, UNSUPPORTED_OPERATION_EXCEPTION)>
 		<implOrOverride(ts.jul_Set_retainAll, UNSUPPORTED_OPERATION_EXCEPTION)>
 
-		<implOrOverride(ts.CoreCommon_containsKey, 		generate_bodyOf_CoreCommon_containsKey(ts, setup, equalityDefaultForArguments		))>
-		<implOrOverride(ts.CoreCommon_containsKeyEquiv,	generate_bodyOf_CoreCommon_containsKey(ts, setup, equalityComparatorForArguments	))>
-		
-		<implOrOverride(ts.CoreCommon_containsValue, 		generate_bodyOf_CoreCommon_containsValue(ts, setup, equalityDefaultForArguments		))>
-		<implOrOverride(ts.CoreCommon_containsValueEquiv,	generate_bodyOf_CoreCommon_containsValue(ts, setup, equalityComparatorForArguments	))>		
+		<impl(ts, containsKey())>
+		<impl(ts, containsKey(customComparator = true))>
+
+		<impl(ts, containsValue())>
+		<impl(ts, containsValue(customComparator = true))>
 
 		<impl(ts, containsEntry())>
 		<impl(ts, containsEntry(customComparator = true))>

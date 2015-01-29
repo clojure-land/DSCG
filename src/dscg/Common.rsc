@@ -355,14 +355,8 @@ data TrieSpecifics
 		Method CoreTransient_removed 		= method(\return(primitive("boolean")), "__remove",  			args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument) ], 				visibility = "public"),
 		Method CoreTransient_removedEquiv 	= method(\return(primitive("boolean")), "__removeEquivalent", args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument), comparator ], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),														
 
-		Method Core_containsKey 		= method(\return(primitive("boolean")), "<containsKeyMethodName(ds)>",  			args = [primitiveToClassArgument(stdObjectArg)], 				visibility = "public"),
-		Method Core_containsKeyEquiv 	= method(\return(primitive("boolean")), "<containsKeyMethodName(ds)>Equivalent", 	args = [primitiveToClassArgument(stdObjectArg), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
-
 		Method Core_get 		= method(\return(dsAtFunction__range_type(ds, tupleTypes)), "get",  			args = [primitiveToClassArgument(stdObjectArg)], 				visibility = "public"),
 		Method Core_getEquiv 	= method(\return(dsAtFunction__range_type(ds, tupleTypes)), "getEquivalent", 	args = [primitiveToClassArgument(stdObjectArg), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
-
-		Method CoreCommon_containsValue 		= method(\return(primitive("boolean")), "containsValue",  			args = [primitiveToClassArgument(stdObjectArg)], 				visibility = "public", isActive = \map() := ds),
-		Method CoreCommon_containsValueEquiv 	= method(\return(primitive("boolean")), "containsValueEquivalent", 	args = [primitiveToClassArgument(stdObjectArg), comparator], 	visibility = "public", isActive = \map() := ds && isOptionEnabled(setup, methodsWithComparator())),													
 
 		Method Core_retainAll 		= method(coreInterfaceReturn, "__retainAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
 		Method Core_retainAllEquiv 	= method(coreInterfaceReturn, "__retainAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
@@ -1017,18 +1011,16 @@ str equalityDefault(str x, str y) = "<x>.equals(<y>)"; // TODO: remove
 
 str equalityDefaultForArguments(Argument x, Argument y) = "<use(x)> == <use(y)>"
 	when x.\type == y.\type && isPrimitive(x.\type) && isPrimitive(y.\type);
-str equalityDefaultForArguments(Argument x, Argument y) = "<use(x)>.equals(<use(y)>)"
-	when x.\type == y.\type && !isPrimitive(x.\type) && !isPrimitive(y.\type);
-default str equalityDefaultForArguments(Argument x, Argument y) { throw "Ahhh"; }
+str equalityDefaultForArguments(Argument x, Argument y) = "<use(x)>.equals(<use(y)>)";
+default str equalityDefaultForArguments(Argument x, Argument y) { throw "Ahhh x: <x>, y: <y>"; }
 	
 
 str equalityComparator(str x, str y) = "<cmpName>.compare(<x>, <y>) == 0"; // TODO: remove
 
 str equalityComparatorForArguments(Argument x, Argument y) = "<use(x)> == <use(y)>"
 	when x.\type == y.\type && isPrimitive(x.\type) && isPrimitive(y.\type);
-str equalityComparatorForArguments(Argument x, Argument y) = "<cmpName>.compare(<use(x)>, <use(y)>) == 0"
-	when x.\type == y.\type && !isPrimitive(x.\type) && !isPrimitive(y.\type);
-default str equalityComparatorForArguments(Argument x, Argument y) { throw "Ahhh"; }	
+str equalityComparatorForArguments(Argument x, Argument y) = "<cmpName>.compare(<use(x)>, <use(y)>) == 0";
+default str equalityComparatorForArguments(Argument x, Argument y) { throw "Ahhh"; }
 
 /*
  * Mainly CompactNode specifics
@@ -1333,6 +1325,60 @@ when core(_) := ts.artifact;
 
 
 
+data PredefOp = containsKey(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, containsKey(customComparator = false))
+	= method(\return(primitive("boolean")), "<containsKeyName(ts.ds)>", args = [ ts.stdObjectArg ], visibility = "public", isActive = true)
+when core(_) := ts.artifact || unknownArtifact() := ts.artifact;
+
+Method getDef(TrieSpecifics ts, containsKey(customComparator = true))
+	= method(\return(primitive("boolean")), "<containsKeyName(ts.ds)>Equivalent", 	args = [ ts.stdObjectArg, ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+when core(_) := ts.artifact || unknownArtifact() := ts.artifact;
+
+str containsKeyName(DataStructure ds:\set()) = "contains";
+default str containsKeyName(DataStructure _) = "containsKey"; 
+
+/* TODO: call correct containsKey (propagate customComparator) */
+str generate_bodyOf(ts, containsKey(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+	"try {
+		<toString(UNCHECKED_ANNOTATION())>
+		<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
+		return rootNode.<toString(call(ts.AbstractNode_containsKey, 
+					argsOverride = (ts.keyHash: exprFromString("improve(<hashCode(key(ts.keyType))>)"), ts.shift: constant(ts.shift.\type, "0"))))>;
+
+	} catch (ClassCastException unused) {
+		return false;
+	}"
+when core(_) := ts.artifact;
+
+
+
+
+
+data PredefOp = containsValue(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, containsValue(customComparator = false))
+	= method(\return(primitive("boolean")), "containsValue", args = [ ts.stdObjectArg ], visibility = "public", isActive = true)
+when core(_) := ts.artifact;
+
+Method getDef(TrieSpecifics ts, containsValue(customComparator = true))
+	= method(\return(primitive("boolean")), "containsValueEquivalent", 	args = [ ts.stdObjectArg, ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+when core(_) := ts.artifact;
+
+/* TODO: call correct containsValue (propagate customComparator) */
+str generate_bodyOf(ts, op:containsValue(), str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
+	"for (Iterator\<<typeToString(primitiveToClass(ts.valType))>\> iterator = valueIterator(); iterator.hasNext();) {
+	'	if (<eq(val(ts.valType, "iterator.next()"), ts.stdObjectArg)>) {
+	'		return true;
+	'	}
+	'}
+	return false;"
+when core(_) := ts.artifact;
+
+
+
+
+
 data PredefOp = containsEntry(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, containsEntry(customComparator = false))
@@ -1343,8 +1389,7 @@ Method getDef(TrieSpecifics ts, containsEntry(customComparator = true))
 	= method(\return(primitive("boolean")), "containsEntryEquivalent", 	args = [ primitiveToClassArgument(ts.stdObjectArg0), primitiveToClassArgument(ts.stdObjectArg1), ts.comparator ], visibility = "public", isActive = \map(multi = true) := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(_) := ts.artifact;
 
-/* TODO: call correct findByKey (propagate customComparator) */
-str generate_bodyOf(ts, containsEntry(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+str generate_bodyOf(ts, op:containsEntry(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"try {
 		<toString(UNCHECKED_ANNOTATION())>
 		<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o0;
@@ -1354,7 +1399,7 @@ str generate_bodyOf(ts, containsEntry(), TrieSpecifics tsSet = setTrieSpecificsF
 					argsOverride = (ts.keyHash: exprFromString("improve(<hashCode(key(ts.keyType))>)"), ts.shift: constant(ts.shift.\type, "0"))))>;
 
 		if (result.isPresent()) {
-			return result.get().<toString(call(tsSet.Core_containsKey, argsOverride = (tsSet.stdObjectArg: useExpr(val(ts.valType)))))>;
+			return result.get().<toString(call(getDef(tsSet, containsKey(customComparator = op.customComparator)), argsOverride = (tsSet.stdObjectArg: useExpr(val(ts.valType)))))>;
 		} else {
 			return false;
 		}			
