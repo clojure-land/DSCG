@@ -41,6 +41,8 @@ data Type
 	| \void    (bool isArray = false)
 	//| object   (bool isArray = false)
 	| generic  (str typePlaceholder, bool isArray = false)
+	| upperBoundGeneric  (Type upperBound)
+	| lowerBoundGeneric  (Type lowerBound)
 	| specific (str typeName, list[Type] typeArguments = [], bool isArray = false)
 	//| specificWithGenerics(str typeName, list[Type] typeArguments, bool isArray = false)
 	//| primitiveByte()
@@ -57,6 +59,8 @@ str typeToString(t:unknown()) = "???<if (t.isArray) {>[]<}>";
 str typeToString(t:\void()) = "void<if (t.isArray) {>[]<}>";
 str typeToString(t:object()) = "java.lang.Object<if (t.isArray) {>[]<}>";
 str typeToString(t:generic  (str \type)) = "<\type><if (t.isArray) {>[]<}>";
+str typeToString(t:lowerBoundGeneric  (Type lowerBound)) = "? super <typeToString(lowerBound)>";
+str typeToString(t:upperBoundGeneric  (Type upperBound)) = "<"?"> extends <typeToString(upperBound)>";
 str typeToString(t:specific (str typeName, typeArguments = [])) = "<\typeName><if (t.isArray) {>[]<}>";
 str typeToString(t:specific (str typeName, typeArguments = typeArguments)) = "<typeName>\<<intercalate(", ", mapper(t.typeArguments, typeToString))>\><if (t.isArray) {>[]<}>";
 str typeToString(t:primitive(str \type)) = "<\type><if (t.isArray) {>[]<}>";
@@ -924,8 +928,18 @@ default str UnifiedGenericsExpanded(DataStructure _, _) { throw "Ahhh"; }
 str GenericsExpandedReversed(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<<typeToString(primitiveToClass(valType))>, <typeToString(primitiveToClass(keyType))>\>";
 str GenericsExpandedReversed(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = GenericsExpanded(ds, tupleTypes);
 
+Argument upperBoundCollectionArg(DataStructure ds, list[Type] tupleTypes, UpdateSemantic updateSemantic) = field(upperBoundCollectionType(ds, tupleTypes, updateSemantic), "<uncapitalize(toString(ds))>");
+Type upperBoundCollectionType(DataStructure ds, list[Type] tupleTypes, UpdateSemantic updateSemantic) = specific(collectionTypeName(ds, updateSemantic), typeArguments = [ primitiveToClass(upperBoundGeneric(arg.\type)) | arg <- __payloadTuple(ds, tupleTypes), generic(_) := arg.\type ]);
+
+str collectionTypeName(DataStructure ds, UpdateSemantic updateSemantic:mutable()) = "<toString(ds)>";
+str collectionTypeName(DataStructure ds, UpdateSemantic updateSemantic:immutable()) = "Immutable<toString(ds)>";
+str collectionTypeName(DataStructure ds, UpdateSemantic updateSemantic:transient()) = "Transient<toString(ds)>";
+
 str GenericsExpandedUpperBounded(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<? extends <typeToString(primitiveToClass(keyType))>, ? extends <typeToString(primitiveToClass(valType))>\>";
 str GenericsExpandedUpperBounded(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<? extends <typeToString(primitiveToClass(keyType))>\>";
+
+//str GenericsExpandedUpperBounded(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<? extends <typeToString(primitiveToClass(keyType))>, ? extends <typeToString(primitiveToClass(valType))>\>";
+//str GenericsExpandedUpperBounded(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<? extends <typeToString(primitiveToClass(keyType))>\>";
 
 str GenericsDec(DataStructure ds:\map(), tupleTypes:[keyType, valType, *_]) = "\<K <GenericsDecExtentionForPrimitives(key(keyType))>, V <GenericsDecExtentionForPrimitives(val(valType))>\>";
 str GenericsDec(DataStructure ds:\set(), tupleTypes:[keyType, *_]) = "\<K <GenericsDecExtentionForPrimitives(key(keyType))>\>";

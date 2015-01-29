@@ -57,27 +57,8 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		<implOrOverride(ts.jul_Set_removeAll, UNSUPPORTED_OPERATION_EXCEPTION)>
 		<implOrOverride(ts.jul_Set_retainAll, UNSUPPORTED_OPERATION_EXCEPTION)>
 
-		@Override
-		public boolean <containsKeyMethodName(ts.ds)>(Object o) {
-			try {
-				<toString(UNCHECKED_ANNOTATION())>
-				<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
-				return rootNode.containsKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0);			
-			} catch (ClassCastException unused) {
-				return false;
-			}
-		}
-	
-		@Override
-		public boolean <containsKeyMethodName(ts.ds)>Equivalent(Object o, Comparator\<Object\> cmp) {
-			try {
-				<toString(UNCHECKED_ANNOTATION())>
-				<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
-				return rootNode.containsKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0, cmp);			
-			} catch (ClassCastException unused) {
-				return false;
-			}
-		}
+		<implOrOverride(ts.CoreCommon_containsKey, 		generate_bodyOf_CoreCommon_containsKey(ts, setup, equalityDefaultForArguments		))>
+		<implOrOverride(ts.CoreCommon_containsKeyEquiv,	generate_bodyOf_CoreCommon_containsKey(ts, setup, equalityComparatorForArguments	))>
 		
 		<implOrOverride(ts.CoreCommon_containsValue, 		generate_bodyOf_CoreCommon_containsValue(ts, setup, equalityDefaultForArguments		))>
 		<implOrOverride(ts.CoreCommon_containsValueEquiv,	generate_bodyOf_CoreCommon_containsValue(ts, setup, equalityComparatorForArguments	))>		
@@ -122,16 +103,16 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		<insertOrPut(ts, setup, useComparator = false)>
 		<insertOrPut(ts, setup, useComparator = true )>
 
-		<if (\map() := ts.ds) {>
-		<insertOrPutAll(ts, setup, args = [field(specific("<toString(ts.ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ts.ds))>")], useComparator = false)>
-		<insertOrPutAll(ts, setup, args = [field(specific("<toString(ts.ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ts.ds))>")], useComparator = true )>		
+		<if (\map() := ts.ds) {>		
+		<insertOrPutAll(ts, setup, args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()) ], useComparator = false)>
+		<insertOrPutAll(ts, setup, args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()) ], useComparator = true )>		
 		<}>		
 
 		<if (ts.ds == \set()) {>
-		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "<insertOrPutMethodName(ts.ds)>", args = [field(specific("Immutable<toString(ts.ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ts.ds))>")], useComparator = false)>
-		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "<insertOrPutMethodName(ts.ds)>", args = [field(specific("Immutable<toString(ts.ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ts.ds))>")], useComparator = true )>
-		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "__remove", args = [field(specific("Immutable<toString(ts.ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ts.ds))>")], useComparator = false)>
-		</* TODO: Rascal bug report about scoping */ allToSingle(ts, setup, "__remove", args = [field(specific("Immutable<toString(ts.ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "<uncapitalize(toString(ts.ds))>")], useComparator = true )>
+		<allToSingle(ts, setup, "<insertOrPutMethodName(ts.ds)>", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, immutable()) ], useComparator = false)>
+		<allToSingle(ts, setup, "<insertOrPutMethodName(ts.ds)>", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, immutable()) ], useComparator = true )>
+		<allToSingle(ts, setup, "__remove", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, immutable()) ], useComparator = false)>
+		<allToSingle(ts, setup, "__remove", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, immutable()) ], useComparator = true )>
 		<}>
 		
 		<implOrOverride(ts.CoreTransient_removed, 		generate_bodyOf_CoreTransient_removed(ts, setup, ts.AbstractNode_removed))>

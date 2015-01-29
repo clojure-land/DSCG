@@ -173,8 +173,8 @@ public class <ts.coreClassName><Generics(ts.ds, ts.tupleTypes)> implements Immut
 	<implOrOverride(ts.Core_removed, 		generate_bodyOf_Core_removed(ts, setup, ts.AbstractNode_removed))>
 	<implOrOverride(ts.Core_removedEquiv,	generate_bodyOf_Core_removed(ts, setup, ts.AbstractNode_removedEquiv))>
 
-	<implOrOverride(ts.Core_containsKey, 		generate_bodyOf_Core_containsKey(ts, setup, equalityDefaultForArguments		))>
-	<implOrOverride(ts.Core_containsKeyEquiv,	generate_bodyOf_Core_containsKey(ts, setup, equalityComparatorForArguments	))>
+	<implOrOverride(ts.CoreCommon_containsKey, 		generate_bodyOf_CoreCommon_containsKey(ts, setup, equalityDefaultForArguments		))>
+	<implOrOverride(ts.CoreCommon_containsKeyEquiv,	generate_bodyOf_CoreCommon_containsKey(ts, setup, equalityComparatorForArguments	))>
 
 	<implOrOverride(ts.CoreCommon_containsValue, 		generate_bodyOf_CoreCommon_containsValue(ts, setup, equalityDefaultForArguments		))>
 	<implOrOverride(ts.CoreCommon_containsValueEquiv,	generate_bodyOf_CoreCommon_containsValue(ts, setup, equalityComparatorForArguments	))>
@@ -509,17 +509,6 @@ default str generate_bodyOf_Core_removed(TrieSpecifics ts, rel[Option,bool] setu
 	}
 
 	return this;"
-	;
-
-default str generate_bodyOf_Core_containsKey(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
-				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
-	"try {
-		<toString(UNCHECKED_ANNOTATION())>
-		<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
-		return rootNode.containsKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0<optionalComparatorArgument>);			
-	} catch (ClassCastException unused) {
-		return false;
-	}"
 	;
 
 default str generate_bodyOf_Core_get(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,

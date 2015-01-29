@@ -286,6 +286,17 @@ if (other instanceof <toString(ts.ds)>) {
 when ts.ds == \set();
 
 default str generate_fragmentOf_CoreCommon_equals(TrieSpecifics ts) { throw "Ahhh"; }	
+
+default str generate_bodyOf_CoreCommon_containsKey(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
+				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
+	"try {
+		<toString(UNCHECKED_ANNOTATION())>
+		<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
+		return rootNode.containsKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0<optionalComparatorArgument>);			
+	} catch (ClassCastException unused) {
+		return false;
+	}"
+	;
 		
 default str generate_bodyOf_CoreCommon_containsValue(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
 				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
