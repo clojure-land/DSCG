@@ -15,13 +15,15 @@ import List;
 import dscg::Common;
 import dscg::ArrayUtils;
 
-str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
+str generateBitmapIndexedNodeClassString(TrieSpecifics tsSuper) {
+
+	TrieSpecifics ts = setArtifact(tsSuper, trieNode(bitmapIndexedNode()));
 
 	// NOTE: filter list from constructor is used to restrict fields
 	fields = [ts.mutator, ts.BitmapIndexedNode_contentArray, ts.BitmapIndexedNode_payloadArity, ts.BitmapIndexedNode_nodeArity] - ts.BitmapIndexedNode_constructor.argsFilter;
 
 	return
-	"private static final class <ts.bitmapIndexedNodeClassName><Generics(ts.ds, ts.tupleTypes)> extends <className_compactNode(ts, ts.setup, true, true)><Generics(ts.ds, ts.tupleTypes)> {
+	"private static final class <ts.bitmapIndexedNodeClassName><GenericsStr(ts.tupleTypes)> extends <className_compactNode(ts, ts.setup, true, true)><GenericsStr(ts.tupleTypes)> {
 
 		<decFields(fields)>
 		
@@ -154,22 +156,6 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 												ts.bitmapField: useExpr(ts.bitmapMethod), ts.valmapField: useExpr(ts.valmapMethod))))>;
 			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>";}
 		)>
-
-		<noop(ts.CompactNode_copyAndSetValue,
-			
-			compoundExpr([
-				
-				// implodeExpr("<tupleLengthConstant> * 2 + 3")),
-				
-				decExpr(field(primitive("int"), "idx"), initExpr = plus(mul(useExpr(tupleLengthConstant), call(ts.CompactNode_dataIndex)), constant(primitive("int"), "1"))),
-			
-				ifElseExpr(
-					call(function(\return(primitive("boolean")), "isAllowedToEdit", args = [ field(ts.mutatorType, "x"), field(ts.mutatorType, "y") ])), 
-					emptyExpression(), 
-					emptyExpression())
-	
-			])
-		)>
 			
 		<implOrOverride(ts.CompactNode_copyAndSetNode, 
 			"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
@@ -293,10 +279,10 @@ default str generate_removeInplaceValueAndConvertToSpecializedNode(TrieSpecifics
 	
 default str generate_bodyOf_getNode(TrieSpecifics ts) = 
 	"final int offset = <use(tupleLengthConstant)> * payloadArity;
-	'return (<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>) nodes[offset + index];";
+	'return (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) nodes[offset + index];";
 	
 str generate_bodyOf_getNode(TrieSpecifics ts) = 
-	"return (<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>) nodes[nodes.length - 1 - index];"
+	"return (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) nodes[nodes.length - 1 - index];"
 when isOptionEnabled(ts.setup, useSandwichArrays())
 	;	
 	

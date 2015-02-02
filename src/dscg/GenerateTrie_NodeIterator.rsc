@@ -22,11 +22,11 @@ str generateNodeIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 	 * Iterator that first iterates over inlined-values and then continues depth
 	 * first recursively.
 	 */
-	private static class <nodeIteratorClassName><Generics(ts.ds, ts.tupleTypes)> implements Iterator\<<AbstractNode(ds)><Generics(ts.ds, ts.tupleTypes)>\> {
+	private static class <nodeIteratorClassName><GenericsStr(ts.tupleTypes)> implements Iterator\<<AbstractNode(ds)><GenericsStr(ts.tupleTypes)>\> {
 
-		final Deque\<Iterator\<? extends <AbstractNode(ds)><Generics(ts.ds, ts.tupleTypes)>\>\> nodeIteratorStack;
+		final Deque\<Iterator\<? extends <AbstractNode(ds)><GenericsStr(ts.tupleTypes)>\>\> nodeIteratorStack;
 
-		<nodeIteratorClassName>(<AbstractNode(ds)><Generics(ts.ds, ts.tupleTypes)> rootNode) {
+		<nodeIteratorClassName>(<AbstractNode(ds)><GenericsStr(ts.tupleTypes)> rootNode) {
 			nodeIteratorStack = new ArrayDeque\<\>();
 			nodeIteratorStack.push(Collections.singleton(rootNode).iterator());
 		}
@@ -48,12 +48,12 @@ str generateNodeIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 		}
 
 		@Override
-		public <AbstractNode(ds)><Generics(ts.ds, ts.tupleTypes)> next() {
+		public <AbstractNode(ds)><GenericsStr(ts.tupleTypes)> next() {
 			if (!hasNext()) {
 				throw new NoSuchElementException();
 			}
 
-			<AbstractNode(ds)><Generics(ts.ds, ts.tupleTypes)> innerNode = nodeIteratorStack.peek().next();
+			<AbstractNode(ds)><GenericsStr(ts.tupleTypes)> innerNode = nodeIteratorStack.peek().next();
 
 			if (innerNode.hasNodes()) {
 				nodeIteratorStack.push(innerNode.nodeIterator());

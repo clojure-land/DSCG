@@ -33,7 +33,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 	}
 
 	return  
-	"private static final class <hashCollisionClassName><Generics(ts.ds, ts.tupleTypes)> extends <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> {
+	"private static final class <hashCollisionClassName><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
 		private <dec(arrays[0])>;		
 		<if (\map() := ds) {>private <dec(arrays[1])>;<}>
 		private final int hash;
@@ -60,19 +60,19 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 
 		@Override
-		Iterator\<<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>\> nodeIterator() {
+		Iterator\<<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>\> nodeIterator() {
 			return Collections.emptyIterator();
 		}
 
 		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
-						<dec(ts.bitposField)>, <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node) {
+		<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
+						<dec(ts.bitposField)>, <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		<CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
-						<dec(ts.bitposField)>, <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> node) {
+		<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
+						<dec(ts.bitposField)>, <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node) {
 			throw new UnsupportedOperationException();
 		}		
 		<}>
@@ -120,7 +120,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		}
 
 		@Override
-		<toString(ts.keyType)> getKey(int index) {
+		<typeToString(ts.keyType)> getKey(int index) {
 			return keys[index];
 		}
 
@@ -135,7 +135,7 @@ str generateHashCollisionNodeClassString(ts:___expandedTrieSpecifics(ds, bitPart
 		<}>
 
 		@Override
-		public <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> getNode(int index) {
+		public <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> getNode(int index) {
 			throw new IllegalStateException(\"Is leaf node.\");
 		}
 
@@ -256,7 +256,7 @@ for (int idx = 0; idx \< keys.length; idx++) {
 			<dec(field(asArray(ts.valType), "src"))> = this.vals;
 			<arraycopyAndSetTuple(field(asArray(ts.valType), "src"), field(asArray(ts.valType), "dst"), 1, [val(ts.valType)], field(primitive("int"), "idx"))>
 
-			final <CompactNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> thisNew = new <hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(this.hash, this.keys, dst);
+			final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> thisNew = new <hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(this.hash, this.keys, dst);
 
 			details.updated(currentVal);
 			return thisNew;
@@ -288,7 +288,7 @@ for (int idx = 0; idx \< keys.length; idx++) {
 			 */
 			<dec(key(ts.keyType, "theOtherKey"))> = (idx == 0) ? keys[1] : keys[0];
 			<if (\map() := ds) {><dec(val(ts.valType, "theOtherVal"))> = (idx == 0) ? vals[1] : vals[0];<}>
-			return <CompactNode(ts.ds)>.<Generics(ts.ds, ts.tupleTypes)> nodeOf(mutator).updated(mutator,
+			return <CompactNode(ts.ds)>.<GenericsStr(ts.tupleTypes)> nodeOf(mutator).updated(mutator,
 							theOtherKey<if (\map() := ds) {>, theOtherVal<}>, keyHash, 0, details<if (!(eq == equalityDefaultForArguments)) {>, cmp<}>);
 		} else {
 			<arraycopyAndRemoveTuple(field(asArray(ts.keyType), "this.keys"), field(asArray(ts.keyType), "keysNew"), 1, field(primitive("int"), "idx"))>
@@ -305,7 +305,7 @@ return this;
 str generate_bodyOf_HashCollisionNode_containsKey(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
 "
 if (this.hash == keyHash) {
-	for (<toString(ts.keyType)> k : keys) {
+	for (<typeToString(ts.keyType)> k : keys) {
 		if (<eq(key(ts.keyType, "k"), key(ts.keyType))>) {
 			return true;
 		}

@@ -24,14 +24,14 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 	str persistentClassName = "Trie<toString(ts.ds)><classNamePostfix>";
 	
 	return
-	"static final class <className><Generics(ts.ds, ts.tupleTypes)> implements
+	"static final class <className><GenericsStr(ts.tupleTypes)> implements
 					Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
 		final private AtomicReference\<Thread\> mutator;
-		private <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> rootNode;
+		private <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> rootNode;
 		private int hashCode;
 		private int cachedSize;
 
-		<className>(<persistentClassName><Generics(ts.ds, ts.tupleTypes)> <uncapitalize(persistentClassName)>) {
+		<className>(<persistentClassName><GenericsStr(ts.tupleTypes)> <uncapitalize(persistentClassName)>) {
 			this.mutator    = new AtomicReference\<Thread\>(Thread.currentThread());
 			this.rootNode   = <uncapitalize(persistentClassName)>.rootNode;
 			this.hashCode   = <uncapitalize(persistentClassName)>.hashCode;
@@ -43,7 +43,7 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		
 		<generate_checkHashCodeAndSize(ts, setup)>	
 
-		<implOrOverride(ts.jul_Map_put, UNSUPPORTED_OPERATION_EXCEPTION)>	
+		<implOrOverride(ts.jul_Map_put, UNSUPPORTED_OPERATION_EXCEPTION)>
 		<implOrOverride(ts.jul_Map_clear, UNSUPPORTED_OPERATION_EXCEPTION)>
 		<implOrOverride(ts.jul_Map_remove, UNSUPPORTED_OPERATION_EXCEPTION)>
 		<implOrOverride(ts.jul_Map_putAll, UNSUPPORTED_OPERATION_EXCEPTION)>
@@ -100,23 +100,20 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 			}
 		}
 
-		<insertOrPut(ts, setup, useComparator = false)>
-		<insertOrPut(ts, setup, useComparator = true )>
+		<impl(ts, insertTuple())>
+		<impl(ts, insertTuple(customComparator = true))>
 
-		<if (\map() := ts.ds) {>		
-		<insertOrPutAll(ts, setup, args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()) ], useComparator = false)>
-		<insertOrPutAll(ts, setup, args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()) ], useComparator = true )>		
-		<}>		
+		<impl(ts, insertCollection())>
+		<impl(ts, insertCollection(customComparator = true))>
 
-		<if (ts.ds == \set()) {>
-		<allToSingle(ts, setup, "<insertOrPutMethodName(ts.ds)>", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, immutable()) ], useComparator = false)>
-		<allToSingle(ts, setup, "<insertOrPutMethodName(ts.ds)>", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, immutable()) ], useComparator = true )>
-		<allToSingle(ts, setup, "__remove", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, immutable()) ], useComparator = false)>
-		<allToSingle(ts, setup, "__remove", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, immutable()) ], useComparator = true )>
-		<}>
-		
-		<implOrOverride(ts.CoreTransient_removed, 		generate_bodyOf_CoreTransient_removed(ts, setup, ts.AbstractNode_removed))>
-		<implOrOverride(ts.CoreTransient_removedEquiv,	generate_bodyOf_CoreTransient_removed(ts, setup, ts.AbstractNode_removedEquiv))>		
+		<impl(ts, removeTuple())>
+		<impl(ts, removeTuple(customComparator = true))>
+
+		<impl(ts, removeCollection())>
+		<impl(ts, removeCollection(customComparator = true))>
+	
+		<impl(ts, retainCollection())>
+		<impl(ts, retainCollection(customComparator = true))>
 	
 		<if (ts.ds == \set()) {>
 		@Override
@@ -194,13 +191,13 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		 * Iterator that first iterates over inlined-values and then continues
 		 * depth first recursively.
 		 */
-		private static class Transient<toString(ts.ds)>KeyIterator<Generics(ts.ds, ts.tupleTypes)> extends Abstract<toString(ts.ds)>Iterator<Generics(ts.ds, ts.tupleTypes)> implements
+		private static class Transient<toString(ts.ds)>KeyIterator<GenericsStr(ts.tupleTypes)> extends Abstract<toString(ts.ds)>Iterator<GenericsStr(ts.tupleTypes)> implements
 				<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}> {
 
-			final <className><Generics(ts.ds, ts.tupleTypes)> <uncapitalize(className)>;
+			final <className><GenericsStr(ts.tupleTypes)> <uncapitalize(className)>;
 			<typeToString(primitiveToClass(ts.keyType))> lastKey;
 
-			Transient<toString(ts.ds)>KeyIterator(<className><Generics(ts.ds, ts.tupleTypes)> <uncapitalize(className)>) {
+			Transient<toString(ts.ds)>KeyIterator(<className><GenericsStr(ts.tupleTypes)> <uncapitalize(className)>) {
 				super(<uncapitalize(className)>.rootNode);
 				this.<uncapitalize(className)> = <uncapitalize(className)>;
 			}
@@ -217,7 +214,7 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 
 			<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
 			@Override
-			public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
+			public <typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
 				throw new UnsupportedOperationException();
 			}<}>
 
@@ -265,217 +262,8 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 			}
 
 			mutator.set(null);
-			return new <persistentClassName><Generics(ts.ds, ts.tupleTypes)>(rootNode, hashCode, cachedSize);
+			return new <persistentClassName><GenericsStr(ts.tupleTypes)>(rootNode, hashCode, cachedSize);
 		}
 	}"
 	;
 }
-	
-str insertOrPut(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(ts.payloadTuple, primitiveToClassArgument), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
-	str methodName = "<insertOrPutMethodName(ts.ds)><if (useComparator) {>Equivalent<}>"; 
-
-	list[Argument] filterArgs(list[Argument] args) {
-		if (useComparator) {
-			return args + ts.comparator;
-		} else {
-			return args;
-		}
-	}
-	
-	return
-	"
-	@Override
-	public boolean <methodName>(<dec(filterArgs(args))>) {
-		if (mutator.get() == null) {
-			throw new IllegalStateException(\"Transient already frozen.\");
-		}
-
-		final int keyHash = key.hashCode();
-		<dec(ts.details)>= <ts.ResultStr>.unchanged();
-		
-		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, improve(keyHash), 0, details<if (useComparator) {>, cmp<}>);
-
-		if (<use(ts.details)>.isModified()) {
-			rootNode = newRootNode;
-
-			hashCode += keyHash;
-			cachedSize += 1;
-
-			if (DEBUG) {
-				assert checkHashCodeAndSize(hashCode, cachedSize);
-			}
-			return true;
-		}
-
-		if (DEBUG) {
-			assert checkHashCodeAndSize(hashCode, cachedSize);
-		}
-		return false;
-	}
-	"
-	;		
-}
-
-str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(ts.payloadTuple, primitiveToClassArgument), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
-	str methodName = "<insertOrPutMethodName(ts.ds)><if (useComparator) {>Equivalent<}>"; 
-	
-	list[Argument] filterArgs(list[Argument] args) {
-		if (useComparator) {
-			return args + ts.comparator;
-		} else {
-			return args;
-		}
-	}	
-	
-	return
-	"
-	@Override
-	public <typeToString(primitiveToClass(ts.valType))> <methodName>(<dec(filterArgs(args))>) {
-		if (mutator.get() == null) {
-			throw new IllegalStateException(\"Transient already frozen.\");
-		}
-
-		final int keyHash = key.hashCode();
-		<dec(ts.details)>= <ts.ResultStr>.unchanged();
-		
-		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, improve(keyHash), 0, details<if (useComparator) {>, cmp<}>);
-
-		if (<use(ts.details)>.isModified()) {
-			rootNode = newRootNode;
-
-			if (<use(ts.details)>.hasReplacedValue()) {
-				<dec(val(ts.valType, "old"))> = <use(ts.details)>.getReplacedValue();
-
-				final int valHashOld = <hashCode(val(ts.valType, "old"))>;
-				final int valHashNew = <hashCode(val(ts.valType))>;
-
-				hashCode += keyHash ^ valHashNew;
-				hashCode -= keyHash ^ valHashOld;
-				// cachedSize remains same
-
-				if (DEBUG) {
-					assert checkHashCodeAndSize(hashCode, cachedSize);
-				}
-				return old;
-			} else {
-				final int valHashNew = <hashCode(val(ts.valType))>;
-
-				hashCode += keyHash ^ valHashNew;
-				cachedSize += 1;
-
-				if (DEBUG) {
-					assert checkHashCodeAndSize(hashCode, cachedSize);
-				}
-				return null;
-			}
-		}
-
-		if (DEBUG) {
-			assert checkHashCodeAndSize(hashCode, cachedSize);
-		}
-		return null;
-	}
-	"
-	;		
-}
-
-str insertOrPutAll(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = [], Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
-	str methodName = "<insertOrPutMethodName(ts.ds)>All<if (useComparator) {>Equivalent<}>"; 
-	
-	list[Argument] filterArgs(list[Argument] args) {
-		if (useComparator) {
-			return args + ts.comparator;
-		} else {
-			return args;
-		}
-	}	
-	
-	return
-	"
-	@Override
-	public boolean <methodName>(<dec(filterArgs(args))>) {
-		boolean modified = false;
-
-		for (Map.Entry<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)> entry : <uncapitalize(toString(ts.ds))>.entrySet()) {
-			final boolean isPresent = containsKey<if (useComparator) {>Equivalent<}>(entry.getKey()<if (useComparator) {>, cmp<}>);
-			<dec(primitiveToClassArgument(val(ts.valType, "replaced")))> = __put<if (useComparator) {>Equivalent<}>(entry.getKey(), entry.getValue()<if (useComparator) {>, cmp<}>);
-
-			if (!isPresent || replaced != null) {
-				modified = true;
-			}
-		}
-
-		return modified;
-	}
-	"
-	;		
-}
-
-str allToSingle(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str methodPrefix, list[Argument] args = [], Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
-	str methodName = "<methodPrefix>All<if (useComparator) {>Equivalent<}>"; 
-
-	list[Argument] filterArgs(list[Argument] args) {
-		if (useComparator) {
-			return args + ts.comparator;
-		} else {
-			return args;
-		}
-	}
-
-	return
-	"
-	@Override
-	public boolean <methodName>(<dec(filterArgs(args))>) {
-		boolean modified = false;
-
-		for (<dec(key(ts.keyType))> : set) {
-			modified |= <methodPrefix><if (useComparator) {>Equivalent<}>(<use(key(ts.keyType))><if (useComparator) {>, cmp<}>);
-		}
-
-		return modified;
-	}
-	"
-	;		
-}
-
-default str generate_bodyOf_CoreTransient_removed(TrieSpecifics ts, rel[Option,bool] setup, Method nodeRemovedMethod) =
-	"if (mutator.get() == null) {
-		throw new IllegalStateException(\"Transient already frozen.\");
-	}
-	
-	final int keyHash = key.hashCode();
-	<dec(ts.details)> = <ts.ResultStr>.unchanged();
-
-	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.<toString(call(nodeRemovedMethod, 
-					argsOverride = (ts.keyHash: exprFromString("improve(keyHash)"), ts.shift: constant(ts.shift.\type, "0"))))>;
-	
-	if (<use(ts.details)>.isModified()) {
-		<if (ts.ds == \set()) {>
-			rootNode = newRootNode;
-			hashCode -= keyHash;
-			cachedSize -= 1;
-
-			if (DEBUG) {
-				assert checkHashCodeAndSize(hashCode, cachedSize);
-			}
-			return true;
-		<} else {>
-			assert <use(ts.details)>.hasReplacedValue();
-			final int valHash = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
-
-			rootNode = newRootNode;
-			hashCode -= keyHash ^ valHash;
-			cachedSize -= 1;
-
-			if (DEBUG) {
-				assert checkHashCodeAndSize(hashCode, cachedSize);
-			}
-			return true;		
-		<}>
-	}
-
-	if (DEBUG) {
-		assert checkHashCodeAndSize(hashCode, cachedSize);
-	}
-	return false;"
-	;

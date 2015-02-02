@@ -19,7 +19,7 @@ str generateResultClassString(TrieSpecifics ts, rel[Option,bool] setup) {
 	className = "<ts.ResultStr>";
 
 	return
-	"static final class <className><Generics(ts.ds, ts.tupleTypes)> {
+	"static final class <className><GenericsStr(ts.tupleTypes)> {
 		private <typeToString(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes))> replacedValue;
 		private boolean isModified;
 		private boolean isReplaced;
@@ -36,7 +36,7 @@ str generateResultClassString(TrieSpecifics ts, rel[Option,bool] setup) {
 		}
 
 		// update: neither element, nor element count changed
-		public static <Generics(ts.ds, ts.tupleTypes)> <className><Generics(ts.ds, ts.tupleTypes)> unchanged() {
+		public static <GenericsStr(ts.tupleTypes)> <className><GenericsStr(ts.tupleTypes)> unchanged() {
 			return new <className><InferredGenerics(ts.ds, ts.tupleTypes)>();
 		}
 

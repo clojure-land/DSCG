@@ -191,7 +191,7 @@ str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) =
 	"Object[] array = new Object[cachedSize];
 	'
 	'int idx = 0;
-	'for (<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))> key : this) {
+	'for (<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))> key : this) {
 	'	array[idx++] = key;
 	'}
 	'
@@ -204,7 +204,7 @@ default str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) = ""
 str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) =
 	"List<GenericsExpanded(ts.ds, ts.tupleTypes)> list = new ArrayList<GenericsExpanded(ts.ds, ts.tupleTypes)>(cachedSize);
 	'
-	'for (<toString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))> key : this) {
+	'for (<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))> key : this) {
 	'	list.add(key);
 	'}
 	'

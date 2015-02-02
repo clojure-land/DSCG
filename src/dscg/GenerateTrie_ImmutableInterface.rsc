@@ -61,18 +61,18 @@ str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) =
 
 	<dec(getDef(setArtifact(ts, core(immutable())), containsEntry()))>
 	<dec(getDef(setArtifact(ts, core(immutable())), containsEntry(customComparator = true)))>
-	
-	<dec(ts.Core_updated)>
-	<dec(ts.Core_updatedEquiv)>
-	
-	<dec(ts.Core_insertOrPutAll)>
-	<dec(ts.Core_insertOrPutAllEquiv)>
 
-	<dec(ts.Core_removed)>
-	<dec(ts.Core_removedEquiv)>
+	<dec(getDef(setArtifact(ts, core(immutable())), insertTuple()))>
+	<dec(getDef(setArtifact(ts, core(immutable())), insertTuple(customComparator = true)))>
 	
-	<dec(ts.Core_removeAll)>
-	<dec(ts.Core_removeAllEquiv)>
+	<dec(getDef(setArtifact(ts, core(immutable())), insertCollection()))>
+	<dec(getDef(setArtifact(ts, core(immutable())), insertCollection(customComparator = true)))>
+	
+	<dec(getDef(setArtifact(ts, core(immutable())), removeTuple()))>
+	<dec(getDef(setArtifact(ts, core(immutable())), removeTuple(customComparator = true)))>
+	
+	<dec(getDef(setArtifact(ts, core(immutable())), removeCollection()))>
+	<dec(getDef(setArtifact(ts, core(immutable())), removeCollection(customComparator = true)))>
 
 	<dec(ts.Core_retainAll)>
 	<dec(ts.Core_retainAllEquiv)>
@@ -82,8 +82,8 @@ str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) =
 	<dec(getDef(setArtifact(ts, core(immutable())), entryIterator()))>
 	<dec(getDef(setArtifact(ts, core(immutable())), tupleIterator()))>
 	
-	<dec(ts.Core_isTransientSupported)>	
-	<dec(ts.Core_asTransient)>	
+	<dec(getDef(setArtifact(ts, core(immutable())), isTransientSupported()))>
+	<dec(getDef(setArtifact(ts, core(immutable())), asTransient()))>
 ";
 
 str generateTransientInterface(TrieSpecifics ts) =
@@ -112,20 +112,17 @@ str generate_bodyOf_TransientInterface(TrieSpecifics ts) =
 	<dec(getDef(setArtifact(ts, core(transient())), containsEntry()))>
 	<dec(getDef(setArtifact(ts, core(transient())), containsEntry(customComparator = true)))>	
 	
-	<dec(ts.CoreTransient_insert)>
-	<dec(ts.CoreTransient_insertEquiv)>
-
-	<dec(ts.CoreTransient_put)>
-	<dec(ts.CoreTransient_putEquiv)>
+	<dec(getDef(setArtifact(ts, core(transient())), insertTuple()))>
+	<dec(getDef(setArtifact(ts, core(transient())), insertTuple(customComparator = true)))>
 	
-	<dec(ts.CoreTransient_insertOrPutAll)>
-	<dec(ts.CoreTransient_insertOrPutAllEquiv)>
+	<dec(getDef(setArtifact(ts, core(transient())), insertCollection()))>
+	<dec(getDef(setArtifact(ts, core(transient())), insertCollection(customComparator = true)))>
 
-	<dec(ts.CoreTransient_removed)>
-	<dec(ts.CoreTransient_removedEquiv)>
+	<dec(getDef(setArtifact(ts, core(transient())), removeTuple()))>
+	<dec(getDef(setArtifact(ts, core(transient())), removeTuple(customComparator = true)))>
 	
-	<dec(ts.CoreTransient_removeAll)>
-	<dec(ts.CoreTransient_removeAllEquiv)>
+	<dec(getDef(setArtifact(ts, core(transient())), removeCollection()))>
+	<dec(getDef(setArtifact(ts, core(transient())), removeCollection(customComparator = true)))>
 
 	<dec(ts.CoreTransient_retainAll)>
 	<dec(ts.CoreTransient_retainAllEquiv)>
@@ -135,5 +132,5 @@ str generate_bodyOf_TransientInterface(TrieSpecifics ts) =
 	<dec(getDef(setArtifact(ts, core(transient())), entryIterator()))>
 	<dec(getDef(setArtifact(ts, core(transient())), tupleIterator()))>
 		
-	<dec(ts.CoreTransient_freeze)>	
+	<dec(getDef(setArtifact(ts, core(transient())), freeze()))>
 ";

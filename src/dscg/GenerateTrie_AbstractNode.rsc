@@ -15,7 +15,7 @@ import dscg::Common;
 
 str generateAbstractNodeClassString(TrieSpecifics ts) { 
 	return 
-	"protected static abstract class <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> implements <ts.abstractAnyNodeClassName><UnifiedGenericsExpanded(ts.ds, ts.tupleTypes)> {
+	"protected static abstract class <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> implements <ts.abstractAnyNodeClassName><UnifiedGenericsExpanded(ts.ds, ts.tupleTypes)> {
 
 		static final int TUPLE_LENGTH = <tupleLength(ts.ds)>;
 
@@ -42,7 +42,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 
 		@Deprecated
 		<implOrOverride(ts.AbstractNode_nodeIterator, 
-			"return new Iterator\<<AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)>\>() {
+			"return new Iterator\<<AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)>\>() {
 
 				int nextIndex = 0;
 				final int nodeArity = <AbstractNode(ts.ds)>.this.nodeArity();
@@ -53,7 +53,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 				}
 
 				@Override
-				public <AbstractNode(ts.ds)><Generics(ts.ds, ts.tupleTypes)> next() {
+				public <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> next() {
 					if (!hasNext())
 						throw new NoSuchElementException();
 					return <AbstractNode(ts.ds)>.this.getNode(nextIndex++);
@@ -86,7 +86,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 
 				<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
 				@Override
-				public <toString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
+				public <typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
 					if (nextIndex == 0 || nextIndex \> <AbstractNode(ts.ds)>.this.payloadArity()) {
 						throw new NoSuchElementException();
 					}
