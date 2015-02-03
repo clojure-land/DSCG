@@ -141,7 +141,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 			<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) keyValuePairs[i];
 			<dec(val(ts.valType))> = (<typeToString(ts.valType)>) keyValuePairs[i + 1];
 
-			result = result.<toString(call(getDef(ts, insertTuple())))>;		
+			result.<toString(call(getDef(ts, insertTuple())))>;		
 		}
 
 		return result;

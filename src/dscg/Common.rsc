@@ -83,11 +83,13 @@ data Argument
 	;
 	
 data Statement
-	= uncheckedStringStatement(str statementStr) 
+	= uncheckedStringStatement(str statementStr)
+	| expressionStatement(Expression e) 
 	;
 
 str toString(Statement:uncheckedStringStatement(statementStr)) = statementStr;
-
+str toString(Statement:expressionStatement(emptyExpression())) = "";
+str toString(Statement:expressionStatement(e)) = "<toString(e)>;";
 
 default str toString(Statement _) { throw "Ahhh"; }
 	
@@ -111,6 +113,7 @@ data Expression
 
 	| mul (Expression l, Expression r)
 	| plus(Expression l, Expression r)
+	| minus(Expression l, Expression r)
 		
 	| plusEqOne(Expression e)
 	| minEqOne(Expression e)
@@ -121,7 +124,11 @@ data Expression
 	| ifElseExpr(Expression condition, Expression onTrue, Expression onFalse)
 	
 	| assign(Argument lhs, Expression rhs)
+	| assignPlusEq(Argument lhs, Expression rhs)
 	;
+
+Expression assign(Argument lhs, Expression rhs:useExpr(lhs)) = emptyExpression();
+Expression assign(Argument lhs, Expression rhs:plus(useExpr(lhs), tail)) = assignPlusEq(lhs, tail);
 
 data Expression = constant(Type \type, str constantString);
 Expression iconst(int i) = constant(primitive("int"), "<i>");
@@ -136,7 +143,8 @@ Expression embrace(Expression e) = e when e is useExpr;
 	toString(plus(hashCodeField, [ constInt5, constInt5 ]));	
  
  */
-Expression plus(Expression l, list[Expression] rs) = ( l | plus(it, r)  | r <- rs);
+Expression plus (Expression l, list[Expression] rs) = ( l | plus (it, r)  | r <- rs);
+Expression minus(Expression l, list[Expression] rs) = ( l | minus(it, r)  | r <- rs);
 
 data Expression = emptyExpression();
 data Expression = bitwiseXor(Expression x, Expression y);
@@ -145,6 +153,7 @@ data Expression = bitwiseXor(Expression x, Expression y);
   Example:
 	bitwiseXor([ emptyExpression(), emptyExpression(), emptyExpression()]);
  */
+Expression bitwiseXor([]) = emptyExpression();
 Expression bitwiseXor([Expression e]) = e;
 Expression bitwiseXor([Expression head, *Expression tail]) = ( head | bitwiseXor(it, e)  | e <- tail);
 
@@ -176,6 +185,16 @@ str toString(Expression e:mul(l, r)) =
 	
 str toString(Expression e:plus(l, r)) = 
 	"<toString(l)> + <toString(r)>";
+	
+str toString(Expression e:minus(l, r)) = 
+	"<toString(l)> - <toString(r)>";	
+	
+str toString(Expression e:assign(l, r)) = 
+	"<use(l)> = <toString(r)>";	
+	
+str toString(Expression e:assignPlusEq(l, r)) = 
+	"<use(l)> += <toString(r)>";	
+
 
 data Expression
 	= call(Method m, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = (), str inferredGenericsStr = "")
@@ -186,21 +205,21 @@ map[Argument, Expression] makeArgsOverrideMap(list[Argument] args, list[Expressi
 when size(args) == size(argsOverride);
 
 str toString(Expression c:call(m:constructor(_,_))) =
-	"new <m.name><c.inferredGenericsStr>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride))>)"	
+	"new <m.name><c.inferredGenericsStr>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"	
 when m.isActive;
 
 str toString(Expression c:call(m:function(_,_))) = 
-	"<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride))>)"
+	"<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
 when m.isActive;
 
 str toString(Expression c:call(m:method(_,_))) = 
-	"<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride))>)"
+	"<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
 when m.isActive;
 
 
 
 str toString(Expression c:call(TrieSpecifics ts, Argument arg, PredefOp op), Method m = getDef(ts, op)) = 
-	"<use(arg)>.<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride))>)"
+	"<use(arg)>.<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
 when m.isActive;
 
 
@@ -254,6 +273,20 @@ when __def.isActive;
 
 
 
+data Property
+	= hashCodeProperty()
+	| sizeProperty();
+
+data Event 
+	= onInsert()
+	| onReplacedValue()
+	| onRemove();
+
+default Expression updateProperty(TrieSpecifics ts, PredefOp op, Property p, Event e) = emptyExpression();
+
+
+
+
 data Artifact
 	= unknownArtifact()
 	| core(UpdateSemantic updateSemantic)
@@ -278,7 +311,8 @@ default str generate_bodyOf(TrieSpecifics ts, PredefOp op) = "";
 
 
 data PredefArgLabel
-	= payloadTuple();
+	= payloadKey() 
+	| payloadTuple();
 
 
 
@@ -743,7 +777,7 @@ default str use(Argument a) { throw "You forgot <a>!"; }
 /***/
 
 /* TODO: remove both; remove eval completely */
-str toString(embrace(e)) = "<eval(e)>";
+str toString(embrace(e)) = "(<eval(e)>)";
 str eval(Expression e) = 
 	"(<toString(e)>)"
 when e is embrace;
@@ -769,6 +803,10 @@ str eval(Expression e) =
 when e is plus;
 
 str eval(Expression e) = 
+	"<eval(e.l)> - <eval(e.r)>"
+when e is minus;
+
+str eval(Expression e) = 
 	"<eval(e.e)> + 1"
 when e is plusEqOne;
 
@@ -788,6 +826,9 @@ str eval(Expression e) =
 	toString(e) 
 when e is call;
 
+str eval(Expression e) = ""
+when e is emptyExpression;
+
 default str eval(Expression e) { throw "Ahhh, you forgot <e>"; }
 
 str eval(list[Expression] xs) = intercalate(", ", mapper(xs, eval));
@@ -796,7 +837,7 @@ default str eval(list[Expression] _) { throw "Ahhh"; }
 
 str use(list[Argument] xs) = intercalate(", ", mapper(xs, use));
 
-str use(Argument::labeledArgument(_, a), bool isFinal = true) = dec(a, isFinal = isFinal);
+str use(Argument::labeledArgument(_, a), bool isFinal = true) = use(a, isFinal = isFinal);
 str use(Argument a) {
 	switch (a) {
 		case field (tp, nm): return "<nm>";
@@ -907,13 +948,14 @@ str implOrOverride(Method m, str bodyStr, OverwriteType doOverride = override(),
 
 default str implOrOverride(Method m, str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) { throw "You forgot <m>!"; }
 
-default list[Expression] substitute(list[Argument] args, map[Argument, Expression] argsOverride) { // , map[PredefArgLabel, Expression] labeledArgsOverride
+default list[Expression] substitute(list[Argument] args, map[Argument, Expression] argsOverride, map[PredefArgLabel, Expression] labeledArgsOverride) {
 	list[Expression] res = [];
 	
 	for (arg <- args) {
-		//if (labeledArgument(largName, larg) := arg && labeledArgsOverride[largName]?) {
-		//	res += labeledArgsOverride[largName];
-		//} else if (labeledArgumentList(largName, largs) := arg && labeledArgsOverride[largName]?) {
+		if (labeledArgument(largName, larg) := arg && labeledArgsOverride[largName]?) {
+			res += labeledArgsOverride[largName];
+		} else 
+		// if (labeledArgumentList(largName, largs) := arg && labeledArgsOverride[largName]?) {
 		//	res += labeledArgsOverride[largName];
 		//} else 
 		
@@ -1389,11 +1431,11 @@ when core(_) := ts.artifact;
 data PredefOp = containsKey(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, containsKey(customComparator = false))
-	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>", args = [ labeledArgument(payloadTuple(), ts.stdObjectArg) ], visibility = "public", isActive = true)
+	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>", args = [ labeledArgument(payloadKey(), ts.stdObjectArg) ], visibility = "public", isActive = true)
 when core(_) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, containsKey(customComparator = true))
-	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>Equivalent", args = [ labeledArgument(payloadTuple(), ts.stdObjectArg), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>Equivalent", args = [ labeledArgument(payloadKey(), ts.stdObjectArg), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(_) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, containsKey(customComparator = false))
@@ -1522,11 +1564,11 @@ when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = false))
 	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument) ], visibility = "public", isActive = true)
-when core(transient()) := ts.artifact;
+when core(transient()) := ts.artifact && !(\map(multi = false) := ts.ds);
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = true))
 	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>Equivalent", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
-when core(transient()) := ts.artifact;
+when core(transient()) := ts.artifact && !(\map(multi = false) := ts.ds);
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = false))
 	= method(\return(collTupleType(ts, 1)), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument) ], visibility = "public", isActive = true)
@@ -1558,7 +1600,7 @@ default str insertTupleMethodName(DataStructure ds, Artifact artifact) { throw "
 str generate_bodyOf(TrieSpecifics ts, op:insertTuple(), 
 		TrieSpecifics tsTrieNode = setArtifact(ts, trieNode(abstractNode())),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) =
-	"final int keyHash = key.hashCode();
+	"<dec(ts.keyHash)> = key.hashCode();
 	<dec(ts.details)> = <ts.ResultStr>.unchanged();
 
 	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.<toString(call(getDef(tsTrieNode, insertTuple(customComparator = op.customComparator)), 
@@ -1568,18 +1610,25 @@ str generate_bodyOf(TrieSpecifics ts, op:insertTuple(),
 
 	if (<use(ts.details)>.isModified()) {
 		<if (\map() := ts.ds) {>if (<use(ts.details)>.hasReplacedValue()) {
-				final int valHashOld = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
-				final int valHashNew = <hashCode(val(ts.valType))>;
+				<dec(valHashOld)> = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
+				<dec(valHashNew)> = <hashCode(val(ts.valType))>;
 
-				return new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, hashCode + (keyHash ^ valHashNew)
-								- (keyHash ^ valHashOld), cachedSize);
+				return 
+					new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, 
+						<eval(updateProperty(ts, op, hashCodeProperty(), onReplacedValue(), tupleHashesOld = [ useExpr(ts.keyHash), useExpr(valHashOld) ], tupleHashesNew = [ useExpr(ts.keyHash), useExpr(valHashNew) ] ))>, 
+						<eval(updateProperty(ts, op, sizeProperty(), onReplacedValue()))>);
 			}
 			
-		<}><if (\map() := ts.ds) {>final int valHash = <hashCode(val(ts.valType))>;<}>return new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, <eval(updateProperty(ts, op, hashCodeProperty(), onInsert()))>, <eval(updateProperty(ts, op, sizeProperty(), onInsert()))>);
+		<}><if (\map() := ts.ds) {><dec(ts.valHash)> = <hashCode(val(ts.valType))>;<}>return 
+			new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, 
+				<eval(updateProperty(ts, op, hashCodeProperty(), onInsert(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(ts.valHash) ])))>, 
+				<eval(updateProperty(ts, op, sizeProperty(), onInsert()))>);
 	}
 
 	return this;"
-when core(immutable()) := ts.artifact;
+when core(immutable()) := ts.artifact
+		&& valHashOld := val(primitive("int"), "valHashOld")
+		&& valHashNew := val(primitive("int"), "valHashNew");
 
 str generate_bodyOf(TrieSpecifics ts, op:insertTuple(), 
 		TrieSpecifics tsTrieNode = setArtifact(ts, trieNode(abstractNode())),
@@ -1588,8 +1637,8 @@ str generate_bodyOf(TrieSpecifics ts, op:insertTuple(),
 		throw new IllegalStateException(\"Transient already frozen.\");
 	}
 
-	final int keyHash = key.hashCode();
-	<dec(ts.details)>= <ts.ResultStr>.unchanged();
+	<dec(ts.keyHash)> = key.hashCode();
+	<dec(ts.details)> = <ts.ResultStr>.unchanged();
 	
 	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.<toString(call(getDef(tsTrieNode, insertTuple(customComparator = op.customComparator)), 
 					argsOverride = (tsTrieNode.keyHash: exprFromString("improve(keyHash)"), 
@@ -1597,10 +1646,9 @@ str generate_bodyOf(TrieSpecifics ts, op:insertTuple(),
 
 	if (<use(ts.details)>.isModified()) {
 		rootNode = newRootNode;
-
-		hashCode += keyHash;
-		cachedSize += 1;
-
+		<toString(assign(ts.hashCodeProperty, updateProperty(ts, op, hashCodeProperty(), onInsert(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(ts.valHash) ]))))>;
+		<toString(assign(ts.sizeProperty, updateProperty(ts, op, sizeProperty(), onInsert())))>;
+	
 		if (DEBUG) {
 			assert checkHashCodeAndSize(hashCode, cachedSize);
 		}
@@ -1613,89 +1661,86 @@ str generate_bodyOf(TrieSpecifics ts, op:insertTuple(),
 	return false;"
 when core(transient()) := ts.artifact && \set() := ts.ds;
 
-data Property
-	= hashCodeProperty()
-	| sizeProperty();
+/*
+ * TODO: Merge with function above; major differences are:
+ * 			* return types;
+ * 			* additional cases for handling value replacement.
+ */
+str generate_bodyOf(TrieSpecifics ts, op:insertTuple(), 
+		TrieSpecifics tsTrieNode = setArtifact(ts, trieNode(abstractNode())),
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) =
+	"if (mutator.get() == null) {
+		throw new IllegalStateException(\"Transient already frozen.\");
+	}
 
-data Event 
-	= onInsert()
-	| onReplacedValue();
+	<dec(ts.keyHash)> = key.hashCode();
+	<dec(ts.details)> = <ts.ResultStr>.unchanged();
+	
+	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.<toString(call(getDef(tsTrieNode, insertTuple(customComparator = op.customComparator)), 
+					argsOverride = (tsTrieNode.keyHash: exprFromString("improve(keyHash)"), 
+						tsTrieNode.shift: constant(tsTrieNode.shift.\type, "0"))))>;
 
-default Expression updateProperty(TrieSpecifics ts, PredefOp op, Property p, Event e) = emptyExpression();
+	if (<use(ts.details)>.isModified()) {
+		if (<use(ts.details)>.hasReplacedValue()) {
+			<dec(val(ts.valType, "old"))> = <use(ts.details)>.getReplacedValue();
 
-Expression updateProperty(TrieSpecifics ts, op:insertTuple(), hashCodeProperty(), onInsert(), Expression hashCodeProperty = useExpr(ts.hashCodeProperty), list[Expression] tupleHashes = [ useExpr(ts.keyHash) ]) 
-	= plus(hashCodeProperty, tupleHashes)
-when \set() := ts.ds;
+			<dec(valHashOld)> = <hashCode(val(ts.valType, "old"))>;
+			<dec(valHashNew)> = <hashCode(val(ts.valType))>;
 
-Expression updateProperty(TrieSpecifics ts, op:insertTuple(), hashCodeProperty(), onInsert(), Expression hashCodeProperty = useExpr(ts.hashCodeProperty), list[Expression] tupleHashes = [ useExpr(ts.keyHash), useExpr(ts.valHash) ]) 
-	= plus(hashCodeProperty, embrace(bitwiseXor(tupleHashes))) 
-when \map() := ts.ds;  
+			rootNode = newRootNode;
+			<toString(expressionStatement(assign(ts.hashCodeProperty, updateProperty(ts, op, hashCodeProperty(), onReplacedValue(), tupleHashesOld = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(valHashOld) ]), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(valHashNew) ])))))>
+			<toString(expressionStatement(assign(ts.sizeProperty, updateProperty(ts, op, sizeProperty(), onReplacedValue()))))>
+
+			if (DEBUG) {
+				assert checkHashCodeAndSize(hashCode, cachedSize);
+			}
+			return old;
+		} else {			
+			<dec(valHashNew)> = <hashCode(val(ts.valType))>;
+		
+			rootNode = newRootNode;
+			<toString(expressionStatement(assign(ts.hashCodeProperty, updateProperty(ts, op, hashCodeProperty(), onInsert(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(valHashNew) ])))))>
+			<toString(expressionStatement(assign(ts.sizeProperty, updateProperty(ts, op, sizeProperty(), onInsert()))))>
+		
+			if (DEBUG) {
+				assert checkHashCodeAndSize(hashCode, cachedSize);
+			}
+			return null;
+		}
+	}
+
+	if (DEBUG) {
+		assert checkHashCodeAndSize(hashCode, cachedSize);
+	}
+	return null;"
+when core(transient()) := ts.artifact && \map() := ts.ds
+		&& valHashOld := val(primitive("int"), "valHashOld")
+		&& valHashNew := val(primitive("int"), "valHashNew");
+
+
+
+
+
+list[&T] cutToTupleSize(TrieSpecifics ts, list[&T] listToCut) = take(size(ts.tupleTypes), listToCut);
+
+Expression updateProperty(TrieSpecifics ts, op:insertTuple(), hashCodeProperty(), onInsert(), Expression hashCodeProperty = useExpr(ts.hashCodeProperty), list[Expression] tupleHashesNew = []) 
+	= plus(hashCodeProperty, embrace(bitwiseXor(tupleHashesNew)));  
 
 Expression updateProperty(TrieSpecifics ts, op:insertTuple(), sizeProperty(), onInsert(), Expression sizeProperty = useExpr(ts.sizeProperty))
-	= plus(sizeProperty, iconst(1));  
+	= plus(sizeProperty, iconst(1));
 
-str insertOrPut(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, list[Argument] args = mapper(ts.payloadTuple, primitiveToClassArgument), Argument res = field(primitive("boolean"), "???"), bool useComparator = false) {
-	str methodName = "<insertTupleMethodName(ts.ds, ts.artifact)><if (useComparator) {>Equivalent<}>"; 
-	
-	list[Argument] filterArgs(list[Argument] args) {
-		if (useComparator) {
-			return args + ts.comparator;
-		} else {
-			return args;
-		}
-	}	
-	
-	return
-	"
-	@Override
-	public <typeToString(primitiveToClass(ts.valType))> <methodName>(<dec(filterArgs(args))>) {
-		if (mutator.get() == null) {
-			throw new IllegalStateException(\"Transient already frozen.\");
-		}
+Expression updateProperty(TrieSpecifics ts, op:insertTuple(), hashCodeProperty(), onReplacedValue(), Expression hashCodeProperty = useExpr(ts.hashCodeProperty), list[Expression] tupleHashesOld = [], list[Expression] tupleHashesNew = [])
+	= minus(plus(hashCodeProperty, embrace(bitwiseXor(tupleHashesNew))), embrace(bitwiseXor(tupleHashesOld))); 
 
-		final int keyHash = key.hashCode();
-		<dec(ts.details)>= <ts.ResultStr>.unchanged();
-		
-		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(mutator, <use(ts.payloadTuple)>, improve(keyHash), 0, details<if (useComparator) {>, cmp<}>);
+Expression updateProperty(TrieSpecifics ts, op:insertTuple(), sizeProperty(), onReplacedValue(), Expression sizeProperty = useExpr(ts.sizeProperty))
+	= sizeProperty;
 
-		if (<use(ts.details)>.isModified()) {
-			rootNode = newRootNode;
+Expression updateProperty(TrieSpecifics ts, op:removeTuple(), hashCodeProperty(), onRemove(), Expression hashCodeProperty = useExpr(ts.hashCodeProperty), list[Expression] tupleHashesNew = []) 
+	= minus(hashCodeProperty, embrace(bitwiseXor(tupleHashesNew)));  
 
-			if (<use(ts.details)>.hasReplacedValue()) {
-				<dec(val(ts.valType, "old"))> = <use(ts.details)>.getReplacedValue();
+Expression updateProperty(TrieSpecifics ts, op:removeTuple(), sizeProperty(), onRemove(), Expression sizeProperty = useExpr(ts.sizeProperty))
+	= minus(sizeProperty, iconst(1));
 
-				final int valHashOld = <hashCode(val(ts.valType, "old"))>;
-				final int valHashNew = <hashCode(val(ts.valType))>;
-
-				hashCode += keyHash ^ valHashNew;
-				hashCode -= keyHash ^ valHashOld;
-				// cachedSize remains same
-
-				if (DEBUG) {
-					assert checkHashCodeAndSize(hashCode, cachedSize);
-				}
-				return old;
-			} else {
-				final int valHashNew = <hashCode(val(ts.valType))>;
-
-				hashCode += keyHash ^ valHashNew;
-				cachedSize += 1;
-
-				if (DEBUG) {
-					assert checkHashCodeAndSize(hashCode, cachedSize);
-				}
-				return null;
-			}
-		}
-
-		if (DEBUG) {
-			assert checkHashCodeAndSize(hashCode, cachedSize);
-		}
-		return null;
-	}
-	"
-	;		
-}
 
 //str generate_bodyOf(TrieSpecifics ts, op:insertTuple())
 //	= ""
@@ -1761,13 +1806,12 @@ str generate_bodyOf(TrieSpecifics ts, op:insertCollection(),
 	"boolean modified = false;
 
 	for (Map.Entry<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)> entry : <uncapitalize(toString(ts.ds))>.entrySet()) {
-		// TODO: override: containsKey(entry.getKey());
-		// TODO: does not work yet because of untyped object o
-		final boolean isPresent = this.<toString(call(getDef(ts, containsKey(customComparator = op.customComparator)), 
-																			argsOverride = makeArgsOverrideMap(collTupleArgs(ts), unboxPayloadFromTuple(ts, entry))))>;
+		final boolean isPresent = this.<toString(
+			call(getDef(ts, containsKey(customComparator = op.customComparator)), 
+					labeledArgsOverride = (payloadKey(): unboxPayloadFromTuple(ts, entry)[0])))>;
 		<dec(primitiveToClassArgument(val(ts.valType, "replaced")))> = this.<toString(call(getDef(ts, insertTuple(customComparator = op.customComparator)), 
 																			argsOverride = makeArgsOverrideMap(collTupleArgs(ts), unboxPayloadFromTuple(ts, entry))))>;
-
+		
 		if (!isPresent || replaced != null) {
 			modified = true;
 		}
@@ -1804,112 +1848,107 @@ data PredefOp = removeTuple(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
 	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__remove", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument) ], visibility = "public", isActive = true)
-when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
+when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && \map(multi = true) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
 	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeEquivalent", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
-when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
+when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && \map(multi = true) := ts.ds;
+
+Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
+	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__remove", args = [ primitiveToClassArgument(payloadTupleArg(ts, 0)) ], visibility = "public", isActive = true)
+when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && !(\map(multi = true) := ts.ds);
+
+Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
+	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeEquivalent", args = [ primitiveToClassArgument(payloadTupleArg(ts, 0)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && !(\map(multi = true) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
 	= method(\return(primitive("boolean")), "__remove", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument) ], visibility = "public", isActive = true)
-when core(transient()) := ts.artifact;
+when core(transient()) := ts.artifact && \map(multi = true) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
 	= method(\return(primitive("boolean")), "__removeEquivalent", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
-when core(transient()) := ts.artifact;
+when core(transient()) := ts.artifact && \map(multi = true) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(collTupleType(ts, 1)), "__remove", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument) ], visibility = "public", isActive = true)
-when core(transient()) := ts.artifact && \map(multi = false) := ts.ds;
+	= method(\return(collTupleType(ts, 1)), "__remove", args = [ primitiveToClassArgument(payloadTupleArg(ts, 0)) ], visibility = "public", isActive = true)
+when core(transient()) := ts.artifact && !(\map(multi = true) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(collTupleType(ts, 1)), "__removeEquivalent", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
-when core(transient()) := ts.artifact && \map(multi = false) := ts.ds;
+	= method(\return(collTupleType(ts, 1)), "__removeEquivalent", args = [ primitiveToClassArgument(payloadTupleArg(ts, 0)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+when core(transient()) := ts.artifact && !(\map(multi = true) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
 	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, *payloadTupleArgs(ts), ts.keyHash, ts.shift, ts.details ])
-when trieNode(_) := ts.artifact;
+when trieNode(_) := ts.artifact && \map(multi = true) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
 	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, *payloadTupleArgs(ts), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
-when trieNode(_) := ts.artifact;
+when trieNode(_) := ts.artifact && \map(multi = true) := ts.ds;
+
+Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
+	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, payloadTupleArg(ts, 0), ts.keyHash, ts.shift, ts.details ])
+when trieNode(_) := ts.artifact && !(\map(multi = true) := ts.ds);
+
+Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
+	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, payloadTupleArg(ts, 0), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+when trieNode(_) := ts.artifact && !(\map(multi = true) := ts.ds);
 
 str generate_bodyOf(TrieSpecifics ts, op:removeTuple(),
+		TrieSpecifics tsTrieNode = setArtifact(ts, trieNode(abstractNode())),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
-	"// TODO"
-when core(immutable()) := ts.artifact;
-
-default str generate_bodyOf_Core_removed(TrieSpecifics ts, rel[Option,bool] setup, Method nodeRemovedMethod) =
-	"final int keyHash = key.hashCode();
+	"<dec(ts.keyHash)> = key.hashCode();
 	<dec(ts.details)> = <ts.ResultStr>.unchanged();
 
-	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.<toString(call(nodeRemovedMethod, 
-					argsOverride = (ts.mutator: NULL(),
-								ts.keyHash: exprFromString("improve(keyHash)"),
-								ts.shift: constant(ts.shift.\type, "0"))))>;
+	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.<toString(call(getDef(tsTrieNode, removeTuple(customComparator = op.customComparator)), 
+					argsOverride = (tsTrieNode.mutator: NULL(), 
+						tsTrieNode.keyHash: exprFromString("improve(keyHash)"), 
+						tsTrieNode.shift: constant(tsTrieNode.shift.\type, "0"))))>;
 	
 	if (<use(ts.details)>.isModified()) {
-		<if (ts.ds == \set()) {>
-			return new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, hashCode - keyHash, cachedSize - 1);
-		<} else {>
-			assert <use(ts.details)>.hasReplacedValue();
-			final int valHash = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
-
-			return new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, hashCode - (keyHash ^ valHash), cachedSize - 1);
-		<}>
+		<if (\map() := ts.ds) {>assert <use(ts.details)>.hasReplacedValue(); <dec(ts.valHash)> = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;<}>return 
+			new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, 
+				<eval(updateProperty(ts, op, hashCodeProperty(), onRemove(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(ts.valHash) ])))>, 
+				<eval(updateProperty(ts, op, sizeProperty(), onRemove()))>);
 	}
 
 	return this;"
-	;
+when core(immutable()) := ts.artifact;
 
-str generate_bodyOf(TrieSpecifics ts, op:removeTuple(),
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
-	"// TODO"
-when core(transient()) := ts.artifact;
-
-default str generate_bodyOf_CoreTransient_removed(TrieSpecifics ts, rel[Option,bool] setup, Method nodeRemovedMethod) =
+/*
+ * TODO: use different return types dependent on data types. 
+ */
+str generate_bodyOf(TrieSpecifics ts, op:removeTuple(), 
+		TrieSpecifics tsTrieNode = setArtifact(ts, trieNode(abstractNode())),
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) =
 	"if (mutator.get() == null) {
 		throw new IllegalStateException(\"Transient already frozen.\");
 	}
-	
-	final int keyHash = key.hashCode();
+
+	<dec(ts.keyHash)> = key.hashCode();
 	<dec(ts.details)> = <ts.ResultStr>.unchanged();
-
-	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.<toString(call(nodeRemovedMethod, 
-					argsOverride = (ts.keyHash: exprFromString("improve(keyHash)"), ts.shift: constant(ts.shift.\type, "0"))))>;
 	
+	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.<toString(call(getDef(tsTrieNode, removeTuple(customComparator = op.customComparator)), 
+					argsOverride = (tsTrieNode.keyHash: exprFromString("improve(keyHash)"), 
+						tsTrieNode.shift: constant(tsTrieNode.shift.\type, "0"))))>;
+
 	if (<use(ts.details)>.isModified()) {
-		<if (ts.ds == \set()) {>
-			rootNode = newRootNode;
-			hashCode -= keyHash;
-			cachedSize -= 1;
-
-			if (DEBUG) {
-				assert checkHashCodeAndSize(hashCode, cachedSize);
-			}
-			return true;
-		<} else {>
-			assert <use(ts.details)>.hasReplacedValue();
-			final int valHash = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
-
-			rootNode = newRootNode;
-			hashCode -= keyHash ^ valHash;
-			cachedSize -= 1;
-
-			if (DEBUG) {
-				assert checkHashCodeAndSize(hashCode, cachedSize);
-			}
-			return true;		
-		<}>
+		<if (\map() := ts.ds) {>assert <use(ts.details)>.hasReplacedValue(); <dec(ts.valHash)> = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;<}>rootNode = newRootNode;
+		<toString(expressionStatement(assign(ts.hashCodeProperty, updateProperty(ts, op, hashCodeProperty(), onRemove(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(ts.valHash) ])))))>
+		<toString(expressionStatement(assign(ts.sizeProperty, updateProperty(ts, op, sizeProperty(), onRemove()))))>
+	
+		if (DEBUG) {
+			assert checkHashCodeAndSize(hashCode, cachedSize);
+		}
+		return null;
 	}
 
 	if (DEBUG) {
 		assert checkHashCodeAndSize(hashCode, cachedSize);
 	}
-	return false;"
-	;
-
-
+	
+	return null;"
+when core(transient()) := ts.artifact;
 
 
 
