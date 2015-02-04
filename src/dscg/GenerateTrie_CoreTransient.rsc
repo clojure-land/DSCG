@@ -134,37 +134,7 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 				}
 			}
 			return true;
-		}
-		
-		@Override
-		public boolean __retainAll(ImmutableSet<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)> set) {
-			boolean modified = false;
-
-			Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)> thisIterator = iterator();
-			while (thisIterator.hasNext()) {
-				if (!set.contains(thisIterator.next())) {
-					thisIterator.remove();
-					modified = true;
-				}
-			}
-
-			return modified;
-		}
-
-		@Override
-		public boolean __retainAllEquivalent(ImmutableSet<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)> set, Comparator\<Object\> cmp) {
-			boolean modified = false;
-
-			Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)> thisIterator = iterator();
-			while (thisIterator.hasNext()) {
-				if (!set.containsEquivalent(thisIterator.next(), cmp)) {
-					thisIterator.remove();
-					modified = true;
-				}
-			}
-
-			return modified;
-		}		
+		}	
 		<}>
 
 		<implOrOverride(ts.CoreCommon_size,

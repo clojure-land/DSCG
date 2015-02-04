@@ -74,9 +74,9 @@ str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) =
 	<dec(getDef(setArtifact(ts, core(immutable())), removeCollection()))>
 	<dec(getDef(setArtifact(ts, core(immutable())), removeCollection(customComparator = true)))>
 
-	<dec(ts.Core_retainAll)>
-	<dec(ts.Core_retainAllEquiv)>
-	
+	<dec(getDef(setArtifact(ts, core(immutable())), retainCollection()))>
+	<dec(getDef(setArtifact(ts, core(immutable())), retainCollection(customComparator = true)))>
+
 	<dec(ts.Core_keyIterator)>
 	<dec(getDef(setArtifact(ts, core(immutable())), valueIterator()))>
 	<dec(getDef(setArtifact(ts, core(immutable())), entryIterator()))>
@@ -124,8 +124,8 @@ str generate_bodyOf_TransientInterface(TrieSpecifics ts) =
 	<dec(getDef(setArtifact(ts, core(transient())), removeCollection()))>
 	<dec(getDef(setArtifact(ts, core(transient())), removeCollection(customComparator = true)))>
 
-	<dec(ts.CoreTransient_retainAll)>
-	<dec(ts.CoreTransient_retainAllEquiv)>
+	<dec(getDef(setArtifact(ts, core(transient())), retainCollection()))>
+	<dec(getDef(setArtifact(ts, core(transient())), retainCollection(customComparator = true)))>
 	
 	<dec(ts.Core_keyIterator)>
 	<dec(getDef(setArtifact(ts, core(transient())), valueIterator()))>

@@ -484,12 +484,3 @@ default str generate_bodyOf_Core_retainAll(TrieSpecifics ts, rel[Option,bool] se
 		tmp.__retainAll<optionalEquivalentPostfix>(<uncapitalize(toString(ts.ds))><optionalComparatorArgument>);
 		return tmp.freeze();"
 	;		
-
-default str generate_bodyOf_Core_removeAll(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
-				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>",
-				str optionalEquivalentPostfix = "<if (!(eq == equalityDefaultForArguments)) {>Equivalent<}>") =
-
-	"	Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> tmp = asTransient();
-		tmp.__removeAll<optionalEquivalentPostfix>(<uncapitalize(toString(ts.ds))><optionalComparatorArgument>);
-		return tmp.freeze();"
-	;

@@ -85,6 +85,9 @@ void doGenerateCurrent() {
 }
 
 void doGenerateBleedingEdge() {
+	// generate map and set interfaces
+	doGenerateInterfaces();
+
 	TrieConfig tcMultimap = hashTrieConfig(\map(multi = true), 5, [generic("K"), generic("V")], withoutSpecialization());
 
 	writeFile(|project://<targetProject>/<targetFolder>/<immutableInterfaceName(\map(multi = true))>.java|, generateImmutableInterface(expandConfiguration(tcMultimap, "")));
