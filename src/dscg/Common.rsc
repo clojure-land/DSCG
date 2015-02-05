@@ -75,6 +75,8 @@ data Argument
 	
 	| var(Type \type, str name)
 	| val(Type \type, str name)
+
+	| qualifiedArgument(Argument obj, Argument arg)
 	;
 
 data Argument
@@ -85,11 +87,17 @@ data Argument
 data Statement
 	= uncheckedStringStatement(str statementStr)
 	| expressionStatement(Expression e) 
+	| compoundStatement(list[Statement] statementList) 
 	;
 
 str toString(Statement:uncheckedStringStatement(statementStr)) = statementStr;
 str toString(Statement:expressionStatement(emptyExpression())) = "";
 str toString(Statement:expressionStatement(e)) = "<toString(e)>;";
+str toString(Statement:compoundStatement(statementList)) = "<for (stmt <- statementList) {><toString(stmt)><}>";
+
+default Statement exprToStmt(Expression e) = expressionStatement(e);
+Statement exprToStmt(compoundExpr(list[Expression] expressionList)) = compoundStatement(mapper(expressionList, exprToStmt));
+
 
 default str toString(Statement _) { throw "Ahhh"; }
 	
@@ -107,7 +115,7 @@ str toString(Annotation:uncheckedStringAnnotation(annotationStr)) = annotationSt
 default str toString(Annotation _) { throw "Ahhh"; }
 
 	
-data Expression
+data Expression(str commentText = "")
 	= cast(Type \type, Expression e)
 	| bitwiseOr (Expression x, Expression y)
 
@@ -125,10 +133,13 @@ data Expression
 	
 	| assign(Argument lhs, Expression rhs)
 	| assignPlusEq(Argument lhs, Expression rhs)
+	
+	| result(Expression e)
+	| super(Expression e)
 	;
 
 Expression assign(Argument lhs, Expression rhs:useExpr(lhs)) = emptyExpression();
-Expression assign(Argument lhs, Expression rhs:plus(useExpr(lhs), tail)) = assignPlusEq(lhs, tail);
+Expression assign(Argument lhs, Expression rhs:plus(useExpr(lhs), Expression tail)) = assignPlusEq(lhs, tail);
 
 data Expression = constant(Type \type, str constantString);
 Expression iconst(int i) = constant(primitive("int"), "<i>");
@@ -194,35 +205,46 @@ str toString(Expression e:assign(l, r)) =
 	"<use(l)> = <toString(r)>";	
 	
 str toString(Expression e:assignPlusEq(l, r)) = 
-	"<use(l)> += <toString(r)>";	
+	"<use(l)> += <toString(r)>";
+	
+str toString(Expression _:super(e)) = 
+	"super(<toString(e)>)";
+	
+str toString(Expression _:result(e)) = 
+	"return <toString(e)>";	
 
 
 data Expression
 	= call(Method m, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = (), str inferredGenericsStr = "")
-	| call(TrieSpecifics ts, Argument arg, PredefOp op, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ());
+	| call(TrieSpecifics ts, Argument arg, PredefOp op, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ())
+	| call(TrieSpecifics ts, Argument arg, str methodName, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ());
 
 map[Argument, Expression] makeArgsOverrideMap(list[Argument] args, list[Expression] argsOverride) 
 	= toMapUnique(zip(args, argsOverride))
 when size(args) == size(argsOverride);
 
 str toString(Expression c:call(m:constructor(_,_))) =
-	"new <m.name><c.inferredGenericsStr>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"	
+	"<printNonEmptyCommentWithNewline(c.commentText)>new <m.name><c.inferredGenericsStr>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"	
 when m.isActive;
 
 str toString(Expression c:call(m:function(_,_))) = 
-	"<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
+	"<printNonEmptyCommentWithNewline(c.commentText)><m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
 when m.isActive;
 
 str toString(Expression c:call(m:method(_,_))) = 
-	"<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
+	"<printNonEmptyCommentWithNewline(c.commentText)><m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
 when m.isActive;
 
 
 
 str toString(Expression c:call(TrieSpecifics ts, Argument arg, PredefOp op), Method m = getDef(ts, op)) = 
-	"<use(arg)>.<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
+	"<printNonEmptyCommentWithNewline(c.commentText)><use(arg)>.<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
 when m.isActive;
 
+
+str toString(Expression c:call(TrieSpecifics ts, Argument arg, str methodName), Method m = getDef(ts, methodName)) = 
+	"<printNonEmptyCommentWithNewline(c.commentText)><use(arg)>.<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
+when m.isActive;
 
 
 
@@ -271,66 +293,214 @@ data JavaDataType
 
 JavaDataType jul_Iterator(Type typeArgument) = javaInterface("Iterator", typeArguments = [ primitiveToClass(typeArgument) ]); 
 
-JavaDataType mapKeyIterator(list[Type] typeArguments) {
+JavaDataType mapKeyIterator(list[Type] typeArguments)
+	= javaClass("MapKeyIterator", typeArguments = typeArguments, implementsList = [ jul_Iterator( typeArguments[0] ) ]); 
+
+JavaDataType mapValueIterator(list[Type] typeArguments)
+	= javaClass("MapValueIterator", typeArguments = typeArguments, implementsList = [ jul_Iterator( typeArguments[1] ) ]); 
+
+JavaDataType mapEntryIterator(list[Type] typeArguments)
+	= javaClass("MapEntryIterator", typeArguments = typeArguments, implementsList = [ jul_Iterator( typeArguments[1] ) ]);
 	
-	JavaDataType clazz = javaClass("MapKeyIterator", typeArguments = typeArguments, implementsList = [ jul_Iterator( typeArguments[0] ) ]); 
+JavaDataType mapTupleIterator(list[Type] typeArguments)
+	= javaClass("MapTupleIterator", typeArguments = typeArguments, implementsList = [ jul_Iterator( typeArguments[1] ) ]);	
 
-	return clazz;
-}
+JavaDataType transientMapKeyIterator()
+	= javaClass("TransientMapKeyIterator", typeArguments = [generic("K"), generic("V")], extends = mapKeyIterator([generic("K"), generic("V")])); 
 
-JavaDataType mapValueIterator(list[Type] typeArguments) {
+JavaDataType transientMapValueIterator()	
+	= javaClass("TransientMapValueIterator", typeArguments = [generic("K"), generic("V")], extends = mapValueIterator([generic("K"), generic("V")]));
 	
-	JavaDataType clazz = javaClass("MapValueIterator", typeArguments = typeArguments, implementsList = [ jul_Iterator( typeArguments[1] ) ]); 
+JavaDataType transientMapEntryIterator()	
+	= javaClass("TransientMapEntryIterator", typeArguments = [generic("K"), generic("V")], extends = mapEntryIterator([generic("K"), generic("V")]));	 
 
-	return clazz;
-}
+JavaDataType transientMapTupleIterator()	
+	= javaClass("TransientMapTupleIterator", typeArguments = [generic("K"), generic("V")], extends = mapTupleIterator([generic("K"), generic("V")]));	 
 
-JavaDataType transientMapKeyIterator() {
-	
-	JavaDataType clazz = javaClass("TransientMapKeyIterator", typeArguments = [generic("K"), generic("V")], extends = mapKeyIterator([generic("K"), generic("V")])); 
+JavaDataType transientMap(list[Type] typeArguments)
+	= javaInterface("TransientMap", typeArguments = typeArguments, extendsList = []);
 
-	return clazz;
-}
+JavaDataType transientTrieMap()
+	= javaClass("TransientTrieMap_BleedingEdge", typeArguments = [generic("K"), generic("V")], extends = transientMap([generic("K"), generic("V")]));
 
-JavaDataType transientMapValueIterator() {
-	
-	JavaDataType clazz = javaClass("TransientMapValueIterator", typeArguments = [generic("K"), generic("V")], extends = mapValueIterator([generic("K"), generic("V")])); 
+list[Argument] getFieldList(TrieSpecifics ts, JavaDataType jdt) = 
+	[ 
+		labeledArgument(collection(), jdtToVal(transientTrieMap(), "collection")),  
+		labeledArgument(payloadKey(), var(ts.keyType, "last<capitalize(keyName)>")) 
+	]
+when jdt := transientMapKeyIterator();
 
-	return clazz;
-}
+list[Argument] getFieldList(TrieSpecifics ts, JavaDataType jdt) = 
+	[ 
+		labeledArgument(collection(), jdtToVal(transientTrieMap(), "collection")),  
+		labeledArgument(payloadValue(), var(ts.valType, "last<capitalize(valName)>")) 
+	]
+when jdt := transientMapValueIterator();
+
+list[Argument] getFieldList(TrieSpecifics ts, JavaDataType jdt) = 
+	[ 
+		labeledArgument(collection(), jdtToVal(transientTrieMap(), "collection")),  
+		labeledArgumentList(payloadTuple(), [ var(ts.keyType, "last<capitalize(keyName)>"), var(ts.valType, "last<capitalize(valName)>") ]) 
+	]
+when jdt := transientMapEntryIterator();
+
+list[Argument] getFieldList(TrieSpecifics ts, JavaDataType jdt) = 
+	[ 
+		labeledArgument(collection(), jdtToVal(transientTrieMap(), "collection")),  
+		labeledArgumentList(payloadTuple(), [ var(ts.keyType, "last<capitalize(keyName)>"), var(ts.valType, "last<capitalize(valName)>") ]) 
+	]
+when jdt := transientMapTupleIterator();
+
+default list[Argument] getFieldList(TrieSpecifics ts, JavaDataType jdt) = []; // { throw "Not supported:\n<jdt>"; }
+
+Argument jdtToVal(JavaDataType jdt, str fieldName) = val(specific(jdt.typeName, typeArguments = jdt.typeArguments), fieldName);
+Type jdtToType(JavaDataType jdt) = specific(jdt.typeName, typeArguments = jdt.typeArguments);
 
 /*
 	Looking up interface doesn't work: 
 		/javaClass("MapValueIterator") := transientMapValueIterator();
 */
 
-// default Method getDef(JavaDataType jdt) { throw "Not found <op> in context <ts.artifact> for <ts.ds>"; } // TODO noop
-
-Method getDef(JavaDataType jdt, methodName:"hasNext") 
+// TODO: reinitiate deep pattern match after github issue cwi-swat/rascal#769 is resolved
+Method getDef(TrieSpecifics ts, JavaDataType jdt, methodName:"hasNext") 
 	= method(\return(primitive("boolean")), methodName, visibility = "public")
-when jdt.typeName == "Iterator";
+; // when /javaInterface("Iterator", _) := jdt;
 
-Method getDef(JavaDataType jdt, methodName:"next") 
+Method getDef(TrieSpecifics ts, JavaDataType jdt, methodName:"next") 
 	= method(\return(typeArgument), methodName, visibility = "public")
-when jdt.typeName == "Iterator"
-	// NAME BINDINGS
-	&& [ typeArgument ] := jdt.typeArguments;
+when /javaInterface("Iterator", typeArguments = [ typeArgument ]) := jdt;
 
-Method getDef(JavaDataType jdt, methodName:"remove") 
+// TODO: remove after github issue cwi-swat/rascal#769 is resolved
+default Method getDef(TrieSpecifics ts, JavaDataType jdt, methodName:"next") 
+	= method(\return(typeArgument), methodName, visibility = "public")
+when typeArgument := generic("K");
+
+// TODO: reinitiate deep pattern match after github issue cwi-swat/rascal#769 is resolved
+Method getDef(TrieSpecifics ts, JavaDataType jdt, methodName:"remove") 
 	= method(\return(\void()), methodName, visibility = "public")
-when jdt.typeName == "Iterator";	
+; // when /javaInterface("Iterator", _) := jdt;	
+
+Method getDef(TrieSpecifics ts, JavaDataType jdt, methodName:"__constructor") 
+	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ collection ], generics = jdt.typeArguments, visibility = "public")	
+when jdt := transientMapKeyIterator()
+		&& /labeledArgument(collection(), Argument collection) := getFieldList(ts, jdt);
+
+Method getDef(TrieSpecifics ts, JavaDataType jdt, methodName:"__constructor") 
+	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ collection ], generics = jdt.typeArguments, visibility = "public")	
+when jdt := transientMapValueIterator()
+		&& /labeledArgument(collection(), Argument collection) := getFieldList(ts, jdt);
+	
+Method getDef(TrieSpecifics ts, JavaDataType jdt, methodName:"__constructor") 
+	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ collection ], generics = jdt.typeArguments, visibility = "public")	
+when jdt := transientMapEntryIterator()
+		&& /labeledArgument(collection(), Argument collection) := getFieldList(ts, jdt);
+
+Method getDef(TrieSpecifics ts, JavaDataType jdt, methodName:"__constructor") 
+	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ collection ], generics = jdt.typeArguments, visibility = "public")	
+when jdt := transientMapTupleIterator()
+		&& /labeledArgument(collection(), Argument collection) := getFieldList(ts, jdt);
+
+default Method getDef(TrieSpecifics ts, JavaDataType jdt, str methodName) { 
+ 	throw "Not found <methodName> and <jdt> for <ts>"; 
+}
 
 
-str toString(JavaDataType clazz) 
-	= "<clazz.typeName><GenericsStr(clazz.typeArguments)> <extendsStr(clazz.extends)> <implementsListStr(clazz.implementsList)>";
+
+
+str generate_bodyOf(TrieSpecifics ts, JavaDataType jdt) {
+
+	list[str] methodNames = [ "__constructor", "next", "remove" ];
+	
+	return
+	"public static class <toString(jdt)> {
+	'	<decFields(getFieldList(ts, jdt))>
+	'
+	'	<for(methodName <- methodNames) {><impl(ts, jdt, methodName)><}>
+	'}";
+}
+
+str impl(TrieSpecifics ts, JavaDataType jdt, str methodName, Method __def = getDef(ts, jdt, methodName)) 
+	= implOrOverride(__def, generate_bodyOf(ts, jdt, methodName), doOverride = \new())
+when __def.isActive;
+
+
+default str generate_bodyOf(TrieSpecifics ts, JavaDataType jdt, str methodName) = "";
+
+//Method getDef(TrieSpecifics ts, JavaDataType jdt, methodName:"__constructor") 
+//	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ collection ], generics = jdt.typeArguments, visibility = "public")	
+//when jdt := transientMapKeyIterator()
+//		&& /labeledArgument(collection(), Argument collection) := getFieldList(ts, jdt);
+//
+//Method getDef(TrieSpecifics ts, JavaDataType jdt, methodName:"__constructor") 
+//	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ collection ], generics = jdt.typeArguments, visibility = "public")	
+//when jdt := transientMapValueIterator()
+//		&& /labeledArgument(collection(), Argument collection) := getFieldList(ts, jdt);
+
+Expression generate_bodyOf(TrieSpecifics ts, JavaDataType jdt, methodName:"__constructor") = 
+	compoundExpr([
+		super(exprFromString("<use(collection)>.rootNode")),
+		assign(qualifiedArgument(this(), collection), useExpr(collection))
+	])
+when /labeledArgument(collection(), Argument collection) := getFieldList(ts, jdt);
+
+Expression generate_bodyOf(TrieSpecifics ts, JavaDataType jdt, methodName:"next") = 
+	result(assign(key, exprFromString("super.next()")))	
+when /labeledArgument(payloadKey(), Argument key) := getFieldList(ts, jdt);
+
+Expression generate_bodyOf(TrieSpecifics ts, JavaDataType jdt, methodName:"next") = 
+	result(assign(val, exprFromString("super.next()")))	
+when /labeledArgument(payloadValue(), Argument val) := getFieldList(ts, jdt);
+
+Expression generate_bodyOf(TrieSpecifics ts, JavaDataType jdt, methodName:"remove") 
+	= call(setArtifact(ts, core(transient())), collection, removeTuple(customComparator = false), 
+			commentText = "TODO: test removal at iteration rigorously")
+when /labeledArgument(collection(), Argument collection) := getFieldList(ts, jdt);
+
+str toString(JavaDataType jdt) 
+	= "<jdt.typeName><GenericsStr(jdt.typeArguments)> <extendsStr(jdt.extends)> <implementsListStr(jdt.implementsList)>"
+when jdt is javaClass;
+
+str toString(JavaDataType jdt) 
+	= "<jdt.typeName><GenericsStr(jdt.typeArguments)> <extendsListStr(jdt.extendsList)>"
+when jdt is javaInterface;
 
 str extendsStr(javaRootClass()) = "";
 str extendsStr(JavaDataType clazz) 
 	= "extends <clazz.typeName><GenericsStr(clazz.typeArguments)>";
 
+str extendsListStr([]) = "";
+str extendsListStr(list[JavaDataType] implementsList) 
+	= "extends <intercalate(", ", [ "<jdt.typeName><GenericsStr(jdt.typeArguments)>" | jdt <- implementsList ])>";
+
 str implementsListStr([]) = "";
 str implementsListStr(list[JavaDataType] implementsList) 
 	= "implements <intercalate(", ", [ "<jdt.typeName><GenericsStr(jdt.typeArguments)>" | jdt <- implementsList ])>";
+
+
+
+str printNonEmptyCommentWithNewline(str commentText) {
+	if (commentText != "") {
+		return "//<commentText>\n";
+	} else {
+		return "";	
+	}
+} 
+
+
+//Method getDef(TrieSpecifics ts, insertCollection(customComparator = true))
+//	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>AllEquivalent", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+//when core(transient()) := ts.artifact || unknownArtifact() := ts.artifact;
+//
+//str generate_bodyOf(TrieSpecifics ts, op:insertCollection(),
+//		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
+//		Argument transientColl = val(exactBoundCollectionType(ts.ds, ts.tupleTypes, transient()), "tmpTransient"),
+//		TrieSpecifics tsCoreTransient = setArtifact(ts, core(transient()))) = 
+//	"<dec(transientColl)> = <toString(call(ts, this(), asTransient()))>;
+//	'<toString(call(ts, transientColl, insertCollection(customComparator = op.customComparator)))>;
+//	'return <toString(call(tsCoreTransient, transientColl, freeze()))>;"
+//when core(immutable()) := ts.artifact;
+
+
 
 /**
  * Iterator that first iterates over inlined-values and then continues
@@ -410,7 +580,8 @@ default str generate_bodyOf(TrieSpecifics ts, PredefOp op) = "";
 
 
 data PredefArgLabel
-	= payloadKey() 
+	= payloadKey()
+	| payloadValue() 
 	| payloadTuple()
 	| collection();
 
@@ -918,6 +1089,10 @@ str eval(Expression e) =
 	e.constantString
 when e is constant;
 
+str toString(Expression e) = 
+	e.exprString
+when e is exprFromString;
+
 str eval(Expression e) = 
 	e.exprString
 when e is exprFromString;
@@ -940,9 +1115,14 @@ str use(list[Argument] xs) = intercalate(", ", mapper(xs, use));
 str use(Argument::labeledArgument(_, a), bool isFinal = true) = use(a, isFinal = isFinal);
 str use(Argument a) {
 	switch (a) {
+		case var (tp, nm): return "<nm>";
+		case val (tp, nm): return "<nm>";
+	
+		case qualifiedArgument(obj, arg): return "<use(obj)>.<use(arg)>";
+	
 		case field (tp, nm): return "<nm>";
 		case getter(tp, nm): return  "<nm>()";
-		default: throw "WHAT?";
+		default: throw "WHAT? <a>";
 	}
 }
 
@@ -953,6 +1133,9 @@ str dec(Argument a, bool isFinal = true) {
 	//}
 	
 	switch (a) {
+		case var (tp, nm): return "<typeToString(tp)> <nm>";
+		case val (tp, nm): return "final <typeToString(tp)> <nm>";
+	
 		case field (tp, nm): return "<if (isFinal) {>final <}><typeToString(tp)> <nm>";
 		case getter(tp, nm): return  "abstract <typeToString(tp)> <nm>()";		
 		case \return(tp): return  "<typeToString(tp)>";
@@ -974,9 +1157,13 @@ default str dec(Argument a) { throw "You forgot <a>!"; }
 str dec(list[Argument] xs) = intercalate(", ", mapper(xs, dec));
 
 // TODO: merge with one above
-str decFields(list[Argument] xs) = intercalate("\n", mapper(xs, str(Argument x) { return "<dec(x)>;"; }));
+str decFields(list[Argument] xs) = intercalate("\n", mapper(flattenArgumentList(xs), str(Argument x) { return "<dec(x)>;"; }));
 
 str initFieldsWithIdendity(list[Argument] xs) = intercalate("\n", mapper(xs, str(Argument x) { return "this.<use(x)> = <use(x)>;"; }));
+
+list[Argument] flattenArgumentList(list[Argument] argumentList) {
+	return [ arg | /Argument arg := argumentList, !(arg is labeledArgument || arg is labeledArgumentList) ];
+}
 
 // convertions
 Argument asField(getter(\type, name)) = field(\type, name);
@@ -1002,7 +1189,9 @@ data OverwriteType
 	;
 
 str implOrOverride(Method m, Statement bodyStmt, OverwriteType doOverride = override(), list[Annotation] annotations = []) = implOrOverride(m, toString(bodyStmt), doOverride = doOverride);
-str implOrOverride(Method m, Expression bodyExpr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = implOrOverride(m, toString(bodyExpr), doOverride = doOverride);
+
+default str implOrOverride(Method m, Expression bodyExpr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = implOrOverride(m, toString(exprToStmt(bodyExpr)), doOverride = doOverride);
+//str implOrOverride(Method m, Expression bodyExpr:result(nestedExpr), OverwriteType doOverride = override(), list[Annotation] annotations = []) = implOrOverride(m, "return <toString(nestedExpr)>;", doOverride = doOverride);
 
 str implOrOverride(Method m, str() lazyBodyStr, OverwriteType __doOverride = override(), list[Annotation] __annotations = []) {
 	if (m.isActive) { 
@@ -1023,8 +1212,7 @@ str implOrOverride(m:method(_,_), str bodyStr, OverwriteType doOverride = overri
 	<if (doOverride == \override()) {>@Override<}>
 	<m.visibility> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>) {
 		<bodyStr>
-	}
-	"
+	}"
 when m.isActive
 	;
 
@@ -1037,10 +1225,9 @@ when m.isActive
 	;
 	
 str implOrOverride(m:constructor(_,_), str bodyStr,  OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
-	"<for(a <- annotations) {><toString(a)><}>
-	'<m.visibility> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>) {
-	'	<bodyStr>
-	'}"
+	"<for(a <- annotations) {><toString(a)><}><m.visibility> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>) {
+		<bodyStr>
+	}"
 when m.isActive
 	;		
 

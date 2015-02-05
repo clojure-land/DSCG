@@ -157,6 +157,15 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 	
 		<impl(ts, valueCollectionsStream())>
 
+
+		<generate_bodyOf(ts, transientMapKeyIterator())>
+		
+		<generate_bodyOf(ts, transientMapValueIterator())>
+		
+		<generate_bodyOf(ts, transientMapEntryIterator())>
+		
+		<generate_bodyOf(ts, transientMapTupleIterator())>
+
 		/**
 		 * Iterator that first iterates over inlined-values and then continues
 		 * depth first recursively.
