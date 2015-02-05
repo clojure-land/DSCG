@@ -159,13 +159,13 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		<impl(ts, valueCollectionsStream())>
 
 
-		<generate_bodyOf(ts, transientMapKeyIterator())>
+		<declareJdt(ts, transientKeyIterator())>
 		
-		<generate_bodyOf(ts, transientMapValueIterator())>
+		<declareJdt(ts, transientValueIterator())>
 		
-		<generate_bodyOf(ts, transientMapEntryIterator())>
+		<declareJdt(ts, transientEntryIterator())>
 		
-		<generate_bodyOf(ts, transientMapTupleIterator())>
+		<declareJdt(ts, transientTupleIterator())>
 
 		/**
 		 * Iterator that first iterates over inlined-values and then continues
