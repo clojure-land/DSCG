@@ -14,6 +14,7 @@ module dscg::GenerateTrie_CoreTransient
 import List;
 import String;
 import dscg::Common;
+import dscg::Common_Iterator;
 import dscg::GenerateTrie_Core_Common;
 
 str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classNamePostfix) { 
