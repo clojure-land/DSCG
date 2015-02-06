@@ -159,13 +159,13 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		<impl(ts, valueCollectionsStream())>
 
 
-		<declareJdt(ts, transientKeyIterator())>
+		<declareJdt(ts, keyIterator(ts.artifact))>
 		
-		<declareJdt(ts, transientValueIterator())>
+		<declareJdt(ts, valueIterator(ts.artifact))>
 		
-		<declareJdt(ts, transientEntryIterator())>
+		<declareJdt(ts, entryIterator(ts.artifact))>
 		
-		<declareJdt(ts, transientTupleIterator())>
+		<declareJdt(ts, tupleIterator(ts.artifact))>
 
 		/**
 		 * Iterator that first iterates over inlined-values and then continues

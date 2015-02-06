@@ -810,7 +810,7 @@ str eval(Expression e) =
 when e is embrace;
 
 str eval(Expression e) = 
-	use(e.arg) 
+	use(flattenArgumentList([e.arg])) 
 when e is useExpr;
 
 str eval(Expression e) = 
@@ -866,7 +866,7 @@ str eval(list[Expression] xs) = intercalate(", ", mapper(xs, eval));
 default str eval(list[Expression] _) { throw "Ahhh"; }
 
 
-str use(list[Argument] xs) = intercalate(", ", mapper(xs, use));
+str use(list[Argument] xs) = intercalate(", ", mapper(flattenArgumentList(xs), use));
 
 str use(Argument::labeledArgument(_, a), bool isFinal = true) = use(a, isFinal = isFinal);
 str use(Argument a) {
@@ -878,6 +878,9 @@ str use(Argument a) {
 	
 		case field (tp, nm): return "<nm>";
 		case getter(tp, nm): return  "<nm>()";
+		
+		case labeledArgument(_, arg): return use(arg);
+		
 		default: throw "WHAT? <a>";
 	}
 }
@@ -910,7 +913,7 @@ str dec(Argument::field (_, _)) = "final  _";
 str dec(Argument::getter(\type, name)) = "abstract <toString(\type)> <name>()";
 default str dec(Argument a) { throw "You forgot <a>!"; }
 /***/
-str dec(list[Argument] xs) = intercalate(", ", mapper(xs, dec));
+str dec(list[Argument] xs) = intercalate(", ", mapper(flattenArgumentList(xs), dec));
 
 // TODO: merge with one above
 str decFields(list[Argument] xs) = intercalate("\n", mapper(flattenArgumentList(xs), str(Argument x) { return "<dec(x)>;"; }));
@@ -997,10 +1000,9 @@ default list[Expression] substitute(list[Argument] args, map[Argument, Expressio
 	for (arg <- args) {
 		if (labeledArgument(largName, larg) := arg && labeledArgsOverride[largName]?) {
 			res += labeledArgsOverride[largName];
+		} else if (labeledArgumentList(largName, largs) := arg && labeledArgsOverride[largName]?) {
+			res += labeledArgsOverride[largName];
 		} else 
-		// if (labeledArgumentList(largName, largs) := arg && labeledArgsOverride[largName]?) {
-		//	res += labeledArgsOverride[largName];
-		//} else 
 		
 		if (argsOverride[arg]?) {
 			res += argsOverride[arg];
@@ -1289,6 +1291,9 @@ list[Type] nodeTupleTypes(TrieSpecifics ts) = [ arg.\type | arg <- nodeTupleArgs
 list[Argument] appendToName(list[str] appendices, Argument prototypeArgument:field(Type \type, str name)) = mapper(appendices, Argument(str appendix) { return field(\type, "<name><appendix>"); }); 
 
 Argument appendToName(Argument arg, str appendix) = appendToName([arg], appendix)[0];
+
+list[Argument] prependToName(list[Argument] arguments, str prefix) 
+	= [ updateName(arg, str(str argName) { return "<prefix><capitalize(argName)>"; }) | arg <- arguments];
 
 list[Argument] appendToName(list[Argument] arguments, str appendix) 
 	= [ updateName(arg, str(str argName) { return "<argName><appendix>"; }) | arg <- arguments];
@@ -1901,51 +1906,51 @@ list[Expression] unboxPayloadFromTuple(TrieSpecifics ts, Argument arg) =
 data PredefOp = removeTuple(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__remove", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument) ], visibility = "public", isActive = true)
+	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__remove", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true)
 when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && \map(multi = true) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeEquivalent", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeEquivalent", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && \map(multi = true) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__remove", args = [ primitiveToClassArgument(payloadTupleArg(ts, 0)) ], visibility = "public", isActive = true)
+	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__remove", args = [ labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))) ], visibility = "public", isActive = true)
 when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && !(\map(multi = true) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeEquivalent", args = [ primitiveToClassArgument(payloadTupleArg(ts, 0)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeEquivalent", args = [ labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && !(\map(multi = true) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(primitive("boolean")), "__remove", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument) ], visibility = "public", isActive = true)
+	= method(\return(primitive("boolean")), "__remove", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true)
 when core(transient()) := ts.artifact && !(\map(multi = false) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(primitive("boolean")), "__removeEquivalent", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitive("boolean")), "__removeEquivalent", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(transient()) := ts.artifact && !(\map(multi = false) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(collTupleType(ts, 1)), "__remove", args = [ primitiveToClassArgument(payloadTupleArg(ts, 0)) ], visibility = "public", isActive = true)
+	= method(\return(collTupleType(ts, 1)), "__remove", args = [ labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))) ], visibility = "public", isActive = true)
 when core(transient()) := ts.artifact && \map(multi = false) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(collTupleType(ts, 1)), "__removeEquivalent", args = [ primitiveToClassArgument(payloadTupleArg(ts, 0)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(collTupleType(ts, 1)), "__removeEquivalent", args = [ labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(transient()) := ts.artifact && \map(multi = false) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, *payloadTupleArgs(ts), ts.keyHash, ts.shift, ts.details ])
+	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts)), ts.keyHash, ts.shift, ts.details ])
 when trieNode(_) := ts.artifact && \map(multi = true) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, *payloadTupleArgs(ts), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when trieNode(_) := ts.artifact && \map(multi = true) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, payloadTupleArg(ts, 0), ts.keyHash, ts.shift, ts.details ])
+	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, labeledArgument(payloadTuple(), payloadTupleArg(ts, 0)), ts.keyHash, ts.shift, ts.details ])
 when trieNode(_) := ts.artifact && !(\map(multi = true) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, payloadTupleArg(ts, 0), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, labeledArgument(payloadTuple(), payloadTupleArg(ts, 0)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when trieNode(_) := ts.artifact && !(\map(multi = true) := ts.ds);
 
 str generate_bodyOf(TrieSpecifics ts, op:removeTuple(),
