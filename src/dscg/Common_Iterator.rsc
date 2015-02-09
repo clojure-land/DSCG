@@ -51,7 +51,7 @@ str implementsListStr([]) = "";
 str implementsListStr(list[JavaDataType] implementsList) 
 	= "implements <intercalate(", ", [ "<jdt.typeName><GenericsStr(jdt.typeArguments)>" | jdt <- implementsList ])>";
 
-Argument jdtToVal(JavaDataType jdt, str fieldName) = val(specific(jdt.typeName, typeArguments = jdt.typeArguments), fieldName);
+Argument jdtToVal(JavaDataType jdt, str fieldName) = val(specific(jdt.typeName, typeArguments = [ primitiveToClass(arg) | arg <- jdt.typeArguments, arg is generic ]), fieldName);
 Type jdtToType(JavaDataType jdt) = specific(jdt.typeName, typeArguments = jdt.typeArguments);
 
 

@@ -129,10 +129,10 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 	}	
 	
 	if (!isGeneric(keyType)) {
-		classNamePostfix = classNamePostfix + "_<capitalize(toString(keyType))>Key";
+		classNamePostfix = classNamePostfix + "_<capitalize(typeToString(keyType))>Key";
 	}	
 	if (!isGeneric(valType) && \map() := ds) {
-		classNamePostfix = classNamePostfix + "_<capitalize(toString(valType))>Value";
+		classNamePostfix = classNamePostfix + "_<capitalize(typeToString(valType))>Value";
 	}
 
 	if (overideClassNamePostfixWith != "") {
@@ -960,8 +960,8 @@ when !isOptionEnabled(setup,useUntypedVariables()) && ((n + m) == nMax) ||
 str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
 	'
-	'	<dec(ts.bitmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)>);
-	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)>);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
 	'
 	'	switch(idx) {
 	'		<for (i <- [0..mn/tupleLength(ds)]) {>case <i>:
@@ -977,8 +977,8 @@ when isOptionEnabled(setup,useUntypedVariables())
 default str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
 	"	final int valIndex = dataIndex(bitpos);
 	'
-	'	<dec(ts.bitmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)>);
-	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)>);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
@@ -999,8 +999,8 @@ when !isOptionEnabled(setup,useUntypedVariables()) && (n + m ) >= nMax
 str generate_bodyOf_copyAndInsertNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
 	"	<dec(field(primitive("int"), "idx"))> = nodeIndex(bitpos);
 	'
-	'	<dec(ts.bitmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
-	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)>);
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)>);
 	'
 	'	switch(idx) {
 	'		<for (i <- [1..n+2]) {>case <i-1>:
@@ -1019,8 +1019,8 @@ when isOptionEnabled(setup,useUntypedVariables()) && (mn >= tupleLength(ds) * nM
 str generate_bodyOf_copyAndInsertNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity() + nodeIndex(bitpos);
 	'
-	'	<dec(ts.bitmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
-	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)>);
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)>);
 	'
 	'	switch(idx) {
 	'		<for (i <- [0..mn+1]) {>case <i>:
@@ -1040,8 +1040,8 @@ when !isOptionEnabled(setup,useUntypedVariables())
 str generate_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
 	"	<dec(field(primitive("int"), "idx"))> = nodeIndex(bitpos);
 	'
-	'	<dec(ts.bitmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);
-	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)>);
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)>);
 	'
 	'	switch(idx) {
 	'		<for (i <- [1..n+1]) {>case <i-1>:
@@ -1055,8 +1055,8 @@ when !isOptionEnabled(setup,useUntypedVariables())
 str generate_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity() + nodeIndex(bitpos);
 	'
-	'	<dec(ts.bitmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);
-	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)>);
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)>);
 	'
 	'	switch(idx) {
 	'		<for (i <- [0..mn]) {>case <i>:
@@ -1075,8 +1075,8 @@ when !isOptionEnabled(setup,useUntypedVariables())
 default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
 	"	final int valIndex = dataIndex(bitpos);
 	'
-	'	<dec(ts.bitmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)>);
-	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)>);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [0..mn/tupleLength(ds)]) {>case <i>:
@@ -1090,8 +1090,8 @@ when isOptionEnabled(setup,useUntypedVariables())
 default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
 	"	final int valIndex = dataIndex(bitpos);
 	'
-	'	<dec(ts.bitmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)>);
-	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)>);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
@@ -1110,8 +1110,8 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedT
 	"	<dec(field(primitive("int"), "bitIndex"))> = <use(tupleLengthConstant)> * (payloadArity() - 1) + nodeIndex(bitpos);
 	'	<dec(field(primitive("int"), "valIndex"))> = dataIndex(bitpos);
 	'
-	'	<dec(ts.bitmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
-	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [0..mn/tupleLength(ds)]) {>case <i>:
@@ -1133,8 +1133,8 @@ default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___e
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
 	'
-	'	<dec(ts.bitmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
-	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
 	'
 	'	switch(valIndex) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
@@ -1171,8 +1171,8 @@ str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedT
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
 	'	
-	'	<dec(ts.bitmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
-	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
 	'
 	'	<dec(key(ts.keyType))> = <nodeName>.getKey(0);
 	'	<if (\map() := ts.ds) {><dec(val(ts.valType))> = <nodeName>.getValue(0);<}>	
@@ -1197,8 +1197,8 @@ default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___e
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
 	'	
-	'	<dec(ts.bitmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
-	'	<dec(ts.valmapField)> = (<toString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
 	'
 	'	<dec(key(ts.keyType))> = <nodeName>.getKey(0);
 	'	<if (\map() := ts.ds) {><dec(val(ts.valType))> = <nodeName>.getValue(0);<}>	

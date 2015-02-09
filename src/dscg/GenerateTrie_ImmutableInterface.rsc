@@ -50,8 +50,8 @@ str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) =
 	<dec(ts.jul_Set_containsAll)>
 	<dec(ts.jul_Set_containsAllEquivalent)>
 
-	<dec(ts.Core_get)>
-	<dec(ts.Core_getEquiv)>
+	<dec(getDef(setArtifact(ts, core(immutable())), get()))>
+	<dec(getDef(setArtifact(ts, core(immutable())), get(customComparator = true)))>
 
 	<dec(getDef(setArtifact(ts, core(immutable())), containsKey()))>
 	<dec(getDef(setArtifact(ts, core(immutable())), containsKey(customComparator = true)))>
@@ -77,7 +77,7 @@ str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) =
 	<dec(getDef(setArtifact(ts, core(immutable())), retainCollection()))>
 	<dec(getDef(setArtifact(ts, core(immutable())), retainCollection(customComparator = true)))>
 
-	<dec(ts.Core_keyIterator)>
+	<dec(getDef(setArtifact(ts, core(immutable())), keyIterator()))>
 	<dec(getDef(setArtifact(ts, core(immutable())), valueIterator()))>
 	<dec(getDef(setArtifact(ts, core(immutable())), entryIterator()))>
 	<dec(getDef(setArtifact(ts, core(immutable())), tupleIterator()))>
@@ -100,8 +100,8 @@ str generate_bodyOf_TransientInterface(TrieSpecifics ts) =
 	<dec(ts.jul_Set_containsAll)>
 	<dec(ts.jul_Set_containsAllEquivalent)>
 
-	<dec(ts.Core_get)>
-	<dec(ts.Core_getEquiv)>
+	<dec(getDef(setArtifact(ts, core(transient())), get()))>
+	<dec(getDef(setArtifact(ts, core(transient())), get(customComparator = true)))>
 
 	<dec(getDef(setArtifact(ts, core(transient())), containsKey()))>
 	<dec(getDef(setArtifact(ts, core(transient())), containsKey(customComparator = true)))>
@@ -127,7 +127,7 @@ str generate_bodyOf_TransientInterface(TrieSpecifics ts) =
 	<dec(getDef(setArtifact(ts, core(transient())), retainCollection()))>
 	<dec(getDef(setArtifact(ts, core(transient())), retainCollection(customComparator = true)))>
 	
-	<dec(ts.Core_keyIterator)>
+	<dec(getDef(setArtifact(ts, core(transient())), keyIterator()))>
 	<dec(getDef(setArtifact(ts, core(transient())), valueIterator()))>
 	<dec(getDef(setArtifact(ts, core(transient())), entryIterator()))>
 	<dec(getDef(setArtifact(ts, core(transient())), tupleIterator()))>

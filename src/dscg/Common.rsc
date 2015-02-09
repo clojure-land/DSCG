@@ -474,26 +474,26 @@ data TrieSpecifics
 //		Method CoreTransient_insertOrPutAll      = method(\return(primitive("boolean")), "<insertOrPutMethodName(ds)>All",  			args = [__weirdArgument], 				visibility = "public"),
 //		Method CoreTransient_insertOrPutAllEquiv = method(\return(primitive("boolean")), "<insertOrPutMethodName(ds)>AllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
 
-		Method Core_removed 		= method(coreInterfaceReturn, "__remove",  			args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument) ], 				visibility = "public"),
-		Method Core_removedEquiv 	= method(coreInterfaceReturn, "__removeEquivalent", args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),														
-		
-		Method CoreTransient_removed 		= method(\return(primitive("boolean")), "__remove",  			args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument) ], 				visibility = "public"),
-		Method CoreTransient_removedEquiv 	= method(\return(primitive("boolean")), "__removeEquivalent", args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument), comparator ], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),														
-
-		Method Core_get 		= method(\return(dsAtFunction__range_type(ds, tupleTypes)), "get",  			args = [primitiveToClassArgument(stdObjectArg)], 				visibility = "public"),
-		Method Core_getEquiv 	= method(\return(dsAtFunction__range_type(ds, tupleTypes)), "getEquivalent", 	args = [primitiveToClassArgument(stdObjectArg), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
-
-		Method Core_retainAll 		= method(coreInterfaceReturn, "__retainAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
-		Method Core_retainAllEquiv 	= method(coreInterfaceReturn, "__retainAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
-		
-		Method CoreTransient_retainAll 		= method(\return(primitive("boolean")), "__retainAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
-		Method CoreTransient_retainAllEquiv = method(\return(primitive("boolean")), "__retainAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
-
-		Method Core_removeAll 		= method(coreInterfaceReturn, "__removeAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
-		Method Core_removeAllEquiv 	= method(coreInterfaceReturn, "__removeAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),		
-
-		Method CoreTransient_removeAll 		= method(\return(primitive("boolean")), "__removeAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
-		Method CoreTransient_removeAllEquiv = method(\return(primitive("boolean")), "__removeAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),		
+//		Method Core_removed 		= method(coreInterfaceReturn, "__remove",  			args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument) ], 				visibility = "public"),
+//		Method Core_removedEquiv 	= method(coreInterfaceReturn, "__removeEquivalent", args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),														
+//		
+//		Method CoreTransient_removed 		= method(\return(primitive("boolean")), "__remove",  			args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument) ], 				visibility = "public"),
+//		Method CoreTransient_removedEquiv 	= method(\return(primitive("boolean")), "__removeEquivalent", args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument), comparator ], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),														
+//
+//		Method Core_get 		= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "get",  			args = [primitiveToClassArgument(stdObjectArg)], 				visibility = "public"),
+//		Method Core_getEquiv 	= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "getEquivalent", 	args = [primitiveToClassArgument(stdObjectArg), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
+//
+//		Method Core_retainAll 		= method(coreInterfaceReturn, "__retainAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
+//		Method Core_retainAllEquiv 	= method(coreInterfaceReturn, "__retainAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
+//		
+//		Method CoreTransient_retainAll 		= method(\return(primitive("boolean")), "__retainAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
+//		Method CoreTransient_retainAllEquiv = method(\return(primitive("boolean")), "__retainAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
+//
+//		Method Core_removeAll 		= method(coreInterfaceReturn, "__removeAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
+//		Method Core_removeAllEquiv 	= method(coreInterfaceReturn, "__removeAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),		
+//
+//		Method CoreTransient_removeAll 		= method(\return(primitive("boolean")), "__removeAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
+//		Method CoreTransient_removeAllEquiv = method(\return(primitive("boolean")), "__removeAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),		
 		
 		Method CoreCommon_size = method(\return(primitive("int")), "size", visibility = "public"),		
 		Method CoreCommon_isEmpty = method(\return(primitive("boolean")), "isEmpty", visibility = "public"),
@@ -650,7 +650,7 @@ data Position // TODO: finish!
 	| positionBitmap()
 	;
 
-bool isOptionEnabled(rel[Option,bool] setup, Option \o) { 
+@memo bool isOptionEnabled(rel[Option,bool] setup, Option \o) { 
 	if ({_*, <\o, b>} := setup) {
 		return b;
 	} else {
@@ -661,10 +661,10 @@ bool isOptionEnabled(rel[Option,bool] setup, Option \o) {
 /*
  * Rewrite Rules
  */ 
-Type primitive(str \type:"byte", bool isArray = false)  = ___primitive(\type, isArray=isArray);
-Type primitive(str \type:"short", bool isArray = false) = ___primitive(\type, isArray=isArray);
-Type primitive(str \type:"int", bool isArray = false)   = ___primitive(\type, isArray=isArray);
-Type primitive(str \type:"long", bool isArray = false)  = ___primitive(\type, isArray=isArray);
+@memo Type primitive(str \type:"byte", bool isArray = false)  = ___primitive(\type, isArray=isArray);
+@memo Type primitive(str \type:"short", bool isArray = false) = ___primitive(\type, isArray=isArray);
+@memo Type primitive(str \type:"int", bool isArray = false)   = ___primitive(\type, isArray=isArray);
+@memo Type primitive(str \type:"long", bool isArray = false)  = ___primitive(\type, isArray=isArray);
 default Type primitive(str _, bool _) { throw "Ahhh"; }
 
 Type asArray(unknown(isArray = false)) = unknown(isArray = true);
@@ -734,10 +734,10 @@ Argument ___bitposMethod(int bitPartitionSize) = getter(chunkSizeToPrimitive(bit
 
 public Argument thisMutator = field(specific("Void"), "null");
 
-Type chunkSizeToPrimitive(int _:3) = primitive("byte");
-Type chunkSizeToPrimitive(int _:4) = primitive("short");
-Type chunkSizeToPrimitive(int _:5) = primitive("int");
-Type chunkSizeToPrimitive(int _:6) = primitive("long");
+@memo Type chunkSizeToPrimitive(int _:3) = primitive("byte");
+@memo Type chunkSizeToPrimitive(int _:4) = primitive("short");
+@memo Type chunkSizeToPrimitive(int _:5) = primitive("int");
+@memo Type chunkSizeToPrimitive(int _:6) = primitive("long");
 
 str chunkSizeToObject(int _:3) = "java.lang.Byte";
 str chunkSizeToObject(int _:4) = "java.lang.Short";
@@ -762,6 +762,7 @@ default str primitiveHashCode(Argument a) = "(int) <use(a)>";
 
 
 
+list[Type] primitiveToClass(list[Type] types) = mapper(types, primitiveToClass);
 
 Type primitiveToClass(Type \type) = specific("java.lang.Byte") when ___primitive("byte") := \type;
 Type primitiveToClass(Type \type) = specific("java.lang.Short") when ___primitive("short") := \type;
@@ -1092,11 +1093,17 @@ str GenericsExpandedReversed(DataStructure ds:\set(), list[Type] tupleTypes:[Typ
 Argument upperBoundCollectionArg(DataStructure ds, list[Type] tupleTypes, UpdateSemantic updateSemantic) = field(upperBoundCollectionType(ds, tupleTypes, updateSemantic), "<uncapitalize(collectionTypeName(ds, updateSemantic))>");
 Type upperBoundCollectionType(DataStructure ds, list[Type] tupleTypes, UpdateSemantic updateSemantic) = specific(collectionTypeName(ds, updateSemantic), typeArguments = [ primitiveToClass(upperBoundGeneric(arg.\type)) | arg <- __payloadTuple(ds, tupleTypes), generic(_) := arg.\type ]);
 
+Argument expandedUpperBoundCollectionArg(DataStructure ds, list[Type] tupleTypes, UpdateSemantic updateSemantic) = field(expandedUpperBoundCollectionType(ds, tupleTypes, updateSemantic), "<uncapitalize(collectionTypeName(ds, updateSemantic))>");
+Type expandedUpperBoundCollectionType(DataStructure ds, list[Type] tupleTypes, UpdateSemantic updateSemantic) = specific(collectionTypeName(ds, updateSemantic), typeArguments = [ primitiveToClass(upperBoundGeneric(primitiveToClass(arg.\type))) | arg <- __payloadTuple(ds, tupleTypes) ]);
+
 Argument lowerBoundCollectionArg(DataStructure ds, list[Type] tupleTypes, UpdateSemantic updateSemantic) = field(lowerBoundCollectionType(ds, tupleTypes, updateSemantic), "<uncapitalize(collectionTypeName(ds, updateSemantic))>");
 Type lowerBoundCollectionType(DataStructure ds, list[Type] tupleTypes, UpdateSemantic updateSemantic) = specific(collectionTypeName(ds, updateSemantic), typeArguments = [ primitiveToClass(lowerBoundGeneric(arg.\type)) | arg <- __payloadTuple(ds, tupleTypes), generic(_) := arg.\type ]);
 
 Argument exactBoundCollectionArg(DataStructure ds, list[Type] tupleTypes, UpdateSemantic updateSemantic) = field(exactBoundCollectionType(ds, tupleTypes, updateSemantic), "<uncapitalize(collectionTypeName(ds, updateSemantic))>");
 Type exactBoundCollectionType(DataStructure ds, list[Type] tupleTypes, UpdateSemantic updateSemantic) = specific(collectionTypeName(ds, updateSemantic), typeArguments = [ primitiveToClass(arg.\type) | arg <- __payloadTuple(ds, tupleTypes), generic(_) := arg.\type ]);
+
+Argument expandedExactBoundCollectionArg(DataStructure ds, list[Type] tupleTypes, UpdateSemantic updateSemantic) = field(expandedExactBoundCollectionType(ds, tupleTypes, updateSemantic), "<uncapitalize(collectionTypeName(ds, updateSemantic))>");
+Type expandedExactBoundCollectionType(DataStructure ds, list[Type] tupleTypes, UpdateSemantic updateSemantic) = specific(collectionTypeName(ds, updateSemantic), typeArguments = [ primitiveToClass(arg.\type) | arg <- __payloadTuple(ds, tupleTypes) ]);
 
 str collectionTypeName(DataStructure ds, UpdateSemantic updateSemantic:mutable()) = "<toString(ds)>";
 str collectionTypeName(DataStructure ds, UpdateSemantic updateSemantic:immutable()) = "Immutable<toString(ds)>";
@@ -1493,6 +1500,28 @@ when core(_) := ts.artifact;
 
 
 
+	//Method Core_get 		= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "get",  			args = [primitiveToClassArgument(stdObjectArg)], 				visibility = "public"),
+	//Method Core_getEquiv 	= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "getEquivalent", 	args = [primitiveToClassArgument(stdObjectArg), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
+
+	//<implOrOverride(ts.Core_get, 		generate_bodyOf_Core_get(ts, setup, equalityDefaultForArguments		))>
+	//<implOrOverride(ts.Core_getEquiv,	generate_bodyOf_Core_get(ts, setup, equalityComparatorForArguments	))>
+
+data PredefOp = get(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, get(customComparator = false))
+	= method(\return(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes))), "get", args = [ __labeledArgument(payloadKey(), ts.stdObjectArg) ], visibility = "public", isActive = true)
+when core(_) := ts.artifact || unknownArtifact() := ts.artifact;
+
+Method getDef(TrieSpecifics ts, get(customComparator = true))
+	= method(\return(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes))), "getEquivalent", args = [ __labeledArgument(payloadKey(), ts.stdObjectArg), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+when core(_) := ts.artifact || unknownArtifact() := ts.artifact;
+
+
+
+
+
+
+
 data PredefOp = containsKey(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, containsKey(customComparator = false))
@@ -1620,11 +1649,11 @@ Method CoreTransient_putEquiv 	= method(\return(generic("<typeToString(primitive
 data PredefOp = insertTuple(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = false))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument) ], visibility = "public", isActive = true)
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument) ], visibility = "public", isActive = true)
 when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = true))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, ts.artifact)>Equivalent", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, ts.artifact)>Equivalent", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = false))
@@ -1835,19 +1864,19 @@ Method CoreTransient_insertOrPutAllEquiv = method(\return(primitive("boolean")),
 data PredefOp = insertCollection(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, insertCollection(customComparator = false))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, ts.artifact)>All", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()) ], visibility = "public", isActive = true)
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, ts.artifact)>All", args = [ expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()) ], visibility = "public", isActive = true)
 when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, insertCollection(customComparator = true))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, ts.artifact)>AllEquivalent", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, ts.artifact)>AllEquivalent", args = [ expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, insertCollection(customComparator = false))
-	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>All", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()) ], visibility = "public", isActive = true)
+	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>All", args = [ expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()) ], visibility = "public", isActive = true)
 when core(transient()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, insertCollection(customComparator = true))
-	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>AllEquivalent", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>AllEquivalent", args = [ expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(transient()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 str generate_bodyOf(TrieSpecifics ts, op:insertCollection(),
@@ -1912,19 +1941,19 @@ list[Expression] unboxPayloadFromTuple(TrieSpecifics ts, Argument arg) =
 data PredefOp = removeTuple(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__remove", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true)
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__remove", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true)
 when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && \map(multi = true) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeEquivalent", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeEquivalent", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && \map(multi = true) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__remove", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))) ], visibility = "public", isActive = true)
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__remove", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))) ], visibility = "public", isActive = true)
 when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && !(\map(multi = true) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeEquivalent", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeEquivalent", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && !(\map(multi = true) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
@@ -2039,19 +2068,19 @@ when core(transient()) := ts.artifact && !(\map(multi = false) := ts.ds);
 data PredefOp = removeCollection(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, removeCollection(customComparator = false))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeAll", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()) ], visibility = "public", isActive = \set() := ts.ds)
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeAll", args = [ expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()) ], visibility = "public", isActive = \set() := ts.ds)
 when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, removeCollection(customComparator = true))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeAllEquivalent", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()), ts.comparator ], visibility = "public", isActive = \set() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeAllEquivalent", args = [ expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()), ts.comparator ], visibility = "public", isActive = \set() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, removeCollection(customComparator = false))
-	= method(\return(primitive("boolean")), "__removeAll", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()) ], visibility = "public", isActive = \set() := ts.ds)
+	= method(\return(primitive("boolean")), "__removeAll", args = [ expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()) ], visibility = "public", isActive = \set() := ts.ds)
 when core(transient()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, removeCollection(customComparator = true))
-	= method(\return(primitive("boolean")), "__removeAllEquivalent", args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()), ts.comparator ], visibility = "public", isActive = \set() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitive("boolean")), "__removeAllEquivalent", args = [ expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()), ts.comparator ], visibility = "public", isActive = \set() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(transient()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 str generate_bodyOf(TrieSpecifics ts, op:removeCollection(),
@@ -2082,19 +2111,19 @@ when core(transient()) := ts.artifact && \set() := ts.ds;
 data PredefOp = retainCollection(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, retainCollection(customComparator = false))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__retainAll", args = [ __labeledArgument(collection(), upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable())) ], visibility = "public", isActive = \set() := ts.ds)
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__retainAll", args = [ __labeledArgument(collection(), expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable())) ], visibility = "public", isActive = \set() := ts.ds)
 when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, retainCollection(customComparator = true))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__retainAllEquivalent", args = [ __labeledArgument(collection(), upperBoundCollectionArg(ts.ds, ts.tupleTypes, transient())), ts.comparator ], visibility = "public", isActive = \set() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__retainAllEquivalent", args = [ __labeledArgument(collection(), expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, transient())), ts.comparator ], visibility = "public", isActive = \set() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, retainCollection(customComparator = false))
-	= method(\return(primitive("boolean")), "__retainAll", args = [ __labeledArgument(collection(), upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable())) ], visibility = "public", isActive = \set() := ts.ds)
+	= method(\return(primitive("boolean")), "__retainAll", args = [ __labeledArgument(collection(), expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable())) ], visibility = "public", isActive = \set() := ts.ds)
 when core(transient()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, retainCollection(customComparator = true))
-	= method(\return(primitive("boolean")), "__retainAllEquivalent", args = [ __labeledArgument(collection(), upperBoundCollectionArg(ts.ds, ts.tupleTypes, transient())), ts.comparator ], visibility = "public", isActive = \set() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitive("boolean")), "__retainAllEquivalent", args = [ __labeledArgument(collection(), expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, transient())), ts.comparator ], visibility = "public", isActive = \set() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(transient()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 str generate_bodyOf(TrieSpecifics ts, op:retainCollection(),
@@ -2145,7 +2174,7 @@ when core(immutable()) := ts.artifact;
 data PredefOp = freeze();
 
 Method getDef(TrieSpecifics ts, freeze())
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "freeze", visibility = "public")
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "freeze", visibility = "public")
 when core(transient()) := ts.artifact;
 
 

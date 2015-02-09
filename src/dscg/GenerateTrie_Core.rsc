@@ -176,8 +176,8 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	<impl(ts, containsEntry())>
 	<impl(ts, containsEntry(customComparator = true))>
 
-	<implOrOverride(ts.Core_get, 		generate_bodyOf_Core_get(ts, setup, equalityDefaultForArguments		))>
-	<implOrOverride(ts.Core_getEquiv,	generate_bodyOf_Core_get(ts, setup, equalityComparatorForArguments	))>
+	<impl(ts, get())>
+	<impl(ts, get(customComparator = true))>
 
 	<impl(ts, insertTuple())>
 	<impl(ts, insertTuple(customComparator = true))>
