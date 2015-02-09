@@ -78,11 +78,15 @@ data Argument
 
 	| qualifiedArgument(Argument obj, Argument arg)
 	;
+	
+Argument asVar(Argument arg) = var(arg.\type, arg.name);
+list[Argument] asVar(list[Argument] args) = [ asVar(arg) | arg <- args ];
 
 data Argument
-	= labeledArgument(PredefArgLabel label, Argument arg)
-	| labeledArgumentList(PredefArgLabel label, list[Argument] args)
+	= labeledArgumentList(PredefArgLabel label, list[Argument] args)
 	;
+	
+Argument __labeledArgument(PredefArgLabel label, Argument arg) = labeledArgumentList(label, [ arg ]);
 	
 data Statement
 	= uncheckedStringStatement(str statementStr)
@@ -273,7 +277,9 @@ default str toString(Expression e) { throw "Ahhh, <e> is not supported."; }
 data Expression
 	= decExpr(Argument arg, Expression initExpr = emptyExpression()) 
 	| useExpr(Argument arg)
-	;				
+	;
+	
+Expression useExprList(list[Argument] xs) = compoundExpr(mapper(flattenArgumentList(xs), useExpr));	
 	
 /*
  * TODO: rework argument lists such that they can be manipulated by argument name. Further allow nesting of argument structures. 
@@ -814,6 +820,10 @@ str eval(Expression e) =
 when e is useExpr;
 
 str eval(Expression e) = 
+	intercalate(", ", mapper(e.es, eval))
+when e is compoundExpr;
+
+str eval(Expression e) = 
 	"<eval(e.x)> | <eval(e.y)>"
 when e is bitwiseOr;
 
@@ -868,7 +878,7 @@ default str eval(list[Expression] _) { throw "Ahhh"; }
 
 str use(list[Argument] xs) = intercalate(", ", mapper(flattenArgumentList(xs), use));
 
-str use(Argument::labeledArgument(_, a), bool isFinal = true) = use(a, isFinal = isFinal);
+str use(Argument::labeledArgumentList(_, [ a ]), bool isFinal = true) = use(a, isFinal = isFinal);
 str use(Argument a) {
 	switch (a) {
 		case var (tp, nm): return "<nm>";
@@ -879,7 +889,7 @@ str use(Argument a) {
 		case field (tp, nm): return "<nm>";
 		case getter(tp, nm): return  "<nm>()";
 		
-		case labeledArgument(_, arg): return use(arg);
+		case labeledArgumentList(_, [ arg ]): return use(arg);
 		
 		default: throw "WHAT? <a>";
 	}
@@ -898,7 +908,7 @@ str dec(Argument a, bool isFinal = true) {
 		case field (tp, nm): return "<if (isFinal) {>final <}><typeToString(tp)> <nm>";
 		case getter(tp, nm): return  "abstract <typeToString(tp)> <nm>()";		
 		case \return(tp): return  "<typeToString(tp)>";
-		case labeledArgument(_, arg): return dec(arg, isFinal = isFinal);
+		case labeledArgumentList(_, [ arg ]): return dec(arg, isFinal = isFinal);
 		//default: fail;
 		default: throw "WHAT is about <a>?";
 	}
@@ -921,7 +931,7 @@ str decFields(list[Argument] xs) = intercalate("\n", mapper(flattenArgumentList(
 str initFieldsWithIdendity(list[Argument] xs) = intercalate("\n", mapper(xs, str(Argument x) { return "this.<use(x)> = <use(x)>;"; }));
 
 list[Argument] flattenArgumentList(list[Argument] argumentList) {
-	return [ arg | /Argument arg := argumentList, !(arg is labeledArgument || arg is labeledArgumentList) ];
+	return [ arg | /Argument arg := argumentList, !(arg is labeledArgumentList) ];
 }
 
 // convertions
@@ -998,13 +1008,9 @@ default list[Expression] substitute(list[Argument] args, map[Argument, Expressio
 	list[Expression] res = [];
 	
 	for (arg <- args) {
-		if (labeledArgument(largName, larg) := arg && labeledArgsOverride[largName]?) {
+		if (labeledArgumentList(largName, largs) := arg && labeledArgsOverride[largName]?) {
 			res += labeledArgsOverride[largName];
-		} else if (labeledArgumentList(largName, largs) := arg && labeledArgsOverride[largName]?) {
-			res += labeledArgsOverride[largName];
-		} else 
-		
-		if (argsOverride[arg]?) {
+		} else if (argsOverride[arg]?) {
 			res += argsOverride[arg];
 		} else {
 			res += useExpr(arg);
@@ -1490,11 +1496,11 @@ when core(_) := ts.artifact;
 data PredefOp = containsKey(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, containsKey(customComparator = false))
-	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>", args = [ labeledArgument(payloadKey(), ts.stdObjectArg) ], visibility = "public", isActive = true)
+	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>", args = [ __labeledArgument(payloadKey(), ts.stdObjectArg) ], visibility = "public", isActive = true)
 when core(_) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, containsKey(customComparator = true))
-	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>Equivalent", args = [ labeledArgument(payloadKey(), ts.stdObjectArg), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>Equivalent", args = [ __labeledArgument(payloadKey(), ts.stdObjectArg), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(_) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, containsKey(customComparator = false))
@@ -1914,11 +1920,11 @@ Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
 when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && \map(multi = true) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__remove", args = [ labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))) ], visibility = "public", isActive = true)
+	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__remove", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))) ], visibility = "public", isActive = true)
 when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && !(\map(multi = true) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeEquivalent", args = [ labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeEquivalent", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when (core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact) && !(\map(multi = true) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
@@ -1930,11 +1936,11 @@ Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
 when core(transient()) := ts.artifact && !(\map(multi = false) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(collTupleType(ts, 1)), "__remove", args = [ labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))) ], visibility = "public", isActive = true)
+	= method(\return(collTupleType(ts, 1)), "__remove", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))) ], visibility = "public", isActive = true)
 when core(transient()) := ts.artifact && \map(multi = false) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(collTupleType(ts, 1)), "__removeEquivalent", args = [ labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(collTupleType(ts, 1)), "__removeEquivalent", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(transient()) := ts.artifact && \map(multi = false) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
@@ -1946,11 +1952,11 @@ Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
 when trieNode(_) := ts.artifact && \map(multi = true) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, labeledArgument(payloadTuple(), payloadTupleArg(ts, 0)), ts.keyHash, ts.shift, ts.details ])
+	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, __labeledArgument(payloadTuple(), payloadTupleArg(ts, 0)), ts.keyHash, ts.shift, ts.details ])
 when trieNode(_) := ts.artifact && !(\map(multi = true) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, labeledArgument(payloadTuple(), payloadTupleArg(ts, 0)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, __labeledArgument(payloadTuple(), payloadTupleArg(ts, 0)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when trieNode(_) := ts.artifact && !(\map(multi = true) := ts.ds);
 
 str generate_bodyOf(TrieSpecifics ts, op:removeTuple(),
@@ -2076,19 +2082,19 @@ when core(transient()) := ts.artifact && \set() := ts.ds;
 data PredefOp = retainCollection(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, retainCollection(customComparator = false))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__retainAll", args = [ labeledArgument(collection(), upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable())) ], visibility = "public", isActive = \set() := ts.ds)
+	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__retainAll", args = [ __labeledArgument(collection(), upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable())) ], visibility = "public", isActive = \set() := ts.ds)
 when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, retainCollection(customComparator = true))
-	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__retainAllEquivalent", args = [ labeledArgument(collection(), upperBoundCollectionArg(ts.ds, ts.tupleTypes, transient())), ts.comparator ], visibility = "public", isActive = \set() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(exactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__retainAllEquivalent", args = [ __labeledArgument(collection(), upperBoundCollectionArg(ts.ds, ts.tupleTypes, transient())), ts.comparator ], visibility = "public", isActive = \set() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, retainCollection(customComparator = false))
-	= method(\return(primitive("boolean")), "__retainAll", args = [ labeledArgument(collection(), upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable())) ], visibility = "public", isActive = \set() := ts.ds)
+	= method(\return(primitive("boolean")), "__retainAll", args = [ __labeledArgument(collection(), upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable())) ], visibility = "public", isActive = \set() := ts.ds)
 when core(transient()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, retainCollection(customComparator = true))
-	= method(\return(primitive("boolean")), "__retainAllEquivalent", args = [ labeledArgument(collection(), upperBoundCollectionArg(ts.ds, ts.tupleTypes, transient())), ts.comparator ], visibility = "public", isActive = \set() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitive("boolean")), "__retainAllEquivalent", args = [ __labeledArgument(collection(), upperBoundCollectionArg(ts.ds, ts.tupleTypes, transient())), ts.comparator ], visibility = "public", isActive = \set() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(transient()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 str generate_bodyOf(TrieSpecifics ts, op:retainCollection(),
@@ -2118,7 +2124,7 @@ str generate_bodyOf(TrieSpecifics ts, op:retainCollection(),
 when core(transient()) := ts.artifact && \set() := ts.ds
 		// NAME BINDINGS
 		&& thisMethod := getDef(ts, op)
-		&& /labeledArgument(collection(), argCollection) := thisMethod.args;
+		&& /labeledArgumentList(collection(), [ argCollection ]) := thisMethod.args;
 
 
 

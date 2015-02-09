@@ -167,57 +167,6 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		
 		<declareJdt(ts, tupleIterator(ts.artifact))>
 
-		/**
-		 * Iterator that first iterates over inlined-values and then continues
-		 * depth first recursively.
-		 */
-		private static class Transient<toString(ts.ds)>KeyIterator<GenericsStr(ts.tupleTypes)> extends Abstract<toString(ts.ds)>Iterator<GenericsStr(ts.tupleTypes)> implements
-				<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}> {
-
-			final <className><GenericsStr(ts.tupleTypes)> <uncapitalize(className)>;
-			<typeToString(primitiveToClass(ts.keyType))> lastKey;
-
-			Transient<toString(ts.ds)>KeyIterator(<className><GenericsStr(ts.tupleTypes)> <uncapitalize(className)>) {
-				super(<uncapitalize(className)>.rootNode);
-				this.<uncapitalize(className)> = <uncapitalize(className)>;
-			}
-
-			@Override
-			public <typeToString(primitiveToClass(ts.keyType))> next() {
-				if (!hasNext()) {
-					throw new NoSuchElementException();
-				} else {
-					lastKey = currentValueNode.getKey(currentValueCursor++);
-					return lastKey;
-				}
-			}
-
-			<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
-			@Override
-			public <typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
-				throw new UnsupportedOperationException();
-			}<}>
-
-			<if (\map(multi = true) := ts.ds) {>
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException();
-			}
-			<} else {>
-			/*
-			 * TODO: test removal with iteration rigorously
-			 */
-			@Override
-			public void remove() {
-				boolean success = <uncapitalize(className)>.__remove(lastKey);
-				
-				if (!success) {
-					throw new IllegalStateException(\"Key from iteration couldn\'t be deleted.\"); 
-				}				
-			}
-			<}>
-		}
-
 		<implOrOverride(ts.jul_Map_keySet, generate_bodyOf_jul_Map_keySet(ts, ts.coreTransientClassName))>
 			
 		<implOrOverride(ts.jul_Map_values, generate_bodyOf_jul_Map_values(ts, ts.coreTransientClassName))>

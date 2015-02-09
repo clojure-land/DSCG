@@ -59,10 +59,12 @@ Type jdtToType(JavaDataType jdt) = specific(jdt.typeName, typeArguments = jdt.ty
 
 
 JavaDataType jul_Iterator(Type typeArgument) = javaInterface("Iterator", typeArguments = [ primitiveToClass(typeArgument) ]); 
+JavaDataType jul_Map_Entry([Type keyType, Type valType]) = javaInterface("Map.Entry", typeArguments = [ primitiveToClass(keyType), primitiveToClass(valType) ]);
+
 
 bool isJdtActive(TrieSpecifics ts, PredefDataType dt:valueIterator(core(_))) = \map() := ts.ds;
 bool isJdtActive(TrieSpecifics ts, PredefDataType dt:entryIterator(core(_))) = \map() := ts.ds;
-bool isJdtActive(TrieSpecifics ts, PredefDataType dt:tupleIterator(core(_))) = \map() := ts.ds;
+bool isJdtActive(TrieSpecifics ts, PredefDataType dt:tupleIterator(core(_))) = \map(multi = true) := ts.ds;
 
 JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:keyIterator(core(immutable())))
 	= javaClass("<toString(ts.ds)>KeyIterator", typeArguments = typeList, implementsList = [ jul_Iterator(typeList[0]) ])
@@ -73,11 +75,11 @@ JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:valueIterator(core(immut
 when typeList := collTupleTypes(ts);
 
 JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:entryIterator(core(immutable())))
-	= javaClass("<toString(ts.ds)>EntryIterator", typeArguments = collTupleTypes(ts), implementsList = [ jul_Iterator(typeList[1]) ])
+	= javaClass("<toString(ts.ds)>EntryIterator", typeArguments = collTupleTypes(ts), implementsList = [ jul_Iterator(jdtToType(jul_Map_Entry(typeList))) ])
 when typeList := collTupleTypes(ts);	
 	
-JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:tupleIterator(core(immutable())))
-	= javaClass("<toString(ts.ds)>TupleIterator", typeArguments = collTupleTypes(ts), implementsList = [ jul_Iterator(typeList[1]) ])
+JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:tupleIterator(core(immutable())), Type iteratorGenericType = generic("T"))
+	= javaClass("<toString(ts.ds)>TupleIterator", typeArguments = collTupleTypes(ts) + iteratorGenericType, implementsList = [ jul_Iterator(iteratorGenericType) ])
 when typeList := collTupleTypes(ts);	
 
 
@@ -90,18 +92,18 @@ JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:keyIterator(core(transie
 data PredefDataType = valueIterator(Artifact artifact);
 
 JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:valueIterator(core(transient())))
-	= javaClass("Transient<toString(ts.ds)>ValueIterator", typeArguments = collTupleTypes(ts), extends = getJdt(ts, valueIterator(core(immutable()))), isActive = \map() := ts.ds);
+	= javaClass("Transient<toString(ts.ds)>ValueIterator", typeArguments = collTupleTypes(ts), extends = getJdt(ts, valueIterator(core(immutable()))));
 
 data PredefDataType = entryIterator(Artifact artifact);
 	
 JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:entryIterator(core(transient())))	
-	= javaClass("Transient<toString(ts.ds)>EntryIterator", typeArguments = collTupleTypes(ts), extends = getJdt(ts, entryIterator(core(immutable()))), isActive = \map() := ts.ds);
+	= javaClass("Transient<toString(ts.ds)>EntryIterator", typeArguments = collTupleTypes(ts), extends = getJdt(ts, entryIterator(core(immutable()))));
 
 data PredefDataType = tupleIterator(Artifact artifact);
 
 JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:tupleIterator(core(transient())))
-	= javaClass("Transient<toString(ts.ds)>TupleIterator", typeArguments = collTupleTypes(ts), extends = getJdt(ts, tupleIterator(core(immutable()))), isActive = \map() := ts.ds);
-
+	= javaClass("Transient<toString(ts.ds)>TupleIterator", typeArguments = collTupleTypes(ts) + iteratorGenericType, extends = getJdt(ts, tupleIterator(core(immutable())), iteratorGenericType = iteratorGenericType))
+when iteratorGenericType := generic("T");
 
 
 //JavaDataType immutableInterface(TrieSpecifics ts)
@@ -118,13 +120,20 @@ JavaDataType transientImplementation(TrieSpecifics ts)
 
 
 
+
 list[Argument] getFieldList(TrieSpecifics ts, PredefDataType dt) = 
 	[ 
-		labeledArgument(collection(), jdtToVal(transientImplementation(ts), "collection")),  
-		labeledArgumentList(payloadTuple(), prependToName(collTupleArgs(ts), "last")) 
+		__labeledArgument(collection(), jdtToVal(transientImplementation(ts), "collection")),  
+		labeledArgumentList(payloadTuple(), asVar(prependToName([ collTupleArg(ts, 0) ], "last"))) 
 	]
-when keyIterator(core(transient())) := dt
-		|| valueIterator(core(transient())) := dt
+when keyIterator(core(transient())) := dt;
+
+// TODO: report ambiguity for singleton list
+list[Argument] getFieldList(TrieSpecifics ts, PredefDataType dt) = [] + 
+	[ 
+		__labeledArgument(collection(), jdtToVal(transientImplementation(ts), "collection"))
+	]
+when valueIterator(core(transient())) := dt
 		|| entryIterator(core(transient())) := dt
 		|| tupleIterator(core(transient())) := dt;
 
@@ -148,23 +157,23 @@ when /javaInterface("Iterator") := getJdt(ts, dt);
 
 Method getDef(TrieSpecifics ts, PredefDataType dt:keyIterator(core(transient())), methodName:"__constructor") 
 	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ collection ], generics = jdt.typeArguments, visibility = "public")	
-when jdt := getJdt(ts, dt) 
-		&& /labeledArgument(collection(), Argument collection) := getFieldList(ts, dt);
+when jdt := getJdt(ts, dt)
+		&& /labeledArgumentList(collection(), [ Argument collection ]) := getFieldList(ts, dt);
 
 Method getDef(TrieSpecifics ts, PredefDataType dt:valueIterator(core(transient())), methodName:"__constructor") 
 	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ collection ], generics = jdt.typeArguments, visibility = "public")	
 when jdt := getJdt(ts, dt)
-		&& /labeledArgument(collection(), Argument collection) := getFieldList(ts, dt);
+		&& /labeledArgumentList(collection(), [ Argument collection ]) := getFieldList(ts, dt);
 	
 Method getDef(TrieSpecifics ts, PredefDataType dt:entryIterator(core(transient())), methodName:"__constructor") 
 	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ collection ], generics = jdt.typeArguments, visibility = "public")	
 when jdt := getJdt(ts, dt)
-		&& /labeledArgument(collection(), Argument collection) := getFieldList(ts, dt);
+		&& /labeledArgumentList(collection(), [ Argument collection ]) := getFieldList(ts, dt);
 
 Method getDef(TrieSpecifics ts, PredefDataType dt:tupleIterator(core(transient())), methodName:"__constructor") 
 	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ collection ], generics = jdt.typeArguments, visibility = "public")	
 when jdt := getJdt(ts, dt)
-		&& /labeledArgument(collection(), Argument collection) := getFieldList(ts, dt);
+		&& /labeledArgumentList(collection(), [ Argument collection ]) := getFieldList(ts, dt);
 
 default Method getDef(TrieSpecifics ts, PredefDataType dt, str methodName) { 
  	throw "Not found method `<methodName>` and <dt> for <ts>"; 
@@ -205,18 +214,33 @@ Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"__co
 		super(exprFromString("<use(collection)>.rootNode")),
 		assign(qualifiedArgument(this(), collection), useExpr(collection))
 	])
-when /labeledArgument(collection(), Argument collection) := getFieldList(ts, dt);
+when /labeledArgumentList(collection(), [ Argument collection ]) := getFieldList(ts, dt);
+
+
 
 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next") = 
-	result(assign(dummy, exprFromString("super.next()")))	
-when (keyIterator(core(transient())) := dt
-		|| valueIterator(core(transient())) := dt
-		|| entryIterator(core(transient())) := dt
-		|| tupleIterator(core(transient())) := dt)
-		&& dummy := key(ts.keyType);
-//when /labeledArgument(payloadTuple(), Argument key) := getFieldList(ts, dt);
+	result(assign(key, exprFromString("super.next()")))	
+when (keyIterator(core(transient())) := dt)
+ 		&& /labeledArgumentList(payloadTuple(), [ Argument key, *_ ]) := getFieldList(ts, dt);
 
 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
 	= call(setArtifact(ts, core(transient())), collection, removeTuple(customComparator = false), 
-			commentText = "TODO: test removal at iteration rigorously")
-when /labeledArgument(collection(), Argument collection) := getFieldList(ts, dt);
+			commentText = "TODO: test removal at iteration rigorously",
+			labeledArgsOverride = (payloadTuple(): useExprList(payloadTupleArgs)))
+when (keyIterator(core(transient())) := dt)
+		&& /labeledArgumentList(collection(), [ Argument collection ]) := getFieldList(ts, dt)
+		&& /labeledArgumentList(payloadTuple(), list[Argument] payloadTupleArgs) := getFieldList(ts, dt);
+
+
+
+Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next") = 
+	result(exprFromString("super.next()"))	
+when (valueIterator(core(transient())) := dt
+		|| entryIterator(core(transient())) := dt
+		|| tupleIterator(core(transient())) := dt);
+
+Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
+	= exprFromString("throw new UnsupportedOperationException()")
+when (valueIterator(core(transient())) := dt
+		|| entryIterator(core(transient())) := dt
+		|| tupleIterator(core(transient())) := dt);
