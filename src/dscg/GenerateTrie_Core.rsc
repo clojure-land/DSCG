@@ -458,29 +458,3 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 		
 }";
 }
-
-default str generate_bodyOf_Core_get(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
-				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
-	"	try {
-			<toString(UNCHECKED_ANNOTATION())>
-			<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
-			final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0<optionalComparatorArgument>);
-	
-			if (result.isPresent()) {
-				return result.get();
-			} else {
-				return null;
-			}			
-		} catch (ClassCastException unused) {
-			return null;
-		}"
-	;		
-
-default str generate_bodyOf_Core_retainAll(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
-				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>",
-				str optionalEquivalentPostfix = "<if (!(eq == equalityDefaultForArguments)) {>Equivalent<}>") =
-
-	"	Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> tmp = asTransient();
-		tmp.__retainAll<optionalEquivalentPostfix>(<uncapitalize(toString(ts.ds))><optionalComparatorArgument>);
-		return tmp.freeze();"
-	;		

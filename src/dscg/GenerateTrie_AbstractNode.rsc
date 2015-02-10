@@ -22,9 +22,9 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 		<dec(getDef(setArtifact(ts, trieNode(abstractNode())), containsKey()), asAbstract = true)>
 		<dec(getDef(setArtifact(ts, trieNode(abstractNode())), containsKey(customComparator = true)), asAbstract = true)>
 	
-		<dec(ts.AbstractNode_findByKey, asAbstract = true)>
-		<dec(ts.AbstractNode_findByKeyEquiv, asAbstract = true)>
-
+		<dec(getDef(setArtifact(ts, trieNode(abstractNode())), get()), asAbstract = true)>
+		<dec(getDef(setArtifact(ts, trieNode(abstractNode())), get(customComparator = true)), asAbstract = true)>
+	
 		<dec(ts.AbstractNode_updated, asAbstract = true)>
 		<dec(ts.AbstractNode_updatedEquiv, asAbstract = true)>
 

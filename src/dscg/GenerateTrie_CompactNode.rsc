@@ -189,8 +189,8 @@ str generateCompactNodeClassString(tsSuper) { // ts:___expandedTrieSpecifics(ds,
 	<impl(ts, containsKey())>
 	<impl(ts, containsKey(customComparator = true))>
 
-	<implOrOverride(ts.AbstractNode_findByKey, 		generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ts, ts.setup, equalityDefaultForArguments	))>
-	<implOrOverride(ts.AbstractNode_findByKeyEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_findByKey(n, m, ts, ts.setup, equalityComparatorForArguments	))>
+	<impl(ts, get())>
+	<impl(ts, get(customComparator = true))>
 	
 	<implOrOverride(ts.AbstractNode_updated, 		generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, ts.setup, equalityDefaultForArguments))>
 	<implOrOverride(ts.AbstractNode_updatedEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, ts.setup, equalityComparatorForArguments))>
@@ -426,62 +426,7 @@ str generate_bodyOf_mergeNodeAndValue(ts:___expandedTrieSpecifics(ds, bitPartiti
 								ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "1")))))>;";			
 
 default str generate_bodyOf_mergeNodeAndValue(TrieSpecifics _, Option _, Position _) { throw "something went wrong"; }
-	
-str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(_, _, ts, rel[Option,bool] setup, str(Argument, Argument) eq)	
-	= "throw new UnsupportedOperationException();"
-when !(isOptionEnabled(ts.setup,methodsWithComparator()) || (eq == equalityDefault))
-	;		
-	
-str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
-	"<dec(ts.mask)> = <toString(call(ts.CompactNode_mask))>;
-	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
-
-	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
-	'	<dec(ts.index)> = dataIndex(bitpos);
-	'	if (<eq(key(ts.keyType, "getKey(<use(ts.index)>)"), key(ts.keyType))>) {
-	'		<dec(collTupleArg(ts, 1))> = <toString(call(ts.AbstractNode_getValue))>; // AbstractNode__getValueAsCollection 
-	'
-	'		return Optional.of(<use(collTupleArg(ts, 1))>);
-	'	}
-	'
-	'	return Optional.empty();
-	'}
-	'
-	'if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
-	'	final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNode = nodeAt(bitpos);
-	'
-	'	return subNode.findByKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
-	'}
-	'
-	'return Optional.empty();"
-when \map() := ds || ds == \vector()
-	;
-	
-str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) = 
-	"<dec(ts.mask)> = <toString(call(ts.CompactNode_mask))>;
-	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
-
-	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
-	'	if (<eq(key(ts.keyType, "getKey(dataIndex(bitpos))"), key(ts.keyType))>) {
-	'		<dec(key(ts.keyType, "_key"))> = getKey(dataIndex(bitpos));
-
-	'		return Optional.of(<use(key(ts.keyType, "_key"))>);
-	'	}
-	'
-	'	return Optional.empty();
-	'}
-	'
-	'if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
-	'	final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNode = nodeAt(bitpos);
-	'
-	'	return subNode.findByKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
-	'}
-	'
-	'return Optional.empty();"
-	;
-	
-default str generate_bodyOf_SpecializedBitmapPositionNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) { throw "Ahhh"; }		
-	
+		
 str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq) = 
 	"return this;" 
 when \set() := ts.ds;	
@@ -498,14 +443,15 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq) =
 	'}" 
 when \map(multi = false) := ts.ds;
 
+// TODO: lost knowledge about 'customComparator'
 str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"<dec(nodeTupleArg(ts, 1))> = getValue(dataIndex);
 	'
 	'final int valHash = <hashCode(val(ts.valType))>;
 	'// if(<use(nodeTupleArg(ts, 1))>.<toString(call(getDef(tsSet, containsKey()), 
 					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: exprFromString("improve(valHash)"), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
-	'if(<use(collTupleArg(ts, 1))>.<toString(call(getDef(tsSet, containsKey()),
-					argsOverride = (tsSet.stdObjectArg: useExpr(val(ts.valType)))))>) {
+	'if(<toString(call(tsSet, collTupleArg(ts, 1), containsKey(),
+					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>) {
 	'	return this;
 	'} else {
 	'	// add new mapping
@@ -515,8 +461,8 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecif
 						tsSet.keyHash: exprFromString("improve(valHash)"), 
 						tsSet.shift: constant(tsSet.shift.\type, "0"),
 						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
-	'	<dec(appendToName(collTupleArg(ts, 1), "New"))> = <use(collTupleArg(ts, 1))>.<toString(call(getDef(tsSet, insertTuple()), 
-					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)))))>;
+	'	<dec(appendToName(collTupleArg(ts, 1), "New"))> = <toString(call(tsSet, collTupleArg(ts, 1), insertTuple(), 
+					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;
 	'
 	'	details.modified();
 	'	return copyAndSetValue(mutator, bitpos, <use(appendToName(nodeTupleArg(ts, 1), "New"))>);
@@ -677,8 +623,8 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 	'final int valHash = <hashCode(val(ts.valType))>;
 	'// if(<use(nodeTupleArg(ts, 1))>.<toString(call(getDef(tsSet, containsKey()), 
 					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: exprFromString("improve(valHash)"), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
-	' if(<use(collTupleArg(ts, 1))>.<toString(call(getDef(tsSet, containsKey()), 
-					argsOverride = (tsSet.stdObjectArg: useExpr(val(ts.valType)))))>) {
+	' if(<toString(call(tsSet, collTupleArg(ts, 1), containsKey() 
+					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>) {
 	'	details.updated(<use(val(ts.valType))>);
 	'	
 	'	// remove mapping
@@ -688,8 +634,8 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 						tsSet.keyHash: exprFromString("improve(valHash)"), 
 						tsSet.shift: constant(tsSet.shift.\type, "0"),
 						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
-	'	<dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.Core_removed, 
-					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)))))>;
+	'	<dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <toString(call(tsSet, nodeTupleArg(ts, 1), removeTuple(), 
+					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;
 	'	
 	'	if (<use(appendToName(nodeTupleArg(ts, 1), "New"))>.size() == 0) { // earlier: arity() == 0
 	'		<removed_value_block1(ts, ts.setup)> else <if (isOptionEnabled(ts.setup,useSpecialization())) {><removed_value_block2(ts, ts.setup)> else<}> {					

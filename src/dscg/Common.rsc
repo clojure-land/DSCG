@@ -228,7 +228,10 @@ str toString(Expression _:result(e)) =
 
 data Expression
 	= call(Method m, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = (), str inferredGenericsStr = "")
+
 	| call(TrieSpecifics ts, Argument arg, PredefOp op, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ())
+	| call(TrieSpecifics ts, Expression e, PredefOp op, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ())
+
 	| call(TrieSpecifics ts, Argument arg, str methodName, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ());
 
 map[Argument, Expression] makeArgsOverrideMap(list[Argument] args, list[Expression] argsOverride) 
@@ -252,6 +255,11 @@ when m.isActive;
 str toString(Expression c:call(TrieSpecifics ts, Argument arg, PredefOp op), Method m = getDef(ts, op)) = 
 	"<printNonEmptyCommentWithNewline(c.commentText)><use(arg)>.<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
 when m.isActive;
+
+str toString(Expression c:call(TrieSpecifics ts, Expression e, PredefOp op), Method m = getDef(ts, op)) = 
+	"<printNonEmptyCommentWithNewline(c.commentText)><toString(e)>.<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
+when m.isActive;
+
 
 
 str toString(Expression c:call(TrieSpecifics ts, Argument arg, str methodName), Method m = getDef(ts, methodName)) = 
@@ -342,9 +350,9 @@ default str generate_bodyOf(TrieSpecifics ts, PredefOp op) = "";
 
 
 data PredefArgLabel
-	= payloadKey()
-	| payloadValue() 
-	| payloadTuple()
+	= payloadTuple() 
+	//| payloadKey()
+	//| payloadValue() 
 	| collection();
 
 
@@ -1104,6 +1112,7 @@ Type exactBoundCollectionType(DataStructure ds, list[Type] tupleTypes, UpdateSem
 
 Argument expandedExactBoundCollectionArg(DataStructure ds, list[Type] tupleTypes, UpdateSemantic updateSemantic) = field(expandedExactBoundCollectionType(ds, tupleTypes, updateSemantic), "<uncapitalize(collectionTypeName(ds, updateSemantic))>");
 Type expandedExactBoundCollectionType(DataStructure ds, list[Type] tupleTypes, UpdateSemantic updateSemantic) = specific(collectionTypeName(ds, updateSemantic), typeArguments = [ primitiveToClass(arg.\type) | arg <- __payloadTuple(ds, tupleTypes) ]);
+list[Type] expandedExactBoundCollectionTypes(DataStructure ds, list[Type] tupleTypes) = [ primitiveToClass(arg.\type) | arg <- __payloadTuple(ds, tupleTypes) ];
 
 str collectionTypeName(DataStructure ds, UpdateSemantic updateSemantic:mutable()) = "<toString(ds)>";
 str collectionTypeName(DataStructure ds, UpdateSemantic updateSemantic:immutable()) = "Immutable<toString(ds)>";
@@ -1436,7 +1445,7 @@ when core(_) := ts.artifact && \map(multi = true) := ts.ds;
 data PredefOp = entryIterator();
 
 Method getDef(TrieSpecifics ts, entryIterator())
-	= method(\return(generic("Iterator\<Map.Entry<ts.GenericsStr>\>")), "entryIterator", visibility = "public", isActive = \map() := ts.ds)
+	= method(\return(specific("Iterator", typeArguments = [ specific("Map.Entry", typeArguments = expandedExactBoundCollectionTypes(ts.ds, ts.tupleTypes)) ])), "entryIterator", visibility = "public", isActive = \map() := ts.ds)
 when core(_) := ts.artifact;
 
 str generate_bodyOf(TrieSpecifics ts, op:entryIterator()) = generate_bodyOf_CoreCommon_entryIterator(ts, op); 
@@ -1509,14 +1518,102 @@ when core(_) := ts.artifact;
 data PredefOp = get(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, get(customComparator = false))
-	= method(\return(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes))), "get", args = [ __labeledArgument(payloadKey(), ts.stdObjectArg) ], visibility = "public", isActive = true)
+	= method(\return(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes))), "get", args = [ __labeledArgument(payloadTuple(), ts.stdObjectArg) ], visibility = "public", isActive = true)
 when core(_) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, get(customComparator = true))
-	= method(\return(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes))), "getEquivalent", args = [ __labeledArgument(payloadKey(), ts.stdObjectArg), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes))), "getEquivalent", args = [ __labeledArgument(payloadTuple(), ts.stdObjectArg), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(_) := ts.artifact || unknownArtifact() := ts.artifact;
 
+//Method getDef(TrieSpecifics ts, get(customComparator = false))
+//	= method(\return(specific("Optional", typeArguments = [ primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)) ])), "findByKey", args = [ labeledArgumentList(payloadTuple(), payloadTupleArgs(ts)), ts.keyHash, ts.shift ])
+//when trieNode(_) := ts.artifact && \map(multi = true) := ts.ds;
+//
+//Method getDef(TrieSpecifics ts, get(customComparator = true))
+//	= method(\return(specific("Optional", typeArguments = [ primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)) ])), "findByKey", args = [ labeledArgumentList(payloadTuple(), payloadTupleArgs(ts)), ts.keyHash, ts.shift, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+//when trieNode(_) := ts.artifact && \map(multi = true) := ts.ds;
 
+Method getDef(TrieSpecifics ts, get(customComparator = false))
+	= method(\return(specific("Optional", typeArguments = [ primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)) ])), "findByKey", args = [ __labeledArgument(payloadTuple(), key(ts.keyType)), ts.keyHash, ts.shift ])
+when trieNode(_) := ts.artifact; // && !(\map(multi = true) := ts.ds);
+
+Method getDef(TrieSpecifics ts, get(customComparator = true))
+	= method(\return(specific("Optional", typeArguments = [ primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)) ])), "findByKey", args = [ __labeledArgument(payloadTuple(), key(ts.keyType)), ts.keyHash, ts.shift, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+when trieNode(_) := ts.artifact; // && !(\map(multi = true) := ts.ds);
+
+str generate_bodyOf(TrieSpecifics ts, op:get(), TrieSpecifics tsTrieNode = setArtifact(ts, trieNode(abstractNode()))) = 
+	"try {
+		<toString(UNCHECKED_ANNOTATION())>
+		<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
+		final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = <toString(call(tsTrieNode, rootNode, get(customComparator = op.customComparator), 
+					labeledArgsOverride = (),
+					argsOverride = (ts.keyHash: exprFromString("improve(<hashCode(key(ts.keyType))>)"), ts.shift: constant(ts.shift.\type, "0"))))>;
+		
+		if (result.isPresent()) {
+			return result.get();
+		} else {
+			return null;
+		}
+	} catch (ClassCastException unused) {
+		return null;
+	}"
+when core(_) := ts.artifact
+		&& rootNode := val(unknown(), "rootNode");
+
+/*
+		@Override
+		Optional<K> findByKey(final K key, final int keyHash, final int shift) {
+			final int mask = mask(keyHash, shift);
+			final int bitpos = bitpos(mask);
+
+			if ((dataMap() & bitpos) != 0) { // inplace value
+				if (getKey(dataIndex(bitpos)).equals(key)) {
+					final K _key = getKey(dataIndex(bitpos));
+
+					return Optional.of(_key);
+				}
+
+				return Optional.empty();
+			}
+
+			if ((nodeMap() & bitpos) != 0) { // node (not value)
+				final AbstractSetNode<K> subNode = nodeAt(bitpos);
+
+				return subNode.findByKey(key, keyHash, shift + BIT_PARTITION_SIZE);
+			}
+
+			return Optional.empty();
+		}
+*/
+
+
+// TODO: getPayload function by index
+// previously used arguments (int n, int m)
+str generate_bodyOf(TrieSpecifics ts, op:get(),
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
+	"<dec(ts.mask)> = <toString(call(ts.CompactNode_mask))>;
+	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
+	'
+	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
+	'	<dec(ts.index)> = dataIndex(bitpos);
+	'	if (<eq(key(ts.keyType, "getKey(<use(ts.index)>)"), key(ts.keyType))>) {
+	'		<if (\set() := ts.ds) {>return Optional.of(getKey(<use(ts.index)>));<} else {><dec(result)> = <toString(call(ts.AbstractNode_getValue))>; 
+	'
+	'		return Optional.of(<use(result)>);<}>
+	'	}
+	'
+	'	return Optional.empty();
+	'}
+	'
+	'if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
+	'	final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNode = nodeAt(bitpos);
+	'
+	'	return subNode.findByKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
+	'}
+	'
+	'return Optional.empty();"
+when trieNode(compactNode()) := ts.artifact
+		&& result := val(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)), "result");
 
 
 
@@ -1525,11 +1622,11 @@ when core(_) := ts.artifact || unknownArtifact() := ts.artifact;
 data PredefOp = containsKey(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, containsKey(customComparator = false))
-	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>", args = [ __labeledArgument(payloadKey(), ts.stdObjectArg) ], visibility = "public", isActive = true)
+	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>", args = [ __labeledArgument(payloadTuple(), ts.stdObjectArg) ], visibility = "public", isActive = true)
 when core(_) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, containsKey(customComparator = true))
-	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>Equivalent", args = [ __labeledArgument(payloadKey(), ts.stdObjectArg), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>Equivalent", args = [ __labeledArgument(payloadTuple(), ts.stdObjectArg), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(_) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, containsKey(customComparator = false))
@@ -1614,24 +1711,27 @@ Method getDef(TrieSpecifics ts, containsEntry(customComparator = true))
 	= method(\return(primitive("boolean")), "containsEntryEquivalent", 	args = [ primitiveToClassArgument(ts.stdObjectArg0), primitiveToClassArgument(ts.stdObjectArg1), ts.comparator ], visibility = "public", isActive = \map(multi = true) := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(_) := ts.artifact;
 
-str generate_bodyOf(TrieSpecifics ts, op:containsEntry(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+str generate_bodyOf(TrieSpecifics ts, op:containsEntry(), 
+		TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts),
+		TrieSpecifics tsTrieNode = setArtifact(ts, trieNode(abstractNode()))) = 
 	"try {
 		<toString(UNCHECKED_ANNOTATION())>
 		<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o0;
 		<toString(UNCHECKED_ANNOTATION())>
 		<dec(val(ts.valType))> = (<typeToString(ts.valType)>) o1;
-		final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.<toString(call(ts.AbstractNode_findByKey, 
+		final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = <toString(call(tsTrieNode, rootNode, get(customComparator = op.customComparator), 
 					argsOverride = (ts.keyHash: exprFromString("improve(<hashCode(key(ts.keyType))>)"), ts.shift: constant(ts.shift.\type, "0"))))>;
 
 		if (result.isPresent()) {
-			return result.get().<toString(call(getDef(tsSet, containsKey(customComparator = op.customComparator)), argsOverride = (tsSet.stdObjectArg: useExpr(val(ts.valType)))))>;
+			return <toString(call(tsSet, exprFromString("result.get()"), containsKey(customComparator = op.customComparator), labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;
 		} else {
 			return false;
 		}			
 	} catch (ClassCastException unused) {
 		return false;
 	}"
-when core(_) := ts.artifact;
+when core(_) := ts.artifact
+		&& rootNode := val(unknown(), "rootNode");
 
 
 
@@ -1649,35 +1749,35 @@ Method CoreTransient_putEquiv 	= method(\return(generic("<typeToString(primitive
 data PredefOp = insertTuple(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = false))
-	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument) ], visibility = "public", isActive = true)
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true)
 when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = true))
-	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, ts.artifact)>Equivalent", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, ts.artifact)>Equivalent", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(immutable()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = false))
-	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument) ], visibility = "public", isActive = true)
+	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true)
 when core(transient()) := ts.artifact && !(\map(multi = false) := ts.ds);
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = true))
-	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>Equivalent", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>Equivalent", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(transient()) := ts.artifact && !(\map(multi = false) := ts.ds);
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = false))
-	= method(\return(collTupleType(ts, 1)), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument) ], visibility = "public", isActive = true)
+	= method(\return(primitiveToClass(collTupleType(ts, 1))), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true)
 when core(transient()) := ts.artifact && \map(multi = false) := ts.ds;
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = true))
-	= method(\return(collTupleType(ts, 1)), "<insertTupleMethodName(ts.ds, ts.artifact)>Equivalent", args = [ *mapper(payloadTupleArgs(ts), primitiveToClassArgument), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitiveToClass(collTupleType(ts, 1))), "<insertTupleMethodName(ts.ds, ts.artifact)>Equivalent", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(transient()) := ts.artifact && \map(multi = false) := ts.ds;
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = false))
-	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ ts.mutator, *payloadTupleArgs(ts), ts.keyHash, ts.shift, ts.details ])
+	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts)), ts.keyHash, ts.shift, ts.details ])
 when trieNode(_) := ts.artifact;
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = true))
-	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ ts.mutator, *payloadTupleArgs(ts), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when trieNode(_) := ts.artifact;
 
 str insertTupleMethodName(DataStructure ds:\set(), artifact:core(_)) = "__insert";
@@ -1703,7 +1803,7 @@ str generate_bodyOf(TrieSpecifics ts, op:insertTuple(),
 						tsTrieNode.shift: constant(tsTrieNode.shift.\type, "0"))))>;
 
 	if (<use(ts.details)>.isModified()) {
-		<if (\map() := ts.ds) {>if (<use(ts.details)>.hasReplacedValue()) {
+		<if (\map(multi = false) := ts.ds) {>if (<use(ts.details)>.hasReplacedValue()) {
 				<dec(valHashOld)> = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
 				<dec(valHashNew)> = <hashCode(val(ts.valType))>;
 
@@ -1881,7 +1981,7 @@ when core(transient()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 str generate_bodyOf(TrieSpecifics ts, op:insertCollection(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
-		Argument transientColl = val(exactBoundCollectionType(ts.ds, ts.tupleTypes, transient()), "tmpTransient"),
+		Argument transientColl = val(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, transient()), "tmpTransient"),
 		TrieSpecifics tsCoreTransient = setArtifact(ts, core(transient()))) = 
 	"<dec(transientColl)> = <toString(call(ts, this(), asTransient()))>;
 	'<toString(call(ts, transientColl, insertCollection(customComparator = op.customComparator)))>;
@@ -1902,9 +2002,9 @@ str generate_bodyOf(TrieSpecifics ts, op:insertCollection(),
 	for (Map.Entry<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)> entry : <uncapitalize(toString(ts.ds))>.entrySet()) {
 		final boolean isPresent = this.<toString(
 			call(getDef(ts, containsKey(customComparator = op.customComparator)), 
-					labeledArgsOverride = (payloadKey(): unboxPayloadFromTuple(ts, entry)[0])))>;
-		<dec(primitiveToClassArgument(val(ts.valType, "replaced")))> = this.<toString(call(getDef(ts, insertTuple(customComparator = op.customComparator)), 
-																			argsOverride = makeArgsOverrideMap(collTupleArgs(ts), unboxPayloadFromTuple(ts, entry))))>;
+					labeledArgsOverride = (payloadTuple(): unboxPayloadFromTuple(ts, entry)[0])))>;
+		<dec(primitiveToClassArgument(val(ts.valType, "replaced")))> = <toString(call(ts, this(), insertTuple(customComparator = op.customComparator), 
+																			labeledArgsOverride = (payloadTuple(): compoundExpr(unboxPayloadFromTuple(ts, entry)))))>;
 		
 		if (!isPresent || replaced != null) {
 			modified = true;
@@ -1965,11 +2065,11 @@ Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
 when core(transient()) := ts.artifact && !(\map(multi = false) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(collTupleType(ts, 1)), "__remove", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))) ], visibility = "public", isActive = true)
+	= method(\return(primitiveToClass(collTupleType(ts, 1))), "__remove", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))) ], visibility = "public", isActive = true)
 when core(transient()) := ts.artifact && \map(multi = false) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(collTupleType(ts, 1)), "__removeEquivalent", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(primitiveToClass(collTupleType(ts, 1))), "__removeEquivalent", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when core(transient()) := ts.artifact && \map(multi = false) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
@@ -2085,7 +2185,7 @@ when core(transient()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 str generate_bodyOf(TrieSpecifics ts, op:removeCollection(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
-		Argument transientColl = val(exactBoundCollectionType(ts.ds, ts.tupleTypes, transient()), "tmpTransient"),
+		Argument transientColl = val(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, transient()), "tmpTransient"),
 		TrieSpecifics tsCoreTransient = setArtifact(ts, core(transient()))) = 
 	"<dec(transientColl)> = <toString(call(ts, this(), asTransient()))>;
 	'<toString(call(ts, transientColl, removeCollection(customComparator = op.customComparator)))>;
@@ -2128,7 +2228,7 @@ when core(transient()) := ts.artifact || unknownArtifact() := ts.artifact;
 
 str generate_bodyOf(TrieSpecifics ts, op:retainCollection(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
-		Argument transientColl = val(exactBoundCollectionType(ts.ds, ts.tupleTypes, transient()), "tmpTransient"),
+		Argument transientColl = val(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, transient()), "tmpTransient"),
 		TrieSpecifics tsCoreTransient = setArtifact(ts, core(transient()))) = 
 	"<dec(transientColl)> = <toString(call(ts, this(), asTransient()))>;
 	'<toString(call(ts, transientColl, retainCollection(customComparator = op.customComparator)))>;
@@ -2143,7 +2243,7 @@ str generate_bodyOf(TrieSpecifics ts, op:retainCollection(),
 
 	Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)> thisIterator = iterator();
 	while (thisIterator.hasNext()) {
-		if (!<use(argCollection)>.<toString(call(getDef(ts, containsKey(customComparator = op.customComparator)), labeledArgsOverride = (payloadKey(): exprFromString("thisIterator.next()"))))>) {
+		if (!<toString(call(ts, argCollection, containsKey(customComparator = op.customComparator), labeledArgsOverride = (payloadTuple(): exprFromString("thisIterator.next()"))))>) {
 			thisIterator.remove();
 			modified = true;
 		}
