@@ -192,8 +192,9 @@ str toString(Expression:ifElseExpr(Expression condition, Expression onTrue, Expr
 	'	<toString(onFalse)>
 	'}";
 	
-str toString(Expression:compoundExpr(es)) = 
-	"<for(e <- es) {><toString(e)><}>";
+str toString(Expression:compoundExpr(es)) 
+	= intercalate(", ", mapper(es, eval)); 
+	//= "<for(e <- es) {><toString(e)><}>";
 
 str toString(Expression:emptyExpression()) = "";
 
@@ -355,7 +356,8 @@ data PredefArgLabel
 	= payloadTuple() 
 	//| payloadKey()
 	//| payloadValue() 
-	| collection();
+	| collection()
+	| tupleWrapper();
 
 
 
@@ -1308,6 +1310,9 @@ list[Argument] nodeTupleArgs(TrieSpecifics ts) = collTupleArgs(ts); // __payload
 Argument payloadTupleArg(TrieSpecifics ts, int idx) = __payloadTuple(ts.ds, ts.tupleTypes)[idx];
 list[Argument] payloadTupleArgs(TrieSpecifics ts) = __payloadTuple(ts.ds, ts.tupleTypes);
 
+Type payloadTupleType(TrieSpecifics ts, int idx) = __payloadTuple(ts.ds, ts.tupleTypes)[idx].\type;
+list[Type] payloadTupleTypes(TrieSpecifics ts) = [ arg.\type | arg <- __payloadTuple(ts.ds, ts.tupleTypes) ];
+
 Type nodeTupleType(TrieSpecifics ts, int idx) = nodeTupleArg(ts, idx).\type;
 list[Type] nodeTupleTypes(TrieSpecifics ts) = [ arg.\type | arg <- nodeTupleArgs(ts) ];
 
@@ -1475,7 +1480,7 @@ when core(_) := ts.artifact;
 str generate_bodyOf(TrieSpecifics ts, valueCollectionsSpliterator()) = 
 	"/* TODO: specialize between mutable / immutable ({@see Spliterator.IMMUTABLE}) */
 	'int characteristics = Spliterator.NONNULL | Spliterator.SIZED | Spliterator.SUBSIZED;
-	'return Spliterators.spliterator(new <toString(ts.ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(<toString(rootNodeOrThis(ts.artifact))>), size(), characteristics);"
+	'return Spliterators.spliterator(new <toString(ts.ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(<toString(rootNodeOrThis(core(immutable())))>), size(), characteristics);"
 when core(_) := ts.artifact;
 
 
@@ -1500,11 +1505,12 @@ when core(_) := ts.artifact;
 data PredefOp = tupleIterator();
 
 Method getDef(TrieSpecifics ts, tupleIterator())
-	= method(\return(generic("Iterator\<T\>")), "tupleIterator", args = [ field(generic("BiFunction\<K, V, T\>"), "tupleOf") ], visibility = "public", generics = [ generic("T") ], isActive = \map(multi = true) := ts.ds)
-when core(_) := ts.artifact;
+	= method(\return(jdtToType(jul_Iterator(genericTypeT))), "tupleIterator", args = [ jdtToVal(juf_BiFunction(payloadTupleTypes(ts) + genericTypeT), "tupleOf") ], visibility = "public", generics = [ genericTypeT ], isActive = \map(multi = true) := ts.ds)
+when core(_) := ts.artifact 
+	&& genericTypeT := generic("T");
 
 str generate_bodyOf(TrieSpecifics ts, tupleIterator()) = 
-	"return new <classnamePrefixFor(ts.artifact)><toString(ts.ds)>TupleIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(rootNode, tupleOf);"
+	"return new <classnamePrefixFor(ts.artifact)><toString(ts.ds)>TupleIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(<toString(rootNodeOrThis(ts.artifact))>, tupleOf);"
 when core(_) := ts.artifact;
 
 
@@ -2047,7 +2053,7 @@ str generate_bodyOf(TrieSpecifics ts, op:insertCollection(),
 	}
 		
 	return modified;"
-when core(transient()) := ts.artifact && \set() := ts.ds;
+when core(transient()) := ts.artifact && !(\map(multi = false) := ts.ds);
 
 /*
  * Current debugging:
@@ -2310,3 +2316,59 @@ data PredefOp = abstractNode_getKeyValueEntry();
 Method getDef(TrieSpecifics ts, abstractNode_getKeyValueEntry())
 	= method(\return(generic("java.util.Map.Entry\<<intercalate(", ", mapper(nodeTupleTypes(ts), primitiveToClass o typeToString))>\>")), "getKeyValueEntry", args = [index], isActive = \map() := ts.ds)
 when trieNode(_) := ts.artifact;
+
+
+
+
+
+
+
+//Method javaConstructor(Type classType, list[Argument] args = [])
+//	= constructor();	
+//	
+/*
+constructor(Argument returnArg, "<classnamePrefixFor(ts.artifact)><toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>", list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, str generics = "");
+javaClass(str name, 
+*/
+data PredefDataType
+	= unknownDataType();
+
+data JavaDataType
+	= invalidJavaDataType(str typeName = "???", list[Type] typeArguments = [])
+	| javaRootClass()
+	| javaInterface(str typeName, list[Type] typeArguments = [], list[JavaDataType] extendsList = [])
+	| javaClass(str typeName, list[Type] typeArguments = [], JavaDataType extends = javaRootClass(), list[JavaDataType] implementsList = []);
+
+default bool isJdtActive(TrieSpecifics ts, PredefDataType dt) = true;
+
+str toString(JavaDataType jdt)
+	= "<jdt.typeName><GenericsStr(jdt.typeArguments)> <extendsStr(jdt.extends)> <implementsListStr(jdt.implementsList)>"
+when jdt is javaClass;
+
+str toString(JavaDataType jdt) 
+	= "<jdt.typeName><GenericsStr(jdt.typeArguments)> <extendsListStr(jdt.extendsList)>"
+when jdt is javaInterface;
+
+str extendsStr(javaRootClass()) = "";
+str extendsStr(JavaDataType clazz) 
+	= "extends <clazz.typeName><GenericsStr(clazz.typeArguments)>";
+
+str extendsListStr([]) = "";
+str extendsListStr(list[JavaDataType] implementsList) 
+	= "extends <intercalate(", ", [ "<jdt.typeName><GenericsStr(jdt.typeArguments)>" | jdt <- implementsList ])>";
+
+str implementsListStr([]) = "";
+str implementsListStr(list[JavaDataType] implementsList) 
+	= "implements <intercalate(", ", [ "<jdt.typeName><GenericsStr(jdt.typeArguments)>" | jdt <- implementsList ])>";
+
+Argument jdtToVal(JavaDataType jdt, str fieldName) = val(specific(jdt.typeName, typeArguments = [ primitiveToClass(arg) | arg <- jdt.typeArguments, arg is generic ]), fieldName);
+Type jdtToType(JavaDataType jdt) = specific(jdt.typeName, typeArguments = jdt.typeArguments);
+
+
+
+
+JavaDataType juf_BiFunction(list[Type] types:[Type argType1, Type argType2, Type resultType]) = javaInterface("BiFunction", typeArguments = [ primitiveToClass(argType1), primitiveToClass(argType2), primitiveToClass(resultType) ]);
+default JavaDataType juf_BiFunction(list[Type] types) = invalidJavaDataType();
+
+JavaDataType jul_Iterator(Type typeArgument) = javaInterface("Iterator", typeArguments = [ primitiveToClass(typeArgument) ]); 
+JavaDataType jul_Map_Entry([Type keyType, Type valType]) = javaInterface("Map.Entry", typeArguments = [ primitiveToClass(keyType), primitiveToClass(valType) ]);
