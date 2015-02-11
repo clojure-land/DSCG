@@ -14,9 +14,9 @@ module dscg::GenerateTrie_HashCollisionNode
 import dscg::Common;
 import dscg::ArrayUtils;
 
-str generateHashCollisionNodeClassString(TrieSpecifics tsSuper) {
+str generateHashCollisionNodeClassString(TrieSpecifics ts) {
 
-	TrieSpecifics ts = setArtifact(tsSuper, trieNode(hashCollisionNode()));
+	//TrieSpecifics ts = setArtifact(tsSuper, trieNode(hashCollisionNode()));
 
 	arrays = [ field(asArray(nodeTupleArg(ts, 0).\type), "keys") ];
 	if (\map() := ts.ds) {

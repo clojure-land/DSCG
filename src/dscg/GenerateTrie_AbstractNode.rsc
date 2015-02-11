@@ -19,11 +19,11 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 
 		static final int TUPLE_LENGTH = <tupleLength(ts.ds)>;
 
-		<dec(getDef(setArtifact(ts, trieNode(abstractNode())), containsKey()), asAbstract = true)>
-		<dec(getDef(setArtifact(ts, trieNode(abstractNode())), containsKey(customComparator = true)), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), containsKey()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), containsKey(customComparator = true)), asAbstract = true)>
 	
-		<dec(getDef(setArtifact(ts, trieNode(abstractNode())), get()), asAbstract = true)>
-		<dec(getDef(setArtifact(ts, trieNode(abstractNode())), get(customComparator = true)), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), get()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), get(customComparator = true)), asAbstract = true)>
 	
 		<dec(ts.AbstractNode_updated, asAbstract = true)>
 		<dec(ts.AbstractNode_updatedEquiv, asAbstract = true)>
@@ -70,7 +70,7 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 		<dec(ts.AbstractNode_getValue, asAbstract = true)>
 		<dec(ts.AbstractNode_getKeyValueEntry, asAbstract = true)>
 		
-		<dec(getDef(setArtifact(ts, trieNode(abstractNode())), getTuple()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), getTuple()), asAbstract = true)>
 		
 		<dec(ts.AbstractNode__getValueAsCollection, asAbstract = true)>
 			

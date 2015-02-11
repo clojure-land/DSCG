@@ -233,7 +233,7 @@ Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next
 when (tupleIterator(core(transient())) := dt);
 
 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
-	= call(setArtifact(ts, core(transient())), collection, removeTuple(customComparator = false), 
+	= call(collection, core(transient()), removeTuple(customComparator = false), 
 			commentText = "TODO: test removal at iteration rigorously",
 			labeledArgsOverride = (payloadTuple(): compoundExpr(unboxPayloadFromTuple(dt))))
 when (tupleIterator(core(transient())) := dt) 

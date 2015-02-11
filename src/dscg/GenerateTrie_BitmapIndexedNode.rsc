@@ -15,9 +15,9 @@ import List;
 import dscg::Common;
 import dscg::ArrayUtils;
 
-str generateBitmapIndexedNodeClassString(TrieSpecifics tsSuper) {
+str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 
-	TrieSpecifics ts = setArtifact(tsSuper, trieNode(bitmapIndexedNode()));
+	//TrieSpecifics ts = setArtifact(tsSuper, trieNode(bitmapIndexedNode()));
 
 	// NOTE: filter list from constructor is used to restrict fields
 	fields = [ts.mutator, ts.BitmapIndexedNode_contentArray, ts.BitmapIndexedNode_payloadArity, ts.BitmapIndexedNode_nodeArity] - ts.BitmapIndexedNode_constructor.argsFilter;

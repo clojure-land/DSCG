@@ -15,7 +15,7 @@ import List;
 import String;
 extend dscg::Common;
 
-str generate_checkHashCodeAndSize(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
+str generate_checkHashCodeAndSize(TrieSpecifics ts) =
 	"
 	private boolean checkHashCodeAndSize(final int targetHash, final int targetSize) {
 		int hash = 0;

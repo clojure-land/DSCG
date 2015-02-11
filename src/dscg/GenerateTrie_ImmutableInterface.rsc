@@ -50,40 +50,40 @@ str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) =
 	<dec(ts.jul_Set_containsAll)>
 	<dec(ts.jul_Set_containsAllEquivalent)>
 
-	<dec(getDef(setArtifact(ts, core(immutable())), get()))>
-	<dec(getDef(setArtifact(ts, core(immutable())), get(customComparator = true)))>
+	<dec(getDef(ts, core(immutable()), get()))>
+	<dec(getDef(ts, core(immutable()), get(customComparator = true)))>
 
-	<dec(getDef(setArtifact(ts, core(immutable())), containsKey()))>
-	<dec(getDef(setArtifact(ts, core(immutable())), containsKey(customComparator = true)))>
+	<dec(getDef(ts, core(immutable()), containsKey()))>
+	<dec(getDef(ts, core(immutable()), containsKey(customComparator = true)))>
 
-	<dec(getDef(setArtifact(ts, core(immutable())), containsValue()))>
-	<dec(getDef(setArtifact(ts, core(immutable())), containsValue(customComparator = true)))>
+	<dec(getDef(ts, core(immutable()), containsValue()))>
+	<dec(getDef(ts, core(immutable()), containsValue(customComparator = true)))>
 
-	<dec(getDef(setArtifact(ts, core(immutable())), containsEntry()))>
-	<dec(getDef(setArtifact(ts, core(immutable())), containsEntry(customComparator = true)))>
+	<dec(getDef(ts, core(immutable()), containsEntry()))>
+	<dec(getDef(ts, core(immutable()), containsEntry(customComparator = true)))>
 
-	<dec(getDef(setArtifact(ts, core(immutable())), insertTuple()))>
-	<dec(getDef(setArtifact(ts, core(immutable())), insertTuple(customComparator = true)))>
+	<dec(getDef(ts, core(immutable()), insertTuple()))>
+	<dec(getDef(ts, core(immutable()), insertTuple(customComparator = true)))>
 	
-	<dec(getDef(setArtifact(ts, core(immutable())), insertCollection()))>
-	<dec(getDef(setArtifact(ts, core(immutable())), insertCollection(customComparator = true)))>
+	<dec(getDef(ts, core(immutable()), insertCollection()))>
+	<dec(getDef(ts, core(immutable()), insertCollection(customComparator = true)))>
 	
-	<dec(getDef(setArtifact(ts, core(immutable())), removeTuple()))>
-	<dec(getDef(setArtifact(ts, core(immutable())), removeTuple(customComparator = true)))>
+	<dec(getDef(ts, core(immutable()), removeTuple()))>
+	<dec(getDef(ts, core(immutable()), removeTuple(customComparator = true)))>
 	
-	<dec(getDef(setArtifact(ts, core(immutable())), removeCollection()))>
-	<dec(getDef(setArtifact(ts, core(immutable())), removeCollection(customComparator = true)))>
+	<dec(getDef(ts, core(immutable()), removeCollection()))>
+	<dec(getDef(ts, core(immutable()), removeCollection(customComparator = true)))>
 
-	<dec(getDef(setArtifact(ts, core(immutable())), retainCollection()))>
-	<dec(getDef(setArtifact(ts, core(immutable())), retainCollection(customComparator = true)))>
+	<dec(getDef(ts, core(immutable()), retainCollection()))>
+	<dec(getDef(ts, core(immutable()), retainCollection(customComparator = true)))>
 
-	<dec(getDef(setArtifact(ts, core(immutable())), keyIterator()))>
-	<dec(getDef(setArtifact(ts, core(immutable())), valueIterator()))>
-	<dec(getDef(setArtifact(ts, core(immutable())), entryIterator()))>
-	<dec(getDef(setArtifact(ts, core(immutable())), tupleIterator()))>
+	<dec(getDef(ts, core(immutable()), keyIterator()))>
+	<dec(getDef(ts, core(immutable()), valueIterator()))>
+	<dec(getDef(ts, core(immutable()), entryIterator()))>
+	<dec(getDef(ts, core(immutable()), tupleIterator()))>
 	
-	<dec(getDef(setArtifact(ts, core(immutable())), isTransientSupported()))>
-	<dec(getDef(setArtifact(ts, core(immutable())), asTransient()))>
+	<dec(getDef(ts, core(immutable()), isTransientSupported()))>
+	<dec(getDef(ts, core(immutable()), asTransient()))>
 ";
 
 str generateTransientInterface(TrieSpecifics ts) =
@@ -100,37 +100,37 @@ str generate_bodyOf_TransientInterface(TrieSpecifics ts) =
 	<dec(ts.jul_Set_containsAll)>
 	<dec(ts.jul_Set_containsAllEquivalent)>
 
-	<dec(getDef(setArtifact(ts, core(transient())), get()))>
-	<dec(getDef(setArtifact(ts, core(transient())), get(customComparator = true)))>
+	<dec(getDef(ts, core(transient()), get()))>
+	<dec(getDef(ts, core(transient()), get(customComparator = true)))>
 
-	<dec(getDef(setArtifact(ts, core(transient())), containsKey()))>
-	<dec(getDef(setArtifact(ts, core(transient())), containsKey(customComparator = true)))>
+	<dec(getDef(ts, core(transient()), containsKey()))>
+	<dec(getDef(ts, core(transient()), containsKey(customComparator = true)))>
 
-	<dec(getDef(setArtifact(ts, core(transient())), containsValue()))>
-	<dec(getDef(setArtifact(ts, core(transient())), containsValue(customComparator = true)))>
+	<dec(getDef(ts, core(transient()), containsValue()))>
+	<dec(getDef(ts, core(transient()), containsValue(customComparator = true)))>
 	
-	<dec(getDef(setArtifact(ts, core(transient())), containsEntry()))>
-	<dec(getDef(setArtifact(ts, core(transient())), containsEntry(customComparator = true)))>	
+	<dec(getDef(ts, core(transient()), containsEntry()))>
+	<dec(getDef(ts, core(transient()), containsEntry(customComparator = true)))>	
 	
-	<dec(getDef(setArtifact(ts, core(transient())), insertTuple()))>
-	<dec(getDef(setArtifact(ts, core(transient())), insertTuple(customComparator = true)))>
+	<dec(getDef(ts, core(transient()), insertTuple()))>
+	<dec(getDef(ts, core(transient()), insertTuple(customComparator = true)))>
 	
-	<dec(getDef(setArtifact(ts, core(transient())), insertCollection()))>
-	<dec(getDef(setArtifact(ts, core(transient())), insertCollection(customComparator = true)))>
+	<dec(getDef(ts, core(transient()), insertCollection()))>
+	<dec(getDef(ts, core(transient()), insertCollection(customComparator = true)))>
 
-	<dec(getDef(setArtifact(ts, core(transient())), removeTuple()))>
-	<dec(getDef(setArtifact(ts, core(transient())), removeTuple(customComparator = true)))>
+	<dec(getDef(ts, core(transient()), removeTuple()))>
+	<dec(getDef(ts, core(transient()), removeTuple(customComparator = true)))>
 	
-	<dec(getDef(setArtifact(ts, core(transient())), removeCollection()))>
-	<dec(getDef(setArtifact(ts, core(transient())), removeCollection(customComparator = true)))>
+	<dec(getDef(ts, core(transient()), removeCollection()))>
+	<dec(getDef(ts, core(transient()), removeCollection(customComparator = true)))>
 
-	<dec(getDef(setArtifact(ts, core(transient())), retainCollection()))>
-	<dec(getDef(setArtifact(ts, core(transient())), retainCollection(customComparator = true)))>
+	<dec(getDef(ts, core(transient()), retainCollection()))>
+	<dec(getDef(ts, core(transient()), retainCollection(customComparator = true)))>
 	
-	<dec(getDef(setArtifact(ts, core(transient())), keyIterator()))>
-	<dec(getDef(setArtifact(ts, core(transient())), valueIterator()))>
-	<dec(getDef(setArtifact(ts, core(transient())), entryIterator()))>
-	<dec(getDef(setArtifact(ts, core(transient())), tupleIterator()))>
+	<dec(getDef(ts, core(transient()), keyIterator()))>
+	<dec(getDef(ts, core(transient()), valueIterator()))>
+	<dec(getDef(ts, core(transient()), entryIterator()))>
+	<dec(getDef(ts, core(transient()), tupleIterator()))>
 		
-	<dec(getDef(setArtifact(ts, core(transient())), freeze()))>
+	<dec(getDef(ts, core(transient()), freeze()))>
 ";

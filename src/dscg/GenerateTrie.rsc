@@ -206,7 +206,7 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 		;
 		
 	if (isOptionEnabled(ts.setup, useStagedMutability())) { 
-		innerClassStrings = innerClassStrings + [ generateCoreTransientClassString(ts, ts.setup, ts.classNamePostfix)];
+		innerClassStrings = innerClassStrings + [ generateCoreTransientClassString(ts)];
 	}	
 		
 	if (isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useUntypedVariables())) {

@@ -18,9 +18,9 @@ import dscg::Common;
 // TODO: remove!!!
 str emptyTrieNodeConstantName = "EMPTY_NODE";
 
-str generateCompactNodeClassString(tsSuper) { // ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup
+str generateCompactNodeClassString(TrieSpecifics ts) {
 	
-	TrieSpecifics ts = setArtifact(tsSuper, trieNode(compactNode()));
+	//TrieSpecifics ts = setArtifact(tsSuper, trieNode(compactNode()));
 	
 	abstractMembers = [ bitmapMethod, valmapMethod ];
 	concreteMembers = [];
@@ -192,11 +192,11 @@ str generateCompactNodeClassString(tsSuper) { // ts:___expandedTrieSpecifics(ds,
 	<impl(ts, get())>
 	<impl(ts, get(customComparator = true))>
 	
-	<implOrOverride(ts.AbstractNode_updated, 		generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, ts.setup, equalityDefaultForArguments))>
-	<implOrOverride(ts.AbstractNode_updatedEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_updated(n, m, ts, ts.setup, equalityComparatorForArguments))>
+	<impl(ts, insertTuple())>
+	<impl(ts, insertTuple(customComparator = true))>
 
-	<implOrOverride(ts.AbstractNode_removed, 		generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, ts.setup, equalityDefaultForArguments, ts.AbstractNode_removed))>
-	<implOrOverride(ts.AbstractNode_removedEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, ts.setup, equalityComparatorForArguments, ts.AbstractNode_removedEquiv))>
+	<impl(ts, removeTuple())>
+	<impl(ts, removeTuple(customComparator = true))>
 
 	'	/**
 	'	 * @return 0 \<= mask \<= 2^BIT_PARTITION_SIZE - 1
@@ -522,60 +522,8 @@ str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecific
 when \map(multi = true) := ts.ds;
 
 
-/*
-default str generate_bodyOf_Core_updated(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq) {
 
-	str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>";
-
-	return  
-	"	final int keyHash = key.hashCode();
-		<dec(ts.details)> = <ts.ResultStr>.unchanged();
-		
-		<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = rootNode.updated(null, <use(ts.payloadTuple)>, improve(keyHash), 0, <use(ts.details)><optionalComparatorArgument>);
-
-		if (<use(ts.details)>.isModified()) {
-			<if (\map() := ts.ds) {>
-				if (<use(ts.details)>.hasReplacedValue()) {
-					final int valHashOld = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
-					final int valHashNew = <hashCode(val(ts.valType))>;
-	
-					return new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, hashCode + (keyHash ^ valHashNew)
-									- (keyHash ^ valHashOld), cachedSize);
-				}
-			<}>
-				
-			<if (\map() := ts.ds) {>
-				final int valHash = <hashCode(val(ts.valType))>;
-				return new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, hashCode + (keyHash ^ valHash), cachedSize + 1);
-			<} else {>
-				return new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, hashCode + keyHash, cachedSize + 1);			
-			<}>
-		}
-
-		return this;"
-	;
-}
-
-
-default str generate_bodyOf_Core_containsKey(TrieSpecifics ts, rel[Option,bool] setup, str(Argument, Argument) eq,
-				str optionalComparatorArgument = "<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>") =
-	"try {
-		<toString(UNCHECKED_ANNOTATION())>
-		<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
-		return rootNode.containsKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0<optionalComparatorArgument>);			
-	} catch (ClassCastException unused) {
-		return false;
-	}"
-	;
-
-*/	
-
-str generate_bodyOf_SpecializedBitmapPositionNode_updated(_, _, ts, rel[Option,bool] setup, str(Argument, Argument) eq)	
-	= "throw new UnsupportedOperationException();"
-when !(isOptionEnabled(ts.setup,methodsWithComparator()) || (eq == equalityDefault))
-	;
-	
-default str generate_bodyOf_SpecializedBitmapPositionNode_updated(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) {
+default str generate_bodyOf_SpecializedBitmapPositionNode_updated(TrieSpecifics ts, str(Argument, Argument) eq) {
 	
 	Argument subNode 	= \node(ts.ds, ts.tupleTypes, "subNode");
 	Argument subNodeNew = \node(ts.ds, ts.tupleTypes, "subNodeNew");
@@ -649,13 +597,9 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 	'}" 
 when \map(multi = true) := ts.ds;
 	
-str generate_bodyOf_SpecializedBitmapPositionNode_removed(_, _, ts, rel[Option,bool] setup, str(Argument, Argument) eq, Method nodeRemovedMethod)	
-	= "throw new UnsupportedOperationException();"
-when !(isOptionEnabled(ts.setup,methodsWithComparator()) || (eq == equalityDefault))
-	;			
+default str generate_bodyOf_SpecializedBitmapPositionNode_removed(TrieSpecifics ts, PredefOp op,
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) {
 		
-default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq, Method nodeRemovedMethod) {
-
 	Argument subNode 	= \node(ts.ds, ts.tupleTypes, "subNode");
 	Argument subNodeNew = \node(ts.ds, ts.tupleTypes, "subNodeNew");
 
@@ -673,7 +617,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(int n, int m, 
 		}
 	} else if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
 		<dec(subNode)> = nodeAt(bitpos);
-		<dec(subNodeNew)> = subNode.<toString(call(nodeRemovedMethod, argsOverride = (ts.shift: exprFromString("shift + BIT_PARTITION_SIZE"))))>;
+		<dec(subNodeNew)> = <toString(call(subNode, compactNode(ts), op, argsOverride = (ts.shift: exprFromString("shift + BIT_PARTITION_SIZE"))))>;
 
 		if (!<use(ts.details)>.isModified()) {
 			return this;

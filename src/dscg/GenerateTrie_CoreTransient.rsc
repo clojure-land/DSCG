@@ -17,12 +17,12 @@ import dscg::Common;
 import dscg::Common_Iterator;
 import dscg::GenerateTrie_Core_Common;
 
-str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classNamePostfix) { 
+str generateCoreTransientClassString(TrieSpecifics ts) { 
 	
-	TrieSpecifics ts = setArtifact(tsSuper, core(transient()));
+	//TrieSpecifics ts = setArtifact(tsSuper, core(transient()));
 	
-	str className = "TransientTrie<toString(ts.ds)><classNamePostfix>";	
-	str persistentClassName = "Trie<toString(ts.ds)><classNamePostfix>";
+	str className = "TransientTrie<toString(ts.ds)><ts.classNamePostfix>";	
+	str persistentClassName = "Trie<toString(ts.ds)><ts.classNamePostfix>";
 	
 	return
 	"static final class <className><GenericsStr(ts.tupleTypes)> implements
@@ -42,7 +42,7 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 			}
 		}
 		
-		<generate_checkHashCodeAndSize(ts, setup)>	
+		<generate_checkHashCodeAndSize(ts)>	
 
 		<implOrOverride(ts.jul_Map_put, UNSUPPORTED_OPERATION_EXCEPTION)>
 		<implOrOverride(ts.jul_Map_clear, UNSUPPORTED_OPERATION_EXCEPTION)>
@@ -159,13 +159,13 @@ str generateCoreTransientClassString(tsSuper, rel[Option,bool] setup, str classN
 		<impl(ts, valueCollectionsStream())>
 
 
-		<declareJdt(ts, keyIterator(ts.artifact))>
+		<declareJdt(ts, keyIterator(core(transient())))>
 		
-		<declareJdt(ts, valueIterator(ts.artifact))>
+		<declareJdt(ts, valueIterator(core(transient())))>
 		
-		<declareJdt(ts, entryIterator(ts.artifact))>
+		<declareJdt(ts, entryIterator(core(transient())))>
 		
-		<declareJdt(ts, tupleIterator(ts.artifact))>
+		<declareJdt(ts, tupleIterator(core(transient())))>
 
 		<implOrOverride(ts.jul_Map_keySet, generate_bodyOf_jul_Map_keySet(ts, ts.coreTransientClassName))>
 			
