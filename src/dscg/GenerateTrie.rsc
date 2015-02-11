@@ -192,7 +192,7 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 
 	innerClassStrings 
 		= innerClassStrings
-		// + [ generateHashCollisionNodeClassString(ts, ts.setup, ts.classNamePostfix)] // temporarily off
+		+ [ generateHashCollisionNodeClassString(ts)]
 		+ [ generateIteratorClassString(ts, ts.setup)] // , classNamePostfix
 		;
 	

@@ -16,6 +16,8 @@ import List;
 import String;
 import util::Math;
 
+import dscg::ArrayUtils;
+
 /* PUBLIC CONSTANTS */
 public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");	 
 
@@ -233,7 +235,9 @@ data Expression
 	| call(TrieSpecifics ts, Argument arg, PredefOp op, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ())
 	| call(TrieSpecifics ts, Expression e, PredefOp op, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ())
 
-	| call(TrieSpecifics ts, Argument arg, str methodName, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ());
+	| call(TrieSpecifics ts, Argument arg, str methodName, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ())
+	
+	| call(JavaDataType jdt, str methodName, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ());	
 
 map[Argument, Expression] makeArgsOverrideMap(list[Argument] args, list[Expression] argsOverride) 
 	= toMapUnique(zip(args, argsOverride))
@@ -337,6 +341,7 @@ data Artifact
 data TrieNodeType
 	= abstractNode()
 	| compactNode()
+	| hashCollisionNode()
 	| bitmapIndexedNode();
 	
 data UpdateSemantic
@@ -1569,33 +1574,6 @@ str generate_bodyOf(TrieSpecifics ts, op:get(), TrieSpecifics tsTrieNode = setAr
 when core(_) := ts.artifact
 		&& rootNode := val(unknown(), "rootNode");
 
-/*
-		@Override
-		Optional<K> findByKey(final K key, final int keyHash, final int shift) {
-			final int mask = mask(keyHash, shift);
-			final int bitpos = bitpos(mask);
-
-			if ((dataMap() & bitpos) != 0) { // inplace value
-				if (getKey(dataIndex(bitpos)).equals(key)) {
-					final K _key = getKey(dataIndex(bitpos));
-
-					return Optional.of(_key);
-				}
-
-				return Optional.empty();
-			}
-
-			if ((nodeMap() & bitpos) != 0) { // node (not value)
-				final AbstractSetNode<K> subNode = nodeAt(bitpos);
-
-				return subNode.findByKey(key, keyHash, shift + BIT_PARTITION_SIZE);
-			}
-
-			return Optional.empty();
-		}
-*/
-
-
 // TODO: getPayload function by index
 // previously used arguments (int n, int m)
 str generate_bodyOf(TrieSpecifics ts, op:get(),
@@ -1623,6 +1601,18 @@ str generate_bodyOf(TrieSpecifics ts, op:get(),
 	'return Optional.empty();"
 when trieNode(compactNode()) := ts.artifact
 		&& result := val(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)), "result");
+
+str generate_bodyOf(TrieSpecifics ts, op:get(),
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
+	"for (int i = 0; i \< keys.length; i++) {
+		<dec(key(ts.keyType, "_key"))> = keys[i];
+		if (<eq(key(ts.keyType), key(ts.keyType, "_key"))>) {
+			<if(\set() := ts.ds) {>return Optional.of(_key);<} else {><dec(val(ts.valType, "_val"))> = vals[i];
+				<if(\map(multi = true) := ts.ds) {>if (<eq(val(ts.keyType), val(ts.keyType, "_val"))>) {<}>return Optional.of(<use(val(ts.valType, "_val"))>);<if(\map(multi = true) := ts.ds) {>}<}><}>
+		}
+	}
+	return Optional.empty();"
+when trieNode(hashCollisionNode()) := ts.artifact;
 
 
 
@@ -1681,6 +1671,19 @@ str generate_bodyOf(TrieSpecifics ts, op:containsKey(),
 	'
 	'return false;"
 when trieNode(compactNode()) := ts.artifact;
+
+// previously used arguments (int n, int m)
+str generate_bodyOf(TrieSpecifics ts, op:containsKey(),
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) =
+	"if (this.hash == keyHash) {
+		for (<typeToString(ts.keyType)> k : keys) {
+			if (<eq(key(ts.keyType, "k"), key(ts.keyType))>) {
+				return true;
+			}
+		}
+	}
+	return false;"
+when trieNode(hashCollisionNode()) := ts.artifact;
 
 
 
@@ -1782,11 +1785,11 @@ Method getDef(TrieSpecifics ts, insertTuple(customComparator = true))
 when core(transient()) := ts.artifact && \map(multi = false) := ts.ds;
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = false))
-	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts)), ts.keyHash, ts.shift, ts.details ])
+	= method(\return(jdtToType(compactNode(ts))), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts)), ts.keyHash, ts.shift, ts.details ])
 when trieNode(_) := ts.artifact;
 
 Method getDef(TrieSpecifics ts, insertTuple(customComparator = true))
-	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(jdtToType(compactNode(ts))), "<insertTupleMethodName(ts.ds, ts.artifact)>", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when trieNode(_) := ts.artifact;
 
 str insertTupleMethodName(DataStructure ds:\set(), artifact:core(_)) = "__insert";
@@ -1972,26 +1975,49 @@ Expression updateProperty(TrieSpecifics ts, op:removeTuple(), sizeProperty(), on
 //when trieNode(compactNode()) := ts.artifact;
 
 
+str generate_bodyOf(TrieSpecifics ts, op:insertTuple(),
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
+	//if (this.hash != keyHash) {
+	//	details.modified();
+	//	return mergeNodeAndKeyValPair(this, this.hash, <use(ts.payloadTuple)>, keyHash, shift);
+	//}
+
+	"assert this.hash == keyHash;
+	
+	for (int idx = 0; idx \< keys.length; idx++) {
+		if (<eq(key(ts.keyType, "keys[idx]"), key(ts.keyType))>) {
+		
+			<if (\map() := ts.ds) {>	
+				<dec(val(ts.valType, "currentVal"))> = vals[idx];
+	
+				if (<eq(val(ts.valType, "currentVal"), val(ts.valType))>) {
+					return this;
+				}
+	
+				<dec(field(asArray(ts.valType), "src"))> = this.vals;
+				<arraycopyAndSetTuple(field(asArray(ts.valType), "src"), field(asArray(ts.valType), "dst"), 1, [val(ts.valType)], field(primitive("int"), "idx"))>
+	
+				final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> thisNew = new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(this.hash, this.keys, dst);
+	
+				details.updated(currentVal);
+				return thisNew;
+			<} else {>
+				return this;
+			<}>
+		}
+	}
+	
+	<arraycopyAndInsertTuple(field(asArray(ts.keyType), "this.keys"), field(asArray(ts.keyType), "keysNew"), 1, [key(ts.keyType)], field(primitive("int"), "keys.length"))>
+	<if (\map() := ts.ds) {><arraycopyAndInsertTuple(field(asArray(ts.valType), "this.vals"), field(asArray(ts.valType), "valsNew"), 1, [val(ts.valType)], field(primitive("int"), "vals.length"))><}>
+	
+	details.modified();
+	return new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash, keysNew<if (\map() := ts.ds) {>, valsNew<}>);" 
+when trieNode(hashCollisionNode()) := ts.artifact;
 
 
 
 
-/*
-Method Core_insertOrPutAll 			= method(coreInterfaceReturn, "<insertOrPutMethodName(ds)>All",  			args = [__weirdArgument], 				visibility = "public"),
-Method Core_insertOrPutAllEquiv 	= method(coreInterfaceReturn, "<insertOrPutMethodName(ds)>AllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
 
-Method CoreTransient_insertOrPutAll      = method(\return(primitive("boolean")), "<insertOrPutMethodName(ds)>All",  			args = [__weirdArgument], 				visibility = "public"),
-Method CoreTransient_insertOrPutAllEquiv = method(\return(primitive("boolean")), "<insertOrPutMethodName(ds)>AllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
-
-	<implOrOverride(ts.Core_insertOrPutAll, 		generate_bodyOf_Core_insertOrPutAll(ts, setup, equalityDefaultForArguments		))>
-	<implOrOverride(ts.Core_insertOrPutAllEquiv,	generate_bodyOf_Core_insertOrPutAll(ts, setup, equalityComparatorForArguments	))>
-
-		<if (\map() := ts.ds) {>		
-		<insertOrPutAll(ts, setup, args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()) ], useComparator = false)>
-		<insertOrPutAll(ts, setup, args = [ upperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()) ], useComparator = true )>		
-		<}>		
-
-*/
 data PredefOp = insertCollection(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, insertCollection(customComparator = false))
@@ -2110,19 +2136,19 @@ Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
 when core(transient()) := ts.artifact && \map(multi = false) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts)), ts.keyHash, ts.shift, ts.details ])
+	= method(\return(jdtToType(compactNode(ts))), "removed", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts)), ts.keyHash, ts.shift, ts.details ])
 when trieNode(_) := ts.artifact && \map(multi = true) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(jdtToType(compactNode(ts))), "removed", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when trieNode(_) := ts.artifact && \map(multi = true) := ts.ds;
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = false))
-	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, __labeledArgument(payloadTuple(), payloadTupleArg(ts, 0)), ts.keyHash, ts.shift, ts.details ])
+	= method(\return(jdtToType(compactNode(ts))), "removed", args = [ ts.mutator, __labeledArgument(payloadTuple(), payloadTupleArg(ts, 0)), ts.keyHash, ts.shift, ts.details ])
 when trieNode(_) := ts.artifact && !(\map(multi = true) := ts.ds);
 
 Method getDef(TrieSpecifics ts, removeTuple(customComparator = true))
-	= method(\return(primitive("boolean")), "removed", args = [ ts.mutator, __labeledArgument(payloadTuple(), payloadTupleArg(ts, 0)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
+	= method(\return(jdtToType(compactNode(ts))), "removed", args = [ ts.mutator, __labeledArgument(payloadTuple(), payloadTupleArg(ts, 0)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when trieNode(_) := ts.artifact && !(\map(multi = true) := ts.ds);
 
 str generate_bodyOf(TrieSpecifics ts, op:removeTuple(),
@@ -2197,6 +2223,40 @@ when core(transient()) := ts.artifact && \map(multi = false) := ts.ds;
 Expression resultOf(TrieSpecifics ts, op:removeTuple(), onRemoveNotFound(), list[Expression] payloadTupleExprList = []) 
 	= bconst(false)
 when core(transient()) := ts.artifact && !(\map(multi = false) := ts.ds);
+
+
+//str generate_bodyOf(TrieSpecifics ts, op:insertTuple())
+//	= ""
+//when trieNode(compactNode()) := ts.artifact;
+
+str generate_bodyOf(TrieSpecifics ts, op:removeTuple(),
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments)	= 
+	"for (int idx = 0; idx \< keys.length; idx++) {
+		if (<eq(key(ts.keyType, "keys[idx]"), key(ts.keyType))>) {
+			<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = vals[idx]; details.updated(currentVal);<}>
+			
+			if (this.arity() == 1) {			
+				return nodeOf(mutator);
+			} else if (this.arity() == 2) {
+				/*
+				 * Create root node with singleton element. This node
+				 * will be a) either be the new root returned, or b)
+				 * unwrapped and inlined.
+				 */
+				<dec(key(ts.keyType, "theOtherKey"))> = (idx == 0) ? keys[1] : keys[0];
+				<if (\map() := ts.ds) {><dec(val(ts.valType, "theOtherVal"))> = (idx == 0) ? vals[1] : vals[0];<}>
+				return <CompactNode(ts.ds)>.<GenericsStr(ts.tupleTypes)> nodeOf(mutator).updated(mutator,
+								theOtherKey<if (\map() := ts.ds) {>, theOtherVal<}>, keyHash, 0, details<if (!(eq == equalityDefaultForArguments)) {>, cmp<}>);
+			} else {
+				<arraycopyAndRemoveTuple(field(asArray(ts.keyType), "this.keys"), field(asArray(ts.keyType), "keysNew"), 1, field(primitive("int"), "idx"))>
+				<if (\map() := ts.ds) {><arraycopyAndRemoveTuple(field(asArray(ts.valType), "this.vals"), field(asArray(ts.valType), "valsNew"), 1, field(primitive("int"), "idx"))><}>
+	
+				return new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash, keysNew<if (\map() := ts.ds) {>, valsNew<}>);
+			}
+		}
+	}
+	return this;"
+when trieNode(hashCollisionNode()) := ts.artifact;
 
 
 
@@ -2379,3 +2439,22 @@ default JavaDataType juf_BiFunction(list[Type] types) = invalidJavaDataType();
 
 JavaDataType jul_Iterator(Type typeArgument) = javaInterface("Iterator", typeArguments = [ primitiveToClass(typeArgument) ]); 
 JavaDataType jul_Map_Entry([Type keyType, Type valType]) = javaInterface("Map.Entry", typeArguments = [ primitiveToClass(keyType), primitiveToClass(valType) ]);
+
+
+
+JavaDataType compactNode(TrieSpecifics ts)
+	= javaClass("Compact<toString(ts.ds)>Node", typeArguments = payloadTupleTypes(ts));
+
+JavaDataType hashCollisionNode(TrieSpecifics ts)
+	= javaClass("HashCollision<toString(ts.ds)>Node<ts.classNamePostfix>", typeArguments = payloadTupleTypes(ts));
+
+
+
+//Method getDef(TrieSpecifics ts, JavaDataType jdt, methodName:"__constructor")
+//	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ ts.keyHash, labeledArgumentList(payloadTuple(), [ appendToName(updateType(arg, asArray), "s") | arg <- payloadTupleArgs(ts) ]) ], generics = jdt.typeArguments, visibility = "public")
+//when jdt := hashCollisionNode(ts);
+//// TODO: feature request: I would like to match these rewrite functions as constructors (e.g., jdt is hashCollisionNode)  
+//
+//str toString(TrieSpecifics ts, Expression c:call(JavaDataType jdt, str methodName), Method m = getDef(ts, op)) = 
+//	"<printNonEmptyCommentWithNewline(c.commentText)><toString(e)>.<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
+//when m.isActive;
