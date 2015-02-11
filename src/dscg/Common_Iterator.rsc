@@ -97,7 +97,7 @@ list[Argument] getFieldList(TrieSpecifics ts, PredefDataType dt) = [] +
 when valueIterator(core(transient())) := dt
 		|| entryIterator(core(transient())) := dt
 		|| tupleIterator(core(transient())) := dt;
-		
+	
 // TODO: remove code duplication of 'tupleOfFunction' between getDef(__constructor) and getFieldList(), ... and tupleIterator().
 //list[Argument] getFieldList(TrieSpecifics ts, PredefDataType dt) = 
 //	[ 
@@ -203,13 +203,13 @@ when (tupleIterator(core(transient())) := dt)
 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next") = 
 	result(assign(key, exprFromString("super.next()")))	
 when (keyIterator(core(transient())) := dt)
- 		&& /labeledArgumentList(payloadTuple(), [ Argument key, *_ ]) := getFieldList(ts, dt);
+ 		&& /labeledArgumentList(payloadTuple(), [ Argument key ]) := getFieldList(ts, dt);
 
 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
 	= call(setArtifact(ts, core(transient())), collection, removeTuple(customComparator = false), 
 			commentText = "TODO: test removal at iteration rigorously",
 			labeledArgsOverride = (payloadTuple(): useExprList(payloadTupleArgs)))
-when (keyIterator(core(transient())) := dt)
+when (keyIterator(core(transient())) := dt && !(\map(multi = true) := ts.ds))
 		&& /labeledArgumentList(collection(), [ Argument collection ]) := getFieldList(ts, dt)
 		&& /labeledArgumentList(payloadTuple(), list[Argument] payloadTupleArgs) := getFieldList(ts, dt);
 
@@ -218,11 +218,29 @@ when (keyIterator(core(transient())) := dt)
 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next") = 
 	result(exprFromString("super.next()"))	
 when (valueIterator(core(transient())) := dt
-		|| entryIterator(core(transient())) := dt
-		|| tupleIterator(core(transient())) := dt);
+		|| entryIterator(core(transient())) := dt);
 
 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
 	= exprFromString("throw new UnsupportedOperationException()")
-when (valueIterator(core(transient())) := dt
-		|| entryIterator(core(transient())) := dt
-		|| tupleIterator(core(transient())) := dt);
+when ((keyIterator(core(transient())) := dt && (\map(multi = true) := ts.ds))
+		||valueIterator(core(transient())) := dt
+		|| entryIterator(core(transient())) := dt);
+		
+		
+
+Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next") = 
+	result(exprFromString("super.next()"))	
+when (tupleIterator(core(transient())) := dt);
+
+Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
+	= call(setArtifact(ts, core(transient())), collection, removeTuple(customComparator = false), 
+			commentText = "TODO: test removal at iteration rigorously",
+			labeledArgsOverride = (payloadTuple(): compoundExpr(unboxPayloadFromTuple(dt))))
+when (tupleIterator(core(transient())) := dt) 
+		&& /labeledArgumentList(collection(), [ Argument collection ]) := getFieldList(ts, dt);
+		
+list[Expression] unboxPayloadFromTuple(PredefDataType dt) =
+	[ exprFromString("currentKey"), exprFromString("currentValue") ]
+when (tupleIterator(core(transient())) := dt);
+
+Expression unboxPayloadFromTuple(PredefDataType dt, int idx) = unboxPayloadFromTuple(dt)[idx];

@@ -353,7 +353,8 @@ default str generate_bodyOf(TrieSpecifics ts, PredefOp op) = "";
 
 
 data PredefArgLabel
-	= payloadTuple() 
+	= payloadTuple()
+	| payloadTupleWrapped() 
 	//| payloadKey()
 	//| payloadValue() 
 	| collection()
@@ -2030,7 +2031,7 @@ str generate_bodyOf(TrieSpecifics ts, op:insertCollection(),
 	"boolean modified = false;
 
 	for (Map.Entry<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)> entry : <uncapitalize(toString(ts.ds))>.entrySet()) {
-		final boolean isPresent = this.<toString(
+		<if(\map(multi = false) := ts.ds) {>final boolean isPresent = this.<toString(
 			call(getDef(ts, containsKey(customComparator = op.customComparator)), 
 					labeledArgsOverride = (payloadTuple(): unboxPayloadFromTuple(ts, entry)[0])))>;
 		<dec(primitiveToClassArgument(val(ts.valType, "replaced")))> = <toString(call(ts, this(), insertTuple(customComparator = op.customComparator), 
@@ -2038,11 +2039,12 @@ str generate_bodyOf(TrieSpecifics ts, op:insertCollection(),
 		
 		if (!isPresent || replaced != null) {
 			modified = true;
-		}
+		}<} else {>modified |= <toString(call(ts, this(), insertTuple(customComparator = op.customComparator), 
+																			labeledArgsOverride = (payloadTuple(): compoundExpr(unboxPayloadFromTuple(ts, entry)))))>;<}>
 	}
 
 	return modified;"
-when core(transient()) := ts.artifact && \map(multi = false) := ts.ds;
+when core(transient()) := ts.artifact && \map() := ts.ds;
 
 str generate_bodyOf(TrieSpecifics ts, op:insertCollection(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
@@ -2053,7 +2055,7 @@ str generate_bodyOf(TrieSpecifics ts, op:insertCollection(),
 	}
 		
 	return modified;"
-when core(transient()) := ts.artifact && !(\map(multi = false) := ts.ds);
+when core(transient()) := ts.artifact && \set() := ts.ds;
 
 /*
  * Current debugging:
@@ -2063,8 +2065,13 @@ when core(transient()) := ts.artifact && !(\map(multi = false) := ts.ds);
 list[Expression] unboxPayloadFromTuple(TrieSpecifics ts, Argument arg) =
 	[ exprFromString("<use(arg)>.getKey()"), exprFromString("<use(arg)>.getValue()") ]; // assume it's a Map.Entry
 
-
-
+Expression unboxPayloadFromTuple(TrieSpecifics ts, Argument arg, int idx) { // assume it's a Map.Entry
+	switch(idx) {
+	case 0: return exprFromString("<use(arg)>.getKey()");
+	case 1: return exprFromString("<use(arg)>.getValue()");
+	case _: fail;
+	};
+}
 
 
 

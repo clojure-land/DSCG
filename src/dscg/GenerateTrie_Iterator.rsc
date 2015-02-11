@@ -186,6 +186,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		final BiFunction\<K, V, T\> tupleOf;
 
 		K currentKey = null;
+		V currentValue = null;
 		Iterator\<V\> currentSetIterator = Collections.emptyIterator();
 
 		<toString(ts.ds)>TupleIterator(<AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> rootNode, final BiFunction\<K, V, T\> tupleOf) {
@@ -214,7 +215,8 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 			if (!hasNext()) {
 				throw new NoSuchElementException();
 			} else {
-				return tupleOf.apply(currentKey, currentSetIterator.next());
+				currentValue = currentSetIterator.next();
+				return tupleOf.apply(currentKey, currentValue);
 			}
 		}
 
