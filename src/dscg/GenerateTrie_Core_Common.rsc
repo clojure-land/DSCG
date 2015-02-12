@@ -19,7 +19,7 @@ str generate_checkHashCodeAndSize(TrieSpecifics ts) =
 	"
 	private boolean checkHashCodeAndSize(final int targetHash, final int targetSize) {
 		int hash = 0;
-		int size = 0;
+		int size = 0;		
 	
 		for (Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)> it = keyIterator(); it.hasNext();) {
 			<dec(key(ts.keyType))> = it.next();
@@ -31,9 +31,9 @@ str generate_checkHashCodeAndSize(TrieSpecifics ts) =
 		return hash == targetHash && size == targetSize;
 	}
 	"
-	;
+when \set() := ts.ds;
 
-str generate_checkHashCodeAndSize(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
+str generate_checkHashCodeAndSize(TrieSpecifics ts) =
 	"
 	private boolean checkHashCodeAndSize(final int targetHash, final int targetSize) {
 		int hash = 0;
@@ -51,8 +51,7 @@ str generate_checkHashCodeAndSize(ts:___expandedTrieSpecifics(ds, bitPartitionSi
 		return hash == targetHash && size == targetSize;
 	}
 	"
-when \map() := ds || ds == vector()	
-	;
+when \map() := ts.ds;
 
 default str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass) = "";
 

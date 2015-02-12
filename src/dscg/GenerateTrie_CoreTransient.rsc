@@ -58,14 +58,14 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 		<implOrOverride(ts.jul_Set_removeAll, UNSUPPORTED_OPERATION_EXCEPTION)>
 		<implOrOverride(ts.jul_Set_retainAll, UNSUPPORTED_OPERATION_EXCEPTION)>
 
-		<impl(ts, containsKey())>
-		<impl(ts, containsKey(customComparator = true))>
+		<impl(ts, core(transient()), containsKey())>
+		<impl(ts, core(transient()), containsKey(customComparator = true))>
 
-		<impl(ts, containsValue())>
-		<impl(ts, containsValue(customComparator = true))>
+		<impl(ts, core(transient()), containsValue())>
+		<impl(ts, core(transient()), containsValue(customComparator = true))>
 
-		<impl(ts, containsEntry())>
-		<impl(ts, containsEntry(customComparator = true))>
+		<impl(ts, core(transient()), containsEntry())>
+		<impl(ts, core(transient()), containsEntry(customComparator = true))>
 		
 		@Override
 		public <typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get(Object o) {
@@ -101,20 +101,20 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 			}
 		}
 
-		<impl(ts, insertTuple())>
-		<impl(ts, insertTuple(customComparator = true))>
+		<impl(ts, core(transient()), insertTuple())>
+		<impl(ts, core(transient()), insertTuple(customComparator = true))>
 
-		<impl(ts, insertCollection())>
-		<impl(ts, insertCollection(customComparator = true))>
+		<impl(ts, core(transient()), insertCollection())>
+		<impl(ts, core(transient()), insertCollection(customComparator = true))>
 
-		<impl(ts, removeTuple())>
-		<impl(ts, removeTuple(customComparator = true))>
+		<impl(ts, core(transient()), removeTuple())>
+		<impl(ts, core(transient()), removeTuple(customComparator = true))>
 
-		<impl(ts, removeCollection())>
-		<impl(ts, removeCollection(customComparator = true))>
+		<impl(ts, core(transient()), removeCollection())>
+		<impl(ts, core(transient()), removeCollection(customComparator = true))>
 	
-		<impl(ts, retainCollection())>
-		<impl(ts, retainCollection(customComparator = true))>
+		<impl(ts, core(transient()), retainCollection())>
+		<impl(ts, core(transient()), retainCollection(customComparator = true))>
 	
 		<if (ts.ds == \set()) {>
 		@Override
@@ -144,19 +144,19 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 		<implOrOverride(ts.CoreCommon_isEmpty,
 			"return cachedSize == 0;")>
 
-		<impl(ts, iterator())>
+		<impl(ts, core(transient()), iterator())>
 
-		<impl(ts, keyIterator())>
+		<impl(ts, core(transient()), keyIterator())>
 
-		<impl(ts, valueIterator())>
+		<impl(ts, core(transient()), valueIterator())>
 
-		<impl(ts, entryIterator())>
+		<impl(ts, core(transient()), entryIterator())>
 
-		<impl(ts, tupleIterator())>
+		<impl(ts, core(transient()), tupleIterator())>
 
-		<impl(ts, valueCollectionsSpliterator())>
+		<impl(ts, core(transient()), valueCollectionsSpliterator())>
 	
-		<impl(ts, valueCollectionsStream())>
+		<impl(ts, core(transient()), valueCollectionsStream())>
 
 
 		<declareJdt(ts, keyIterator(core(transient())))>

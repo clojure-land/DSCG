@@ -68,17 +68,17 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts) {
 		}		
 		<}>
 
-	<impl(ts, containsKey())>
-	<impl(ts, containsKey(customComparator = true))>
+	<impl(ts, trieNode(hashCollisionNode()), containsKey())>
+	<impl(ts, trieNode(hashCollisionNode()), containsKey(customComparator = true))>
 
-	<impl(ts, get())>
-	<impl(ts, get(customComparator = true))>
+	<impl(ts, trieNode(hashCollisionNode()), get())>
+	<impl(ts, trieNode(hashCollisionNode()), get(customComparator = true))>
 
-	<impl(ts, insertTuple())>
-	<impl(ts, insertTuple(customComparator = true))>
+	<impl(ts, trieNode(hashCollisionNode()), insertTuple())>
+	<impl(ts, trieNode(hashCollisionNode()), insertTuple(customComparator = true))>
 
-	<impl(ts, removeTuple())>
-	<impl(ts, removeTuple(customComparator = true))>
+	<impl(ts, trieNode(hashCollisionNode()), removeTuple())>
+	<impl(ts, trieNode(hashCollisionNode()), removeTuple(customComparator = true))>
 
 		@Override
 		boolean hasPayload() {

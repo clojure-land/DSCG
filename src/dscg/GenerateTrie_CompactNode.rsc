@@ -186,17 +186,17 @@ str generateCompactNodeClassString(TrieSpecifics ts) {
 		return getNode(nodeIndex(bitpos)); 
 	}
 	
-	<impl(ts, containsKey())>
-	<impl(ts, containsKey(customComparator = true))>
+	<impl(ts, trieNode(compactNode()), containsKey())>
+	<impl(ts, trieNode(compactNode()), containsKey(customComparator = true))>
 
-	<impl(ts, get())>
-	<impl(ts, get(customComparator = true))>
+	<impl(ts, trieNode(compactNode()), get())>
+	<impl(ts, trieNode(compactNode()), get(customComparator = true))>
 	
-	<impl(ts, insertTuple())>
-	<impl(ts, insertTuple(customComparator = true))>
+	<impl(ts, trieNode(compactNode()), insertTuple())>
+	<impl(ts, trieNode(compactNode()), insertTuple(customComparator = true))>
 
-	<impl(ts, removeTuple())>
-	<impl(ts, removeTuple(customComparator = true))>
+	<impl(ts, trieNode(compactNode()), removeTuple())>
+	<impl(ts, trieNode(compactNode()), removeTuple(customComparator = true))>
 
 	'	/**
 	'	 * @return 0 \<= mask \<= 2^BIT_PARTITION_SIZE - 1
@@ -444,13 +444,14 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq) =
 when \map(multi = false) := ts.ds;
 
 // TODO: lost knowledge about 'customComparator'
+// TODO: lost knowledge about 'artifact'
 str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"<dec(nodeTupleArg(ts, 1))> = getValue(dataIndex);
 	'
 	'final int valHash = <hashCode(val(ts.valType))>;
-	'// if(<use(nodeTupleArg(ts, 1))>.<toString(call(getDef(tsSet, containsKey()), 
+	'// if(<toString(call(nodeTupleArg(ts, 1), getDef(tsSet, trieNode(abstractNode()), containsKey()), 
 					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: exprFromString("improve(valHash)"), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
-	'if(<toString(call(tsSet, collTupleArg(ts, 1), containsKey(),
+	'if(<toString(call(collTupleArg(ts, 1), getDef(tsSet, core(immutable()), containsKey()),
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>) {
 	'	return this;
 	'} else {
@@ -461,7 +462,7 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecif
 						tsSet.keyHash: exprFromString("improve(valHash)"), 
 						tsSet.shift: constant(tsSet.shift.\type, "0"),
 						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
-	'	<dec(appendToName(collTupleArg(ts, 1), "New"))> = <toString(call(tsSet, collTupleArg(ts, 1), insertTuple(), 
+	'	<dec(appendToName(collTupleArg(ts, 1), "New"))> = <toString(call(collTupleArg(ts, 1), getDef(tsSet, core(immutable()), insertTuple()), 
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;
 	'
 	'	details.modified();
@@ -569,9 +570,9 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 	"<dec(nodeTupleArg(ts, 1))> = getValue(dataIndex); 
 	'
 	'final int valHash = <hashCode(val(ts.valType))>;
-	'// if(<use(nodeTupleArg(ts, 1))>.<toString(call(getDef(tsSet, containsKey()), 
+	'// if(<toString(call(nodeTupleArg(ts, 1), getDef(tsSet, trieNode(abstractNode()), containsKey()), 
 					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: exprFromString("improve(valHash)"), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
-	' if(<toString(call(tsSet, collTupleArg(ts, 1), containsKey() 
+	' if(<toString(call(collTupleArg(ts, 1), getDef(tsSet, core(immutable()), containsKey()) 
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>) {
 	'	details.updated(<use(val(ts.valType))>);
 	'	
@@ -582,7 +583,7 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 						tsSet.keyHash: exprFromString("improve(valHash)"), 
 						tsSet.shift: constant(tsSet.shift.\type, "0"),
 						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
-	'	<dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <toString(call(tsSet, nodeTupleArg(ts, 1), removeTuple(), 
+	'	<dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <toString(call(nodeTupleArg(ts, 1), getDef(tsSet, core(immutable()), removeTuple()), 
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;
 	'	
 	'	if (<use(appendToName(nodeTupleArg(ts, 1), "New"))>.size() == 0) { // earlier: arity() == 0
@@ -617,7 +618,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(TrieSpecifics 
 		}
 	} else if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
 		<dec(subNode)> = nodeAt(bitpos);
-		<dec(subNodeNew)> = <toString(call(subNode, compactNode(ts), op, argsOverride = (ts.shift: exprFromString("shift + BIT_PARTITION_SIZE"))))>;
+		<dec(subNodeNew)> = <toString(call(subNode, getDef(ts, trieNode(abstractNode()), op), argsOverride = (ts.shift: exprFromString("shift + BIT_PARTITION_SIZE"))))>;
 
 		if (!<use(ts.details)>.isModified()) {
 			return this;

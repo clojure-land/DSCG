@@ -14,14 +14,20 @@ module dscg::GenerateTrie_Core
 import List;
 import String;
 extend dscg::Common;
+extend dscg::Common_Iterator;
 import dscg::GenerateTrie_Core_Common;
 
-str generateCoreClassString(tsSuper, rel[Option,bool] setup, str innerClassesString) {
+str generateCoreClassString(ts, rel[Option,bool] setup, str innerClassesString) {
 	
-	TrieSpecifics ts = setArtifact(tsSuper, core(immutable()));
+	//TrieSpecifics ts = setArtifact(tsSuper, core(immutable()));
 	
 	str emptyCollectionConstantName = "EMPTY_<toUpperCase(toString(ts.ds))>";
 	str emptyTrieNodeConstantName   = "EMPTY_NODE";
+	
+	Argument rootNode = jdtToVal(abstractNode(ts), "rootNode");
+	
+	Argument immutableResult = jdtToVal(immutableInterface(ts), "result");
+	Argument transientResult = jdtToVal(transientInterface(ts), "result");
 	
 return 
 "/*******************************************************************************
@@ -96,16 +102,16 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 			throw new IllegalArgumentException(\"Length of argument list is uneven: no key/value pairs.\");
 		}
 
-		Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>;
+		<dec(asVar(immutableResult))> = <ts.coreClassName>.<emptyCollectionConstantName>; 
 
 		for (int i = 0; i \< keyValuePairs.length; i += 2) {
 			<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) keyValuePairs[i];
 			<dec(val(ts.valType))> = (<typeToString(ts.valType)>) keyValuePairs[i + 1];
 
-			result = result.<toString(call(getDef(ts, insertTuple())))>;		
+			<use(immutableResult)> = <toString(call(immutableResult, getDef(ts, core(immutable()), insertTuple())))>;
 		}
 
-		return result;
+		return <use(immutableResult)>;
 	}
 	<}>
 	
@@ -115,7 +121,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 		Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>;
 
 		for (<dec(key(ts.keyType))> : keys) {
-			result = result.<insertTupleMethodName(ts.ds, ts.artifact)>(<use(key(ts.keyType))>);
+			<use(immutableResult)> = <toString(call(immutableResult, getDef(ts, core(immutable()), insertTuple())))>;
 		}
 
 		return result;
@@ -135,16 +141,16 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 							\"Length of argument list is uneven: no key/value pairs.\");
 		}
 
-		final Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
+		<dec(transientResult)> = <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 
 		for (int i = 0; i \< keyValuePairs.length; i += 2) {
 			<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) keyValuePairs[i];
 			<dec(val(ts.valType))> = (<typeToString(ts.valType)>) keyValuePairs[i + 1];
 
-			result.<toString(call(getDef(ts, insertTuple())))>;		
+			<toString(call(transientResult, getDef(ts, core(transient()), insertTuple())))>;			
 		}
 
-		return result;
+		return <use(transientResult)>;
 	}
 	<}>
 	
@@ -154,45 +160,45 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 		final Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 
 		for (<dec(key(ts.keyType))> : keys) {
-			result.<insertTupleMethodName(ts.ds, ts.artifact)>(<use(key(ts.keyType))>);
+			<toString(call(transientResult, getDef(ts, core(transient()), insertTuple())))>;
 		}
 
 		return result;
 	}
 	<}>
 
-	<generate_checkHashCodeAndSize(ts, setup)>
+	<generate_checkHashCodeAndSize(ts)>
 	
 	private static int improve(final int hash) {
 		return hash; // return idendity
 	}
 
-	<impl(ts, containsKey())>
-	<impl(ts, containsKey(customComparator = true))>
+	<impl(ts, core(immutable()), containsKey())>
+	<impl(ts, core(immutable()), containsKey(customComparator = true))>
 
-	<impl(ts, containsValue())>
-	<impl(ts, containsValue(customComparator = true))>
+	<impl(ts, core(immutable()), containsValue())>
+	<impl(ts, core(immutable()), containsValue(customComparator = true))>
 
-	<impl(ts, containsEntry())>
-	<impl(ts, containsEntry(customComparator = true))>
+	<impl(ts, core(immutable()), containsEntry())>
+	<impl(ts, core(immutable()), containsEntry(customComparator = true))>
 
-	<impl(ts, get())>
-	<impl(ts, get(customComparator = true))>
+	<impl(ts, core(immutable()), get())>
+	<impl(ts, core(immutable()), get(customComparator = true))>
 
-	<impl(ts, insertTuple())>
-	<impl(ts, insertTuple(customComparator = true))>
+	<impl(ts, core(immutable()), insertTuple())>
+	<impl(ts, core(immutable()), insertTuple(customComparator = true))>
 
-	<impl(ts, insertCollection())>
-	<impl(ts, insertCollection(customComparator = true))>
+	<impl(ts, core(immutable()), insertCollection())>
+	<impl(ts, core(immutable()), insertCollection(customComparator = true))>
 	
-	<impl(ts, removeTuple())>
-	<impl(ts, removeTuple(customComparator = true))>
+	<impl(ts, core(immutable()), removeTuple())>
+	<impl(ts, core(immutable()), removeTuple(customComparator = true))>
 
-	<impl(ts, removeCollection())>
-	<impl(ts, removeCollection(customComparator = true))>
+	<impl(ts, core(immutable()), removeCollection())>
+	<impl(ts, core(immutable()), removeCollection(customComparator = true))>
 
-	<impl(ts, retainCollection())>
-	<impl(ts, retainCollection(customComparator = true))>
+	<impl(ts, core(immutable()), retainCollection())>
+	<impl(ts, core(immutable()), retainCollection(customComparator = true))>
 	
 
 
@@ -235,19 +241,19 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	<implOrOverride(ts.CoreCommon_isEmpty,
 		"return cachedSize == 0;")>
 	
-	<impl(ts, iterator())>
+	<impl(ts, core(immutable()), iterator())>
 	
-	<impl(ts, keyIterator())>
+	<impl(ts, core(immutable()), keyIterator())>
 
-	<impl(ts, valueIterator())>
+	<impl(ts, core(immutable()), valueIterator())>
 
-	<impl(ts, entryIterator())>
+	<impl(ts, core(immutable()), entryIterator())>
 	
-	<impl(ts, tupleIterator())>
+	<impl(ts, core(immutable()), tupleIterator())>
 
-	<impl(ts, valueCollectionsSpliterator())>
+	<impl(ts, core(immutable()), valueCollectionsSpliterator())>
 
-	<impl(ts, valueCollectionsStream())>
+	<impl(ts, core(immutable()), valueCollectionsStream())>
 
 	<implOrOverride(ts.jul_Map_keySet, generate_bodyOf_jul_Map_keySet(ts, ts.coreClassName))>
 		

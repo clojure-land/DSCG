@@ -67,14 +67,18 @@ JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:tupleIterator(core(trans
 when iteratorGenericType := generic("T");
 
 
-//JavaDataType immutableInterface(TrieSpecifics ts)
-//	= ...
-//
+
+
+
+
+JavaDataType immutableInterface(TrieSpecifics ts)
+	= javaInterface("Immutable<toString(ts.ds)>", typeArguments = payloadTupleTypes(ts), extendsList = []);
+
 //JavaDataType immutableImplementation(TrieSpecifics ts)
 //	= ...
 
 JavaDataType transientInterface(TrieSpecifics ts)
-	= javaInterface("Transient<toString(ts.ds)><ts.classNamePostfix>", typeArguments = payloadTupleTypes(ts), extendsList = []);
+	= javaInterface("Transient<toString(ts.ds)>", typeArguments = payloadTupleTypes(ts), extendsList = []);
 
 JavaDataType transientImplementation(TrieSpecifics ts)
 	= javaClass("TransientTrie<toString(ts.ds)><ts.classNamePostfix>", typeArguments = payloadTupleTypes(ts), extends = transientInterface(ts));
@@ -206,7 +210,7 @@ when (keyIterator(core(transient())) := dt)
  		&& /labeledArgumentList(payloadTuple(), [ Argument key ]) := getFieldList(ts, dt);
 
 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
-	= call(setArtifact(ts, core(transient())), collection, removeTuple(customComparator = false), 
+	= call(collection, getDef(ts, core(transient()), removeTuple(customComparator = false)), 
 			commentText = "TODO: test removal at iteration rigorously",
 			labeledArgsOverride = (payloadTuple(): useExprList(payloadTupleArgs)))
 when (keyIterator(core(transient())) := dt && !(\map(multi = true) := ts.ds))
@@ -233,7 +237,7 @@ Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next
 when (tupleIterator(core(transient())) := dt);
 
 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
-	= call(collection, core(transient()), removeTuple(customComparator = false), 
+	= call(collection, getDef(ts, core(transient()), removeTuple(customComparator = false)), 
 			commentText = "TODO: test removal at iteration rigorously",
 			labeledArgsOverride = (payloadTuple(): compoundExpr(unboxPayloadFromTuple(dt))))
 when (tupleIterator(core(transient())) := dt) 
