@@ -25,12 +25,12 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 		<dec(getDef(ts, trieNode(abstractNode()), get()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(abstractNode()), get(customComparator = true)), asAbstract = true)>
 	
-		<dec(ts.AbstractNode_updated, asAbstract = true)>
-		<dec(ts.AbstractNode_updatedEquiv, asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), insertTuple()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), insertTuple(customComparator = true)), asAbstract = true)>
 
-		<dec(ts.AbstractNode_removed, asAbstract = true)>
-		<dec(ts.AbstractNode_removedEquiv, asAbstract = true)>
-		
+		<dec(getDef(ts, trieNode(abstractNode()), removeTuple()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), removeTuple(customComparator = true)), asAbstract = true)>
+	
 		static final boolean isAllowedToEdit(AtomicReference\<Thread\> x, AtomicReference\<Thread\> y) {
 			return x != null && y != null && (x == y || x.get() == y.get());
 		}

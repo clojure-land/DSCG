@@ -13,7 +13,7 @@ module dscg::GenerateTrie_Core_Common
 
 import List;
 import String;
-extend dscg::Common;
+import dscg::Common;
 
 str generate_checkHashCodeAndSize(TrieSpecifics ts) =
 	"

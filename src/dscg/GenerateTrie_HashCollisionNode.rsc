@@ -204,20 +204,27 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts) {
 		<}>
 
 		<implOrOverride(ts.CompactNode_convertToGenericNode, "return this;")>
+				
+		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetValue()), 
+			UNSUPPORTED_OPERATION_EXCEPTION)>
+
+		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), 
+			UNSUPPORTED_OPERATION_EXCEPTION)>
+
+		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndRemoveValue()), 
+			UNSUPPORTED_OPERATION_EXCEPTION)>
+
+		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetNode()), 
+			UNSUPPORTED_OPERATION_EXCEPTION)>
+
+		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode()), 
+			UNSUPPORTED_OPERATION_EXCEPTION)>
 		
-		<implOrOverride(ts.CompactNode_copyAndSetValue, UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<implOrOverride(ts.CompactNode_copyAndInsertValue, UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<implOrOverride(ts.CompactNode_copyAndRemoveValue, UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<implOrOverride(ts.CompactNode_copyAndSetNode, UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<implOrOverride(ts.CompactNode_copyAndMigrateFromInlineToNode, UNSUPPORTED_OPERATION_EXCEPTION)>
+		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()), 
+			UNSUPPORTED_OPERATION_EXCEPTION)>
 		
-		<implOrOverride(ts.CompactNode_copyAndMigrateFromNodeToInline, UNSUPPORTED_OPERATION_EXCEPTION)>
-		
-		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, UNSUPPORTED_OPERATION_EXCEPTION)>	
+		<implOrOverride(getDef(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode()), 
+			UNSUPPORTED_OPERATION_EXCEPTION)>	
 			
 		<implOrOverride(ts.CompactNode_nodeMap, UNSUPPORTED_OPERATION_EXCEPTION)>
 		

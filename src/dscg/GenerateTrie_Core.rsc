@@ -118,7 +118,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	<if (ts.ds == \set()) {>
 	<toString(UNCHECKED_ANNOTATION())>
 	public static final <GenericsStr(ts.tupleTypes)> Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> of(<typeToString(ts.keyType)>... keys) {
-		Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>;
+		<dec(asVar(immutableResult))> = <ts.coreClassName>.<emptyCollectionConstantName>;
 
 		for (<dec(key(ts.keyType))> : keys) {
 			<use(immutableResult)> = <toString(call(immutableResult, getDef(ts, core(immutable()), insertTuple())))>;

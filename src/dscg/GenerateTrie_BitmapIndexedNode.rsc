@@ -138,9 +138,11 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			'	return SIZE_MORE_THAN_ONE;
 			'}<}>")>
 
-		<implOrOverride(ts.CompactNode_convertToGenericNode, "return this;")>
+		<implOrOverride(ts.CompactNode_convertToGenericNode, 
+			"return this;")>
 
-		<implOrOverride(ts.CompactNode_copyAndSetValue, 
+		</* TODO: support bitmapIndexedNode() here */"">
+		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetValue()), 
 			str() { return "<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
 			
 			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (isAllowedToEdit(this.mutator, mutator)) {
@@ -157,7 +159,8 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>";}
 		)>
 			
-		<implOrOverride(ts.CompactNode_copyAndSetNode, 
+		</* TODO: support bitmapIndexedNode() here */"">
+		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetNode()), 
 			"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
 			<dec(field(primitive("int"), "idx"))> = this.nodes.length - 1 - nodeIndex(bitpos);
 			<} else {>
@@ -177,7 +180,8 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 												ts.bitmapField: useExpr(ts.bitmapMethod), ts.valmapField: useExpr(ts.valmapMethod))))>;
 			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>")>
 
-		<implOrOverride(ts.CompactNode_copyAndInsertValue, 
+		</* TODO: support bitmapIndexedNode() here */"">
+		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), 
 			"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			
 			<dec(field(asArray(object()), "src"))> = this.nodes;
@@ -189,7 +193,8 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 											ts.bitmapField: useExpr(ts.bitmapMethod), 
 											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;")>
 
-		<implOrOverride(ts.CompactNode_copyAndRemoveValue, 
+		</* TODO: support bitmapIndexedNode() here */"">
+		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndRemoveValue()),
 			"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			
 			<dec(field(asArray(object()), "src"))> = this.nodes;
@@ -201,7 +206,8 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 											ts.bitmapField: useExpr(ts.bitmapMethod), 
 											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;")>
 
-		<implOrOverride(ts.CompactNode_copyAndMigrateFromInlineToNode, 
+		</* TODO: support bitmapIndexedNode() here */"">
+		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode()),
 			"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
 			<dec(field(primitive("int"), "idxOld"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			<dec(field(primitive("int"), "idxNew"))> = this.nodes.length - <use(tupleLengthConstant)> - nodeIndex(bitpos);
@@ -220,7 +226,8 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 											ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr (useExpr(ts.bitmapMethod), useExpr(ts.bitposField))), 
 											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;")>
 
-		<implOrOverride(ts.CompactNode_copyAndMigrateFromNodeToInline,
+		</* TODO: support bitmapIndexedNode() here */"">
+		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()),		
 			"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
 			<dec(field(primitive("int"), "idxOld"))> = this.nodes.length - 1 - nodeIndex(bitpos);
 			<dec(field(primitive("int"), "idxNew"))> = dataIndex(bitpos);
@@ -239,7 +246,8 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 											ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.bitmapMethod), useExpr(ts.bitposField))), 
 											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr (useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;")>
 		
-		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, 
+		</* TODO: support bitmapIndexedNode() here */"">
+		<implOrOverride(getDef(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode()),	
 			generate_removeInplaceValueAndConvertToSpecializedNode(ts))>		
 	'}";
 }

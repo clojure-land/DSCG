@@ -11,7 +11,7 @@
  */
 module dscg::Common_Iterator
 
-import dscg::Common;
+extend dscg::Common;
 
 import List;
 import String;
@@ -72,16 +72,18 @@ when iteratorGenericType := generic("T");
 
 
 JavaDataType immutableInterface(TrieSpecifics ts)
-	= javaInterface("Immutable<toString(ts.ds)>", typeArguments = payloadTupleTypes(ts), extendsList = []);
+	= javaInterface("Immutable<toString(ts.ds)>", typeArguments = typesPrimitiveToClass(payloadTupleTypes(ts)), extendsList = []);
 
 //JavaDataType immutableImplementation(TrieSpecifics ts)
 //	= ...
 
 JavaDataType transientInterface(TrieSpecifics ts)
-	= javaInterface("Transient<toString(ts.ds)>", typeArguments = payloadTupleTypes(ts), extendsList = []);
+	= javaInterface("Transient<toString(ts.ds)>", typeArguments = typesPrimitiveToClass(payloadTupleTypes(ts)), extendsList = []);
 
 JavaDataType transientImplementation(TrieSpecifics ts)
-	= javaClass("TransientTrie<toString(ts.ds)><ts.classNamePostfix>", typeArguments = payloadTupleTypes(ts), extends = transientInterface(ts));
+	= javaClass("TransientTrie<toString(ts.ds)><ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = transientInterface(ts));
+
+
 
 
 

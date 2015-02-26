@@ -11,13 +11,14 @@
  */
 module dscg::Common
 
+import dscg::GenerateTrie_CompactNode;
+
 import IO;
 import List;
 import String;
 import util::Math;
 
 import dscg::ArrayUtils;
-extend dscg::GenerateTrie_CompactNode;
 
 /* PUBLIC CONSTANTS */
 public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");	 
@@ -390,9 +391,7 @@ data Option // TODO: finish!
 data TrieSpecifics 
 	= undefinedTrieSpecifics()
 	| ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound, Type keyType = generic("K"), Type valType = generic("V"), str classNamePostfix = "", rel[Option,bool] setup = {},
-		
-		//Artifact artifact = unknownArtifact(),		
-				
+					
 		Argument BIT_PARTITION_SIZE = field(primitive("int"), "BIT_PARTITION_SIZE"), 
 				
 		Argument bitposField = ___bitposField(bitPartitionSize),
@@ -442,16 +441,7 @@ data TrieSpecifics
 		
 		Argument compactNodeReturn = \return(generic("<CompactNode(ds)><GenericsStr>")),
 		Argument optionalRangeReturn = \return(generic("Optional<MapsToGenericsStr>")),
-	
-		Method AbstractNode_findByKey 		= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift]),
-		Method AbstractNode_findByKeyEquiv 	= method(optionalRangeReturn, "findByKey", args = [key(keyType), keyHash, shift, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),
-		
-		Method AbstractNode_updated 		= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details]),
-		Method AbstractNode_updatedEquiv 	= method(compactNodeReturn, "updated", args = [mutator, *payloadTuple, keyHash, shift, details, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),		
-	
-		Method AbstractNode_removed 		= method(compactNodeReturn, "removed", args = [mutator, *__payloadTuple_Core_remove(ds, tupleTypes), keyHash, shift, details]),
-		Method AbstractNode_removedEquiv 	= method(compactNodeReturn, "removed", args = [mutator, *__payloadTuple_Core_remove(ds, tupleTypes), keyHash, shift, details, comparator], isActive = isOptionEnabled(setup, methodsWithComparator())),
-				
+					
 		/* GENERATE_TRIE_CORE */
 		str coreClassName = "Trie<toString(ds)><classNamePostfix>",
 		str coreInterfaceName = "Immutable<toString(ds)>",
@@ -476,51 +466,8 @@ data TrieSpecifics
 		Argument coreImmutableInterfaceReturn = \return(generic("<immutableInterfaceName(ds)><GenericsStr>")),
 		Argument coreTransientInterfaceReturn = \return(generic("<transientInterfaceName(ds)><GenericsStr>")),
 		
-//		Method Core_updated 		= method(coreInterfaceReturn, "<insertOrPutMethodName(ds)>",  			args = [*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public"),
-//		Method Core_updatedEquiv 	= method(coreInterfaceReturn, "<insertOrPutMethodName(ds)>Equivalent", 	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
-//
-//		Method CoreTransient_insert 		= method(\return(primitive("boolean")), "<insertOrPutMethodName(\set())>",  			args = [*mapper(payloadTuple, primitiveToClassArgument)], visibility = "public", isActive = ds == \set()),
-//		Method CoreTransient_insertEquiv 	= method(\return(primitive("boolean")), "<insertOrPutMethodName(\set())>Equivalent", 	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
-//
-//		Method CoreTransient_put 		= method(\return(generic("<typeToString(primitiveToClass(valType))>")), "<insertOrPutMethodName(\map())>",				args = [*mapper(payloadTuple, primitiveToClassArgument)], 				visibility = "public", isActive = \map(multi = false) := ds),
-//		Method CoreTransient_putEquiv 	= method(\return(generic("<typeToString(primitiveToClass(valType))>")), "<insertOrPutMethodName(\map())>Equivalent",	args = [*mapper(payloadTuple, primitiveToClassArgument), comparator], 	visibility = "public", isActive = \map(multi = false) := ds && isOptionEnabled(setup, methodsWithComparator())),
-
-		Argument __weirdArgument = field(generic("<if (ds == \set()) {>Immutable<}><toString(ds)><GenericsExpandedUpperBounded(ds, tupleTypes)>"), "<uncapitalize(toString(ds))>"),
-		Argument __anotherWeirdArgument = field(generic("<toString(ds)><GenericsExpandedUpperBounded(ds, tupleTypes)>"), "<uncapitalize(toString(ds))>"),
-
-//		Method Core_insertOrPutAll 			= method(coreInterfaceReturn, "<insertOrPutMethodName(ds)>All",  			args = [__weirdArgument], 				visibility = "public"),
-//		Method Core_insertOrPutAllEquiv 	= method(coreInterfaceReturn, "<insertOrPutMethodName(ds)>AllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
-//
-//		Method CoreTransient_insertOrPutAll      = method(\return(primitive("boolean")), "<insertOrPutMethodName(ds)>All",  			args = [__weirdArgument], 				visibility = "public"),
-//		Method CoreTransient_insertOrPutAllEquiv = method(\return(primitive("boolean")), "<insertOrPutMethodName(ds)>AllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
-
-//		Method Core_removed 		= method(coreInterfaceReturn, "__remove",  			args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument) ], 				visibility = "public"),
-//		Method Core_removedEquiv 	= method(coreInterfaceReturn, "__removeEquivalent", args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),														
-//		
-//		Method CoreTransient_removed 		= method(\return(primitive("boolean")), "__remove",  			args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument) ], 				visibility = "public"),
-//		Method CoreTransient_removedEquiv 	= method(\return(primitive("boolean")), "__removeEquivalent", args = [ *mapper(__payloadTuple_Core_remove(ds, tupleTypes), primitiveToClassArgument), comparator ], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),														
-//
-//		Method Core_get 		= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "get",  			args = [primitiveToClassArgument(stdObjectArg)], 				visibility = "public"),
-//		Method Core_getEquiv 	= method(\return(primitiveToClass(dsAtFunction__range_type(ds, tupleTypes))), "getEquivalent", 	args = [primitiveToClassArgument(stdObjectArg), comparator], 	visibility = "public", isActive = isOptionEnabled(setup, methodsWithComparator())),
-//
-//		Method Core_retainAll 		= method(coreInterfaceReturn, "__retainAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
-//		Method Core_retainAllEquiv 	= method(coreInterfaceReturn, "__retainAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
-//		
-//		Method CoreTransient_retainAll 		= method(\return(primitive("boolean")), "__retainAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
-//		Method CoreTransient_retainAllEquiv = method(\return(primitive("boolean")), "__retainAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),
-//
-//		Method Core_removeAll 		= method(coreInterfaceReturn, "__removeAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
-//		Method Core_removeAllEquiv 	= method(coreInterfaceReturn, "__removeAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),		
-//
-//		Method CoreTransient_removeAll 		= method(\return(primitive("boolean")), "__removeAll",  			args = [__weirdArgument], 				visibility = "public", isActive = ds == \set()),
-//		Method CoreTransient_removeAllEquiv = method(\return(primitive("boolean")), "__removeAllEquivalent", 	args = [__weirdArgument, comparator], 	visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),		
-		
 		Method CoreCommon_size = method(\return(primitive("int")), "size", visibility = "public"),		
-		Method CoreCommon_isEmpty = method(\return(primitive("boolean")), "isEmpty", visibility = "public"),
-				
-		Method Core_keyIterator = method(\return(generic("Iterator\<<typeToString(primitiveToClass(keyType))>\>")), "keyIterator", visibility = "public", isActive = true),
-		// moved: Method Core_valueIterator = method(\return(generic("Iterator\<<typeToString(primitiveToClass(valType))>\>")), "valueIterator", visibility = "public", isActive = \map() := ds),
-		// moved: Method Core_entryIterator = method(\return(generic("Iterator\<Map.Entry<GenericsStr>\>")), "entryIterator", visibility = "public", isActive = \map() := ds),
+		Method CoreCommon_isEmpty = method(\return(primitive("boolean")), "isEmpty", visibility = "public"),		
 		
 		Method CompactNode_nodeMap 	= method(bitmapField, bitmapField.name),
 		Method CompactNode_dataMap 	= method(valmapField, valmapField.name),
@@ -528,16 +475,6 @@ data TrieSpecifics
 		Method CompactNode_mergeTwoKeyValPairs = function(compactNodeClassReturn, "mergeTwoKeyValPairs", args = [ *appendToName(__payloadTupleAtNode(ds, tupleTypes), "0"), keyHash0, *appendToName(__payloadTupleAtNode(ds, tupleTypes), "1"), keyHash1, shift ], generics = genericTupleTypes), 
 		Method CompactNode_mergeNodeAndKeyValPair = function(compactNodeClassReturn, "mergeNodeAndKeyValPair", args = [ \inode(ds, tupleTypes, 0), keyHash0, *appendToName(__payloadTupleAtNode(ds, tupleTypes), "1"), keyHash1, shift ], generics = genericTupleTypes, isActive = false),
 				
-		Method CompactNode_copyAndRemoveValue = method(compactNodeClassReturn, "copyAndRemoveValue", args = [mutator, bitposField]),
-		Method CompactNode_copyAndInsertValue = method(compactNodeClassReturn, "copyAndInsertValue", args = [mutator, bitposField, *__payloadTupleAtNode(ds, tupleTypes)]),
-		Method CompactNode_copyAndSetValue = method(compactNodeClassReturn, "copyAndSetValue", lazyArgs = list[Argument]() { return [mutator, bitposField, __payloadTupleAtNode(ds, tupleTypes)[1] ]; }, isActive = \map() := ds),		
-		Method CompactNode_copyAndSetNode = method(compactNodeClassReturn, "copyAndSetNode", args = [mutator, bitposField, \node(ds, tupleTypes)]),		
-		Method CompactNode_copyAndInsertNode = method(compactNodeClassReturn, "copyAndInsertNode", args = [mutator, bitposField, \node(ds, tupleTypes)], isActive = false),
-		Method CompactNode_copyAndMigrateFromInlineToNode = method(compactNodeClassReturn, "copyAndMigrateFromInlineToNode", args = [mutator, bitposField, \node(ds, tupleTypes)]),
-		Method CompactNode_copyAndMigrateFromNodeToInline = method(compactNodeClassReturn, "copyAndMigrateFromNodeToInline", args = [mutator, bitposField, \node(ds, tupleTypes)]),
-		Method CompactNode_copyAndRemoveNode = method(compactNodeClassReturn, "copyAndInsertNode", args = [mutator, bitposField], isActive = false),				
-		Method CompactNode_removeInplaceValueAndConvertToSpecializedNode = method(compactNodeClassReturn, "removeInplaceValueAndConvertToSpecializedNode", args = [mutator, bitposField], isActive = isOptionEnabled(setup, useSpecialization())),				
-
 		Method CompactNode_convertToGenericNode	= method(compactNodeClassReturn, bitmapField.name, isActive = false), // if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax
 
 		Method CompactNode_mask = function(\return(primitive("int")), "mask", args = [keyHash, shift]),
@@ -775,6 +712,34 @@ default str hashCode(Argument a) = "<use(a)>.hashCode()";
 
 str primitiveHashCode(Argument a) = "(int)(<use(a)> ^ (<use(a)> \>\>\> 32))" when a has \type && a.\type == primitive("long");
 default str primitiveHashCode(Argument a) = "(int) <use(a)>";
+
+
+
+
+/*
+	TODO: clean-up / merge with primitiveToClass
+ */
+list[Type] typesPrimitiveToClass(list[Type] typeArguments) {
+	return result: for(ta <- typeArguments) {
+		switch (ta) {
+		case ___primitive(_): 
+			append result: primitiveToClass(ta);
+		case _:
+			append result: ta;
+		}
+	};
+}
+
+list[Type] typesKeepGeneric(list[Type] typeArguments) {
+	return result: for(ta <- typeArguments) {
+		switch (ta) {
+		case generic(_): 
+			append result: ta;
+		}
+	};
+}
+
+
 
 
 
@@ -2035,23 +2000,19 @@ data PredefOp = removeTuple(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), removeTuple(customComparator = false))
 	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__remove", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true)
-when \map(multi = true) := ts.ds;
-// (core(immutable()) := artifact || unknownArtifact() := artifact) && 
+when \map(multi = true) := ts.ds; 
 
 Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), removeTuple(customComparator = true))
 	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeEquivalent", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
-when \map(multi = true) := ts.ds;
-// (core(immutable()) := artifact || unknownArtifact() := artifact) && 
+when \map(multi = true) := ts.ds; 
 
 Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), removeTuple(customComparator = false))
 	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__remove", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))) ], visibility = "public", isActive = true)
-when !(\map(multi = true) := ts.ds);
-// (core(immutable()) := artifact || unknownArtifact() := artifact) && 
+when !(\map(multi = true) := ts.ds); 
 
 Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), removeTuple(customComparator = true))
 	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "__removeEquivalent", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(payloadTupleArg(ts, 0))), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
-when !(\map(multi = true) := ts.ds);
-// (core(immutable()) := artifact || unknownArtifact() := artifact) && 
+when !(\map(multi = true) := ts.ds); 
 
 Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), removeTuple(customComparator = false))
 	= method(\return(primitive("boolean")), "__remove", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true)
@@ -2283,6 +2244,63 @@ when \set() := ts.ds
 
 
 
+data PredefOp = copyAndRemoveValue(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveValue())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndRemoveValue", args = [ts.mutator, ts.bitposField]);
+
+
+data PredefOp = copyAndInsertValue(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertValue())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertValue", args = [ts.mutator, ts.bitposField, *nodeTupleArgs(ts)]);
+
+
+data PredefOp = copyAndSetValue(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetValue())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndSetValue", lazyArgs = list[Argument]() { return [ts.mutator, ts.bitposField, nodeTupleArg(ts, 1) ]; }, isActive = \map() := ts.ds);
+
+
+data PredefOp = copyAndSetNode(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetNode())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndSetNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+
+
+data PredefOp = copyAndInsertNode(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertNode())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)], isActive = false);
+
+
+data PredefOp = copyAndMigrateFromInlineToNode(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromInlineToNode())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromInlineToNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+
+		
+data PredefOp = copyAndMigrateFromNodeToInline(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromNodeToInline())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromNodeToInline", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+
+		
+data PredefOp = copyAndRemoveNode(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveNode())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertNode", args = [ts.mutator, ts.bitposField], isActive = false);
+
+
+data PredefOp = removeInplaceValueAndConvertToSpecializedNode(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode())
+	= method(\return(jdtToType(compactNode(ts))), "removeInplaceValueAndConvertToSpecializedNode", args = [ts.mutator, ts.bitposField], isActive = isOptionEnabled(ts.setup, useSpecialization()));
+
+
+
+
+
 
 data PredefOp = isTransientSupported();
 
@@ -2352,8 +2370,8 @@ str implementsListStr([]) = "";
 str implementsListStr(list[JavaDataType] implementsList) 
 	= "implements <intercalate(", ", [ "<jdt.typeName><GenericsStr(jdt.typeArguments)>" | jdt <- implementsList ])>";
 
-Argument jdtToVal(JavaDataType jdt, str fieldName) = val(specific(jdt.typeName, typeArguments = [ primitiveToClass(arg) | arg <- jdt.typeArguments, arg is generic ]), fieldName);
-Type jdtToType(JavaDataType jdt) = specific(jdt.typeName, typeArguments = jdt.typeArguments);
+Argument jdtToVal(JavaDataType jdt, str fieldName) = val(specific(jdt.typeName, typeArguments = jdt.typeArguments), fieldName); // [ primitiveToClass(arg) | arg <- jdt.typeArguments, arg is generic ]
+Type jdtToType(JavaDataType jdt) = specific(jdt.typeName, typeArguments = jdt.typeArguments); // [ primitiveToClass(arg) | arg <- jdt.typeArguments, arg is generic ]
 
 
 
@@ -2367,13 +2385,13 @@ JavaDataType jul_Map_Entry([Type keyType, Type valType]) = javaInterface("Map.En
 
 
 JavaDataType abstractNode(TrieSpecifics ts)
-	= javaClass("Abstract<toString(ts.ds)>Node", typeArguments = payloadTupleTypes(ts));
+	= javaClass("Abstract<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)));
 
 JavaDataType compactNode(TrieSpecifics ts)
-	= javaClass("Compact<toString(ts.ds)>Node", typeArguments = payloadTupleTypes(ts));
+	= javaClass("Compact<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)));
 
 JavaDataType hashCollisionNode(TrieSpecifics ts)
-	= javaClass("HashCollision<toString(ts.ds)>Node<ts.classNamePostfix>", typeArguments = payloadTupleTypes(ts), extends = compactNode(ts));
+	= javaClass("HashCollision<toString(ts.ds)>Node<ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts));
 
 
 

@@ -81,25 +81,21 @@ str generateCompactNodeClassString(TrieSpecifics ts) {
 			return inv1 && inv2 && inv3 && inv4 && inv5;
 		}
 
-		<implOrOverride(ts.CompactNode_copyAndInsertNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = new())>
-		
-		<implOrOverride(ts.CompactNode_copyAndRemoveNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = new())>
+		<impl(ts, trieNode(compactNode()), copyAndInsertNode())>
+		<impl(ts, trieNode(compactNode()), copyAndRemoveNode())>
 
-		<dec(ts.CompactNode_copyAndSetValue, asAbstract = true)>
+		//implOrOverride(ts.CompactNode_copyAndInsertNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = new())
+		//implOrOverride(ts.CompactNode_copyAndRemoveNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = new())
 
-		<dec(ts.CompactNode_copyAndInsertValue, asAbstract = true)>
-	
-		<dec(ts.CompactNode_copyAndRemoveValue, asAbstract = true)>
-	
-		<dec(ts.CompactNode_copyAndSetNode, asAbstract = true)>
-	
-		<dec(ts.CompactNode_copyAndMigrateFromInlineToNode, asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndSetNode()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()), asAbstract = true)>
 		
-		<dec(ts.CompactNode_copyAndMigrateFromNodeToInline, asAbstract = true)>
-		
-		/* TODO: specialize removed(..) to remove this method from this interface */
-		<implOrOverride(ts.CompactNode_removeInplaceValueAndConvertToSpecializedNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = new())>
-
+		</* TODO: specialize removed(..) to remove this method from this interface */"">
+		<impl(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode())>
 
 		<implOrOverride(ts.CompactNode_mergeTwoKeyValPairs, 
 			generate_bodyOf_mergeTwoKeyValPairs(ts), annotations = [ UNCHECKED_ANNOTATION() ])>
@@ -456,12 +452,13 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecif
 	'	return this;
 	'} else {
 	'	// add new mapping
-	'	// <dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_updated, 
-					argsOverride = (tsSet.mutator: NULL(), 
-						key(tsSet.keyType): useExpr(val(ts.valType)), 
-						tsSet.keyHash: exprFromString("improve(valHash)"), 
-						tsSet.shift: constant(tsSet.shift.\type, "0"),
-						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
+	'	// <dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <toString(call(nodeTupleArg(ts, 1), getDef(tsSet, trieNode(abstractNode()), insertTuple()), 
+					argsOverride = (ts.mutator: NULL(), 
+						ts.keyHash: exprFromString("improve(valHash)"), 
+						ts.shift: constant(ts.shift.\type, "0"),
+						ts.details: exprFromString("<tsSet.ResultStr>.unchanged()")), // TODO: remove tsSet dependency here
+					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))
+						))>;
 	'	<dec(appendToName(collTupleArg(ts, 1), "New"))> = <toString(call(collTupleArg(ts, 1), getDef(tsSet, core(immutable()), insertTuple()), 
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;
 	'
@@ -484,12 +481,13 @@ default str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq
 		
 str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"final int valHash = <hashCode(val(ts.valType))>;
-	'// <dec(nodeTupleArg(ts, 1))> = CompactSetNode.EMPTY_NODE.<toString(call(tsSet.AbstractNode_updated, 
-					argsOverride = (tsSet.mutator: NULL(), 
-						key(tsSet.keyType): useExpr(val(ts.valType)), 
-						tsSet.keyHash: exprFromString("improve(valHash)"), 
-						tsSet.shift: constant(tsSet.shift.\type, "0"),
-						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
+	'// <dec(nodeTupleArg(ts, 1))> = <toString(call(exprFromString("CompactSetNode.EMPTY_NODE"), getDef(tsSet, trieNode(abstractNode()), insertTuple()), 
+					argsOverride = (ts.mutator: NULL(), 
+						ts.keyHash: exprFromString("improve(valHash)"), 
+						ts.shift: constant(ts.shift.\type, "0"),
+						ts.details: exprFromString("<tsSet.ResultStr>.unchanged()")), // TODO: remove dependency on tsSet here
+					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))						
+					))>;
 	' <dec(collTupleArg(ts, 1))> = <tsSet.coreSpecializedClassName>.setOf(<use(val(ts.valType))>);
 	'
 	'<dec(replaceName(nodeTupleArg(ts, 1), "currentValNode"))> = getValue(dataIndex);
@@ -510,12 +508,13 @@ default str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq) =
 		
 str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"final int valHash = <hashCode(val(ts.valType))>;
-	'// <dec(nodeTupleArg(ts, 1))> = CompactSetNode.EMPTY_NODE.<toString(call(tsSet.AbstractNode_updated, 
-					argsOverride = (tsSet.mutator: NULL(), 
-						key(tsSet.keyType): useExpr(val(ts.valType)), 
-						tsSet.keyHash: exprFromString("improve(valHash)"), 
-						tsSet.shift: constant(tsSet.shift.\type, "0"),
-						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
+	'// <dec(nodeTupleArg(ts, 1))> = <toString(call(exprFromString("CompactSetNode.EMPTY_NODE"), getDef(tsSet, trieNode(abstractNode()), insertTuple()), 
+					argsOverride = (ts.mutator: NULL(), 
+						ts.keyHash: exprFromString("improve(valHash)"), 
+						ts.shift: constant(ts.shift.\type, "0"),
+						ts.details: exprFromString("<ts.ResultStr>.unchanged()")),
+					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))	
+					))>;
 	' <dec(collTupleArg(ts, 1))> = <tsSet.coreSpecializedClassName>.setOf(<use(val(ts.valType))>);
 	'
 	'details.modified();
@@ -577,12 +576,13 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 	'	details.updated(<use(val(ts.valType))>);
 	'	
 	'	// remove mapping
-	'	// <dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <use(nodeTupleArg(ts, 1))>.<toString(call(tsSet.AbstractNode_removed, 
-					argsOverride = (tsSet.mutator: NULL(), 
-						key(tsSet.keyType): useExpr(val(ts.valType)), 
-						tsSet.keyHash: exprFromString("improve(valHash)"), 
-						tsSet.shift: constant(tsSet.shift.\type, "0"),
-						tsSet.details: exprFromString("<tsSet.ResultStr>.unchanged()"))))>;
+	'	// <dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <toString(call(nodeTupleArg(ts, 1), getDef(tsSet, trieNode(abstractNode()), removeTuple()), 
+					argsOverride = (ts.mutator: NULL(), 
+						ts.keyHash: exprFromString("improve(valHash)"), 
+						ts.shift: constant(ts.shift.\type, "0"),
+						ts.details: exprFromString("<ts.ResultStr>.unchanged()")),
+					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))	
+					))>;
 	'	<dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <toString(call(nodeTupleArg(ts, 1), getDef(tsSet, core(immutable()), removeTuple()), 
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;
 	'	
