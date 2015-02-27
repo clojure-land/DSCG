@@ -82,9 +82,8 @@ str generateCompactNodeClassString(TrieSpecifics ts) {
 		<impl(ts, trieNode(compactNode()), copyAndInsertNode())>
 		<impl(ts, trieNode(compactNode()), copyAndRemoveNode())>
 
-		//implOrOverride(ts.CompactNode_copyAndInsertNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = new())
-		//implOrOverride(ts.CompactNode_copyAndRemoveNode, UNSUPPORTED_OPERATION_EXCEPTION, doOverride = new())
-
+		<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue()), asAbstract = true)>

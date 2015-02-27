@@ -34,14 +34,14 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 		static final boolean isAllowedToEdit(AtomicReference\<Thread\> x, AtomicReference\<Thread\> y) {
 			return x != null && y != null && (x == y || x.get() == y.get());
 		}
+											
+		<dec(getDef(ts, trieNode(abstractNode()), hasNodes()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), nodeArity()), asAbstract = true)>
+		</***/"">
+		<dec(getDef(ts, trieNode(abstractNode()), getNode()), asAbstract = true)>		
 						
-		<dec(ts.AbstractNode_getNode, asAbstract = true)>
-		
-		<dec(ts.AbstractNode_hasNodes, asAbstract = true)>
-		<dec(ts.AbstractNode_nodeArity, asAbstract = true)>
-
 		@Deprecated
-		<implOrOverride(ts.AbstractNode_nodeIterator, 
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), nodeIterator()), 
 			"return new Iterator\<<AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)>\>() {
 
 				int nextIndex = 0;
@@ -66,17 +66,16 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 			};", doOverride = new())>
 	
 	
-		<dec(ts.AbstractNode_getKey, asAbstract = true)>
-		<dec(ts.AbstractNode_getValue, asAbstract = true)>
-		<dec(ts.AbstractNode_getKeyValueEntry, asAbstract = true)>
-		
-		<dec(getDef(ts, trieNode(abstractNode()), getTuple()), asAbstract = true)>
-		
-		<dec(ts.AbstractNode_hasPayload, asAbstract = true)>
-		<dec(ts.AbstractNode_payloadArity, asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), hasPayload()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), payloadArity()), asAbstract = true)>
+		</***/"">
+		<dec(getDef(ts, trieNode(abstractNode()), getKey()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), getValue()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), getKeyValueEntry()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), getTuple()), asAbstract = true)>				
 
 		@Deprecated
-		<implOrOverride(ts.AbstractNode_payloadIterator, 
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), payloadIterator()), 
 			"return new <if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}>() {
 
 				int nextIndex = 0;
@@ -109,12 +108,13 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 					return nextIndex \< payloadArity;
 				}
 			};", doOverride = new())>
-
-		<dec(ts.AbstractNode_getSlot, asAbstract = true)>
 	
-		<dec(ts.AbstractNode_hasSlots, asAbstract = true)>
-		<dec(ts.AbstractNode_slotArity, asAbstract = true)>
 	
+		<dec(getDef(ts, trieNode(abstractNode()), hasSlots()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), slotArity()), asAbstract = true)>	
+		</***/"">
+		<dec(getDef(ts, trieNode(abstractNode()), getSlot()), asAbstract = true)>	
+		
 		/**
 		 * The arity of this trie node (i.e. number of values and nodes stored
 		 * on this level).
