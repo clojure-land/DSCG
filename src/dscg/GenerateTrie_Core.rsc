@@ -234,12 +234,9 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 		}
 		return true;")>
 
-
-	<implOrOverride(ts.CoreCommon_size,
-		"return cachedSize;")>
-
-	<implOrOverride(ts.CoreCommon_isEmpty,
-		"return cachedSize == 0;")>
+	<impl(ts, core(immutable()), size())>
+	
+	<impl(ts, core(immutable()), isEmpty())>
 	
 	<impl(ts, core(immutable()), iterator())>
 	

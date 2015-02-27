@@ -190,6 +190,13 @@ Expression bitwiseXor([Expression head, *Expression tail]) = ( head | bitwiseXor
 
 data Expression = signedLeftBitShift(Expression x, Expression y);
 
+/*
+  Currently translates to '=='.
+*/
+data Expression = equals(Expression x, Expression y);
+
+
+
 str toString(Expression e:constant(_, constantString)) = constantString; 
 
 str toString(Expression:ifElseExpr(Expression condition, Expression onTrue, Expression onFalse)) = 
@@ -468,9 +475,6 @@ data TrieSpecifics
 		
 		Argument coreImmutableInterfaceReturn = \return(generic("<immutableInterfaceName(ds)><GenericsStr>")),
 		Argument coreTransientInterfaceReturn = \return(generic("<transientInterfaceName(ds)><GenericsStr>")),
-		
-		Method CoreCommon_size = method(\return(primitive("int")), "size", visibility = "public"),		
-		Method CoreCommon_isEmpty = method(\return(primitive("boolean")), "isEmpty", visibility = "public"),		
 		
 		Method CompactNode_nodeMap 	= method(bitmapField, bitmapField.name),
 		Method CompactNode_dataMap 	= method(valmapField, valmapField.name),
@@ -826,6 +830,12 @@ str eval(Epression:signedLeftBitShift(Expression x, Expression y)) =
 
 str toString(Epression:signedLeftBitShift(Expression x, Expression y)) =
 	"<toString(x)> \<\< <toString(y)>";
+
+str eval(Epression:equals(Expression x, Expression y)) =
+	"<eval(x)> == <eval(y)>";
+
+str toString(Epression:equals(Expression x, Expression y)) =
+	"<toString(x)> == <toString(y)>";
 
 str eval(Expression e) = 
 	"<eval(e.l)> + <eval(e.r)>"
@@ -2364,6 +2374,35 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), bitpo
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), bitpos())
 	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
 when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
+
+
+
+
+
+data PredefOp = size();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, size())
+	= method(\return(primitive("int")), "size", visibility = "public")
+when artifact := core(immutable()) || artifact := core(transient());
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, size())
+	= result(useExpr(ts.sizeProperty))
+when artifact := core(immutable()) || artifact := core(transient());	
+
+
+
+
+
+data PredefOp = isEmpty();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, isEmpty())
+	= method(\return(primitive("boolean")), "isEmpty", visibility = "public")
+when artifact := core(immutable()) || artifact := core(transient());	
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, isEmpty())
+	= result(equals(useExpr(ts.sizeProperty), iconst(0)))
+when artifact := core(immutable()) || artifact := core(transient());	
+
 
 
 

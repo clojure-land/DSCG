@@ -138,12 +138,10 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 		}	
 		<}>
 
-		<implOrOverride(ts.CoreCommon_size,
-			"return cachedSize;")>
+		<impl(ts, core(transient()), size())>
 	
-		<implOrOverride(ts.CoreCommon_isEmpty,
-			"return cachedSize == 0;")>
-
+		<impl(ts, core(transient()), isEmpty())>
+	
 		<impl(ts, core(transient()), iterator())>
 
 		<impl(ts, core(transient()), keyIterator())>
