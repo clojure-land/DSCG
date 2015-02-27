@@ -97,13 +97,8 @@ str generateCompactNodeClassString(TrieSpecifics ts) {
 		</* TODO: specialize removed(..) to remove this method from this interface */"">
 		<impl(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode())>
 
-		<implOrOverride(ts.CompactNode_mergeTwoKeyValPairs, 
-			generate_bodyOf_mergeTwoKeyValPairs(ts), annotations = [ UNCHECKED_ANNOTATION() ])>
-
-		<if (false) {>
-		<implOrOverride(ts.CompactNode_mergeNodeAndKeyValPair,
-			generate_bodyOf_mergeNodeAndKeyValPair(ts))>
-		<}>
+		<impl(ts, trieNode(compactNode()), mergeTwoKeyValPairs())>
+		<impl(ts, trieNode(compactNode()), mergeNodeAndKeyValPair())>
 
 	'	static final <CompactNode(ts.ds)> <emptyTrieNodeConstantName>;
 
@@ -838,7 +833,7 @@ default str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts) =
 		// both nodes fit on same level
 		<generate_bodyOf_mergeTwoValues(ts, ts.setup, positionBitmap())>
 	} else {
-		final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node = <toString(call(ts.CompactNode_mergeTwoKeyValPairs, argsOverride = (ts.shift: plus(useExpr(ts.shift), useExpr(ts.BIT_PARTITION_SIZE)))))>;
+		final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node = <toString(call(getDef(ts, trieNode(compactNode()), mergeTwoKeyValPairs()), argsOverride = (ts.shift: plus(useExpr(ts.shift), useExpr(ts.BIT_PARTITION_SIZE)))))>;
 		// values fit on next level
 
 		<generate_bodyOf_mergeOnNextLevel(ts, ts.setup, positionBitmap())>

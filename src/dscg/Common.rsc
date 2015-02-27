@@ -475,9 +475,6 @@ data TrieSpecifics
 		
 		Argument coreImmutableInterfaceReturn = \return(generic("<immutableInterfaceName(ds)><GenericsStr>")),
 		Argument coreTransientInterfaceReturn = \return(generic("<transientInterfaceName(ds)><GenericsStr>")),
-
-		Method CompactNode_mergeTwoKeyValPairs = function(compactNodeClassReturn, "mergeTwoKeyValPairs", args = [ *appendToName(__payloadTupleAtNode(ds, tupleTypes), "0"), keyHash0, *appendToName(__payloadTupleAtNode(ds, tupleTypes), "1"), keyHash1, shift ], generics = genericTupleTypes), 
-		Method CompactNode_mergeNodeAndKeyValPair = function(compactNodeClassReturn, "mergeNodeAndKeyValPair", args = [ \inode(ds, tupleTypes, 0), keyHash0, *appendToName(__payloadTupleAtNode(ds, tupleTypes), "1"), keyHash1, shift ], generics = genericTupleTypes, isActive = false),
 				
 		Method CompactNode_convertToGenericNode	= method(compactNodeClassReturn, bitmapField.name, isActive = false), // if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax
 
@@ -2427,6 +2424,32 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataM
 //Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataMap())
 //	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
 //when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
+
+
+
+
+
+
+data PredefOp = mergeTwoKeyValPairs();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs())
+	=  function(\return(jdtToType(compactNode(ts))), "mergeTwoKeyValPairs", args = [ *appendToName(__payloadTupleAtNode(ts.ds, ts.tupleTypes), "0"), ts.keyHash0, *appendToName(__payloadTupleAtNode(ts.ds, ts.tupleTypes), "1"), ts.keyHash1, ts.shift ], generics = ts.genericTupleTypes);
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs())
+	= generate_bodyOf_mergeTwoKeyValPairs(ts);
+
+
+
+
+
+
+data PredefOp = mergeNodeAndKeyValPair();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeNodeAndKeyValPair())
+	=  function(\return(jdtToType(compactNode(ts))), "mergeNodeAndKeyValPair", args = [ \inode(ts.ds, ts.tupleTypes, 0), ts.keyHash0, *appendToName(__payloadTupleAtNode(ts.ds, ts.tupleTypes), "1"), ts.keyHash1, ts.shift ], generics = ts.genericTupleTypes, isActive = false);
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeNodeAndKeyValPair())
+	= generate_bodyOf_mergeNodeAndKeyValPair(ts);
 
 
 
