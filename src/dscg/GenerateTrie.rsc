@@ -95,11 +95,11 @@ void doGenerateBleedingEdge() {
 
 	doGenerate(tcMultimap, overideClassNamePostfixWith = "BleedingEdge");
 	
-	//doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");
-	//doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");	
+	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");
+	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");	
 
-	doGenerate(hashTrieConfig(\map(), 5, [primitive("int"), primitive("int")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");
-	doGenerate(hashTrieConfig(\set(), 5, [primitive("int"), primitive("int")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");	
+	//doGenerate(hashTrieConfig(\map(), 5, [primitive("int"), primitive("int")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");
+	//doGenerate(hashTrieConfig(\set(), 5, [primitive("int"), primitive("int")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");	
 
 	//doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(1, false)), overideClassNamePostfixWith = "BleedingEdge");
 	//doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(1, false)), overideClassNamePostfixWith = "BleedingEdge");	

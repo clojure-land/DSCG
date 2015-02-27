@@ -158,6 +158,7 @@ Expression assign(Argument lhs, Expression rhs:useExpr(lhs)) = emptyExpression()
 Expression assign(Argument lhs, Expression rhs:plus(useExpr(lhs), Expression tail)) = assignPlusEq(lhs, tail);
 
 data Expression = constant(Type \type, str constantString);
+Expression lconst(int i) = constant(primitive("long"), "<i>");
 Expression iconst(int i) = constant(primitive("int"), "<i>");
 Expression bconst(bool b) = constant(primitive("boolean"), "<b>");
 
@@ -186,6 +187,8 @@ Expression bitwiseXor([Expression e]) = e;
 Expression bitwiseXor([Expression head, *Expression tail]) = ( head | bitwiseXor(it, e)  | e <- tail);
 
 //default Expression bitwiseXor(e) { throw "Ahhh <e>"; }
+
+data Expression = signedLeftBitShift(Expression x, Expression y);
 
 str toString(Expression e:constant(_, constantString)) = constantString; 
 
@@ -476,9 +479,6 @@ data TrieSpecifics
 		Method CompactNode_mergeNodeAndKeyValPair = function(compactNodeClassReturn, "mergeNodeAndKeyValPair", args = [ \inode(ds, tupleTypes, 0), keyHash0, *appendToName(__payloadTupleAtNode(ds, tupleTypes), "1"), keyHash1, shift ], generics = genericTupleTypes, isActive = false),
 				
 		Method CompactNode_convertToGenericNode	= method(compactNodeClassReturn, bitmapField.name, isActive = false), // if (isOptionEnabled(setup,useSpecialization()) && nBound < nMax
-
-		Method CompactNode_mask = function(\return(primitive("int")), "mask", args = [keyHash, shift]),
-		Method CompactNode_bitpos = function(\return(chunkSizeToPrimitive(bitPartitionSize)), "bitpos", args = [mask]),
 
 		Method CompactNode_index2 = function(\return(primitive("int")), "index", args = [ ___anybitmapField(bitPartitionSize), bitposField]),
 		Method CompactNode_index3 = function(\return(primitive("int")), "index", args = [ ___anybitmapField(bitPartitionSize), mask, bitposField]),
@@ -816,6 +816,16 @@ when e is bitwiseXor;
 str eval(Expression e) = 
 	"(<typeToString(e.\type)>) (<eval(e.e)>)"
 when e is cast;
+
+str toString(Expression e) = 
+	"(<typeToString(e.\type)>) (<toString(e.e)>)"
+when e is cast;
+
+str eval(Epression:signedLeftBitShift(Expression x, Expression y)) =
+	"<eval(x)> \<\< <eval(y)>";
+
+str toString(Epression:signedLeftBitShift(Expression x, Expression y)) =
+	"<toString(x)> \<\< <toString(y)>";
 
 str eval(Expression e) = 
 	"<eval(e.l)> + <eval(e.r)>"
@@ -1513,8 +1523,8 @@ when rootNode := jdtToVal(abstractNode(ts), "rootNode");
 // previously used arguments (int n, int m)
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:get(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
-	"<dec(ts.mask)> = <toString(call(ts.CompactNode_mask))>;
-	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
+	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
+	'<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;
 	'
 	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
 	'	<dec(ts.index)> = dataIndex(bitpos);
@@ -1583,8 +1593,8 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsKey(
 // previously used arguments (int n, int m)
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:containsKey(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
-	"<dec(ts.mask)> = <toString(call(ts.CompactNode_mask))>;
-	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
+	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
+	'<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;
 	'
 	'final int dataMap = <use(valmapMethod)>;
 	'if ((dataMap & bitpos) != 0) {
@@ -2321,6 +2331,44 @@ Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), freeze())
 
 
 
+
+
+data PredefOp = mask();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mask())
+	= function(\return(primitive("int")), "mask", args = [ts.keyHash, ts.shift]);
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mask())
+	// "return (<use(ts.keyHash)> \>\>\> (Math.max(0, <32 - ts.bitPartitionSize> - <use(ts.shift)>))) & BIT_PARTITION_MASK;"
+	=
+	"if (<use(ts.shift)> == 30) {
+	'	return keyHash & BIT_PARTITION_MASK;
+	'} else {
+	'	return (<use(ts.keyHash)> \>\>\> (<32 - ts.bitPartitionSize> - <use(ts.shift)>)) & BIT_PARTITION_MASK;
+	'}"
+when isOptionEnabled(ts.setup, usePrefixInsteadOfPostfixEncoding());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mask())
+	= "return (<use(ts.keyHash)> \>\>\> <use(ts.shift)>) & BIT_PARTITION_MASK;"
+when !isOptionEnabled(ts.setup, usePrefixInsteadOfPostfixEncoding());
+
+
+
+
+
+data PredefOp = bitpos();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), bitpos())
+	= function(\return(chunkSizeToPrimitive(ts.bitPartitionSize)), "bitpos", args = [ts.mask]);
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), bitpos())
+	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
+when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
+
+
+
+
+
 data PredefOp = abstractNode_getKeyValueEntry();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), abstractNode_getKeyValueEntry())
@@ -2425,17 +2473,26 @@ when method.isActive;
 data Expression 
 	= call(Argument arg, JavaDataType jdt, str methodName, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ());
 
+
 data Expression
 	= call(Argument arg, Artifact artifact, PredefOp op, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ());
-
-
-
 
 // desire: call(Argument, Artifact, PredefOp)
 
 str toString(TrieSpecifics ts, Expression c:call(Argument arg, Artifact artifact, PredefOp op), Method m = getDef(ts, artifact, op)) = 
 	"<printNonEmptyCommentWithNewline(c.commentText)><toString(e)>.<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
 when m.isActive;
+
+
+data Expression
+	= call(Artifact artifact, PredefOp op, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ());
+
+// desire: call(Artifact, PredefOp) ... for functions
+
+str toString(TrieSpecifics ts, Expression c:call(Artifact artifact, PredefOp op), Method m = getDef(ts, artifact, op)) = 
+	"<printNonEmptyCommentWithNewline(c.commentText)><m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
+when m.isActive;
+
 
 
 
