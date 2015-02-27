@@ -138,9 +138,6 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			'	return SIZE_MORE_THAN_ONE;
 			'}<}>")>
 
-		<implOrOverride(ts.CompactNode_convertToGenericNode, 
-			"return this;")>
-
 		</* TODO: support bitmapIndexedNode() here */"">
 		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetValue()), 
 			str() { return "<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;

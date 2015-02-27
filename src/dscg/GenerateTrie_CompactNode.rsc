@@ -54,8 +54,6 @@ str generateCompactNodeClassString(TrieSpecifics ts) {
 		<dec(field(primitive("byte"), "SIZE_ONE"), 			constant(primitive("byte"), "0b01"), isStatic = true)>;
 		<dec(field(primitive("byte"), "SIZE_MORE_THAN_ONE"),constant(primitive("byte"), "0b10"), isStatic = true)>;
 
-		<dec(ts.CompactNode_convertToGenericNode, asAbstract = true)>
-
 		/**
 		 * Abstract predicate over a node\'s size. Value can be either
 		 * {@value #SIZE_EMPTY}, {@value #SIZE_ONE}, or

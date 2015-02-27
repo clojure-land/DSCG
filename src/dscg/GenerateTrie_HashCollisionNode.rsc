@@ -203,8 +203,6 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts) {
 		}
 		<}>
 
-		<implOrOverride(ts.CompactNode_convertToGenericNode, "return this;")>
-				
 		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetValue()), 
 			UNSUPPORTED_OPERATION_EXCEPTION)>
 

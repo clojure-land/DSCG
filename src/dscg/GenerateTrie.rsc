@@ -2285,15 +2285,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	<implOrOverride(ts.CompactNode_copyAndMigrateFromInlineToNode, generate_bodyOf_copyAndMigrateFromInlineToNode(n, m, ts, setup))>	
 	
 	<implOrOverride(ts.CompactNode_copyAndMigrateFromNodeToInline, generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts, setup))>
-	
-	<implOrOverride(ts.CompactNode_convertToGenericNode, 
-		"	@Override
-		'	<CompactNode(ds)><GenericsStr(ts.tupleTypes)> convertToGenericNode() {
-		'		return nodeOf(<use(thisMutator)>, <use(bitmapMethod)>, <use(valmapMethod)>, new Object[] { <use(contentArguments(n, m, ts, setup))> }, (byte) <m>);
-		'	}"
-		)>
-		
-			
+				
 	<implOrOverride(ts.CompactNode_hashCode, generate_bodyOf_hashCode(n, m, ts, setup))>	
 
 	<implOrOverride(ts.CompactNode_equals, 	
