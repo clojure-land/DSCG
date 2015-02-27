@@ -479,9 +479,6 @@ data TrieSpecifics
 		Method CompactNode_index2 = function(\return(primitive("int")), "index", args = [ ___anybitmapField(bitPartitionSize), bitposField]),
 		Method CompactNode_index3 = function(\return(primitive("int")), "index", args = [ ___anybitmapField(bitPartitionSize), mask, bitposField]),
 
-		Method CompactNode_dataIndex = method(\return(primitive("int")), "dataIndex", args = [bitposField]),
-		Method CompactNode_nodeIndex = method(\return(primitive("int")), "nodeIndex", args = [bitposField]),
-
 		// TODO: improve overriding of methods
 		Method AbstractNode_getNode = method(abstractNodeClassReturn, "getNode", args = [index]),
 		Method CompactNode_getNode = method(compactNodeClassReturn, "getNode", args = [index]),	
@@ -502,11 +499,6 @@ data TrieSpecifics
 		// Method AbstractNode_getValue = method(\return(__payloadTupleArgAtNode(ds, tupleTypes, 1).\type), "getValue", args = [index], isActive = \map() := ds),
 		Method AbstractNode_getValue = method(\return(__payloadTupleArgAtColl(ds, tupleTypes, 1).\type), "getValue", args = [index], isActive = \map() := ds),
 		Method AbstractNode_getKeyValueEntry = method(\return(generic("java.util.Map.Entry<GenericsExpanded(ds, tupleTypes)>")), "getKeyValueEntry", args = [index], isActive = \map() := ds),
-	
-		Method CompactNode_keyAt = method(\return(keyType), "keyAt", args = [index]),
-		Method CompactNode_valueAt = method(\return(__payloadTupleArgAtNode(ds, tupleTypes, 1).\type), "valueAt", args = [index], isActive = \map() := ds),
-	
-		Method AbstractNode__getValueAsCollection = method(\return(__payloadTupleArgAtColl(ds, tupleTypes, 1).\type), "getBoxedValue", args = [index], isActive = false), // isActive = \map() := ds	
 	
 		/***/
 		Method AbstractNode_hasPayload = method(\return(primitive("boolean")), "hasPayload"),
@@ -2422,6 +2414,33 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataM
 //Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataMap())
 //	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
 //when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
+
+
+
+
+
+
+data PredefOp = nodeIndex();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeIndex())
+	=  method(\return(primitive("int")), "nodeIndex", args = [ts.bitposField]);
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeIndex())
+	= "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___bitmapMethod(ts.bitPartitionSize))> & (bitpos - 1));";
+
+
+
+
+
+
+data PredefOp = dataIndex();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataIndex())
+	=  method(\return(primitive("int")), "dataIndex", args = [ts.bitposField]);
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataIndex())
+	= "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(ts.bitPartitionSize))> & (bitpos - 1));";
+
 
 
 

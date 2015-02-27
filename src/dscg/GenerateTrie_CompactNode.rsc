@@ -153,24 +153,10 @@ str generateCompactNodeClassString(TrieSpecifics ts) {
 			? mask 
 			: <toString(call(ts.CompactNode_index2))>;", doOverride = new())>
 	
-	<implOrOverride(ts.CompactNode_dataIndex, 
-		"return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(ts.bitPartitionSize))> & (bitpos - 1));", doOverride = new())>
-
-	<implOrOverride(ts.CompactNode_nodeIndex,
-		"return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___bitmapMethod(ts.bitPartitionSize))> & (bitpos - 1));", doOverride = new())>
-
-	<if(false) {>
-//	<typeToString(ts.keyType)> keyAt(<dec(ts.bitposField)>) {
-//		return getKey(dataIndex(bitpos)); 
-//	}
-//
-//	<if (\map() := ts.ds) {>
-//	<toString(__returnTypeOf_AbstractNode_getValue(ts.ds, ts.tupleTypes))> valAt(<dec(ts.bitposField)>) {
-//		return getValue(dataIndex(bitpos)); 
-//	}
-//	<}>
-	<}>
-
+	
+	<impl(ts, trieNode(compactNode()), dataIndex())>
+	<impl(ts, trieNode(compactNode()), nodeIndex())>
+	
 	<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> nodeAt(<dec(ts.bitposField)>) {
 		return getNode(nodeIndex(bitpos)); 
 	}
