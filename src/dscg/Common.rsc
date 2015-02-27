@@ -475,9 +475,6 @@ data TrieSpecifics
 		
 		Argument coreImmutableInterfaceReturn = \return(generic("<immutableInterfaceName(ds)><GenericsStr>")),
 		Argument coreTransientInterfaceReturn = \return(generic("<transientInterfaceName(ds)><GenericsStr>")),
-		
-		Method CompactNode_nodeMap 	= method(bitmapField, bitmapField.name),
-		Method CompactNode_dataMap 	= method(valmapField, valmapField.name),
 
 		Method CompactNode_mergeTwoKeyValPairs = function(compactNodeClassReturn, "mergeTwoKeyValPairs", args = [ *appendToName(__payloadTupleAtNode(ds, tupleTypes), "0"), keyHash0, *appendToName(__payloadTupleAtNode(ds, tupleTypes), "1"), keyHash1, shift ], generics = genericTupleTypes), 
 		Method CompactNode_mergeNodeAndKeyValPair = function(compactNodeClassReturn, "mergeNodeAndKeyValPair", args = [ \inode(ds, tupleTypes, 0), keyHash0, *appendToName(__payloadTupleAtNode(ds, tupleTypes), "1"), keyHash1, shift ], generics = genericTupleTypes, isActive = false),
@@ -2402,6 +2399,34 @@ when artifact := core(immutable()) || artifact := core(transient());
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, isEmpty())
 	= result(equals(useExpr(ts.sizeProperty), iconst(0)))
 when artifact := core(immutable()) || artifact := core(transient());	
+
+
+
+
+
+
+data PredefOp = nodeMap();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeMap())
+	=  method(ts.bitmapField, ts.bitmapField.name);
+
+//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeMap())
+//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
+//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
+
+
+
+
+
+
+data PredefOp = dataMap();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataMap())
+	=  method(ts.valmapField, ts.valmapField.name);
+
+//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataMap())
+//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
+//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
 
 
 

@@ -226,10 +226,12 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts) {
 		<implOrOverride(getDef(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode()), 
 			UNSUPPORTED_OPERATION_EXCEPTION)>	
 			
-		<implOrOverride(ts.CompactNode_nodeMap, UNSUPPORTED_OPERATION_EXCEPTION)>
-		
-		<implOrOverride(ts.CompactNode_dataMap, UNSUPPORTED_OPERATION_EXCEPTION)>			
+		<implOrOverride(getDef(ts, trieNode(compactNode()), nodeMap()), 
+			UNSUPPORTED_OPERATION_EXCEPTION)>
 			
+		<implOrOverride(getDef(ts, trieNode(compactNode()), dataMap()),
+			UNSUPPORTED_OPERATION_EXCEPTION)>
+						
 	}"
 	;
 }

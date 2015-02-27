@@ -45,10 +45,10 @@ str generateCompactNodeClassString(TrieSpecifics ts) {
 		<dec(field(primitive("int"), "BIT_PARTITION_MASK"), constant(primitive("int"), "0b<for (i <- [1..ts.bitPartitionSize+1]) {>1<}>"), isStatic = true, isFinal = true)>;
 		
 		<impl(ts, trieNode(compactNode()), mask())>
-		<impl(ts, trieNode(compactNode()), bitpos())>
+		<impl(ts, trieNode(compactNode()), bitpos())>		
 		
-		<dec(ts.CompactNode_nodeMap, asAbstract = true)>
-		<dec(ts.CompactNode_dataMap, asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), nodeMap()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), dataMap()), asAbstract = true)>
 		
 		<dec(field(primitive("byte"), "SIZE_EMPTY"), 		constant(primitive("byte"), "0b00"), isStatic = true)>;
 		<dec(field(primitive("byte"), "SIZE_ONE"), 			constant(primitive("byte"), "0b01"), isStatic = true)>;
