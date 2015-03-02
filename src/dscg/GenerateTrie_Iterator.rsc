@@ -153,8 +153,9 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 		public <typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))> get() {
 			throw new UnsupportedOperationException();
 		}<}>
-	}
+	}<}>
 
+	<if (\map(multi = false) := ds) {>
 	protected static class <toString(ts.ds)>EntryIterator<GenericsStr(ts.tupleTypes)> extends Abstract<toString(ts.ds)>Iterator<GenericsStr(ts.tupleTypes)> implements
 			<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator\<Map.Entry<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>, <typeToString(primitiveToClass(ts.keyType))>\><} else {>Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\><}> {
 

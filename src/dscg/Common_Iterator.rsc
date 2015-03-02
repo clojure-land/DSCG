@@ -17,7 +17,7 @@ import List;
 import String;
 
 bool isJdtActive(TrieSpecifics ts, PredefDataType dt:valueIterator(core(_))) = \map() := ts.ds;
-bool isJdtActive(TrieSpecifics ts, PredefDataType dt:entryIterator(core(_))) = \map() := ts.ds;
+bool isJdtActive(TrieSpecifics ts, PredefDataType dt:entryIterator(core(_))) = \map(multi = false) := ts.ds;
 bool isJdtActive(TrieSpecifics ts, PredefDataType dt:tupleIterator(core(_))) = \map(multi = true) := ts.ds;
 
 //////

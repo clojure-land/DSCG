@@ -1286,7 +1286,7 @@ str transientInterfaceName(DataStructure ds) = "Transient<toString(ds)>";
 data PredefOp = getTuple();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), getTuple())
-	= method(\return(generic("T")), "getTuple", args = [ ts.index, field(generic("BiFunction\<K, V, T\>"), "tupleOf") ], generics = [ generic("T") ], isActive = \map(multi = true) := ts.ds);
+	= method(\return(generic("T")), "getTuple", args = [ ts.index, field(generic("BiFunction\<K, V, T\>"), "tupleOf") ], generics = [ generic("T") ], isActive = false); // \map(multi = true) := ts.ds
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(_), getTuple()) = 
 	"return tupleOf.apply((<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<typeToString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);";
@@ -2105,9 +2105,6 @@ Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple
 	= bconst(false)
 when !(\map(multi = false) := ts.ds);
 
-	//<implOrOverride(ts.AbstractNode_removed, 		generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, ts.setup, equalityDefaultForArguments, ts.AbstractNode_removed))>
-	//<implOrOverride(ts.AbstractNode_removedEquiv,	generate_bodyOf_SpecializedBitmapPositionNode_removed(n, m, ts, ts.setup, equalityComparatorForArguments, ts.AbstractNode_removedEquiv))>
-
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple())
 	= generate_bodyOf_SpecializedBitmapPositionNode_removed(ts, op);
 
@@ -2137,9 +2134,67 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNo
 			}
 		}
 	}
-	return this;";
+	return this;"
+when !(\map(multi = true) := ts.ds);
+	
 
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:removeTuple(),
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
+	"for (int idx = 0; idx \< keys.length; idx++) {
+		if (<eq(key(ts.keyType, "keys[idx]"), key(ts.keyType))>) {					
+			<removedOn_TupleFound(ts, artifact, op, eq)>
+		}
+	}
+	return this;"
+when \map(multi = true) := ts.ds;	
 
+	
+str removedOn_TupleFound(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:removeTuple(), 
+		str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+	"<dec(collCur)> = getValue(idx);
+	'
+	'if(<toString(call(collCur, getDef(tsSet, core(immutable()), containsKey()) 
+					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>) {
+	'	details.updated(<use(val(ts.valType))>);
+	'	
+	'	// remove tuple
+	'	<dec(collNew)> = <toString(call(collCur, getDef(tsSet, core(immutable()), removeTuple(customComparator = op.customComparator)), 
+					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;
+	'	
+	'	if (<toString(call(collNew, getDef(tsSet, core(immutable()), size())))> != 0) {
+	'		// update mapping
+			<arraycopyAndSetTuple(val(asArray(nodeTupleType(ts, 1)), "this.vals"), field(asArray(nodeTupleType(ts, 1)), "valsNew"), 1, [collNew], field(primitive("int"), "idx"))>
+	
+			return new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash, keys, valsNew);
+	'	} else {
+	'		// drop mapping
+			if (this.arity() == 2) {
+				/*
+				 * Create root node with singleton element. This node
+				 * will be a) either be the new root returned, or b)
+				 * unwrapped and inlined.
+				 */
+				<dec(key(ts.keyType, "theOtherKey"))> = (idx == 0) ? keys[1] : keys[0];
+				<dec(val(collType, "theOtherVal"))> = (idx == 0) ? vals[1] : vals[0];
+				
+				<dec(ts.bitmapField)> = 0;
+				<dec(ts.valmapField)> = bitpos(mask(hash, 0));
+								
+				return <CompactNode(ts.ds)>.<GenericsStr(ts.tupleTypes)> nodeOf(mutator, <use(ts.bitmapField)>, <use(ts.valmapField)>, theOtherKey, theOtherVal);
+			} else {
+	'			<arraycopyAndRemoveTuple(field(asArray(ts.keyType), "this.keys"), field(asArray(ts.keyType), "keysNew"), 1, field(primitive("int"), "idx"))>
+	'			<arraycopyAndRemoveTuple(field(asArray(collType), "this.vals"), field(asArray(collType), "valsNew"), 1, field(primitive("int"), "idx"))>
+	'
+	'			return new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash, keysNew<if (\map() := ts.ds) {>, valsNew<}>);		
+	'		}
+	'	}	
+	'} else {	
+	'	return this;
+	'}" 
+when \map(multi = true) := ts.ds 
+		&& collCur := prependToName(nodeTupleArg(ts, 1), "current")
+		&& collNew := appendToName(nodeTupleArg(ts, 1), "New")
+		&& collType := nodeTupleType(ts, 1);
 
 
 
