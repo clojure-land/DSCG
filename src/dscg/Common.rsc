@@ -1543,8 +1543,8 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	'final int nodeMap = <use(bitmapMethod)>;
 	'if ((nodeMap & bitpos) != 0) {
 	'	final int index = index(nodeMap, mask, bitpos);
-	'	return <toString(call(exprFromString("getNode(index)"), getDef(ts, artifact, containsKey(customComparator = op.customComparator))), 
-			argsOverride = (ts.shift: plus(useExpr(ts.shift), constant(ts.shift.\type, "BIT_PARTITION_SIZE"))))>;	
+	'	return <toString(call(exprFromString("getNode(index)"), getDef(ts, artifact, containsKey(customComparator = op.customComparator)), 
+			argsOverride = (ts.shift: plus(useExpr(ts.shift), constant(ts.shift.\type, "BIT_PARTITION_SIZE")))))>;	
 	'}
 	'
 	'return false;";
