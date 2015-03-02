@@ -61,10 +61,12 @@ str generateCompactNodeClassString(TrieSpecifics ts) {
 		 * 
 		 * @return size predicate
 		 */
-		<dec(ts.CompactNode_sizePredicate, asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), sizePredicate()), 
+			asAbstract = true)>
 
 		@Override
-		<dec(ts.CompactNode_getNode, asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), getNode()), 
+			asAbstract = true)>
 
 		boolean nodeInvariant() {
 			boolean inv1 = (size() - payloadArity() \>= 2 * (arity() - payloadArity()));

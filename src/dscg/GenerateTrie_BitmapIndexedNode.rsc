@@ -47,48 +47,50 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			
 			<if (isOptionEnabled(ts.setup,useSpecialization()) && ts.nBound < ts.nMax) {>assert arity() \> <ts.nBound>;<}>assert nodeInvariant();")>					
 		
-		<implOrOverride(ts.AbstractNode_getKey,
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), getKey()),
 			"return (<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index];"
 			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.keyType)) ])>
 
-		<implOrOverride(ts.AbstractNode_getValue,
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), getValue()),
 			"return (<typeToString((nodeTupleType(ts, 1)))>) nodes[<use(tupleLengthConstant)> * index + 1];"
 			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.valType)) ])>
 	
-		<implOrOverride(ts.AbstractNode_getKeyValueEntry, 
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), getKeyValueEntry()), 
 			"return entryOf((<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<typeToString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);",
 			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.keyType) && !isPrimitive(ts.valType)) ])>
 
 		<impl(ts, trieNode(bitmapIndexedNode()), getTuple())>
 
-		<implOrOverride(ts.CompactNode_getNode, generate_bodyOf_getNode(ts),
+		<implOrOverride(getDef(ts, trieNode(compactNode()), getNode()), 
+			generate_bodyOf_getNode(ts),
 			annotations = [ UNCHECKED_ANNOTATION() ])>
 
-		<implOrOverride(ts.AbstractNode_payloadIterator, 
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), payloadIterator()),
 			generate_bodyOf_payloadIterator(ts))>
 
-		<implOrOverride(ts.CompactNode_nodeIterator, generate_bodyOf_nodeIterator(ts),
+		<implOrOverride(getDef(ts, trieNode(compactNode()), nodeIterator()),
+			generate_bodyOf_nodeIterator(ts),
 			annotations = [ UNCHECKED_ANNOTATION() ])>
 
-		<implOrOverride(ts.AbstractNode_hasPayload,
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), hasPayload()),
 			generate_bodyOf_hasPayload(ts))>
 
-		<implOrOverride(ts.AbstractNode_payloadArity,
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), payloadArity()),
 			generate_bodyOf_payloadArity(ts))>
 
-		<implOrOverride(ts.AbstractNode_hasNodes, 
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), hasNodes()),
 			generate_bodyOf_hasNodes(ts))>
 
-		<implOrOverride(ts.AbstractNode_nodeArity, 
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), nodeArity()),
 			generate_bodyOf_nodeArity(ts))>
 
-		<implOrOverride(ts.AbstractNode_getSlot, 
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), getSlot()), 
 			"return nodes[<use(ts.index)>];")>
 
-		<implOrOverride(ts.AbstractNode_hasSlots, 
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), hasSlots()),
 			"return nodes.length != 0;")>
 
-		<implOrOverride(ts.AbstractNode_slotArity, 
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), slotArity()), 
 			"return nodes.length;")>
 
 		<implOrOverride(ts.CompactNode_hashCode,
@@ -121,7 +123,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			}
 			return true;")>
 
-		<implOrOverride(ts.CompactNode_sizePredicate, 
+		<implOrOverride(getDef(ts, trieNode(compactNode()), sizePredicate()), 
 			"<if (isOptionEnabled(ts.setup,useSpecialization())) {>return SIZE_MORE_THAN_ONE;<} else {>if (this.nodeArity() == 0) {
 			'	switch (this.payloadArity()) {
 			'	case 0:

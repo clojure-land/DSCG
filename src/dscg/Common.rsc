@@ -1492,7 +1492,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
 	'	<dec(ts.index)> = dataIndex(bitpos);
 	'	if (<eq(key(ts.keyType, "getKey(<use(ts.index)>)"), key(ts.keyType))>) {
-	'		<if (\set() := ts.ds) {>return Optional.of(getKey(<use(ts.index)>));<} else {><dec(result)> = <toString(call(ts.AbstractNode_getValue))>; 
+	'		<if (\set() := ts.ds) {>return Optional.of(getKey(<use(ts.index)>));<} else {><dec(result)> = <toString(call(getDef(ts, trieNode(abstractNode()), getValue())))>; 
 	'
 	'		return Optional.of(<use(result)>);<}>
 	'	}
@@ -2318,7 +2318,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), node
 
 // TODO: fix generics in return type
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeIterator())
-	= method(\return(generic("Iterator\<? extends <CompactNode(ts.ds)><ts.GenericsStr>\>")), "nodeIterator", isActive = !isOptionEnabled(setup, useFixedStackIterator()));
+	= method(\return(generic("Iterator\<? extends <CompactNode(ts.ds)><ts.GenericsStr>\>")), "nodeIterator", isActive = !isOptionEnabled(ts.setup, useFixedStackIterator()));
 
 //Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), nodeIterator())
 //	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
@@ -2329,7 +2329,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeI
 data PredefOp = hasPayload();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasPayload())
-	= method(\return(primitive("boolean")), "hasNodes");
+	= method(\return(primitive("boolean")), "hasPayload");
 
 //Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasPayload())
 //	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
@@ -2340,7 +2340,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasP
 data PredefOp = payloadArity();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), payloadArity())
-	= method(\return(primitive("int")), "nodeArity");
+	= method(\return(primitive("int")), "payloadArity");
 
 //Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), payloadArity())
 //	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
@@ -2426,6 +2426,27 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getS
 
 
 
+data PredefOp = arity();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), arity())
+	= method(\return(primitive("int")), "arity");
+
+
+
+data PredefOp = size();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), size())
+	= method(\return(primitive("int")), "size");
+
+
+
+data PredefOp = sizePredicate();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), sizePredicate())
+	= method(\return(primitive("byte")), "sizePredicate");
+
+
+
 /*
 data PredefOp = hasNodes();
 
@@ -2435,11 +2456,6 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasN
 //Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasNodes())
 //	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
 //when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
-
-		Method CompactNode_sizePredicate = method(\return(primitive("byte")), "sizePredicate"),
-		
-		Method AbstractNode_arity = method(\return(primitive("int")), "arity"),
-		Method AbstractNode_size = method(\return(primitive("int")), "size"),		 	
 */
 
 

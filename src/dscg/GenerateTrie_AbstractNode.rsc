@@ -121,9 +121,10 @@ str generateAbstractNodeClassString(TrieSpecifics ts) {
 		 * 
 		 * @return sum of nodes and values stored within
 		 */
-		<implOrOverride(ts.AbstractNode_arity, "return payloadArity() + nodeArity();", doOverride = new())>
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), arity()), 
+			"return payloadArity() + nodeArity();", doOverride = new())>
 
-		<implOrOverride(ts.AbstractNode_size, 
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), size()), 
 			"final Iterator\<<typeToString(primitiveToClass(ts.keyType))>\> it = new <toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(this);
 
 			int size = 0;

@@ -37,7 +37,8 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts) {
 			assert payloadArity() \>= 2;
 		}
 
-		<implOrOverride(ts.AbstractNode_payloadIterator, generate_bodyOf_payloadIterator(ts))>
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), payloadIterator()),
+			generate_bodyOf_payloadIterator(ts))>
 
 		<if (false) {>
 		@Override
@@ -110,12 +111,10 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts) {
 			return SIZE_MORE_THAN_ONE;
 		}
 
-		@Override
-		<typeToString(ts.keyType)> getKey(int index) {
-			return keys[index];
-		}
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), getKey()),
+			"return keys[index];")>		
 
-		<implOrOverride(ts.AbstractNode_getValue, 
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), getValue()), 
 			"return vals[index];")>		
 
 		<if (\map() := ts.ds) {>
@@ -129,14 +128,14 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts) {
 		public <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> getNode(int index) {
 			throw new IllegalStateException(\"Is leaf node.\");
 		}
-
-		<implOrOverride(ts.AbstractNode_getSlot, 
+		
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), getSlot()),
 			UNSUPPORTED_OPERATION_EXCEPTION)>
 
-		<implOrOverride(ts.AbstractNode_hasSlots, 
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), hasSlots()),
 			UNSUPPORTED_OPERATION_EXCEPTION)>
 
-		<implOrOverride(ts.AbstractNode_slotArity, 
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), slotArity()),
 			UNSUPPORTED_OPERATION_EXCEPTION)>
 
 		<if (isOptionEnabled(ts.setup, useStructuralEquality())) {>
