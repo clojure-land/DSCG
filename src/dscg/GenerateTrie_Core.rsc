@@ -169,9 +169,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 
 	<generate_checkHashCodeAndSize(ts)>
 	
-	private static int improve(final int hash) {
-		return hash; // return idendity
-	}
+	<impl(ts, core(immutable()), transformHashCode())>
 
 	<impl(ts, core(immutable()), containsKey())>
 	<impl(ts, core(immutable()), containsKey(customComparator = true))>

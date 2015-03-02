@@ -351,7 +351,8 @@ data Artifact(TrieSpecifics ts = undefinedTrieSpecifics())
 	| trieNode(TrieNodeType trieNodeType)
 	| ju_Map(bool multi = false, DataStructure multiValueSemantics = \set())
 	| ju_Set()
-	| ju_Collection()	
+	| ju_Collection()
+	| jl_Object()	
 	;
 
 data TrieNodeType
@@ -379,7 +380,8 @@ data PredefArgLabel
 	//| payloadKey()
 	//| payloadValue() 
 	| collection()
-	| tupleWrapper();
+	| tupleWrapper()
+	| hashCode();
 
 
 
@@ -641,6 +643,9 @@ default str hashCode(Argument a) = "<use(a)>.hashCode()";
 
 str primitiveHashCode(Argument a) = "(int)(<use(a)> ^ (<use(a)> \>\>\> 32))" when a has \type && a.\type == primitive("long");
 default str primitiveHashCode(Argument a) = "(int) <use(a)>";
+
+Expression hashCodeExpr(TrieSpecifics ts, Argument arg) = call(useExpr(arg), getDef(ts, jl_Object(), PredefOp::hashCode())) when isPrimitive(a.\type);
+default Expression hashCodeExpr(TrieSpecifics ts, Argument arg) { throw "Ahhh"; } 
 
 
 
@@ -1523,10 +1528,17 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsKey(
 		<toString(UNCHECKED_ANNOTATION())>
 		<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
 		return rootNode.<toString(call(getDef(ts, trieNode(abstractNode()), containsKey(customComparator = op.customComparator)), 
-					argsOverride = (ts.keyHash: exprFromString("improve(<hashCode(key(ts.keyType))>)"), ts.shift: constant(ts.shift.\type, "0"))))>;
+					argsOverride = (ts.keyHash: keyHashExpr, ts.shift: constant(ts.shift.\type, "0"))))>;
 	} catch (ClassCastException unused) {
 		return false;
-	}";
+	}"
+when keyHashExpr := call(
+						getDef(ts, artifact, transformHashCode()), 
+						labeledArgsOverride = (
+							PredefArgLabel::hashCode(): 
+								hashCodeExpr(ts, key(ts.keyType))
+						)
+					);
 
 // previously used arguments (int n, int m)
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:containsKey(),
@@ -2712,12 +2724,24 @@ data PredefOp = hashCode();
 
 Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::hashCode())
 	= method(\return(primitive("int")), "hashCode", visibility = "public")
-when core(_) := artifact;
+when core(_) := artifact || jl_Object() := artifact;
 
 Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::hashCode())
 	= method(\return(primitive("int")), "hashCode", visibility = "public", isActive = isOptionEnabled(ts.setup, useStructuralEquality()))
 when trieNode(_) := artifact;
 
+
+
+data PredefOp = transformHashCode();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::transformHashCode())
+	= function(\return(primitive("int")), "improve", args = [ __labeledArgument(PredefArgLabel::hashCode(), val(primitive("int"), "hash")) ], visibility = "public")
+when core(_) := artifact;
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, op:transformHashCode()) 
+	= result(useExpr(hash))
+when core(_) := artifact
+		&& hash := getDef(ts, artifact, op).args[0];
 
 
 
