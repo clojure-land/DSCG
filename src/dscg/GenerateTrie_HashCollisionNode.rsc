@@ -179,9 +179,9 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts) {
 
 				for (int j = 0; j \< keys.length; j++) {
 					<dec(key(ts.keyType))> = keys[j];
-					<dec(val(ts.valType))> = vals[j];
+					<dec(nodeTupleArg(ts, 1))> = vals[j];
 
-					if (<equalityDefaultForArguments(key(ts.keyType), key(ts.keyType, "otherKey"))> && <equalityDefaultForArguments(val(ts.valType), val(ts.valType, "otherVal"))>) {
+					if (<equalityDefaultForArguments(key(ts.keyType), key(ts.keyType, "otherKey"))> && <equalityDefaultForArguments(nodeTupleArg(ts, 1), val(ts.valType, "otherVal"))>) {
 						continue outerLoop;
 					}
 				}
