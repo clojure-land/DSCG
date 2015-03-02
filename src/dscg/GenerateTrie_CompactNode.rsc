@@ -320,7 +320,7 @@ str generate_bodyOf_mergeTwoValues(ts:___expandedTrieSpecifics(ds, bitPartitionS
 	'}";
 
 str generate_bodyOf_mergeTwoValues(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionBitmap()) =
-	"<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask0))))> | <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask1))))>);
+	"<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask0))))> | <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask1))))>);
 	' 
 	'if (mask0 \< mask1) {
 	'	return nodeOf(null, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, <use(valmapField)>, <use(appendToName(nodeTupleArgs(ts), "0") + appendToName(nodeTupleArgs(ts), "1"))>);
@@ -358,7 +358,7 @@ str generate_bodyOf_mergeOnNextLevel(ts:___expandedTrieSpecifics(ds, bitPartitio
 	"return nodeOf(null, (byte) mask0, node);";
 
 str generate_bodyOf_mergeOnNextLevel(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionBitmap()) =
-	"<dec(ts.bitmapField)> = <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask0))))>;
+	"<dec(ts.bitmapField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask0))))>;
 	'return nodeOf(null, <use(bitmapField)>, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, node);";		
 	
 str generate_bodyOf_mergeOnNextLevel(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),false>}, Position _) =
@@ -378,15 +378,15 @@ str generate_bodyOf_mergeNodeAndValue(ts:___expandedTrieSpecifics(ds, bitPartiti
 	'return nodeOf(null, (byte) mask1, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, (byte) mask0, node0);";
 
 str generate_bodyOf_mergeNodeAndValue(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),true>}, Position pos:positionBitmap()) =
-	"<dec(ts.bitmapField)> = <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask0))))>;
-	'<dec(ts.valmapField)> = <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask1))))>;
+	"<dec(ts.bitmapField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask0))))>;
+	'<dec(ts.valmapField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask1))))>;
 	'
 	'// store values before node
 	'return nodeOf(null, <use(bitmapField)>, <use(valmapField)>, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, node0);";		
 	
 str generate_bodyOf_mergeNodeAndValue(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, <useSpecialization(),false>}, Position _) =
-	"<dec(ts.bitmapField)> = <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask0))))>;
-	'<dec(ts.valmapField)> = <toString(call(ts.CompactNode_bitpos, argsOverride = (ts.mask: useExpr(ts.mask1))))>;
+	"<dec(ts.bitmapField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask0))))>;
+	'<dec(ts.valmapField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask1))))>;
 	'
 	'// store values before node
 	'return <toString(call(ts.nodeOf_BitmapIndexedNode, 

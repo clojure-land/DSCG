@@ -2116,13 +2116,16 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	<}>
 	<}>
 	
-	<implOrOverride(ts.AbstractNode_hasSlots, generate_bodyOf_hasSlots(mn))>
+	<implOrOverride(getDef(ts, trieNode(abstractNode()), hasSlots()), 
+		generate_bodyOf_hasSlots(mn))>
 
-	<implOrOverride(ts.AbstractNode_slotArity, "return <mn>;")>
+	<implOrOverride(getDef(ts, trieNode(abstractNode()), slotArity()), 
+		"return <mn>;")>
 
-	<implOrOverride(ts.AbstractNode_getSlot, generate_bodyOf_getSlot(ts, mn))> 
+	<implOrOverride(getDef(ts, trieNode(abstractNode()), getSlot()),
+		generate_bodyOf_getSlot(ts, mn))> 
 
-	<if (isOptionEnabled(setup,useUntypedVariables())) {>
+	<if (isOptionEnabled(setup, useUntypedVariables())) {>
 
 		<if (!isPrimitive(key(ts.keyType))) {><toString(UNCHECKED_ANNOTATION())><}>
 		@Override
@@ -2278,17 +2281,22 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'	}	
 
 
-	<implOrOverride(ts.CompactNode_copyAndInsertNode, generate_bodyOf_copyAndInsertNode(n, m, ts, setup))>
+	<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndInsertNode()), 
+		generate_bodyOf_copyAndInsertNode(n, m, ts, setup))>
 	
-	<implOrOverride(ts.CompactNode_copyAndRemoveNode, generate_bodyOf_copyAndRemoveNode(n, m, ts, setup))>	
+	<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndRemoveNode()),
+		generate_bodyOf_copyAndRemoveNode(n, m, ts, setup))>	
 	
-	<implOrOverride(ts.CompactNode_copyAndMigrateFromInlineToNode, generate_bodyOf_copyAndMigrateFromInlineToNode(n, m, ts, setup))>	
+	<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode()),	
+		generate_bodyOf_copyAndMigrateFromInlineToNode(n, m, ts, setup))>	
 	
-	<implOrOverride(ts.CompactNode_copyAndMigrateFromNodeToInline, generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts, setup))>
+	<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()), 
+		generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts, setup))>
 				
-	<implOrOverride(ts.CompactNode_hashCode, generate_bodyOf_hashCode(n, m, ts, setup))>	
+	<implOrOverride(getDef(ts, trieNode(compactNode()), hashCode()),				
+		generate_bodyOf_hashCode(n, m, ts, setup))>	
 
-	<implOrOverride(ts.CompactNode_equals, 	
+	<implOrOverride(getDef(ts, trieNode(compactNode()), equals()), 	
 	"		if (null == other) {
 	'			return false;
 	'		}

@@ -756,11 +756,14 @@ str eval(Epression:signedLeftBitShift(Expression x, Expression y)) =
 str toString(Epression:signedLeftBitShift(Expression x, Expression y)) =
 	"<toString(x)> \<\< <toString(y)>";
 
-str eval(Epression:equals(Expression x, Expression y)) =
-	"<eval(x)> == <eval(y)>";
+str eval(Expression e) =
+	"<eval(e.x)> == <eval(e.y)>"
+when e is equals;
 
-str toString(Epression:equals(Expression x, Expression y)) =
-	"<toString(x)> == <toString(y)>";
+str toString(Expression e) =
+	"<toString(e.x)> == <toString(e.y)>"
+when e is equals;
+	
 
 str eval(Expression e) = 
 	"<eval(e.l)> + <eval(e.r)>"
@@ -2341,6 +2344,9 @@ data PredefOp = removeInplaceValueAndConvertToSpecializedNode(bool customCompara
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode())
 	= method(\return(jdtToType(compactNode(ts))), "removeInplaceValueAndConvertToSpecializedNode", args = [ts.mutator, ts.bitposField], isActive = isOptionEnabled(ts.setup, useSpecialization()));
 
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, removeInplaceValueAndConvertToSpecializedNode()) 
+	= UNSUPPORTED_OPERATION_EXCEPTION
+when trieNode(_) := artifact;
 
 
 
@@ -2509,8 +2515,16 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), arit
 
 data PredefOp = size();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), size())
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::size())
 	= method(\return(primitive("int")), "size");
+
+Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::size())
+	= method(\return(primitive("int")), "size", visibility = "public")
+when artifact := core(immutable()) || artifact := core(transient());
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp::size())
+	= result(useExpr(ts.sizeProperty))
+when artifact := core(immutable()) || artifact := core(transient());	
 
 
 
@@ -2572,19 +2586,19 @@ when core(_) := artifact || ju_Set() := artifact;
 
 data PredefOp = remove();
 
-Method getDef(TrieSpecifics ts, Artifact artifact, remove())
+Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::remove())
 	= method(\return(primitiveToClass(ts.valType)), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = \map(multi = false) := ts.ds)
 when core(_) := artifact && \map(multi = false) := ts.ds;	
 
-Method getDef(TrieSpecifics ts, Artifact artifact, remove())
+Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::remove())
 	= method(\return(primitiveToClass(ts.valType)), "remove", args = [ field(object(), "<keyName>"), field(object(), "<valName>") ], visibility = "public", isActive = \map(multi = true) := ts.ds)
 when core(_) := artifact && \map(multi = true) := ts.ds;
 
-Method getDef(TrieSpecifics ts, Artifact artifact, remove())
+Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::remove())
 	= method(\return(primitive("boolean")), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = ts.ds == \set())
 when core(_) := artifact && \set() := ts.ds;	
 
-Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, remove()) 
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp::remove()) 
 	= UNSUPPORTED_OPERATION_EXCEPTION
 when core(_) := artifact;
 
@@ -2684,11 +2698,11 @@ when core(_) := artifact;
 
 data PredefOp = equals();
 
-Method getDef(TrieSpecifics ts, Artifact artifact, equals())
+Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::equals())
 	= method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public")
 when core(_) := artifact;
 
-Method getDef(TrieSpecifics ts, Artifact artifact, equals())
+Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::equals())
 	= method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public", isActive = isOptionEnabled(ts.setup, useStructuralEquality()))
 when trieNode(_) := artifact;
 
@@ -2696,11 +2710,11 @@ when trieNode(_) := artifact;
 
 data PredefOp = hashCode();
 
-Method getDef(TrieSpecifics ts, Artifact artifact, hashCode())
+Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::hashCode())
 	= method(\return(primitive("int")), "hashCode", visibility = "public")
 when core(_) := artifact;
 
-Method getDef(TrieSpecifics ts, Artifact artifact, hashCode())
+Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::hashCode())
 	= method(\return(primitive("int")), "hashCode", visibility = "public", isActive = isOptionEnabled(ts.setup, useStructuralEquality()))
 when trieNode(_) := artifact;
 
@@ -2791,27 +2805,14 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 
 
 
-data PredefOp = size();
-
-Method getDef(TrieSpecifics ts, Artifact artifact, size())
-	= method(\return(primitive("int")), "size", visibility = "public")
-when artifact := core(immutable()) || artifact := core(transient());
-
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, size())
-	= result(useExpr(ts.sizeProperty))
-when artifact := core(immutable()) || artifact := core(transient());	
-
-
-
-
 
 data PredefOp = isEmpty();
 
-Method getDef(TrieSpecifics ts, Artifact artifact, isEmpty())
+Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::isEmpty())
 	= method(\return(primitive("boolean")), "isEmpty", visibility = "public")
 when artifact := core(immutable()) || artifact := core(transient());	
 
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, isEmpty())
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp::isEmpty())
 	= result(equals(useExpr(ts.sizeProperty), iconst(0)))
 when artifact := core(immutable()) || artifact := core(transient());	
 
