@@ -203,22 +203,22 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 
 
 
+	<impl(ts, core(immutable()), put())>
+	<impl(ts, core(immutable()), putAll())>
 
-	<implOrOverride(ts.jul_Map_put, UNSUPPORTED_OPERATION_EXCEPTION)>	
-	<implOrOverride(ts.jul_Map_clear, UNSUPPORTED_OPERATION_EXCEPTION)>
-	<implOrOverride(ts.jul_Map_remove, UNSUPPORTED_OPERATION_EXCEPTION)>
-	<implOrOverride(ts.jul_Map_putAll, UNSUPPORTED_OPERATION_EXCEPTION)>
-	
-	<implOrOverride(ts.Multimap_remove, UNSUPPORTED_OPERATION_EXCEPTION)>
-	
-	<implOrOverride(ts.jul_Set_add, UNSUPPORTED_OPERATION_EXCEPTION)>	
-	<implOrOverride(ts.jul_Set_clear, UNSUPPORTED_OPERATION_EXCEPTION)>
-	<implOrOverride(ts.jul_Set_remove, UNSUPPORTED_OPERATION_EXCEPTION)>
-	<implOrOverride(ts.jul_Set_addAll, UNSUPPORTED_OPERATION_EXCEPTION)>
-	<implOrOverride(ts.jul_Set_removeAll, UNSUPPORTED_OPERATION_EXCEPTION)>
-	<implOrOverride(ts.jul_Set_retainAll, UNSUPPORTED_OPERATION_EXCEPTION)>
+	<impl(ts, core(immutable()), add())>
+	<impl(ts, core(immutable()), addAll())>
 
-	<implOrOverride(ts.jul_Set_containsAll, 	
+	<impl(ts, core(immutable()), clear())>
+	<impl(ts, core(immutable()), remove())>
+	
+	<impl(ts, core(immutable()), removeAll())>
+	<impl(ts, core(immutable()), retainAll())>
+
+
+
+
+	<implOrOverride(getDef(ts, core(immutable()), containsAll()), 	
 		"for (Object item : c) {
 			if (!contains(item)) {
 				return false;
@@ -226,7 +226,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 		}
 		return true;")>
 
-	<implOrOverride(ts.jul_Set_containsAllEquivalent,	
+	<implOrOverride(getDef(ts, core(immutable()), containsAll(customComparator = true)),	
 		"for (Object item : c) {
 			if (!containsEquivalent(item, cmp)) {
 				return false;
@@ -252,22 +252,26 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 
 	<impl(ts, core(immutable()), valueCollectionsStream())>
 
-	<implOrOverride(ts.jul_Map_keySet, generate_bodyOf_jul_Map_keySet(ts, ts.coreClassName))>
+	<implOrOverride(getDef(ts, core(immutable()), keySet()), 
+		generate_bodyOf_jul_Map_keySet(ts, ts.coreClassName))>
 		
-	<implOrOverride(ts.jul_Map_values, generate_bodyOf_jul_Map_values(ts, ts.coreClassName))>
+	<implOrOverride(getDef(ts, core(immutable()), values()), 
+		generate_bodyOf_jul_Map_values(ts, ts.coreClassName))>
 
-	<implOrOverride(ts.jul_Map_entrySet, generate_bodyOf_jul_Map_entrySet(ts, ts.coreClassName))>
+	<implOrOverride(getDef(ts, core(immutable()), entrySet()), 
+		generate_bodyOf_jul_Map_entrySet(ts, ts.coreClassName))>
 
-	<implOrOverride(ts.jul_Collection_toObjectArray, generate_bodyOf_jul_Collection_toObjectArray(ts))>
+	<implOrOverride(getDef(ts, core(immutable()), toObjectArray()), 
+		generate_bodyOf_jul_Collection_toObjectArray(ts))>
 
-	<implOrOverride(ts.jul_Collection_toGenericArray, generate_bodyOf_jul_Collection_toGenericArray(ts))>
+	<implOrOverride(getDef(ts, core(immutable()), toGenericArray()), 
+		generate_bodyOf_jul_Collection_toGenericArray(ts))>
 
-	<implOrOverride(ts.CoreCommon_equals, generate_bodyOf_CoreCommon_equals(ts, ts.coreTransientClassName))>
+	<implOrOverride(getDef(ts, core(immutable()), equals()), 
+		generate_bodyOf_CoreCommon_equals(ts, ts.coreTransientClassName))>
 
-	@Override
-	public int hashCode() {
-		return hashCode;
-	}
+	<implOrOverride(getDef(ts, core(immutable()), hashCode()), 
+		"return hashCode;")>
 
 	@Override
 	public boolean isTransientSupported() {

@@ -44,20 +44,18 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 		
 		<generate_checkHashCodeAndSize(ts)>	
 
-		<implOrOverride(ts.jul_Map_put, UNSUPPORTED_OPERATION_EXCEPTION)>
-		<implOrOverride(ts.jul_Map_clear, UNSUPPORTED_OPERATION_EXCEPTION)>
-		<implOrOverride(ts.jul_Map_remove, UNSUPPORTED_OPERATION_EXCEPTION)>
-		<implOrOverride(ts.jul_Map_putAll, UNSUPPORTED_OPERATION_EXCEPTION)>
-		
-		<implOrOverride(ts.Multimap_remove, UNSUPPORTED_OPERATION_EXCEPTION)>
-		
-		<implOrOverride(ts.jul_Set_add, UNSUPPORTED_OPERATION_EXCEPTION)>	
-		<implOrOverride(ts.jul_Set_clear, UNSUPPORTED_OPERATION_EXCEPTION)>
-		<implOrOverride(ts.jul_Set_remove, UNSUPPORTED_OPERATION_EXCEPTION)>
-		<implOrOverride(ts.jul_Set_addAll, UNSUPPORTED_OPERATION_EXCEPTION)>
-		<implOrOverride(ts.jul_Set_removeAll, UNSUPPORTED_OPERATION_EXCEPTION)>
-		<implOrOverride(ts.jul_Set_retainAll, UNSUPPORTED_OPERATION_EXCEPTION)>
+		<impl(ts, core(transient()), put())>
+		<impl(ts, core(transient()), putAll())>
 
+		<impl(ts, core(transient()), add())>
+		<impl(ts, core(transient()), addAll())>
+
+		<impl(ts, core(transient()), clear())>
+		<impl(ts, core(transient()), remove())>
+		
+		<impl(ts, core(transient()), removeAll())>
+		<impl(ts, core(transient()), retainAll())>
+		
 		<impl(ts, core(transient()), containsKey())>
 		<impl(ts, core(transient()), containsKey(customComparator = true))>
 
@@ -165,17 +163,23 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 		
 		<declareJdt(ts, tupleIterator(core(transient())))>
 
-		<implOrOverride(ts.jul_Map_keySet, generate_bodyOf_jul_Map_keySet(ts, ts.coreTransientClassName))>
+		<implOrOverride(getDef(ts, core(transient()), keySet()),
+			generate_bodyOf_jul_Map_keySet(ts, ts.coreTransientClassName))>
 			
-		<implOrOverride(ts.jul_Map_values, generate_bodyOf_jul_Map_values(ts, ts.coreTransientClassName))>
+		<implOrOverride(getDef(ts, core(transient()), values()), 
+			generate_bodyOf_jul_Map_values(ts, ts.coreTransientClassName))>
 
-		<implOrOverride(ts.jul_Map_entrySet, generate_bodyOf_jul_Map_entrySet(ts, ts.coreTransientClassName))>
+		<implOrOverride(getDef(ts, core(transient()), entrySet()),
+			generate_bodyOf_jul_Map_entrySet(ts, ts.coreTransientClassName))>
 	
-		<implOrOverride(ts.jul_Collection_toObjectArray, generate_bodyOf_jul_Collection_toObjectArray(ts))>
+		<implOrOverride(getDef(ts, core(transient()), toObjectArray()),
+			generate_bodyOf_jul_Collection_toObjectArray(ts))>
 		
-		<implOrOverride(ts.jul_Collection_toGenericArray, generate_bodyOf_jul_Collection_toGenericArray(ts))>
+		<implOrOverride(getDef(ts, core(transient()), toGenericArray()),		
+			generate_bodyOf_jul_Collection_toGenericArray(ts))>
 
-		<implOrOverride(ts.CoreCommon_equals, generate_bodyOf_CoreCommon_equals(ts, ts.coreTransientClassName))>
+		<implOrOverride(getDef(ts, core(transient()), equals()),
+			generate_bodyOf_CoreCommon_equals(ts, ts.coreTransientClassName))>
 
 		@Override
 		public int hashCode() {

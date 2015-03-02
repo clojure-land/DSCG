@@ -47,8 +47,8 @@ public interface <immutableInterfaceName(ts.ds)><ts.GenericsStr> extends <toStri
 
 str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) = 
 "
-	<dec(ts.jul_Set_containsAll)>
-	<dec(ts.jul_Set_containsAllEquivalent)>
+	<dec(getDef(ts, core(immutable()), containsAll()))>
+	<dec(getDef(ts, core(immutable()), containsAll(customComparator = true)))>
 
 	<dec(getDef(ts, core(immutable()), get()))>
 	<dec(getDef(ts, core(immutable()), get(customComparator = true)))>
@@ -97,9 +97,9 @@ public interface <transientInterfaceName(ts.ds)><ts.GenericsStr> extends <toStri
 
 str generate_bodyOf_TransientInterface(TrieSpecifics ts) = 
 "
-	<dec(ts.jul_Set_containsAll)>
-	<dec(ts.jul_Set_containsAllEquivalent)>
-
+	<dec(getDef(ts, core(transient()), containsAll()))>
+	<dec(getDef(ts, core(transient()), containsAll(customComparator = true)))>
+	
 	<dec(getDef(ts, core(transient()), get()))>
 	<dec(getDef(ts, core(transient()), get(customComparator = true)))>
 

@@ -348,7 +348,11 @@ default Expression updateProperty(TrieSpecifics ts, PredefOp op, Property p, Eve
 data Artifact(TrieSpecifics ts = undefinedTrieSpecifics())
 	= unknownArtifact()
 	| core(UpdateSemantic updateSemantic)
-	| trieNode(TrieNodeType trieNodeType);
+	| trieNode(TrieNodeType trieNodeType)
+	| ju_Map(bool multi = false, DataStructure multiValueSemantics = \set())
+	| ju_Set()
+	| ju_Collection()	
+	;
 
 data TrieNodeType
 	= abstractNode()
@@ -479,35 +483,6 @@ data TrieSpecifics
 		Method CompactNode_index2 = function(\return(primitive("int")), "index", args = [ ___anybitmapField(bitPartitionSize), bitposField]),
 		Method CompactNode_index3 = function(\return(primitive("int")), "index", args = [ ___anybitmapField(bitPartitionSize), mask, bitposField]),
 		
-		Method jul_Map_put = method(\return(primitiveToClass(valType)), "put", args = [ key(primitiveToClass(keyType)), val(primitiveToClass(valType)) ], visibility = "public", isActive = \map() := ds),		
-		Method jul_Map_remove = method(\return(primitiveToClass(valType)), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = \map(multi = false) := ds),
-		Method jul_Map_clear = method(\return(\void()), "clear", visibility = "public", isActive = \map() := ds),		
-		Method jul_Map_putAll = method(\return(\void()), "putAll", args = [ field(generic("<toString(ds)><GenericsExpandedUpperBounded(ds, tupleTypes)>"), "m") ], visibility = "public", isActive = \map() := ds),	
-
-		Method Multimap_remove = method(\return(primitiveToClass(valType)), "remove", args = [ field(object(), "<keyName>"), field(object(), "<valName>") ], visibility = "public", isActive = \map(multi = true) := ds),
-
-		Method jul_Map_keySet = method(\return(generic("Set\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ds, tupleTypes)))>\>")), "keySet", visibility = "public", isActive = \map() := ds),
-		Method jul_Map_values = method(\return(generic("Collection\<<typeToString(primitiveToClass(dsAtFunction__range_type_of_tuple(ds, tupleTypes)))>\>")), "values", visibility = "public", isActive = \map() := ds),
-		Method jul_Map_entrySet = method(\return(generic("Set\<java.util.Map.Entry<GenericsExpanded(ds, tupleTypes)>\>")), "entrySet", visibility = "public", isActive = \map() := ds),
-				
-		Method jul_Set_add = method(\return(primitive("boolean")), "add", args = [ key(primitiveToClass(keyType)) ], visibility = "public", isActive = ds == \set()),		
-		Method jul_Set_remove = method(\return(primitive("boolean")), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = ds == \set()),
-		Method jul_Set_clear = method(\return(\void()), "clear", visibility = "public", isActive = ds == \set()),		
-		Method jul_Set_addAll = method(\return(primitive("boolean")), "addAll", args = [ field(generic("Collection<GenericsExpandedUpperBounded(ds, tupleTypes)>"), "c") ], visibility = "public", isActive = ds == \set()),
-		Method jul_Set_removeAll = method(\return(primitive("boolean")), "removeAll", args = [ field(generic("Collection\<?\>"), "c") ], visibility = "public", isActive = ds == \set()),
-		Method jul_Set_retainAll = method(\return(primitive("boolean")), "retainAll", args = [ field(generic("Collection\<?\>"), "c") ], visibility = "public", isActive = ds == \set()),		
-
-		Method jul_Set_containsAll = method(\return(primitive("boolean")), "containsAll", args = [ field(generic("Collection\<?\>"), "c") ], visibility = "public", isActive = ds == \set()),		
-		Method jul_Set_containsAllEquivalent = method(\return(primitive("boolean")), "containsAllEquivalent", args = [ field(generic("Collection\<?\>"), "c"), comparator ], visibility = "public", isActive = ds == \set() && isOptionEnabled(setup, methodsWithComparator())),		
-
-		Method jul_Collection_toObjectArray = method(\return(\object(isArray = true)), "toArray", visibility = "public", isActive = ds == \set()),
-		Method jul_Collection_toGenericArray = method(\return(\generic("T", isArray = true)), "toArray", generics = [ generic("T") ], args = [ field(generic("T", isArray = true), "a") ], visibility = "public", isActive = ds == \set()),
-
-		Method CoreCommon_equals = method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public"),
-
-		Method CompactNode_equals = method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
-		Method CompactNode_hashCode = method(\return(primitive("int")), "hashCode", visibility = "public", isActive = isOptionEnabled(setup,useStructuralEquality())),
-
 		Method BitmapIndexedNode_constructor = constructor(bitmapIndexedNodeClassReturn, "<bitmapIndexedNodeClassName>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ], visibility = "private", argsFilter = argsFilter),
 
 		Method nodeOf_BitmapIndexedNode = function(compactNodeClassReturn, "nodeOf", generics = genericTupleTypes, args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ], argsFilter = argsFilter, isActive = !isOptionEnabled(setup,useSpecialization()) || nBound < nMax)	
@@ -2447,6 +2422,192 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), sizeP
 
 
 
+data PredefOp = put();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, put())
+	= method(\return(primitiveToClass(ts.valType)), "put", args = [ key(primitiveToClass(ts.keyType)), val(primitiveToClass(ts.valType)) ], visibility = "public", isActive = \map() := ts.ds)
+when core(_) := artifact || ju_Map() := artifact;
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, put()) 
+	= UNSUPPORTED_OPERATION_EXCEPTION
+when core(_) := artifact || ju_Map() := artifact;
+
+
+
+data PredefOp = putAll();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, putAll())
+	= method(\return(\void()), "putAll", args = [ field(generic("<toString(ts.ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "m") ], visibility = "public", isActive = \map() := ts.ds)
+when core(_) := artifact || ju_Map() := artifact;
+	
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, putAll()) 
+	= UNSUPPORTED_OPERATION_EXCEPTION
+when core(_) := artifact || ju_Map() := artifact;
+
+
+
+data PredefOp = add();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, add())
+	= method(\return(primitive("boolean")), "add", args = [ key(primitiveToClass(ts.keyType)) ], visibility = "public", isActive = ts.ds == \set())
+when core(_) := artifact || ju_Set() := artifact;
+	
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, add()) 
+	= UNSUPPORTED_OPERATION_EXCEPTION
+when core(_) := artifact || ju_Set() := artifact;
+
+
+
+data PredefOp = addAll();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, addAll())
+	= method(\return(primitive("boolean")), "addAll", args = [ field(generic("Collection<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "c") ], visibility = "public", isActive = ts.ds == \set())
+when core(_) := artifact || ju_Set() := artifact;	
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, addAll()) 
+	= UNSUPPORTED_OPERATION_EXCEPTION
+when core(_) := artifact || ju_Set() := artifact;
+
+
+
+data PredefOp = remove();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, remove())
+	= method(\return(primitiveToClass(ts.valType)), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = \map(multi = false) := ts.ds)
+when core(_) := artifact && \map(multi = false) := ts.ds;	
+
+Method getDef(TrieSpecifics ts, Artifact artifact, remove())
+	= method(\return(primitiveToClass(ts.valType)), "remove", args = [ field(object(), "<keyName>"), field(object(), "<valName>") ], visibility = "public", isActive = \map(multi = true) := ts.ds)
+when core(_) := artifact && \map(multi = true) := ts.ds;
+
+Method getDef(TrieSpecifics ts, Artifact artifact, remove())
+	= method(\return(primitive("boolean")), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = ts.ds == \set())
+when core(_) := artifact && \set() := ts.ds;	
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, remove()) 
+	= UNSUPPORTED_OPERATION_EXCEPTION
+when core(_) := artifact;
+
+
+
+data PredefOp = removeAll();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, removeAll())
+	= method(\return(primitive("boolean")), "removeAll", args = [ field(generic("Collection\<?\>"), "c") ], visibility = "public", isActive = ts.ds == \set())
+when core(_) := artifact;
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, removeAll()) 
+	= UNSUPPORTED_OPERATION_EXCEPTION
+when core(_) := artifact;
+
+
+
+data PredefOp = retainAll();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, retainAll())
+	= method(\return(primitive("boolean")), "retainAll", args = [ field(generic("Collection\<?\>"), "c") ], visibility = "public", isActive = ts.ds == \set())
+when core(_) := artifact;	
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, retainAll()) 
+	= UNSUPPORTED_OPERATION_EXCEPTION
+when core(_) := artifact;
+
+
+
+data PredefOp = clear();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, clear())
+	= method(\return(\void()), "clear", visibility = "public", isActive = \map() := ts.ds)
+when core(_) := artifact && \map() := ts.ds;
+
+Method getDef(TrieSpecifics ts, Artifact artifact, clear())
+	= method(\return(\void()), "clear", visibility = "public", isActive = ts.ds == \set())
+when core(_) := artifact && \set() := ts.ds;
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, clear()) 
+	= UNSUPPORTED_OPERATION_EXCEPTION
+when core(_) := artifact;
+
+
+
+data PredefOp = keySet();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, keySet())
+	= method(\return(generic("Set\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\>")), "keySet", visibility = "public", isActive = \map() := ts.ds)
+when core(_) := artifact;
+
+
+
+data PredefOp = values();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, values())
+	= method(\return(generic("Collection\<<typeToString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\>")), "values", visibility = "public", isActive = \map() := ts.ds)
+when core(_) := artifact;
+
+
+
+data PredefOp = entrySet();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, entrySet())
+	= method(\return(generic("Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>")), "entrySet", visibility = "public", isActive = \map() := ts.ds)
+when core(_) := artifact;	
+
+
+
+data PredefOp = containsAll(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact, containsAll(customComparator = false))
+	= method(\return(primitive("boolean")), "containsAll", args = [ field(generic("Collection\<?\>"), "c") ], visibility = "public", isActive = ts.ds == \set())
+when core(_) := artifact || ju_Collection() := artifact;
+
+Method getDef(TrieSpecifics ts, Artifact artifact, containsAll(customComparator = true))
+	= method(\return(primitive("boolean")), "containsAllEquivalent", args = [ field(generic("Collection\<?\>"), "c"), ts.comparator ], visibility = "public", isActive = ts.ds == \set() && isOptionEnabled(ts.setup, methodsWithComparator()))
+when core(_) := artifact || ju_Collection() := artifact;
+
+
+
+data PredefOp = toObjectArray();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, toObjectArray())
+	= method(\return(\object(isArray = true)), "toArray", visibility = "public", isActive = ts.ds == \set())
+when core(_) := artifact;
+
+
+
+data PredefOp = toGenericArray();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, toGenericArray())
+	= method(\return(\generic("T", isArray = true)), "toArray", generics = [ generic("T") ], args = [ field(generic("T", isArray = true), "a") ], visibility = "public", isActive = ts.ds == \set())
+when core(_) := artifact;
+
+
+
+data PredefOp = equals();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, equals())
+	= method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public")
+when core(_) := artifact;
+
+Method getDef(TrieSpecifics ts, Artifact artifact, equals())
+	= method(\return(primitive("boolean")), "equals", args = [ field(object(), "other") ], visibility = "public", isActive = isOptionEnabled(ts.setup, useStructuralEquality()))
+when trieNode(_) := artifact;
+
+
+
+data PredefOp = hashCode();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, hashCode())
+	= method(\return(primitive("int")), "hashCode", visibility = "public")
+when core(_) := artifact;
+
+Method getDef(TrieSpecifics ts, Artifact artifact, hashCode())
+	= method(\return(primitive("int")), "hashCode", visibility = "public", isActive = isOptionEnabled(ts.setup, useStructuralEquality()))
+when trieNode(_) := artifact;
+
+
+
+
 /*
 data PredefOp = hasNodes();
 
@@ -2455,8 +2616,12 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasN
 
 //Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasNodes())
 //	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
+//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));					
+
+
 */
+
+
 
 
 

@@ -93,7 +93,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 		<implOrOverride(getDef(ts, trieNode(abstractNode()), slotArity()), 
 			"return nodes.length;")>
 
-		<implOrOverride(ts.CompactNode_hashCode,
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), hashCode()), 
 			"final int prime = 31;
 			int result = 0;
 			result = prime * result + (<primitiveHashCode(___valmapMethod(ts.bitPartitionSize))>);
@@ -101,7 +101,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			result = prime * result + Arrays.hashCode(nodes);
 			return result;")>
 		
-		<implOrOverride(ts.CompactNode_equals,
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), equals()), 
 			"if (null == other) {
 				return false;
 			}
