@@ -479,9 +479,6 @@ data TrieSpecifics
 		
 		Argument coreImmutableInterfaceReturn = \return(generic("<immutableInterfaceName(ds)><GenericsStr>")),
 		Argument coreTransientInterfaceReturn = \return(generic("<transientInterfaceName(ds)><GenericsStr>")),
-
-		Method CompactNode_index2 = function(\return(primitive("int")), "index", args = [ ___anybitmapField(bitPartitionSize), bitposField]),
-		Method CompactNode_index3 = function(\return(primitive("int")), "index", args = [ ___anybitmapField(bitPartitionSize), mask, bitposField]),
 		
 		Method BitmapIndexedNode_constructor = constructor(bitmapIndexedNodeClassReturn, "<bitmapIndexedNodeClassName>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ], visibility = "private", argsFilter = argsFilter),
 
@@ -2608,28 +2605,6 @@ when trieNode(_) := artifact;
 
 
 
-/*
-data PredefOp = hasNodes();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasNodes())
-	= method(\return(primitive("boolean")), "hasNodes");
-
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasNodes())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));					
-
-
-*/
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2686,6 +2661,29 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), bitpo
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), bitpos())
 	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
 when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
+
+
+
+
+
+data PredefOp = index2();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), index2())
+	= function(\return(primitive("int")), "index", args = [ ___anybitmapField(ts.bitPartitionSize), ts.bitposField]);
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), index2())
+	= "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___anybitmapField(ts.bitPartitionSize))> & (bitpos - 1));";
+
+data PredefOp = index3();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), index3())
+	= function(\return(primitive("int")), "index", args = [ ___anybitmapField(ts.bitPartitionSize), ts.mask, ts.bitposField]);
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), index3()) = 
+	"return (<useSafeUnsigned(___anybitmapField(ts.bitPartitionSize))> == -1) 
+	'	? mask 
+	'	: <toString(call(getDef(ts, trieNode(compactNode()), index2())))>;";
+
 
 
 

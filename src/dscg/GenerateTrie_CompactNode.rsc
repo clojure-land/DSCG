@@ -146,15 +146,9 @@ str generateCompactNodeClassString(TrieSpecifics ts) {
 
 	<generate_specializationFactoryMethods(ts, ts.setup)>
 
-	<implOrOverride(ts.CompactNode_index2,
-		"return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___anybitmapField(ts.bitPartitionSize))> & (bitpos - 1));", doOverride = new())>
-	
-	<implOrOverride(ts.CompactNode_index3,
-		"return (<useSafeUnsigned(___anybitmapField(ts.bitPartitionSize))> == -1) 
-			? mask 
-			: <toString(call(ts.CompactNode_index2))>;", doOverride = new())>
-	
-	
+	<impl(ts, trieNode(compactNode()), index2())>
+	<impl(ts, trieNode(compactNode()), index3())>
+
 	<impl(ts, trieNode(compactNode()), dataIndex())>
 	<impl(ts, trieNode(compactNode()), nodeIndex())>
 	
