@@ -117,12 +117,7 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts) {
 		<implOrOverride(getDef(ts, trieNode(abstractNode()), getValue()), 
 			"return vals[index];")>		
 
-		<if (\map() := ts.ds) {>
-		@Override
-		Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> getKeyValueEntry(int index) {
-			return entryOf(keys[index], vals[index]);
-		}
-		<}>
+		<impl(ts, trieNode(hashCollisionNode()), getKeyValueEntry())>
 
 		@Override
 		public <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> getNode(int index) {

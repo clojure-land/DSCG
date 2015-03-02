@@ -1234,6 +1234,7 @@ list[Type] nodeTupleTypes(TrieSpecifics ts) = [ arg.\type | arg <- nodeTupleArgs
 list[Argument] appendToName(list[str] appendices, Argument prototypeArgument:field(Type \type, str name)) = mapper(appendices, Argument(str appendix) { return field(\type, "<name><appendix>"); }); 
 
 Argument appendToName(Argument arg, str appendix) = appendToName([arg], appendix)[0];
+Argument prependToName(Argument arg, str prependix) = prependToName([arg], prependix)[0];
 
 list[Argument] prependToName(list[Argument] arguments, str prefix) 
 	= [ updateName(arg, str(str argName) { return "<prefix><capitalize(argName)>"; }) | arg <- arguments];
@@ -1486,8 +1487,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNo
 	"for (int i = 0; i \< keys.length; i++) {
 		<dec(key(ts.keyType, "_key"))> = keys[i];
 		if (<eq(key(ts.keyType), key(ts.keyType, "_key"))>) {
-			<if(\set() := ts.ds) {>return Optional.of(_key);<} else {><dec(val(ts.valType, "_val"))> = vals[i];
-				<if(\map(multi = true) := ts.ds) {>if (<eq(val(ts.keyType), val(ts.keyType, "_val"))>) {<}>return Optional.of(<use(val(ts.valType, "_val"))>);<if(\map(multi = true) := ts.ds) {>}<}><}>
+			<if(\set() := ts.ds) {>return Optional.of(_key);<} else {><dec(nodeTupleArg(ts, 1))> = vals[i]; return Optional.of(<use(nodeTupleArg(ts, 1))>);<}>				
 		}
 	}
 	return Optional.empty();";
@@ -1825,7 +1825,8 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	= generate_bodyOf_SpecializedBitmapPositionNode_updated(ts, eq);
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(),
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
+		TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	//if (this.hash != keyHash) {
 	//	details.modified();
 	//	return mergeNodeAndKeyValPair(this, this.hash, <use(ts.payloadTuple)>, keyHash, shift);
@@ -1835,33 +1836,76 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNo
 	
 	for (int idx = 0; idx \< keys.length; idx++) {
 		if (<eq(key(ts.keyType, "keys[idx]"), key(ts.keyType))>) {
-		
-			<if (\map() := ts.ds) {>	
-				<dec(val(ts.valType, "currentVal"))> = vals[idx];
-	
-				if (<eq(val(ts.valType, "currentVal"), val(ts.valType))>) {
-					return this;
-				}
-	
-				<dec(field(asArray(ts.valType), "src"))> = this.vals;
-				<arraycopyAndSetTuple(field(asArray(ts.valType), "src"), field(asArray(ts.valType), "dst"), 1, [val(ts.valType)], field(primitive("int"), "idx"))>
-	
-				final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> thisNew = new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(this.hash, this.keys, dst);
-	
-				details.updated(currentVal);
-				return thisNew;
-			<} else {>
-				return this;
-			<}>
+			<updatedOn_KeysEqual(ts, artifact, op, eq)>
 		}
 	}
 	
-	<arraycopyAndInsertTuple(field(asArray(ts.keyType), "this.keys"), field(asArray(ts.keyType), "keysNew"), 1, [key(ts.keyType)], field(primitive("int"), "keys.length"))>
+	<updatedOn_NoTuple(ts, artifact, op, eq)>";
+
+str updatedOn_KeysEqual(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(), 
+		str(Argument, Argument) eq) = 
+	"return this;" 
+when \set() := ts.ds;	
+	
+// TODO: rewrite as ASTs and merge both cases for maps
+str updatedOn_KeysEqual(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(), 
+		str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+	"<dec(prependToName(nodeTupleArg(ts, 1), "current"))> = vals[idx];
+
+	if (<eq(prependToName(nodeTupleArg(ts, 1), "current"), val(ts.valType))>) {
+		return this;
+	} else {
+		// add new mapping	
+		<dec(field(asArray(nodeTupleType(ts, 1)), "src"))> = this.vals;
+		<arraycopyAndSetTuple(val(asArray(nodeTupleType(ts, 1)), "src"), val(asArray(nodeTupleType(ts, 1)), "dst"), 1, [val(ts.valType)], field(primitive("int"), "idx"))>
+	
+		final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> thisNew = new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(this.hash, this.keys, dst);
+	
+		details.updated(currentVal);
+		return thisNew;
+	}"
+when \map(multi = false) := ts.ds;
+
+// TODO: rewrite as ASTs and merge both cases for maps
+str updatedOn_KeysEqual(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(), 
+		str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+	"<dec(prependToName(nodeTupleArg(ts, 1), "current"))> = vals[idx];
+
+	if (<toString(call(prependToName(nodeTupleArg(ts, 1), "current"), getDef(tsSet, core(immutable()), containsKey(customComparator = op.customComparator)), 
+			labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>) {
+		return this;
+	} else {
+		// add new mapping
+		<dec(appendToName(collTupleArg(ts, 1), "New"))> = <toString(call(prependToName(nodeTupleArg(ts, 1), "current"), getDef(tsSet, core(immutable()), insertTuple()), 
+				labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;				
+	
+		<dec(field(asArray(nodeTupleType(ts, 1)), "src"))> = this.vals;
+		<arraycopyAndSetTuple(val(asArray(nodeTupleType(ts, 1)), "src"), val(asArray(nodeTupleType(ts, 1)), "dst"), 1, [ appendToName(collTupleArg(ts, 1), "New") ], field(primitive("int"), "idx"))>
+	
+		final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> thisNew = new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(this.hash, this.keys, dst);
+	
+		details.modified();
+		return thisNew;
+	}" 
+when \map(multi = true) := ts.ds;	
+
+default str updatedOn_NoTuple(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(), str(Argument, Argument) eq) = 
+	"<arraycopyAndInsertTuple(field(asArray(ts.keyType), "this.keys"), field(asArray(ts.keyType), "keysNew"), 1, [key(ts.keyType)], field(primitive("int"), "keys.length"))>
 	<if (\map() := ts.ds) {><arraycopyAndInsertTuple(field(asArray(ts.valType), "this.vals"), field(asArray(ts.valType), "valsNew"), 1, [val(ts.valType)], field(primitive("int"), "vals.length"))><}>
 	
 	details.modified();
-	return new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash, keysNew<if (\map() := ts.ds) {>, valsNew<}>);" ;
-
+	return new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash, keysNew<if (\map() := ts.ds) {>, valsNew<}>);";
+		
+str updatedOn_NoTuple(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(), str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+	"// add new tuple
+	'<dec(appendToName(collTupleArg(ts, 1), "New"))> = <tsSet.coreSpecializedClassName>.setOf(<use(val(ts.valType))>);	
+	'
+	'<arraycopyAndInsertTuple(val(asArray(ts.keyType), "this.keys"), val(asArray(ts.keyType), "keysNew"), 1, [key(ts.keyType)], field(primitive("int"), "keys.length"))>
+	'<arraycopyAndInsertTuple(val(asArray(nodeTupleType(ts, 1)), "this.vals"), val(asArray(nodeTupleType(ts, 1)), "valsNew"), 1, [appendToName(collTupleArg(ts, 1), "New")], field(primitive("int"), "vals.length"))>
+	
+	details.modified();
+	return new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash, keysNew<if (\map() := ts.ds) {>, valsNew<}>);"
+when \map(multi = true) := ts.ds;
 
 
 
@@ -2344,13 +2388,16 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getV
 
 data PredefOp = getKeyValueEntry();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getKeyValueEntry())
-	= method(\return(generic("java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>")), "getKeyValueEntry", args = [ts.index], isActive = \map() := ts.ds);
+Method getDef(TrieSpecifics ts, Artifact artifact, getKeyValueEntry())
+	= method(\return(jdtToType(jul_Map_Entry(nodeTupleTypes(ts)))), "getKeyValueEntry", args = [ts.index], isActive = \map(multi = false) := ts.ds)
+when trieNode(_) := artifact;	
 
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getKeyValueEntry())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getKeyValueEntry()) = 
+	"return entryOf(keys[index], vals[index]);";
 
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getKeyValueEntry()) = 
+	"return entryOf((<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<typeToString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);";
+	
 
 
 data PredefOp = payloadIterator();
@@ -2858,8 +2905,9 @@ JavaDataType juf_BiFunction(list[Type] types:[Type argType1, Type argType2, Type
 default JavaDataType juf_BiFunction(list[Type] types) = invalidJavaDataType();
 
 JavaDataType jul_Iterator(Type typeArgument) = javaInterface("Iterator", typeArguments = [ primitiveToClass(typeArgument) ]); 
-JavaDataType jul_Map_Entry([Type keyType, Type valType]) = javaInterface("Map.Entry", typeArguments = [ primitiveToClass(keyType), primitiveToClass(valType) ]);
 
+JavaDataType jul_Map_Entry([Type keyType, Type valType]) = javaInterface("Map.Entry", typeArguments = [ primitiveToClass(keyType), primitiveToClass(valType) ]);
+default JavaDataType jul_Map_Entry(list[Type] types) = invalidJavaDataType();
 
 
 JavaDataType abstractNode(TrieSpecifics ts)
