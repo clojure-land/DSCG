@@ -105,6 +105,11 @@ void doGenerateBleedingEdge() {
 	//doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(1, false)), overideClassNamePostfixWith = "BleedingEdge");	
 }
 
+void doGenerateBleedingEdgeMultimap() {
+	doGenerate(hashTrieConfig(\map(multi = true), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");
+	//doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");	
+}
+
 void doGenerateSpecializedUntyped() {
 	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(8, true)));
 	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(8, true)));	

@@ -467,7 +467,7 @@ str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq, TrieSp
 	' <dec(collTupleArg(ts, 1))> = <tsSet.coreSpecializedClassName>.setOf(<use(val(ts.valType))>);
 	'
 	'<dec(replaceName(nodeTupleArg(ts, 1), "currentValNode"))> = getValue(dataIndex);
-	'final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentValNode, <call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType, "currentKey"))))>, key, <use(collTupleArg(ts, 1))>, keyHash, shift + BIT_PARTITION_SIZE);
+	'final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentValNode, <toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType, "currentKey")))))>, key, <use(collTupleArg(ts, 1))>, keyHash, shift + BIT_PARTITION_SIZE);
 	'
 	'details.modified();
 	'return copyAndMigrateFromInlineToNode(mutator, bitpos, subNodeNew);" 

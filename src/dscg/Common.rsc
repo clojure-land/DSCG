@@ -1621,7 +1621,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsEntr
 		<toString(UNCHECKED_ANNOTATION())>
 		<dec(val(ts.valType))> = (<typeToString(ts.valType)>) o1;
 		final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), get(customComparator = op.customComparator)), 
-					argsOverride = (ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ts.keyHash))), ts.shift: constant(ts.shift.\type, "0"))))>;
+					argsOverride = (ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType)))), ts.shift: constant(ts.shift.\type, "0"))))>;
 
 		if (result.isPresent()) {
 			return <toString(call(exprFromString("result.get()"), getDef(tsSet, artifact, containsKey(customComparator = op.customComparator)), labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;
