@@ -645,6 +645,7 @@ str primitiveHashCode(Argument a) = "(int)(<use(a)> ^ (<use(a)> \>\>\> 32))" whe
 default str primitiveHashCode(Argument a) = "(int) <use(a)>";
 
 Expression hashCodeExpr(TrieSpecifics ts, Argument arg) = call(useExpr(arg), getDef(ts, jl_Object(), PredefOp::hashCode())) when !isPrimitive(arg.\type);
+Expression hashCodeExpr(TrieSpecifics ts, Argument arg) = useExpr(arg) when isPrimitive(arg.\type);
 default Expression hashCodeExpr(TrieSpecifics ts, Argument arg) { throw "Ahhh"; } 
 
 
