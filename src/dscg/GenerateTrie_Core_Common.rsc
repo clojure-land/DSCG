@@ -225,9 +225,15 @@ str generate_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass) =
 	if (other instanceof <enclosingClass>) {
 		<enclosingClass><QuestionMarkGenerics(ts.ds, ts.tupleTypes)> that = (<enclosingClass><QuestionMarkGenerics(ts.ds, ts.tupleTypes)>) other;
 
-		if (this.size() != that.size()) {
+		if (this.cachedSize != that.cachedSize) {
 			return false;
 		}
+		
+		<if (isOptionEnabled(ts.setup, useIncrementalHashCodes())) {>
+		if (this.hashCode != that.hashCode) {
+			return false;
+		}
+		<}>
 
 		return rootNode.equals(that.rootNode);
 	} else <}> <generate_fragmentOf_CoreCommon_equals(ts)>
@@ -249,7 +255,7 @@ if (other instanceof <toString(ts.ds)>) {
 		try {
 			@SuppressWarnings(\"unchecked\")
 			<dec(key(ts.keyType))> = (<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>) entry.getKey();
-			final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(key, improve(<hashCode(key(ts.keyType))>), 0);
+			final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(key, <toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType)))))>, 0);
 
 			if (!result.isPresent()) {
 				return false;

@@ -266,7 +266,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 		generate_bodyOf_jul_Collection_toGenericArray(ts))>
 
 	<implOrOverride(getDef(ts, core(immutable()), equals()), 
-		generate_bodyOf_CoreCommon_equals(ts, ts.coreTransientClassName))>
+		generate_bodyOf_CoreCommon_equals(ts, ts.coreClassName))>
 
 	<implOrOverride(getDef(ts, core(immutable()), hashCode()), 
 		"return hashCode;")>

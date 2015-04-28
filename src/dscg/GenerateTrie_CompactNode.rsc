@@ -420,7 +420,9 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecif
 	'
 	'final int valHash = <hashCode(val(ts.valType))>;
 	'// if(<toString(call(nodeTupleArg(ts, 1), getDef(tsSet, trieNode(abstractNode()), containsKey()), 
-					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: exprFromString("improve(valHash)"), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
+					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), 
+					tsSet.keyHash: call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ival("valHash")))), 
+					tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
 	'if(<toString(call(collTupleArg(ts, 1), getDef(tsSet, core(immutable()), containsKey()),
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>) {
 	'	return this;
@@ -428,7 +430,7 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecif
 	'	// add new mapping
 	'	// <dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <toString(call(nodeTupleArg(ts, 1), getDef(tsSet, trieNode(abstractNode()), insertTuple()), 
 					argsOverride = (ts.mutator: NULL(), 
-						ts.keyHash: exprFromString("improve(valHash)"), 
+						ts.keyHash: call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ival("valHash")))), 
 						ts.shift: constant(ts.shift.\type, "0"),
 						ts.details: exprFromString("<tsSet.ResultStr>.unchanged()")), // TODO: remove tsSet dependency here
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))
@@ -448,7 +450,7 @@ when \map(multi = true) := ts.ds;
 
 
 default str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq) = 
-	"<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex);<}> final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, <if (\map() := ts.ds) {> currentVal,<}>improve(<hashCode(key(ts.keyType, "currentKey"))>), key, <if (\map() := ts.ds) {> val,<}> keyHash, shift + BIT_PARTITION_SIZE);
+	"<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex);<}> final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, <if (\map() := ts.ds) {> currentVal,<}><toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType, "currentKey")))))>, key, <if (\map() := ts.ds) {> val,<}> keyHash, shift + BIT_PARTITION_SIZE);
 	'
 	'details.modified();
 	'return copyAndMigrateFromInlineToNode(mutator, bitpos, subNodeNew);";	
@@ -457,7 +459,7 @@ str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq, TrieSp
 	"final int valHash = <hashCode(val(ts.valType))>;
 	'// <dec(nodeTupleArg(ts, 1))> = <toString(call(exprFromString("CompactSetNode.EMPTY_NODE"), getDef(tsSet, trieNode(abstractNode()), insertTuple()), 
 					argsOverride = (ts.mutator: NULL(), 
-						ts.keyHash: exprFromString("improve(valHash)"), 
+						ts.keyHash: call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ival("valHash")))), 
 						ts.shift: constant(ts.shift.\type, "0"),
 						ts.details: exprFromString("<tsSet.ResultStr>.unchanged()")), // TODO: remove dependency on tsSet here
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))						
@@ -465,7 +467,7 @@ str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq, TrieSp
 	' <dec(collTupleArg(ts, 1))> = <tsSet.coreSpecializedClassName>.setOf(<use(val(ts.valType))>);
 	'
 	'<dec(replaceName(nodeTupleArg(ts, 1), "currentValNode"))> = getValue(dataIndex);
-	'final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentValNode, improve(<hashCode(key(ts.keyType, "currentKey"))>), key, <use(collTupleArg(ts, 1))>, keyHash, shift + BIT_PARTITION_SIZE);
+	'final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentValNode, <call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType, "currentKey"))))>, key, <use(collTupleArg(ts, 1))>, keyHash, shift + BIT_PARTITION_SIZE);
 	'
 	'details.modified();
 	'return copyAndMigrateFromInlineToNode(mutator, bitpos, subNodeNew);" 
@@ -484,7 +486,7 @@ str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecific
 	"final int valHash = <hashCode(val(ts.valType))>;
 	'// <dec(nodeTupleArg(ts, 1))> = <toString(call(exprFromString("CompactSetNode.EMPTY_NODE"), getDef(tsSet, trieNode(abstractNode()), insertTuple()), 
 					argsOverride = (ts.mutator: NULL(), 
-						ts.keyHash: exprFromString("improve(valHash)"), 
+						ts.keyHash: call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ival("valHash")))), 
 						ts.shift: constant(ts.shift.\type, "0"),
 						ts.details: exprFromString("<ts.ResultStr>.unchanged()")),
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))	
@@ -544,7 +546,7 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 	'
 	'final int valHash = <hashCode(val(ts.valType))>;
 	'// if(<toString(call(nodeTupleArg(ts, 1), getDef(tsSet, trieNode(abstractNode()), containsKey()), 
-					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: exprFromString("improve(valHash)"), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
+					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ival("valHash")))), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
 	' if(<toString(call(collTupleArg(ts, 1), getDef(tsSet, core(immutable()), containsKey()) 
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>) {
 	'	details.updated(<use(val(ts.valType))>);
@@ -552,7 +554,7 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 	'	// remove mapping
 	'	// <dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <toString(call(nodeTupleArg(ts, 1), getDef(tsSet, trieNode(abstractNode()), removeTuple()), 
 					argsOverride = (ts.mutator: NULL(), 
-						ts.keyHash: exprFromString("improve(valHash)"), 
+						ts.keyHash: call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ival("valHash")))), 
 						ts.shift: constant(ts.shift.\type, "0"),
 						ts.details: exprFromString("<ts.ResultStr>.unchanged()")),
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))	

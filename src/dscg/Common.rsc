@@ -83,6 +83,8 @@ data Argument
 	| qualifiedArgument(Argument obj, Argument arg)
 	;
 	
+Argument ival(str name) = val(primitive("int"), name);	
+	
 Argument asVar(Argument arg) = var(arg.\type, arg.name);
 list[Argument] asVar(list[Argument] args) = [ asVar(arg) | arg <- args ];
 
@@ -356,13 +358,15 @@ data Artifact(TrieSpecifics ts = undefinedTrieSpecifics())
 	;
 
 data TrieNodeType
-	= abstractNode()
+	= unknownNodeType()
+	| abstractNode()
 	| compactNode()
 	| hashCollisionNode()
 	| bitmapIndexedNode();
 	
 data UpdateSemantic
-	= immutable()
+	= unknownUpdateSemantic()
+	| immutable()
 	| mutable()
 	| transient();
 
@@ -402,6 +406,9 @@ data Option // TODO: finish!
 	| useStagedMutability()
 	| usePrefixInsteadOfPostfixEncoding()
 	| usePathCompression()
+	| useIncrementalHashCodes()
+	// | useLazyHashCodes() // TODO
+	// | useNonCachedHashCodes() // TODO
 	;
 
 data TrieSpecifics 
@@ -1452,7 +1459,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:get()) =
 		<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
 		final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), get(customComparator = op.customComparator)), 
 					labeledArgsOverride = (),
-					argsOverride = (ts.keyHash: exprFromString("improve(<hashCode(key(ts.keyType))>)"), ts.shift: constant(ts.shift.\type, "0"))))>;
+					argsOverride = (ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType)))), ts.shift: constant(ts.shift.\type, "0"))))>;
 		
 		if (result.isPresent()) {
 			return result.get();
@@ -1614,7 +1621,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsEntr
 		<toString(UNCHECKED_ANNOTATION())>
 		<dec(val(ts.valType))> = (<typeToString(ts.valType)>) o1;
 		final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), get(customComparator = op.customComparator)), 
-					argsOverride = (ts.keyHash: exprFromString("improve(<hashCode(key(ts.keyType))>)"), ts.shift: constant(ts.shift.\type, "0"))))>;
+					argsOverride = (ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ts.keyHash))), ts.shift: constant(ts.shift.\type, "0"))))>;
 
 		if (result.isPresent()) {
 			return <toString(call(exprFromString("result.get()"), getDef(tsSet, artifact, containsKey(customComparator = op.customComparator)), labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;
@@ -1680,7 +1687,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:in
 
 	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), insertTuple(customComparator = op.customComparator)), 
 					argsOverride = (ts.mutator: NULL(), 
-						ts.keyHash: exprFromString("improve(keyHash)"), 
+						ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ts.keyHash))), 
 						ts.shift: constant(ts.shift.\type, "0"))))>;
 
 	if (<use(ts.details)>.isModified()) {
@@ -1715,7 +1722,7 @@ when valHashOld := val(primitive("int"), "valHashOld")
 //	<dec(ts.details)> = <ts.ResultStr>.unchanged();
 //	
 //	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), insertTuple(customComparator = op.customComparator)), 
-//					argsOverride = (ts.keyHash: exprFromString("improve(keyHash)"), 
+//					argsOverride = (ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ts.keyHash))), 
 //						ts.shift: constant(ts.shift.\type, "0"))))>;
 //
 //	if (<use(ts.details)>.isModified()) {
@@ -1750,7 +1757,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:in
 	<dec(ts.details)> = <ts.ResultStr>.unchanged();
 	
 	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), insertTuple(customComparator = op.customComparator)), 
-					argsOverride = (ts.keyHash: exprFromString("improve(keyHash)"), 
+					argsOverride = (ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ts.keyHash))), 
 					ts.shift: constant(ts.shift.\type, "0"))))>;
 
 	if (<use(ts.details)>.isModified()) {
@@ -2058,7 +2065,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:re
 
 	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), removeTuple(customComparator = op.customComparator)), 
 					argsOverride = (ts.mutator: NULL(), 
-						ts.keyHash: exprFromString("improve(keyHash)"), 
+						ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ts.keyHash))), 
 						ts.shift: constant(ts.shift.\type, "0"))))>;
 	
 	if (<use(ts.details)>.isModified()) {
@@ -2084,7 +2091,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:re
 	<dec(ts.details)> = <ts.ResultStr>.unchanged();
 	
 	<dec(\node(ts.ds, ts.tupleTypes, "newRootNode"))> = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), removeTuple(customComparator = op.customComparator)), 
-					argsOverride = (ts.keyHash: exprFromString("improve(keyHash)"), ts.shift: constant(ts.shift.\type, "0"))))>;
+					argsOverride = (ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ts.keyHash))), ts.shift: constant(ts.shift.\type, "0"))))>;
 
 	if (<use(ts.details)>.isModified()) {
 		<if (\map() := ts.ds) {>assert <use(ts.details)>.hasReplacedValue(); <dec(ts.valHash)> = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;\n\n<}>rootNode = newRootNode;
@@ -2736,7 +2743,7 @@ when trieNode(_) := artifact;
 data PredefOp = transformHashCode();
 
 Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::transformHashCode())
-	= function(\return(primitive("int")), "improve", args = [ __labeledArgument(PredefArgLabel::hashCode(), val(primitive("int"), "hash")) ], visibility = "public")
+	= function(\return(primitive("int")), "transformHashCode", args = [ __labeledArgument(PredefArgLabel::hashCode(), val(primitive("int"), "hash")) ], visibility = "public")
 when core(_) := artifact;
 
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, op:transformHashCode()) 

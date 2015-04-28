@@ -65,40 +65,9 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 		<impl(ts, core(transient()), containsEntry())>
 		<impl(ts, core(transient()), containsEntry(customComparator = true))>
 		
-		@Override
-		public <typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get(Object o) {
-			try {
-				<toString(UNCHECKED_ANNOTATION())>
-				<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
-				final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0);
+		<impl(ts, core(transient()), get())>
+		<impl(ts, core(transient()), get(customComparator = true))>
 		
-				if (result.isPresent()) {
-					return result.get();
-				} else {
-					return null;
-				}			
-			} catch (ClassCastException unused) {
-				return null;
-			}
-		}		
-			
-		@Override
-		public <typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> getEquivalent(Object o, Comparator\<Object\> cmp) {
-			try {
-				<toString(UNCHECKED_ANNOTATION())>
-				<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
-				final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(<use(key(ts.keyType))>, improve(<hashCode(key(ts.keyType))>), 0, cmp);
-		
-				if (result.isPresent()) {
-					return result.get();
-				} else {
-					return null;
-				}			
-			} catch (ClassCastException unused) {
-				return null;
-			}
-		}
-
 		<impl(ts, core(transient()), insertTuple())>
 		<impl(ts, core(transient()), insertTuple(customComparator = true))>
 
