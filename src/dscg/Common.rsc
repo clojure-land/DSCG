@@ -1282,7 +1282,7 @@ public Argument tupleLengthConstant = field(primitive("int"), "TUPLE_LENGTH"); /
 
 // TODO: move to List.rsc?
 list[&T] times(&T template, int count) 
-	= [ template | i <- [1..count]];
+	= [ template | i <- [0..count]];
 	
 default str nodeOf(int n, int m, str args)
 	= "nodeOf(mutator, <args>)" 	//= "new Value<m>Index<n>Node(<args>)"
@@ -2135,7 +2135,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNo
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments)	= 
 	"for (int idx = 0; idx \< keys.length; idx++) {
 		if (<eq(key(ts.keyType, "keys[idx]"), key(ts.keyType))>) {
-			<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = vals[idx]; details.updated(currentVal);<}>
+			<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = vals[idx]; details.updated(currentVal);<}><if (\set() := ts.ds) {>details.modified();<}>
 			
 			if (this.arity() == 1) {			
 				return nodeOf(mutator);
