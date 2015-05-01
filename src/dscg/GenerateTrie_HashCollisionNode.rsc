@@ -223,6 +223,8 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts) {
 			
 		<implOrOverride(getDef(ts, trieNode(compactNode()), dataMap()),
 			UNSUPPORTED_OPERATION_EXCEPTION)>
+					
+		<impl(ts, trieNode(hashCollisionNode()), isTrieStructureValid())>					
 						
 	}"
 	;

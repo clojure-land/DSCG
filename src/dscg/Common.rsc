@@ -2944,6 +2944,48 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), abstractNode_getK
 
 
 
+data PredefOp = isTrieStructureValid();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::isTrieStructureValid())
+	= method(\return(primitive("boolean")), "isTrieStructureValid",  args = [ val(primitive("int"), "hashPrefix"), ts.shift ], visibility = "public", isActive = false)
+when trieNode(_) := artifact; // || jl_Object() := artifact;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isTrieStructureValid()) =
+"for (byte i = 0; i \< payloadArity(); i++) {
+	int hash = getKey(i).hashCode();
+
+	// check correctness of bitmap compression
+	byte mask = (byte) mask(hash, shift);
+	byte recoveredMask = recoverMask(dataMap(), (byte) (i + 1));
+	if (mask != recoveredMask) {
+		return false;
+	}
+
+	// check correctness of prefix
+	int recoveredHashPrefix = hash & ((1 \<\< shift) - 1);
+	if (hashPrefix != recoveredHashPrefix) {
+		return false;
+	}
+}
+
+for (byte i = 0; i \< nodeArity(); i++) {
+	final byte recoveredMask = recoverMask(nodeMap(), (byte) (i + 1));
+	final int nestedHashPrefix = (recoveredMask \<\< shift) ^ hashPrefix;
+
+	// recurse
+	if (!getNode(i).isTrieStructureValid(nestedHashPrefix, shift + BIT_PARTITION_SIZE)) {
+		return false;
+	}
+}
+
+return true;";
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::isTrieStructureValid()) =
+	"return true;";
+
+
+
+
 
 //Method javaConstructor(Type classType, list[Argument] args = [])
 //	= constructor();	

@@ -225,6 +225,8 @@ str generateCompactNodeClassString(TrieSpecifics ts) {
 	'		return bldr.toString();
 	'	}
 	
+		<impl(ts, trieNode(compactNode()), isTrieStructureValid())>
+	
 	'}
 	
 	protected static abstract class <className_compactNode(ts, ts.setup, true, true)><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
