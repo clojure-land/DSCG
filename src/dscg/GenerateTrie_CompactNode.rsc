@@ -201,7 +201,7 @@ str generateCompactNodeClassString(TrieSpecifics ts) {
 	'
 	'		for (byte i = 0; i \< payloadArity(); i++) {
 	'			final byte pos = recoverMask(<use(valmapMethod)>, (byte) (i + 1));
-	'			bldr.append(String.format(\"@%d: <intercalate("=", times("%s", size(ts.payloadTuple)))>\", pos, <use(invoke_get_for_payloadTuple(ts.ds, ts.tupleTypes, field("i")))>));
+	'			bldr.append(String.format(\"@%d\<<intercalate(",", times("#%d", size(ts.payloadTuple)))>\>\", pos, <use(invoke_getAndHashCode_for_payloadTuple(ts.ds, ts.tupleTypes, field("i")))>));
 	'
 	'			if (!((i + 1) == payloadArity())) {
 	'				bldr.append(\", \");
@@ -790,8 +790,8 @@ default str generate_specializationFactoryMethods(ts:___expandedTrieSpecifics(ds
 
 
 
-list[Argument] invoke_get_for_payloadTuple(DataStructure ds:\map(), list[Type] tupleTypes:[keyType, valType, *_], Argument idx) = [ key(keyType, "getKey(<use(idx)>)"), val(valType, "getValue(<use(idx)>)") ];
-list[Argument] invoke_get_for_payloadTuple(DataStructure ds:\set(), list[Type] tupleTypes:[keyType, *_], Argument idx) = [ key(keyType, "getKey(<use(idx)>)") ];
+list[Argument] invoke_getAndHashCode_for_payloadTuple(DataStructure ds:\map(), list[Type] tupleTypes:[keyType, valType, *_], Argument idx) = [ key(keyType, "Objects.hashCode(getKey(<use(idx)>))"), val(valType, "Objects.hashCode(getValue(<use(idx)>))") ];
+list[Argument] invoke_getAndHashCode_for_payloadTuple(DataStructure ds:\set(), list[Type] tupleTypes:[keyType, *_], Argument idx) = [ key(keyType, "Objects.hashCode(getKey(<use(idx)>))") ];
 
 
 
