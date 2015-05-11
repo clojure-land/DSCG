@@ -224,10 +224,10 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()),		
 			"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
 			<dec(field(primitive("int"), "idxOld"))> = this.nodes.length - 1 - nodeIndex(bitpos);
-			<dec(field(primitive("int"), "idxNew"))> = dataIndex(bitpos);
+			<dec(field(primitive("int"), "idxNew"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			<} else {>
 			<dec(field(primitive("int"), "idxOld"))> = <use(tupleLengthConstant)> * payloadArity + nodeIndex(bitpos);
-			<dec(field(primitive("int"), "idxNew"))> = dataIndex(bitpos);
+			<dec(field(primitive("int"), "idxNew"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			<}>
 			
 			<dec(field(asArray(object()), "src"))> = this.nodes;
