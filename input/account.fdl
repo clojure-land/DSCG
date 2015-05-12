@@ -1,0 +1,15 @@
+diagram account
+
+include
+	paymentAccount
+
+features
+	Account				: all(accountNumber, balance, currency, AccountType, CreditInterest?, Withdraw, Deposit, Open, Close)
+	CreditInterest		: one-of(fixed, VariableInterest)
+	VariableInterest	: one-of(TermBased, balanceBased) 
+	AccountType			: one-of(paymentAccount.PaymentAccount, savingsAccount)
+	TermBased			: one-of(daily, monthly, quarterly, yearly)
+	Withdraw			: one-of(noPenalty, pentalty)
+	Deposit				: one-of(noPenalty, penalty)
+	Open				: all(minimumDeposit, fixedTerms?)
+	Close				: more-of(normalClose, forcedClose, closeAfter)

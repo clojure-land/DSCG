@@ -1,0 +1,8 @@
+diagram savingsAccount
+
+features
+	//SavingsAccount: all(startDate, balance, term)
+	SavingsAccount: all(Withdraw)
+	Withdraw: one-of(noPenalty, onePercentPenalty)
+//	Deposit: one-of(noPenalty, onePercentPenalty)
+//	PayInterest: one-of(yearly, monthly, daily)

@@ -1,0 +1,12 @@
+diagram channelActionMatrix
+
+features
+	Channel				: more-of(BranchOffice, CallCenter, Web, MyIng, MobileApp, MidOffice) 
+	BranchOffice		: AllowedAction
+	CallCenter			: AllowedAction
+	Web					: AllowedAction
+	MobileApp			: AllowedAction
+	MidOffice			: AllowedAction
+	MyIng				: AllowedAction
+	AllowedAction		: more-of(apply, open, close, modify)
+	

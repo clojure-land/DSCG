@@ -1,0 +1,12 @@
+diagram paymentAccount
+
+features
+	PaymentAccount		: all(AvailableCard?, AllowedTransactions, CreditDisposition?)
+	AvailableCard		: more-of(debitCard, creditCard)
+	AllowedTransactions	: more-of(sepaCT, sepaDD, withdrawalInNL, withdrawalOutsideNL, paymentOutsideNL)
+	CreditDisposition	: all(DispositionLimit, DispositionType, freeToSpend)
+	DispositionType		: one-of(TermBased, continuous)
+	TermBased			: one-of(daily, monthly, quarterly, yearly)
+	DispositionLimit	: one-of(Fixed, proportional)
+	Fixed				: all(lowerLimit, upperLimit)
+	

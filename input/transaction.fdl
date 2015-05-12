@@ -1,0 +1,11 @@
+diagram transaction
+
+features
+	Transaction: all(amount, Currency, Originator, Beneficiary, Dates, Scheduled, TransactionCost, cutOfTime, paymentReference?, remittanceInformation?, Purpose?)
+	Currency: one-of(eur, other)
+	Scheduled: one-of(immediate, planned, recurring) 
+	Dates: all(requestedDate, settlementDate, currencyExchangeValueDate?)
+	Originator: all(bank, iban, accountHolderName, address, identificationCode, bankIdentifierCode, ultimateDebtor?) 
+	Beneficiary: all(bank, iban, accountHolderName, address, identificationCode, bankIdentifierCode, ultimateCreditor?) 
+	TransactionCost: more-of(originator, beneficary, shared) 
+	Purpose: all(description, code)

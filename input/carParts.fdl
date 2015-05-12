@@ -1,0 +1,5 @@
+diagram carParts
+
+features
+	Sub3:	more-of(gas, Somethin)
+	

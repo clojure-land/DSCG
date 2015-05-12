@@ -1,0 +1,9 @@
+diagram product
+
+include
+	account, channelActionMatrix, transaction
+
+features
+	Product				: all(Type, price, sellable, TargetAudience, channelActionMatrix.Channel)
+	TargetAudience		: more-of(mass, preferedBanking, privateBanking)
+	Type				: one-of(package, cards, contract, moneyWithdrawal, deposit, cash, account.Account, services, statements, transaction.Transaction, other)

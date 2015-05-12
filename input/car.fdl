@@ -1,0 +1,11 @@
+diagram car
+
+features
+	Car: all(body, Engine, Transmission, HorsePower, pulls?)
+	Engine: more-of(combustion, electric)
+	Transmission: one-of(manual, automatic)
+	HorsePower: one-of(lowPower, mediumPower, highPower) 
+	
+constraints
+	pulls requires highPower
+	

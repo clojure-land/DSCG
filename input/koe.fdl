@@ -1,0 +1,15 @@
+diagram koe
+
+features
+	Koe: 			all(MelkProductie, Grootte, vlekken?, Kleur, Vacht)
+	MelkProductie:	all(Hoeveelheid, Doel) 
+	Hoeveelheid: 	one-of(tienTotTwintig, meerDanTwintig)
+	Doel:			more-of(boter, karnemelk, yoghurt)
+	Grootte:		one-of(m, l, xl)
+	Kleur:			one-of(wit, oranje)		 
+	Vacht:			one-of(kort, lang)
+		
+constraints
+	meerDanTwintig requires xl
+	vlekken excludes oranje
+	
