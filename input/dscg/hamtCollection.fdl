@@ -1,0 +1,6 @@
+diagram hamtCollection
+
+features
+	HamtCollection		: all(CollectionType, Mutability)
+	CollectionType		: one-of(map, multiMap, set, multiSet)
+	Mutability			: one-of(mutable, stagedMutable, immutable)
