@@ -409,6 +409,7 @@ data Option // TODO: finish!
 	| useIncrementalHashCodes()
 	// | useLazyHashCodes() // TODO
 	// | useNonCachedHashCodes() // TODO
+	| separateTrieAndLeafNodes()
 	;
 
 data TrieSpecifics 
@@ -3049,8 +3050,6 @@ JavaDataType compactNode(TrieSpecifics ts)
 JavaDataType hashCollisionNode(TrieSpecifics ts)
 	= javaClass("HashCollision<toString(ts.ds)>Node<ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts));
 
-
-
 //Method getDef(TrieSpecifics ts, Artifact artifact:, JavaDataType jdt, methodName:"__constructor")
 //	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ ts.keyHash, labeledArgumentList(payloadTuple(), [ appendToName(updateType(arg, asArray), "s") | arg <- payloadTupleArgs(ts) ]) ], generics = jdt.typeArguments, visibility = "public")
 //when jdt := hashCollisionNode(ts);
@@ -3060,6 +3059,8 @@ JavaDataType hashCollisionNode(TrieSpecifics ts)
 //	"<printNonEmptyCommentWithNewline(c.commentText)><toString(e)>.<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
 //when m.isActive;
 
+JavaDataType leafNode(TrieSpecifics ts)
+	= javaClass("<toString(ts.ds)>LeafNode<ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = abstractNode(ts));
 
 
 data Expression 
@@ -3117,3 +3118,22 @@ when jdt := compactNode(jdt.ts);
 //Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), removeTuple(customComparator = false))
 //	= method(\return(jdtToType(compactNode(ts))), "removed", args = [ ts.mutator, __labeledArgument(payloadTuple(), payloadTupleArg(ts, 0)), ts.keyHash, ts.shift, ts.details ], ts = ts)
 //when trieNode(_) := artifact && !(\map(multi = true) := ts.ds);
+
+
+
+
+
+// Test with ... print(decJavaDataType(leafNode(genericTsSet)))
+// TODO: generics substitution
+str decJavaDataType(JavaDataType jdt) {
+	// javaClass(str typeName, list[Type] typeArguments = [], JavaDataType extends = javaRootClass(), list[JavaDataType] implementsList = []);
+
+	bool hasImplementsList = jdt.implementsList != [];
+	str implementsListStr = intercalate(", ", [ implJdt.typeName | implJdt <- jdt.implementsList ]);	
+	
+	return 
+"
+private static final 
+class <jdt.typeName><GenericsStr(jdt.typeArguments)> extends <jdt.extends.typeName> <if (hasImplementsList) {>implements <implementsListStr><}> {
+}";	
+}
