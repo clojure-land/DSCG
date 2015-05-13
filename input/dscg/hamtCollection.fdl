@@ -1,6 +1,47 @@
 diagram hamtCollection
 
+include
+	hamtNodeOperations
+
 features
-	HamtCollection		: all(CollectionType, Mutability)
-	CollectionType		: one-of(map, multiMap, set, multiSet)
+	HamtCollection		: all(CollectionType, Mutability, Processing, bitPartitionSize, Specialization?, Iteration, ElementHashing, HamtStyle, OtherFeatures?, HamtArraryEncoding, canonicalization?)
+	CollectionType		: one-of(map, multiMap, set, multiSet) // vector: contraint !hash but index  
 	Mutability			: one-of(mutable, stagedMutable, immutable)
+	Processing			: one-of(sequential, concurrent, parallel)
+	// BitPartitionSize	: one-of(one, two, three, four, five, six)
+	Specialization		: one-of(SpecializationType, SpecializationComplexity, arityRange?)
+	SpecializationType	: one-of(HomogeniousSpecialization, heterogeniousSpecialization)
+	HomogeniousSpecialization	: more-of(byGenerics, byClasses, byPrimitives) // more-of depends on the number of unbound payload tuple arguments
+	SpecializationComplexity	: one-of(linear, quadratic, exponential)
+	Iteration					: all(ElementTraversal, ElementTraveralComplexity)
+	ElementTraveralComplexity	: one-of(bigO_n, bigO_n_times_log_n) 
+	ElementTraversal			: more-of(depthFirst, breadthFirst)
+	ElementHashing				: all(ElementHashFunction, CollisionResolutionStrategy, hashLength) // hash length influences CollisionResolutionStrategy
+	ElementHashFunction			: one-of(singleHashFunction, multipleHashFunctions)
+	CollisionResolutionStrategy	: one-of(chaining, prefixExtension)
+	HamtStyle					: one-of(MixedContentNodes, separateLeafFromTrieNodes)
+	MixedContentNodes			: one-of(hamt, chartWithOffsetIndexing, chartWithSandwichIndexing)
+	OtherFeatures				: more-of(useFixedStackIterator, useSupplierIterator, useStructuralEquality, methodsWithComparator, usePrefixInsteadOfPostfixEncoding, usePathCompression, useIncrementalHashCodes)
+	HamtArraryEncoding			: one-of(nonCompressedArray, bitmapCompressedArray)
+
+	Property_Size				: all(PropertyUpdateStrategy)
+	Property_HashCode			: all(PropertyUpdateStrategy)
+		
+	PropertyUpdateStrategy		: one-of(alwaysCalculated, incrementallyUpdated, lazilyComputedAndThenCached) 
+	
+	// Canonicalize
+	
+constraints
+	breadthFirst excludes separateLeafFromTrieNodes // breadthFirst makes only sense with Clojure / CHART; is that true?
+	
+	// constraints on 'HamtNodeUpdateOperations'
+	insertNode requires separateLeafFromTrieNodes
+	removeNode requires separateLeafFromTrieNodes
+	
+	separateLeafFromTrieNodes excludes migrateFromInlineToNode
+	separateLeafFromTrieNodes excludes migrateFromNodeToInline
+	
+	Specialization requires insertPayloadAndConvertToGenericNode
+	Specialization requires removePayloadAndConvertToSpecializedNode
+
+	migrateFromNodeToInline requires canonicalization

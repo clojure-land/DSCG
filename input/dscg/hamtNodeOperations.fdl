@@ -1,0 +1,15 @@
+diagram hamtNodeOperations
+
+features
+	HamtNodeOperations			: all(HamtNodeUpdateOperations)
+	HamtNodeUpdateOperations	: all(updatePayload,
+										updateNode,
+										insertPayload,
+										insertPayloadAndConvertToGenericNode?,
+										insertNode?,
+										removePayload,
+										removePayloadAndConvertToSpecializedNode?,
+										removeNode?,
+										migrateFromInlineToNode?,
+										migrateFromNodeToInline?)
+constraints	
