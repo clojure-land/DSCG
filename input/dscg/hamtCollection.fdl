@@ -1,47 +1,103 @@
 diagram hamtCollection
 
 include
-	hamtNodeOperations
+	trie,
+	hamtNodeOperations,
+	collectionOperations
 
 features
-	HamtCollection		: all(CollectionType, Mutability, Processing, bitPartitionSize, Specialization?, Iteration, ElementHashing, HamtStyle, OtherFeatures?, HamtArraryEncoding, canonicalization?)
-	CollectionType		: one-of(map, multiMap, set, multiSet) // vector: contraint !hash but index  
+	HamtCollection		: all(CollectionType, Mutability, Processing, bitPartitionSize, Specialization?, Iteration, ElementHashing, HamtStyle, OtherFeatures?, HamtArraryEncoding, canonicalization?, 
+								collectionOperations.CollectionOperations, 
+								hamtNodeOperations.HamtNodeOperations)
+								
+	CollectionType		: one-of(map, multiMap, set, multiSet, vector)
+	Ordering			: one-of(ordered, unordered)
+	
 	Mutability			: one-of(mutable, stagedMutable, immutable)
 	Processing			: one-of(sequential, concurrent, parallel)
+	
 	// BitPartitionSize	: one-of(one, two, three, four, five, six)
-	Specialization		: one-of(SpecializationType, SpecializationComplexity, arityRange?)
+	
+	Specialization		: one-of(SpecializationType, SpecializationComplexity, SpecializationArityRange)
 	SpecializationType	: one-of(HomogeniousSpecialization, heterogeniousSpecialization)
+	SpecializationArityRange	: one-of(all, zeroToN)
 	HomogeniousSpecialization	: more-of(byGenerics, byClasses, byPrimitives) // more-of depends on the number of unbound payload tuple arguments
 	SpecializationComplexity	: one-of(linear, quadratic, exponential)
+	
 	Iteration					: all(ElementTraversal, ElementTraveralComplexity)
 	ElementTraveralComplexity	: one-of(bigO_n, bigO_n_times_log_n) 
 	ElementTraversal			: more-of(depthFirst, breadthFirst)
+
 	ElementHashing				: all(ElementHashFunction, CollisionResolutionStrategy, hashLength) // hash length influences CollisionResolutionStrategy
 	ElementHashFunction			: one-of(singleHashFunction, multipleHashFunctions)
 	CollisionResolutionStrategy	: one-of(chaining, prefixExtension)
+
 	HamtStyle					: one-of(MixedContentNodes, separateLeafFromTrieNodes)
 	MixedContentNodes			: one-of(hamt, chartWithOffsetIndexing, chartWithSandwichIndexing)
-	OtherFeatures				: more-of(useFixedStackIterator, useSupplierIterator, useStructuralEquality, methodsWithComparator, usePrefixInsteadOfPostfixEncoding, usePathCompression, useIncrementalHashCodes)
 	HamtArraryEncoding			: one-of(nonCompressedArray, bitmapCompressedArray)
+
+	OtherFeatures				: more-of(useFixedStackIterator, useSupplierIterator, useStructuralEquality, methodsWithComparator, usePrefixInsteadOfPostfixEncoding, usePathCompression, useIncrementalHashCodes)
 
 	Property_Size				: all(PropertyUpdateStrategy)
 	Property_HashCode			: all(PropertyUpdateStrategy)
 		
 	PropertyUpdateStrategy		: one-of(alwaysCalculated, incrementallyUpdated, lazilyComputedAndThenCached) 
-	
-	// Canonicalize
-	
+
 constraints
-	breadthFirst excludes separateLeafFromTrieNodes // breadthFirst makes only sense with Clojure / CHART; is that true?
-	
-	// constraints on 'HamtNodeUpdateOperations'
+	////
+	// HamtCollection
+	//////
+	// HamtCollection requires PrefixEncodingType.hashOfData
+	hashOfData requires unorderd 
+	// CollectionType.vector excludes PrefixEncodingType.hashOfData
+		
+		
+	////
+	// HamtCollection
+	//////
+	map requires unorderd
+	multiMap requires unorderd
+	set requires unorderd
+	multiSet requires unorderd
+
+	vector requires ordered
+		
+			 
+	////
+	// HamtNodeUpdateOperations
+	//////
 	insertNode requires separateLeafFromTrieNodes
 	removeNode requires separateLeafFromTrieNodes
 	
 	separateLeafFromTrieNodes excludes migrateFromInlineToNode
 	separateLeafFromTrieNodes excludes migrateFromNodeToInline
-	
-	Specialization requires insertPayloadAndConvertToGenericNode
-	Specialization requires removePayloadAndConvertToSpecializedNode
 
 	migrateFromNodeToInline requires canonicalization
+
+
+	////
+	// HamtNodeUpdateOperations
+	//////
+	// collectionOperations.Equality.structural requires hamtNodeOperations.Equality.structural
+	
+
+	////
+	// SpecializationArityRange
+	//////
+	all requires insertPayloadAndConvertToGenericNode
+	all requires removePayloadAndConvertToSpecializedNode
+
+	zeroToN excludes insertPayloadAndConvertToGenericNode
+	zeroToN excludes removePayloadAndConvertToSpecializedNode
+
+
+	////
+	// HomogeniousSpecialization
+	//////
+	// HomogeniousSpecialization.byPrimitives excludes SpecializationComplexity.linear
+
+
+	////
+	// Other (unspecified)
+	//////
+	breadthFirst excludes separateLeafFromTrieNodes // breadthFirst makes only sense with Clojure / CHART; TODO: for sake of completeness implement breadth first search in generator
