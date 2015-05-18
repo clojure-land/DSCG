@@ -169,7 +169,7 @@ str declareJdt(TrieSpecifics ts, PredefDataType dt) {
 	list[str] methodNames = [ "__constructor", "next", "remove" ];
 	
 	return
-	"public static class <toString(jdt)> {
+	"public static <toString(jdt)> {
 	'	<decFields(getFieldList(ts, dt))>
 	'
 	'	<for(methodName <- methodNames) {><impl(ts, dt, methodName)><}>

@@ -13,7 +13,50 @@ module dscg::GenerateTrie_AbstractNode
 
 import dscg::Common;
 
+list[PredefOp] declaredMethodsByAbstractNode = [
+
+	containsKey(),
+	containsKey(customComparator = true),
+
+	get(),
+	get(customComparator = true),
+
+	insertTuple(),
+	insertTuple(customComparator = true),
+
+	removeTuple(),
+	removeTuple(customComparator = true),	
+	
+	/* TODO: isAllowedToEdit */
+	
+	hasNodes(),
+	nodeArity(),
+	getNode(),	
+	nodeIterator(),
+	
+	hasPayload(),
+	payloadArity(),
+	
+	getKey(),
+	getValue(),
+	getKeyValueEntry(),	
+	getTuple(),
+	payloadIterator(),
+	
+	hasSlots(),
+	slotArity(),
+	getSlot(),
+	
+	arity(),
+	size()	
+];
+
 str generateAbstractNodeClassString(TrieSpecifics ts) { 
+	return
+	"";
+}
+
+str legacy_generateAbstractNodeClassString(TrieSpecifics ts) {
 	return 
 	"protected static abstract class <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> implements <ts.abstractAnyNodeClassName><UnifiedGenericsExpanded(ts.ds, ts.tupleTypes)> {
 

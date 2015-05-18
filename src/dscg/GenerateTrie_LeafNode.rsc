@@ -166,211 +166,254 @@ str generateLeafNodeClassString(TrieSpecifics ts) {
 //		}
 //	}"
 
-// private static final class LeafNode<GenericsStr(ts.tupleTypes)> extends <CompactNode(ds)><GenericsStr(ts.tupleTypes)> implements Map.Entry<GenericsStr(ts.tupleTypes)> {
+	JavaDataType lnClass = leafNode(ts, modifierList = [ "private", "final", "static" ]);
+	
+	Artifact artifact = trieNode(leafNode());
+	
+	list[PredefOp] ops = [ 
+		masterConstructor(), 
+		
+		containsKey(),
+		containsKey(customComparator = true),
+		
+		get(),
+		get(customComparator = true),
+
+		insertTuple(),
+		insertTuple(customComparator = true),
+		
+		removeTuple(),
+		removeTuple(customComparator = true),
+		
+		getKey(),
+		getValue(),
+		getKeyValueEntry(),
+		getTuple(),
+		
+		getNode(),
+		payloadIterator(),
+		nodeIterator(),
+		hasPayload(),
+		payloadArity(),
+		hasNodes(),
+		nodeArity(),
+		getSlot(),
+		hasSlots(),
+		slotArity(),
+
+		hashCode(),
+		equals(),
+		sizePredicate(),
+		
+		copyAndSetValue(),
+		copyAndSetNode(),
+		copyAndInsertValue(),
+		copyAndRemoveValue(),
+		copyAndMigrateFromInlineToNode(),
+		copyAndMigrateFromNodeToInline(),
+		removeInplaceValueAndConvertToSpecializedNode()		
+	];
+	
+	list[Argument] lnMembers = payloadTupleArgs(ts) + ts.keyHash; 
 
 	return  
-	"private static final class <leafNode(ts).typeName><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
-		private <dec(arrays[0])>;		
-		<if (\map() := ts.ds) {>private <dec(arrays[1])>;<}>
-		private final int hash;
+"<toString(lnClass)> {
 
-		<leafNode(ts).typeName>(final int hash, <dec(arrays[0])><if (\map() := ts.ds) {>, <dec(arrays[1])><}>) {
-			this.keys = keys;
-			<if (\map() := ts.ds) {>this.vals = vals;<}>
-			this.hash = hash;
+	<for (op <- ops) {><impl(ts, artifact, op)><}>
 
-			assert payloadArity() \>= 2;
-		}
+}";
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), payloadIterator()),
-			generate_bodyOf_payloadIterator(ts))>
 
-		<if (false) {>
-		@Override
-		public String toString() {			
-			<if (\map() := ts.ds) {>final Object[] keysAndVals = new Object[keys.length + vals.length];
-			for (int i = 0; i \< keys.length; i++) {
-				keysAndVals[2 * i] = keys[i];
-				keysAndVals[2 * i + 1] = vals[i];
-			}
-			return Arrays.toString(keysAndVals);<} else {>return Arrays.toString(keys);<}>
-		}
-
-		@Override
-		Iterator\<<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>\> nodeIterator() {
-			return Collections.emptyIterator();
-		}
-
-		@Override
-		<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
-						<dec(ts.bitposField)>, <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
-						<dec(ts.bitposField)>, <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node) {
-			throw new UnsupportedOperationException();
-		}		
-		<}>
-
-	<impl(ts, trieNode(leafNode()), containsKey())>
-	<impl(ts, trieNode(leafNode()), containsKey(customComparator = true))>
-
-	<impl(ts, trieNode(leafNode()), get())>
-	<impl(ts, trieNode(leafNode()), get(customComparator = true))>
-
-	<impl(ts, trieNode(leafNode()), insertTuple())>
-	<impl(ts, trieNode(leafNode()), insertTuple(customComparator = true))>
-
-	<impl(ts, trieNode(leafNode()), removeTuple())>
-	<impl(ts, trieNode(leafNode()), removeTuple(customComparator = true))>
-
-		@Override
-		boolean hasPayload() {
-			return true;
-		}
-
-		@Override
-		int payloadArity() {
-			return keys.length;
-		}
-
-		@Override
-		boolean hasNodes() {
-			return false;
-		}
-
-		@Override
-		int nodeArity() {
-			return 0;
-		}
-
-		@Override
-		int arity() {
-			return payloadArity();
-		}
-
-		@Override
-		byte sizePredicate() {
-			return SIZE_MORE_THAN_ONE;
-		}
-
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), getKey()),
-			"return keys[index];")>		
-
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), getValue()), 
-			"return vals[index];")>		
-
-		<impl(ts, trieNode(leafNode()), getKeyValueEntry())>
-
-		@Override
-		public <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> getNode(int index) {
-			throw new IllegalStateException(\"Is leaf node.\");
-		}
-		
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), getSlot()),
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), hasSlots()),
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), slotArity()),
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<if (isOptionEnabled(ts.setup, useStructuralEquality())) {>
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 0;
-			result = prime * result + hash;
-			result = prime * result + Arrays.hashCode(keys);<if (\map() := ts.ds) {>result = prime * result + Arrays.hashCode(vals);<}>
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object other) {
-			if (null == other) {
-				return false;
-			}
-			if (this == other) {
-				return true;
-			}
-			if (getClass() != other.getClass()) {
-				return false;
-			}
-
-			<leafNode(ts).typeName><QuestionMarkGenerics(ts.ds, ts.tupleTypes)> that = (<leafNode(ts).typeName><QuestionMarkGenerics(ts.ds, ts.tupleTypes)>) other;
-
-			if (hash != that.hash) {
-				return false;
-			}
-
-			if (arity() != that.arity()) {
-				return false;
-			}
-
-			/*
-			 * Linear scan for each key, because of arbitrary element order.
-			 */
-			outerLoop: for (int i = 0; i \< that.payloadArity(); i++) {
-				<if (\map() := ts.ds) {><if (isPrimitive(ts.keyType)) {><dec(field(ts.keyType, "otherKey"))><} else {><dec(field(object(), "otherKey"))><}> = that.getKey(i);
-				<if (isPrimitive(ts.valType)) {><dec(field(ts.valType, "otherVal"))><} else {><dec(field(object(), "otherVal"))><}> = that.getValue(i);
-
-				for (int j = 0; j \< keys.length; j++) {
-					<dec(key(ts.keyType))> = keys[j];
-					<dec(nodeTupleArg(ts, 1))> = vals[j];
-
-					if (<equalityDefaultForArguments(key(ts.keyType), key(ts.keyType, "otherKey"))> && <equalityDefaultForArguments(nodeTupleArg(ts, 1), val(ts.valType, "otherVal"))>) {
-						continue outerLoop;
-					}
-				}
-				return false;<} else {><if (isPrimitive(ts.keyType)) {><dec(field(ts.keyType, "otherKey"))><} else {><dec(field(object(), "otherKey"))><}> = that.getKey(i);
-
-				for (int j = 0; j \< keys.length; j++) {
-					<dec(key(ts.keyType))> = keys[j];
-
-					if (<equalityDefaultForArguments(key(ts.keyType), key(ts.keyType, "otherKey"))>) {
-						continue outerLoop;
-					}
-				}
-				return false;
-				<}>
-			}
-
-			return true;
-		}
-		<}>
-
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetValue()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndRemoveValue()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetNode()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-		
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-		
-		<implOrOverride(getDef(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>	
-			
-		<implOrOverride(getDef(ts, trieNode(compactNode()), nodeMap()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-			
-		<implOrOverride(getDef(ts, trieNode(compactNode()), dataMap()),
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-					
-		<impl(ts, trieNode(leafNode()), isTrieStructureValid())>					
-						
-	}"
-	;
+//	"
+//		<implOrOverride(getDef(ts, trieNode(abstractNode()), payloadIterator()),
+//			generate_bodyOf_payloadIterator(ts))>
+//
+//		<if (false) {>
+//		@Override
+//		public String toString() {			
+//			<if (\map() := ts.ds) {>final Object[] keysAndVals = new Object[keys.length + vals.length];
+//			for (int i = 0; i \< keys.length; i++) {
+//				keysAndVals[2 * i] = keys[i];
+//				keysAndVals[2 * i + 1] = vals[i];
+//			}
+//			return Arrays.toString(keysAndVals);<} else {>return Arrays.toString(keys);<}>
+//		}
+//
+//		@Override
+//		Iterator\<<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>\> nodeIterator() {
+//			return Collections.emptyIterator();
+//		}
+//
+//		@Override
+//		<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
+//						<dec(ts.bitposField)>, <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node) {
+//			throw new UnsupportedOperationException();
+//		}
+//
+//		@Override
+//		<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
+//						<dec(ts.bitposField)>, <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node) {
+//			throw new UnsupportedOperationException();
+//		}		
+//		<}>
+//
+//	<impl(ts, trieNode(leafNode()), containsKey())>
+//	<impl(ts, trieNode(leafNode()), containsKey(customComparator = true))>
+//
+//	<impl(ts, trieNode(leafNode()), get())>
+//	<impl(ts, trieNode(leafNode()), get(customComparator = true))>
+//
+//	<impl(ts, trieNode(leafNode()), insertTuple())>
+//	<impl(ts, trieNode(leafNode()), insertTuple(customComparator = true))>
+//
+//	<impl(ts, trieNode(leafNode()), removeTuple())>
+//	<impl(ts, trieNode(leafNode()), removeTuple(customComparator = true))>
+//
+//		@Override
+//		boolean hasPayload() {
+//			return true;
+//		}
+//
+//		@Override
+//		int payloadArity() {
+//			return keys.length;
+//		}
+//
+//		@Override
+//		boolean hasNodes() {
+//			return false;
+//		}
+//
+//		@Override
+//		int nodeArity() {
+//			return 0;
+//		}
+//
+//		@Override
+//		int arity() {
+//			return payloadArity();
+//		}
+//
+//		@Override
+//		byte sizePredicate() {
+//			return SIZE_MORE_THAN_ONE;
+//		}
+//
+//		<implOrOverride(getDef(ts, trieNode(abstractNode()), getKey()),
+//			"return keys[index];")>		
+//
+//		<implOrOverride(getDef(ts, trieNode(abstractNode()), getValue()), 
+//			"return vals[index];")>		
+//
+//		<impl(ts, trieNode(leafNode()), getKeyValueEntry())>
+//
+//		@Override
+//		public <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> getNode(int index) {
+//			throw new IllegalStateException(\"Is leaf node.\");
+//		}
+//		
+//		<implOrOverride(getDef(ts, trieNode(abstractNode()), getSlot()),
+//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//
+//		<implOrOverride(getDef(ts, trieNode(abstractNode()), hasSlots()),
+//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//
+//		<implOrOverride(getDef(ts, trieNode(abstractNode()), slotArity()),
+//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//
+//		<if (isOptionEnabled(ts.setup, useStructuralEquality())) {>
+//		@Override
+//		public int hashCode() {
+//			final int prime = 31;
+//			int result = 0;
+//			result = prime * result + hash;
+//			result = prime * result + Arrays.hashCode(keys);<if (\map() := ts.ds) {>result = prime * result + Arrays.hashCode(vals);<}>
+//			return result;
+//		}
+//
+//		@Override
+//		public boolean equals(Object other) {
+//			if (null == other) {
+//				return false;
+//			}
+//			if (this == other) {
+//				return true;
+//			}
+//			if (getClass() != other.getClass()) {
+//				return false;
+//			}
+//
+//			<leafNode(ts).typeName><QuestionMarkGenerics(ts.ds, ts.tupleTypes)> that = (<leafNode(ts).typeName><QuestionMarkGenerics(ts.ds, ts.tupleTypes)>) other;
+//
+//			if (hash != that.hash) {
+//				return false;
+//			}
+//
+//			if (arity() != that.arity()) {
+//				return false;
+//			}
+//
+//			/*
+//			 * Linear scan for each key, because of arbitrary element order.
+//			 */
+//			outerLoop: for (int i = 0; i \< that.payloadArity(); i++) {
+//				<if (\map() := ts.ds) {><if (isPrimitive(ts.keyType)) {><dec(field(ts.keyType, "otherKey"))><} else {><dec(field(object(), "otherKey"))><}> = that.getKey(i);
+//				<if (isPrimitive(ts.valType)) {><dec(field(ts.valType, "otherVal"))><} else {><dec(field(object(), "otherVal"))><}> = that.getValue(i);
+//
+//				for (int j = 0; j \< keys.length; j++) {
+//					<dec(key(ts.keyType))> = keys[j];
+//					<dec(nodeTupleArg(ts, 1))> = vals[j];
+//
+//					if (<equalityDefaultForArguments(key(ts.keyType), key(ts.keyType, "otherKey"))> && <equalityDefaultForArguments(nodeTupleArg(ts, 1), val(ts.valType, "otherVal"))>) {
+//						continue outerLoop;
+//					}
+//				}
+//				return false;<} else {><if (isPrimitive(ts.keyType)) {><dec(field(ts.keyType, "otherKey"))><} else {><dec(field(object(), "otherKey"))><}> = that.getKey(i);
+//
+//				for (int j = 0; j \< keys.length; j++) {
+//					<dec(key(ts.keyType))> = keys[j];
+//
+//					if (<equalityDefaultForArguments(key(ts.keyType), key(ts.keyType, "otherKey"))>) {
+//						continue outerLoop;
+//					}
+//				}
+//				return false;
+//				<}>
+//			}
+//
+//			return true;
+//		}
+//		<}>
+//
+//		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetValue()), 
+//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//
+//		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), 
+//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//
+//		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndRemoveValue()), 
+//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//
+//		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetNode()), 
+//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//
+//		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode()), 
+//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//		
+//		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()), 
+//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//		
+//		<implOrOverride(getDef(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode()), 
+//			UNSUPPORTED_OPERATION_EXCEPTION)>	
+//			
+//		<implOrOverride(getDef(ts, trieNode(compactNode()), nodeMap()), 
+//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			
+//		<implOrOverride(getDef(ts, trieNode(compactNode()), dataMap()),
+//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//					
+//		<impl(ts, trieNode(leafNode()), isTrieStructureValid())>					
+//						
+//	}"
+//	;
 }

@@ -27,6 +27,7 @@ import dscg::GenerateTrie_AbstractNode;
 import dscg::GenerateTrie_CompactNode;
 import dscg::GenerateTrie_BitmapIndexedNode;
 import dscg::GenerateTrie_HashCollisionNode;
+import dscg::GenerateTrie_LeafNode;
 import dscg::GenerateTrie_Iterator;
 import dscg::GenerateTrie_EasyIterator;
 import dscg::GenerateTrie_NodeIterator;
@@ -159,7 +160,7 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 		<usePrefixInsteadOfPostfixEncoding(),false>,	
 		<usePathCompression(),false>,
 		<useIncrementalHashCodes(),true>,
-		<separateTrieAndLeafNodes(),true>
+		<separateTrieAndLeafNodes(),false>
 	}; // { compactionViaFieldToMethod() };
 
 	return trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup, unknownArtifact());
@@ -190,8 +191,12 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 		= [ generateOptionalClassString() ]
 		+ [ generateResultClassString(ts, ts.setup) ]
 		+ [ generateAbstractAnyNodeClassString(ts, ts.setup)]
-		+ [ generateAbstractNodeClassString(ts)]		
+		+ [ generateAbstractNodeClassString(ts)]
 		+ [ generateCompactNodeClassString(ts)];
+
+	if (isOptionEnabled(ts.setup, separateTrieAndLeafNodes())) {
+		innerClassStrings = innerClassStrings + [ generateLeafNodeClassString(ts)];
+	}
 
 	if (!isOptionEnabled(ts.setup, useSpecialization()) || ts.nBound < ts.nMax) {
 		innerClassStrings = innerClassStrings + [ generateBitmapIndexedNodeClassString(ts)];

@@ -20,6 +20,10 @@ import util::Math;
 
 import dscg::ArrayUtils;
 
+import ValueIO;
+import Type;
+import analysis::m3::Core;
+
 /* PUBLIC CONSTANTS */
 public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");	 
 
@@ -362,7 +366,8 @@ data TrieNodeType
 	| abstractNode()
 	| compactNode()
 	| hashCollisionNode()
-	| bitmapIndexedNode();
+	| bitmapIndexedNode()
+	| leafNode();
 	
 data UpdateSemantic
 	= unknownUpdateSemantic()
@@ -3001,17 +3006,17 @@ data PredefDataType
 data JavaDataType(TrieSpecifics ts = undefinedTrieSpecifics())
 	= invalidJavaDataType(str typeName = "???", list[Type] typeArguments = [])
 	| javaRootClass()
-	| javaInterface(str typeName, list[Type] typeArguments = [], list[JavaDataType] extendsList = [])
-	| javaClass(str typeName, list[Type] typeArguments = [], JavaDataType extends = javaRootClass(), list[JavaDataType] implementsList = []);
+	| javaInterface(str typeName, list[Type] typeArguments = [], list[JavaDataType] extendsList = [], list[str] modifierList = [])
+	| javaClass(str typeName, list[Type] typeArguments = [], JavaDataType extends = javaRootClass(), list[JavaDataType] implementsList = [], list[str] modifierList = []);
 
 default bool isJdtActive(TrieSpecifics ts, PredefDataType dt) = true;
 
 str toString(JavaDataType jdt)
-	= "<jdt.typeName><GenericsStr(jdt.typeArguments)> <extendsStr(jdt.extends)> <implementsListStr(jdt.implementsList)>"
+	= "<for(m <- jdt.modifierList) {><m> <}>class <jdt.typeName><GenericsStr(jdt.typeArguments)> <extendsStr(jdt.extends)> <implementsListStr(jdt.implementsList)>"
 when jdt is javaClass;
 
 str toString(JavaDataType jdt) 
-	= "<jdt.typeName><GenericsStr(jdt.typeArguments)> <extendsListStr(jdt.extendsList)>"
+	= "<for(m <- jdt.modifierList) {><m> <}>interface <jdt.typeName><GenericsStr(jdt.typeArguments)> <extendsListStr(jdt.extendsList)>"
 when jdt is javaInterface;
 
 str extendsStr(javaRootClass()) = "";
@@ -3059,9 +3064,12 @@ JavaDataType hashCollisionNode(TrieSpecifics ts)
 //	"<printNonEmptyCommentWithNewline(c.commentText)><toString(e)>.<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
 //when m.isActive;
 
-JavaDataType leafNode(TrieSpecifics ts)
-	= javaClass("<toString(ts.ds)>LeafNode<ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = abstractNode(ts));
-
+JavaDataType leafNode(TrieSpecifics ts, list[str] modifierList = [])
+	= javaClass("<toString(ts.ds)>LeafNode<ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = abstractNode(ts), implementsList = leafNodeImplementsList(ts), modifierList = modifierList);
+ 
+default list[JavaDataType] leafNodeImplementsList(TrieSpecifics ts) = [];
+list[JavaDataType] leafNodeImplementsList(TrieSpecifics ts) = [] + jul_Map_Entry(payloadTupleTypes(ts)) // TODO: report Rascal ambiguity 
+when \map() := ts.ds;
 
 data Expression 
 	= call(Argument arg, Method method, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ());
@@ -3122,18 +3130,43 @@ when jdt := compactNode(jdt.ts);
 
 
 
+list[Argument] getMembers(TrieSpecifics ts, Artifact artifact:trieNode(leafNode())) = payloadTupleArgs(ts) + ts.keyHash ;
+//Method jdtToConstructor(JavaDataType jdt) = constructor(\return(jdtToType(leafNode(ts))), jdt.typeName, args = [], visibility = "", generics = []);
 
-// Test with ... print(decJavaDataType(leafNode(genericTsSet)))
-// TODO: generics substitution
-str decJavaDataType(JavaDataType jdt) {
-	// javaClass(str typeName, list[Type] typeArguments = [], JavaDataType extends = javaRootClass(), list[JavaDataType] implementsList = []);
 
-	bool hasImplementsList = jdt.implementsList != [];
-	str implementsListStr = intercalate(", ", [ implJdt.typeName | implJdt <- jdt.implementsList ]);	
+data PredefOp = masterConstructor();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), op:masterConstructor())
+	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = getArgsOfDef(ts, artifact, op), visibility = "protected", generics = [])
+//	= jdtToConstructor(leafNode(ts))
+when jdt := leafNode(ts);
+
+list[Argument] getArgsOfDef(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), masterConstructor()) = getMembers(ts, artifact);
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), op:masterConstructor())
+	= initFieldsWithIdendity(getDef(ts, artifact, op).args);
+
+
+
+/*
+ * (Typed) Reflection Mechanism
+ */
+loc adtToLoc(value \value) = |<schema>:///| + "<\value>" 
+when schema := "<typeOf(\value).name>";
+
+PredefOp locToAdt(loc l) = readTextValueString(#PredefOp, serializedValue)
+when "PredefOp" := l.scheme && /\/<serializedValue:.*>/ := l.path;
+
+Artifact locToAdt(loc l) = readTextValueString(#Artifact, serializedValue)
+when "Artifact" := l.scheme && /\/<serializedValue:.*>/ := l.path;
+
+/*
+ * (Typed) M3 Helper Functions
+ */
+tuple[loc, loc] decl(PredefOp op, Artifact artifact) = <adtToLoc(op), adtToLoc(artifact)>;
+
+M3 getM3() {
+	M3 model = emptyM3(|generator:///DSCG|);
+		
 	
-	return 
-"
-private static final 
-class <jdt.typeName><GenericsStr(jdt.typeArguments)> extends <jdt.extends.typeName> <if (hasImplementsList) {>implements <implementsListStr><}> {
-}";	
 }
