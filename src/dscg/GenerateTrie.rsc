@@ -70,8 +70,8 @@ void main() {
 }
 
 void doGenerateInterfaces() {
-	TrieSpecifics genericTsSet = expandConfiguration(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()), "");
-	TrieSpecifics genericTsMap = expandConfiguration(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()), "");
+	TrieSpecifics genericTsSet = expandConfigurationAndCreateModel(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()), "");
+	TrieSpecifics genericTsMap = expandConfigurationAndCreateModel(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()), "");
 	
 	writeFile(|project://<targetProject>/<targetFolder>/<immutableInterfaceName(\set())>.java|, generateImmutableInterface(genericTsSet));
 	writeFile(|project://<targetProject>/<targetFolder>/<transientInterfaceName(\set())>.java|, generateTransientInterface(genericTsSet));
@@ -91,8 +91,8 @@ void doGenerateBleedingEdge() {
 
 	TrieConfig tcMultimap = hashTrieConfig(\map(multi = true), 5, [generic("K"), generic("V")], withoutSpecialization());
 
-	writeFile(|project://<targetProject>/<targetFolder>/<immutableInterfaceName(\map(multi = true))>.java|, generateImmutableInterface(expandConfiguration(tcMultimap, "")));
-	writeFile(|project://<targetProject>/<targetFolder>/<transientInterfaceName(\map(multi = true))>.java|, generateTransientInterface(expandConfiguration(tcMultimap, "")));
+	writeFile(|project://<targetProject>/<targetFolder>/<immutableInterfaceName(\map(multi = true))>.java|, generateImmutableInterface(expandConfigurationAndCreateModel(tcMultimap, "")));
+	writeFile(|project://<targetProject>/<targetFolder>/<transientInterfaceName(\map(multi = true))>.java|, generateTransientInterface(expandConfigurationAndCreateModel(tcMultimap, "")));
 
 	doGenerate(tcMultimap, overideClassNamePostfixWith = "BleedingEdge");
 	
@@ -114,6 +114,13 @@ void doGenerateBleedingEdgeMultimap() {
 void doGenerateSpecializedUntyped() {
 	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(8, true)));
 	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(8, true)));	
+}
+
+TrieSpecifics expandConfigurationAndCreateModel(TrieConfig cfg, str overideClassNamePostfixWith) {
+	TrieSpecifics ts = expandConfiguration(cfg, overideClassNamePostfixWith);
+	
+	// *** STAGE: CREATE MODEL *** //
+	return ts[model = buildModel(ts)];	
 }
 
 TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes:[keyType, valType, *_], SpecializationConfig specializationConfig), str overideClassNamePostfixWith) {
@@ -160,7 +167,7 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 		<usePrefixInsteadOfPostfixEncoding(),false>,	
 		<usePathCompression(),false>,
 		<useIncrementalHashCodes(),true>,
-		<separateTrieAndLeafNodes(),false>
+		<separateTrieAndLeafNodes(),true>
 	}; // { compactionViaFieldToMethod() };
 
 	return trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup, unknownArtifact());
@@ -168,6 +175,11 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 
 void doGenerate(TrieConfig cfg, str overideClassNamePostfixWith = "") {
 	TrieSpecifics ts = expandConfiguration(cfg, overideClassNamePostfixWith);
+	
+	// *** STAGE: CREATE MODEL *** //
+	ts = ts[model = buildModel(ts)];	
+	
+	// *** STAGE: GENERATE CODE *** //
 	
 	list[str] innerClassStrings = doGenerateInnerClassStrings(ts);
 	//if (\map(multi = true) := ts.ds) {
@@ -184,6 +196,10 @@ void doGenerate(TrieConfig cfg, str overideClassNamePostfixWith = "") {
 	// writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
 
 	writeFile(|project://<targetProject>/<targetFolder>/Trie<toString(ts.ds)><ts.classNamePostfix>.java|, classStrings);
+}
+
+Model buildModel(TrieSpecifics ts) {
+	return model(refines = refines, declares = toSet(declares(abstractNode())));
 }
 	
 list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {

@@ -128,7 +128,7 @@ Method getDef(TrieSpecifics ts, PredefDataType dt, methodName:"next")
 when /javaInterface("Iterator", typeArguments = [ typeArgument ]) := getJdt(ts, dt);
 
 Method getDef(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
-	= method(\return(\void()), methodName, visibility = "public")
+	= method(\return(notApplicable()), methodName, visibility = "public")
 when /javaInterface("Iterator") := getJdt(ts, dt);	
 
 Method getDef(TrieSpecifics ts, PredefDataType dt:keyIterator(core(transient())), methodName:"__constructor") 

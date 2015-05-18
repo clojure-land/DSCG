@@ -167,62 +167,10 @@ str generateLeafNodeClassString(TrieSpecifics ts) {
 //	}"
 
 	JavaDataType lnClass = leafNode(ts, modifierList = [ "private", "final", "static" ]);
-	
-	Artifact artifact = trieNode(leafNode());
-	
-	list[PredefOp] ops = [ 
-		masterConstructor(), 
 		
-		containsKey(),
-		containsKey(customComparator = true),
-		
-		get(),
-		get(customComparator = true),
-
-		insertTuple(),
-		insertTuple(customComparator = true),
-		
-		removeTuple(),
-		removeTuple(customComparator = true),
-		
-		getKey(),
-		getValue(),
-		getKeyValueEntry(),
-		getTuple(),
-		
-		getNode(),
-		payloadIterator(),
-		nodeIterator(),
-		hasPayload(),
-		payloadArity(),
-		hasNodes(),
-		nodeArity(),
-		getSlot(),
-		hasSlots(),
-		slotArity(),
-
-		hashCode(),
-		equals(),
-		sizePredicate(),
-		
-		copyAndSetValue(),
-		copyAndSetNode(),
-		copyAndInsertValue(),
-		copyAndRemoveValue(),
-		copyAndMigrateFromInlineToNode(),
-		copyAndMigrateFromNodeToInline(),
-		removeInplaceValueAndConvertToSpecializedNode()		
-	];
-	
 	list[Argument] lnMembers = payloadTupleArgs(ts) + ts.keyHash; 
 
-	return  
-"<toString(lnClass)> {
-
-	<for (op <- ops) {><impl(ts, artifact, op)><}>
-
-}";
-
+	return generateClassString(ts, lnClass, leafNode()); 
 
 //	"
 //		<implOrOverride(getDef(ts, trieNode(abstractNode()), payloadIterator()),

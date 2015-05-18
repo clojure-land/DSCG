@@ -15,6 +15,7 @@ import dscg::GenerateTrie_CompactNode;
 
 import IO;
 import List;
+import Set;
 import String;
 import util::Math;
 
@@ -23,6 +24,7 @@ import dscg::ArrayUtils;
 import ValueIO;
 import Type;
 import analysis::m3::Core;
+import analysis::graphs::Graph;
 
 /* PUBLIC CONSTANTS */
 public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");	 
@@ -47,7 +49,7 @@ data DataStructure
 
 data Type 
 	= unknown  (bool isArray = false)
-	| \void    (bool isArray = false)
+	| notApplicable    (bool isArray = false)
 	//| object   (bool isArray = false)
 	| generic  (str typePlaceholder, bool isArray = false)
 	| upperBoundGeneric  (Type upperBound)
@@ -65,7 +67,7 @@ data Type
 default Type object(bool isArray = false) = specific("Object", isArray = isArray);	 	
 
 str typeToString(t:unknown()) = "???<if (t.isArray) {>[]<}>";
-str typeToString(t:\void()) = "void<if (t.isArray) {>[]<}>";
+str typeToString(t:notApplicable()) = "void<if (t.isArray) {>[]<}>";
 str typeToString(t:generic  (str \type)) = "<\type><if (t.isArray) {>[]<}>";
 str typeToString(t:lowerBoundGeneric  (Type lowerBound)) = "? super <typeToString(lowerBound)>";
 str typeToString(t:upperBoundGeneric  (Type upperBound)) = "<"?"> extends <typeToString(upperBound)>";
@@ -73,7 +75,7 @@ str typeToString(t:specific (str typeName, typeArguments = [])) = "<\typeName><i
 str typeToString(t:specific (str typeName, typeArguments = typeArguments)) = "<typeName>\<<intercalate(", ", mapper(t.typeArguments, typeToString))>\><if (t.isArray) {>[]<}>";
 str typeToString(t:primitive(str \type)) = "<\type><if (t.isArray) {>[]<}>";
 str typeToString(t:___primitive(str \type)) = "<\type><if (t.isArray) {>[]<}>";
-default str typeToString(Type t) { throw "Ahhh: <t>"; } 
+default str typeToString(Type t) { throw "Ahhh: <t>"; }
 
 data Argument
 	= emptyArgument(Type \type = unknown())
@@ -200,6 +202,12 @@ data Expression = signedLeftBitShift(Expression x, Expression y);
   Currently translates to '=='.
 */
 data Expression = equals(Expression x, Expression y);
+
+
+/*
+  Currently translates to '!='.
+*/
+data Expression = notEquals(Expression x, Expression y);
 
 
 
@@ -349,8 +357,6 @@ data Event
 default Expression updateProperty(TrieSpecifics ts, PredefOp op, Property p, Event e) = emptyExpression();
 
 
-
-
 data Artifact(TrieSpecifics ts = undefinedTrieSpecifics())
 	= unknownArtifact()
 	| core(UpdateSemantic updateSemantic)
@@ -419,7 +425,7 @@ data Option // TODO: finish!
 
 data TrieSpecifics 
 	= undefinedTrieSpecifics()
-	| ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound, Type keyType = generic("K"), Type valType = generic("V"), str classNamePostfix = "", rel[Option,bool] setup = {},
+	| ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound, Type keyType = generic("K"), Type valType = generic("V"), str classNamePostfix = "", rel[Option,bool] setup = {}, Model model = model(), 
 					
 		Argument BIT_PARTITION_SIZE = field(primitive("int"), "BIT_PARTITION_SIZE"), 
 				
@@ -775,6 +781,7 @@ str eval(Epression:signedLeftBitShift(Expression x, Expression y)) =
 str toString(Epression:signedLeftBitShift(Expression x, Expression y)) =
 	"<toString(x)> \<\< <toString(y)>";
 
+
 str eval(Expression e) =
 	"<eval(e.x)> == <eval(e.y)>"
 when e is equals;
@@ -783,6 +790,16 @@ str toString(Expression e) =
 	"<toString(e.x)> == <toString(e.y)>"
 when e is equals;
 	
+
+str eval(Expression e) =
+	"<eval(e.x)> != <eval(e.y)>"
+when e is notEquals;
+
+str toString(Expression e) =
+	"<toString(e.x)> != <toString(e.y)>"
+when e is notEquals;
+
+
 
 str eval(Expression e) = 
 	"<eval(e.l)> + <eval(e.r)>"
@@ -2460,6 +2477,9 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getK
 //	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
 //when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
 
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKey())
+	= result(ts.key);
+
 
 
 data PredefOp = getValue();
@@ -2470,6 +2490,9 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getV
 //Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getValue())
 //	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
 //when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getValue())
+	= result(ts.val);
 
 
 
@@ -2484,6 +2507,9 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNo
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getKeyValueEntry()) = 
 	"return entryOf((<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<typeToString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);";
+	
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKeyValueEntry())
+	= result(this());	
 	
 
 
@@ -2576,7 +2602,7 @@ when core(_) := artifact || ju_Map() := artifact;
 data PredefOp = putAll();
 
 Method getDef(TrieSpecifics ts, Artifact artifact, putAll())
-	= method(\return(\void()), "putAll", args = [ field(generic("<toString(ts.ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "m") ], visibility = "public", isActive = \map() := ts.ds)
+	= method(\return(notApplicable()), "putAll", args = [ field(generic("<toString(ts.ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "m") ], visibility = "public", isActive = \map() := ts.ds)
 when core(_) := artifact || ju_Map() := artifact;
 	
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, putAll()) 
@@ -2657,11 +2683,11 @@ when core(_) := artifact;
 data PredefOp = clear();
 
 Method getDef(TrieSpecifics ts, Artifact artifact, clear())
-	= method(\return(\void()), "clear", visibility = "public", isActive = \map() := ts.ds)
+	= method(\return(notApplicable()), "clear", visibility = "public", isActive = \map() := ts.ds)
 when core(_) := artifact && \map() := ts.ds;
 
 Method getDef(TrieSpecifics ts, Artifact artifact, clear())
-	= method(\return(\void()), "clear", visibility = "public", isActive = ts.ds == \set())
+	= method(\return(notApplicable()), "clear", visibility = "public", isActive = ts.ds == \set())
 when core(_) := artifact && \set() := ts.ds;
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, clear()) 
@@ -2993,6 +3019,34 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNo
 
 
 
+data PredefOp = isAllowedToEdit();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::isAllowedToEdit())
+	= function(\return(primitive("boolean")), "isAllowedToEdit",  args = [ field(ts.mutatorType, "x"), field(ts.mutatorType, "y") ], visibility = "protected")
+when trieNode(abstractNode()) := artifact; // || jl_Object() := artifact;
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::isAllowedToEdit()) =
+	result(
+		and([notEquals(x, null()), notEquals(y, null()), embrace(or([equals(x, y), equals(exprFromString("x.get()"), exprFromString("y.get()"))]))])
+	);
+	
+
+
+
+
+data PredefOp = tupleLength();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::tupleLength())
+	= function(\return(primitive("int")), "tupleLength", visibility = "protected")
+when trieNode(abstractNode()) := artifact;
+	
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::tupleLength())
+	= iconst(tupleLength(ts.ds));
+
+
+
+
+
 //Method javaConstructor(Type classType, list[Argument] args = [])
 //	= constructor();	
 //	
@@ -3170,3 +3224,91 @@ M3 getM3() {
 		
 	
 }
+
+
+
+
+/*
+ * Temporary Global Model
+ */
+data Model
+	= model(
+		rel[TrieNodeType from, TrieNodeType to] refines = {},
+		rel[TrieNodeType from, PredefOp to] declares = {}
+	);
+
+public rel[TrieNodeType from, TrieNodeType to] refines = {
+	<compactNode(), abstractNode()>,
+	<bitmapIndexedNode(), compactNode()>,
+	<hashCollisionNode(), abstractNode()>,
+	<leafNode(), abstractNode()> 
+};
+
+default Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType), PredefOp op) = getDef(ts, nodeType, op);
+
+Method getDef(TrieSpecifics ts, TrieNodeType nodeType, PredefOp op) {
+	TrieNodeType currentNodeType = nodeType; 
+	
+	while ((<currentNodeType, op> in ts.model.declares) == false) {
+		set[TrieNodeType] superTypes = ts.model.refines[currentNodeType];
+		
+		if(superTypes == {}) {
+			throw "Method <op> is neither defined in <nodeType> or any of its base types.";
+		} else {
+			currentNodeType = getOneFrom(superTypes);
+		}
+	}
+	
+	return getDef(ts, trieNode(currentNodeType), op);                                  
+}
+
+lrel[TrieNodeType from, PredefOp to] declares(TrieNodeType nodeType:abstractNode()) 
+	= [ <nodeType,method> | method <- declaredMethodsByAbstractNode];
+
+list[PredefOp] declaredMethodsByAbstractNode = [
+
+	tupleLength(), // TODO: implement as static final field
+
+	isAllowedToEdit(), // TODO: implement as static final method
+
+	containsKey(),
+	containsKey(customComparator = true),
+
+	get(),
+	get(customComparator = true),
+
+	insertTuple(),
+	insertTuple(customComparator = true),
+
+	removeTuple(),
+	removeTuple(customComparator = true),	
+		
+	hasNodes(),
+	nodeArity(),
+	getNode(),	
+	nodeIterator(),
+	
+	hasPayload(),
+	payloadArity(),
+	
+	getKey(),
+	getValue(),
+	getKeyValueEntry(),	
+	getTuple(),
+	payloadIterator(),
+	
+	hasSlots(),
+	slotArity(),
+	getSlot(),
+	
+	arity(),
+	size()	
+];
+
+
+str generateClassString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType) =  
+"<toString(jdt)> {
+
+	<for (op <- ts.model.declares[nodeType]) {><impl(ts, trieNode(nodeType), op)><}>
+
+}";
