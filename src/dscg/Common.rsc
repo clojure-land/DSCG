@@ -11,20 +11,20 @@
  */
 module dscg::Common
 
-import dscg::GenerateTrie_CompactNode;
-
 import IO;
 import List;
 import Set;
+import Relation;
 import String;
 import util::Math;
-
-import dscg::ArrayUtils;
 
 import ValueIO;
 import Type;
 import analysis::m3::Core;
 import analysis::graphs::Graph;
+
+import dscg::ArrayUtils; 
+
 
 /* PUBLIC CONSTANTS */
 public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");	 
@@ -203,11 +203,19 @@ data Expression = signedLeftBitShift(Expression x, Expression y);
 */
 data Expression = equals(Expression x, Expression y);
 
-
 /*
   Currently translates to '!='.
 */
 data Expression = notEquals(Expression x, Expression y);
+
+
+
+data Expression = and(list[Expression] exprList);
+str toString(Expression e:and(exprList)) = intercalate(" && ", exprList);
+
+data Expression = or(list[Expression] exprList);
+str toString(Expression e:and(exprList)) = intercalate(" || ", exprList);
+
 
 
 
@@ -273,7 +281,7 @@ when m.isActive;
 
 str toString(Expression c:call(m:function(_,_))) = 
 	"<printNonEmptyCommentWithNewline(c.commentText)><m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
-when m.isActive;
+; ///when m.isActive;
 
 str toString(Expression c:call(m:method(_,_))) = 
 	"<printNonEmptyCommentWithNewline(c.commentText)><m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
@@ -309,7 +317,7 @@ when m.isActive;
 
 //default str call(Method m, map[Argument, Expression] argsOverride = ()) { throw "You forgot <m>!"; }
 
-default str toString(Expression e) { throw "Ahhh, <e> is not supported."; }	
+// default str toString(Expression e) { throw "Ahhh, <e> is not supported."; }	
 		
 data Expression
 	= decExpr(Argument arg, Expression initExpr = emptyExpression()) 
@@ -330,16 +338,6 @@ data Method(TrieSpecifics ts = undefinedTrieSpecifics())
 	= method(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, list[Type] generics = [])
 	| function(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, list[Type] generics = [])
 	| constructor(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, list[Type] generics = []);
-
-
-
-default str impl(TrieSpecifics ts, Artifact artifact, PredefOp op) = "";
-
-str impl(TrieSpecifics ts, Artifact artifact, PredefOp op, Method __def = getDef(ts, artifact, op)) 
-	= implOrOverride(__def, generate_bodyOf(ts, artifact, op), doOverride = \new())
-when __def.isActive;
-
-
 
 
 data Property
@@ -383,6 +381,9 @@ data UpdateSemantic
 
 data PredefOp
 	= noop();
+
+data OpBinding 
+	= trieNodeOp(TrieNodeType nodeType, PredefOp op);	
 
 default Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp op) { throw "Not found <op> in context <artifact> for <ts.ds>"; } // TODO noop
 
@@ -2478,7 +2479,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getK
 //when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
 
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKey())
-	= result(ts.key);
+	= result(useExpr(key(ts.keyType)));
 
 
 
@@ -2492,7 +2493,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getV
 //when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
 
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getValue())
-	= result(ts.val);
+	= result(useExpr(key(ts.valType)));
 
 
 
@@ -2509,7 +2510,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNo
 	"return entryOf((<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<typeToString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);";
 	
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKeyValueEntry())
-	= result(this());	
+	= result(useExpr(this()));	
 	
 
 
@@ -3027,8 +3028,9 @@ when trieNode(abstractNode()) := artifact; // || jl_Object() := artifact;
 
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::isAllowedToEdit()) =
 	result(
-		and([notEquals(x, null()), notEquals(y, null()), embrace(or([equals(x, y), equals(exprFromString("x.get()"), exprFromString("y.get()"))]))])
-	);
+		and([notEquals(useExpr(x), NULL()), notEquals(useExpr(y), NULL()), embrace(or([equals(useExpr(x), useExpr(y)), equals(exprFromString("x.get()"), exprFromString("y.get()"))]))])
+	)
+when x := field(ts.mutatorType, "x") && y := field(ts.mutatorType, "y");
 	
 
 
@@ -3100,8 +3102,8 @@ JavaDataType jul_Map_Entry([Type keyType, Type valType]) = javaInterface("Map.En
 default JavaDataType jul_Map_Entry(list[Type] types) = invalidJavaDataType();
 
 
-JavaDataType abstractNode(TrieSpecifics ts)
-	= javaClass("Abstract<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)));
+JavaDataType abstractNode(TrieSpecifics ts, list[str] modifierList = [])
+	= javaClass("Abstract<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), modifierList = modifierList);
 
 JavaDataType compactNode(TrieSpecifics ts)
 	= javaClass("Compact<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)));
@@ -3231,10 +3233,57 @@ M3 getM3() {
 /*
  * Temporary Global Model
  */
+ 
+// TODO: get ride of global dependencies
+Model buildLanguageAgnosticModel(TrieSpecifics ts) {
+	rel[TrieNodeType from, TrieNodeType to] refines = refines;
+	rel[TrieNodeType from, PredefOp to] declares = toSet(declares(abstractNode()) + declares(compactNode()));
+	rel[TrieNodeType from, PredefOp to] implements = {};	
+		
+	rel[OpBinding from, OpBinding to] operationRefinement; // ???
+
+	set[TrieNodeType] allTrieNodeTypes = carrier(refines);
+	
+	// crawl all available implementations
+	for (current <- allTrieNodeTypes) {		
+		TrieNodeType top = abstractNode();
+		set[PredefOp] transitiveOps = transitiveOps(refines, declares, top, current);
+		
+		for (op <- transitiveOps) {
+			value implementation = generate_bodyOf(ts, trieNode(current), op);
+	
+			// TODO: switch fully to Expression; provide a relation to query if there is a matching implementation	
+			if (implementation != ""	&& implementation != emptyExpression()) {
+				implements += <current, op>;
+			}
+		}
+	}	 
+	
+	// TODO: check for every defined method, at least one refinement/implementation
+
+	return model(refines = refines, declares = declares, implements = implements);
+}
+
+// collect transitive set of operation on a type hierarchy
+set[PredefOp] transitiveOps(
+		rel[TrieNodeType from, TrieNodeType to] refines, 
+		rel[TrieNodeType from, PredefOp to] declares, 
+		TrieNodeType top, 
+		TrieNodeType current) {		
+	set[PredefOp] operationsPerType;
+	
+	list[TrieNodeType] typeHierarchy = reverse(shortestPathPair(refines, current, top));
+	
+	set[PredefOp] transitiveOps = { *ops | \type <- typeHierarchy, ops <- declares[\type] };
+	
+	return transitiveOps;
+} 
+ 
 data Model
 	= model(
 		rel[TrieNodeType from, TrieNodeType to] refines = {},
-		rel[TrieNodeType from, PredefOp to] declares = {}
+		rel[TrieNodeType from, PredefOp to] declares = {},
+		rel[TrieNodeType from, PredefOp to] implements = {}
 	);
 
 public rel[TrieNodeType from, TrieNodeType to] refines = {
@@ -3244,7 +3293,7 @@ public rel[TrieNodeType from, TrieNodeType to] refines = {
 	<leafNode(), abstractNode()> 
 };
 
-default Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType), PredefOp op) = getDef(ts, nodeType, op);
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType), PredefOp op) = getDef(ts, nodeType, op);
 
 Method getDef(TrieSpecifics ts, TrieNodeType nodeType, PredefOp op) {
 	TrieNodeType currentNodeType = nodeType; 
@@ -3305,10 +3354,129 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 	size()	
 ];
 
+lrel[TrieNodeType from, PredefOp to] declares(TrieNodeType nodeType:compactNode()) 
+	= [ <nodeType,method> | method <- declaredMethodsByCompactNode];
 
-str generateClassString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType) =  
+data PredefOp = hashCodeLength();
+data PredefOp = bitPartitionSize();
+data PredefOp = bitPartitionMask();
+
+data PredefOp = sizeEmpty();
+data PredefOp = sizeOne();
+data PredefOp = sizeMoreThanOne();
+
+data PredefOp = nodeInvariant();
+data PredefOp = isTrieStructureValid();
+
+data PredefOp = emptyTrieNodeConstant();
+
+data PredefOp = nodeAt();
+
+data PredefOp = recoverMask();
+data PredefOp = toString();
+
+list[PredefOp] declaredMethodsByCompactNode = [
+
+	// TODO: this is implementation specific ...
+	// TODO: nodeOf() factory methods; also option to enable disable the use of factory methods.
+
+	hashCodeLength(), // TODO: implement as static final field
+	bitPartitionSize(), // TODO: implement as static final field
+	
+	// TODO: implement as static final field
+	// TODO: this is implementation specific
+	bitPartitionMask(),
+	
+	mask(),
+	bitpos(),
+	
+	nodeMap(),
+	dataMap(),
+	
+	sizeEmpty(),
+	sizeOne(),
+	sizeMoreThanOne(),
+
+	sizePredicate(),
+	
+	getNode(), // redeclaration (more specific return type)	
+	
+	nodeInvariant(),
+	isTrieStructureValid(),
+	
+	copyAndInsertNode(), // ???
+	copyAndRemoveNode(), // ???
+	copyAndSetValue(),
+	copyAndInsertValue(),
+	copyAndRemoveValue(),
+	copyAndSetNode(),
+	copyAndMigrateFromInlineToNode(),
+	copyAndMigrateFromNodeToInline(),
+	
+	removeInplaceValueAndConvertToSpecializedNode(),	
+
+	mergeTwoKeyValPairs(),
+	mergeNodeAndKeyValPair(),
+
+	emptyTrieNodeConstant(), // TODO: this is implementation specific
+
+	index2(),
+	index3(),
+	
+	dataIndex(),
+	nodeIndex(),
+	
+	nodeAt(), // TODO: get rid of?
+		
+//	containsKey(),
+//	containsKey(customComparator = true),
+//
+//	get(),
+//	get(customComparator = true),
+//
+//	insertTuple(),
+//	insertTuple(customComparator = true),
+//
+//	removeTuple(),
+//	removeTuple(customComparator = true),	
+		
+	recoverMask(),
+	toString()
+	
+];
+
+rel[OpBinding from, OpBinding to] operationRefinement;
+
+str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType) =  
 "<toString(jdt)> {
 
 	<for (op <- ts.model.declares[nodeType]) {><impl(ts, trieNode(nodeType), op)><}>
 
 }";
+
+
+default str impl(TrieSpecifics ts, Artifact artifact, PredefOp op) = "";
+
+str impl(TrieSpecifics ts, Artifact artifact, PredefOp op, Method __def = getDef(ts, artifact, op)) 
+	= implOrOverride(__def, generate_bodyOf(ts, artifact, op), doOverride = \new())
+when __def.isActive;
+
+
+Expression decOrImpl(TrieSpecifics ts, Artifact artifact, PredefOp op) {
+	Method declaration = getDef(ts, artifact, op);
+	value implementation = generate_bodyOf(ts, artifact, op);
+
+	// TODO: switch fully to Expression; provide a relation to query if there is a matching implementation	
+	if (implemenation == ""	|| implementation == emptyExpression()) {
+		// do declare
+		bool isOverride = false;
+		bool isAbstract = false;
+		;
+	} else {
+		// do implement
+		bool isOverride = false;
+		bool isAbstract = false;
+		bool isDefaultMethoed = false;
+		;
+	}
+}

@@ -16,25 +16,7 @@ import List;
 import String;
 import util::Math;
 
-import dscg::Common;
-import dscg::GenerateImmutableMap;
-
-import dscg::GenerateTrie_Optional;
-import dscg::GenerateTrie_Result;
-
-import dscg::GenerateTrie_AbstractAnyNode;
-import dscg::GenerateTrie_AbstractNode;
-import dscg::GenerateTrie_CompactNode;
-import dscg::GenerateTrie_BitmapIndexedNode;
-import dscg::GenerateTrie_HashCollisionNode;
-import dscg::GenerateTrie_LeafNode;
-import dscg::GenerateTrie_Iterator;
-import dscg::GenerateTrie_EasyIterator;
-import dscg::GenerateTrie_NodeIterator;
-import dscg::GenerateTrie_Core_Common;
-import dscg::GenerateTrie_Core;
-import dscg::GenerateTrie_CoreTransient;
-import dscg::GenerateTrie_ImmutableInterface;
+import dscg::GenerateTrie_Master;
 
 data TrieConfig 
 	= hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes, SpecializationConfig specializationConfig);
@@ -120,7 +102,7 @@ TrieSpecifics expandConfigurationAndCreateModel(TrieConfig cfg, str overideClass
 	TrieSpecifics ts = expandConfiguration(cfg, overideClassNamePostfixWith);
 	
 	// *** STAGE: CREATE MODEL *** //
-	return ts[model = buildModel(ts)];	
+	return ts[model = buildLanguageAgnosticModel(ts)];	
 }
 
 TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds, int bitPartitionSize, list[Type] tupleTypes:[keyType, valType, *_], SpecializationConfig specializationConfig), str overideClassNamePostfixWith) {
@@ -177,7 +159,7 @@ void doGenerate(TrieConfig cfg, str overideClassNamePostfixWith = "") {
 	TrieSpecifics ts = expandConfiguration(cfg, overideClassNamePostfixWith);
 	
 	// *** STAGE: CREATE MODEL *** //
-	ts = ts[model = buildModel(ts)];	
+	ts = ts[model = buildLanguageAgnosticModel(ts)];
 	
 	// *** STAGE: GENERATE CODE *** //
 	
@@ -196,10 +178,6 @@ void doGenerate(TrieConfig cfg, str overideClassNamePostfixWith = "") {
 	// writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
 
 	writeFile(|project://<targetProject>/<targetFolder>/Trie<toString(ts.ds)><ts.classNamePostfix>.java|, classStrings);
-}
-
-Model buildModel(TrieSpecifics ts) {
-	return model(refines = refines, declares = toSet(declares(abstractNode())));
 }
 	
 list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {

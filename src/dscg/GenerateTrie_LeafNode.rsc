@@ -166,11 +166,11 @@ str generateLeafNodeClassString(TrieSpecifics ts) {
 //		}
 //	}"
 
-	JavaDataType lnClass = leafNode(ts, modifierList = [ "private", "final", "static" ]);
+	JavaDataType jdt = leafNode(ts, modifierList = [ "private", "final", "static" ]);
 		
 	list[Argument] lnMembers = payloadTupleArgs(ts) + ts.keyHash; 
 
-	return generateClassString(ts, lnClass, leafNode()); 
+	return generateJdtString(ts, jdt, leafNode()); 
 
 //	"
 //		<implOrOverride(getDef(ts, trieNode(abstractNode()), payloadIterator()),

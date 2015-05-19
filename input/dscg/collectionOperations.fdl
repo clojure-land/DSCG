@@ -8,6 +8,6 @@ features
 	CollectionQueryOperations	: all(queryByKey,
 										projectionOfKey)
 										
-	Equality					: one-of(logical, structural)
+	Equality					: all(equivalenceRelation, structural?)
 
 constraints

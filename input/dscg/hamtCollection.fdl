@@ -48,7 +48,7 @@ constraints
 	// HamtCollection
 	//////
 	// HamtCollection requires PrefixEncodingType.hashOfData
-	hashOfData requires unorderd 
+	hashOfData requires unordered 
 	// CollectionType.vector excludes PrefixEncodingType.hashOfData
 		
 		

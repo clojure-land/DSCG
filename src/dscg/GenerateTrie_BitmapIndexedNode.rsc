@@ -47,11 +47,11 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			
 			<if (isOptionEnabled(ts.setup,useSpecialization()) && ts.nBound < ts.nMax) {>assert arity() \> <ts.nBound>;<}>assert nodeInvariant();")>					
 		
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), getKey()),
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), getKey()),
 			"return (<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index];"
 			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.keyType)) ])>
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), getValue()),
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), getValue()),
 			"return (<typeToString((nodeTupleType(ts, 1)))>) nodes[<use(tupleLengthConstant)> * index + 1];"
 			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.valType)) ])>
 
@@ -59,39 +59,39 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 	
 		<impl(ts, trieNode(bitmapIndexedNode()), getTuple())>
 
-		<implOrOverride(getDef(ts, trieNode(compactNode()), getNode()), 
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), getNode()), 
 			generate_bodyOf_getNode(ts),
 			annotations = [ UNCHECKED_ANNOTATION() ])>
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), payloadIterator()),
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), payloadIterator()),
 			generate_bodyOf_payloadIterator(ts))>
 
-		<implOrOverride(getDef(ts, trieNode(compactNode()), nodeIterator()),
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), nodeIterator()),
 			generate_bodyOf_nodeIterator(ts),
 			annotations = [ UNCHECKED_ANNOTATION() ])>
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), hasPayload()),
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), hasPayload()),
 			generate_bodyOf_hasPayload(ts))>
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), payloadArity()),
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), payloadArity()),
 			generate_bodyOf_payloadArity(ts))>
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), hasNodes()),
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), hasNodes()),
 			generate_bodyOf_hasNodes(ts))>
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), nodeArity()),
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), nodeArity()),
 			generate_bodyOf_nodeArity(ts))>
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), getSlot()), 
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), getSlot()), 
 			"return nodes[<use(ts.index)>];")>
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), hasSlots()),
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), hasSlots()),
 			"return nodes.length != 0;")>
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), slotArity()), 
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), slotArity()), 
 			"return nodes.length;")>
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), hashCode()), 
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), hashCode()), 
 			"final int prime = 31;
 			int result = 0;
 			result = prime * result + (<primitiveHashCode(___valmapMethod(ts.bitPartitionSize))>);
@@ -99,7 +99,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			result = prime * result + Arrays.hashCode(nodes);
 			return result;")>
 		
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), equals()), 
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), equals()), 
 			"if (null == other) {
 				return false;
 			}
@@ -121,7 +121,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			}
 			return true;")>
 
-		<implOrOverride(getDef(ts, trieNode(compactNode()), sizePredicate()), 
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), sizePredicate()), 
 			"<if (isOptionEnabled(ts.setup,useSpecialization())) {>return SIZE_MORE_THAN_ONE;<} else {>if (this.nodeArity() == 0) {
 			'	switch (this.payloadArity()) {
 			'	case 0:
@@ -136,7 +136,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			'}<}>")>
 
 		</* TODO: support bitmapIndexedNode() here */"">
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetValue()), 
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), copyAndSetValue()), 
 			str() { return "<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
 			
 			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (isAllowedToEdit(this.mutator, mutator)) {
@@ -154,7 +154,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 		)>
 			
 		</* TODO: support bitmapIndexedNode() here */"">
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetNode()), 
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), copyAndSetNode()), 
 			"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
 			<dec(field(primitive("int"), "idx"))> = this.nodes.length - 1 - nodeIndex(bitpos);
 			<} else {>
@@ -175,7 +175,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>")>
 
 		</* TODO: support bitmapIndexedNode() here */"">
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), 
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), copyAndInsertValue()), 
 			"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			
 			<dec(field(asArray(object()), "src"))> = this.nodes;
@@ -188,7 +188,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;")>
 
 		</* TODO: support bitmapIndexedNode() here */"">
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndRemoveValue()),
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), copyAndRemoveValue()),
 			"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			
 			<dec(field(asArray(object()), "src"))> = this.nodes;
@@ -201,7 +201,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;")>
 
 		</* TODO: support bitmapIndexedNode() here */"">
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode()),
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), copyAndMigrateFromInlineToNode()),
 			"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
 			<dec(field(primitive("int"), "idxOld"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 			<dec(field(primitive("int"), "idxNew"))> = this.nodes.length - <use(tupleLengthConstant)> - nodeIndex(bitpos);
@@ -221,7 +221,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;")>
 
 		</* TODO: support bitmapIndexedNode() here */"">
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()),		
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), copyAndMigrateFromNodeToInline()),		
 			"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
 			<dec(field(primitive("int"), "idxOld"))> = this.nodes.length - 1 - nodeIndex(bitpos);
 			<dec(field(primitive("int"), "idxNew"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
@@ -241,7 +241,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 											ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr (useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;")>
 		
 		</* TODO: support bitmapIndexedNode() here */"">
-		<implOrOverride(getDef(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode()),	
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), removeInplaceValueAndConvertToSpecializedNode()),	
 			generate_removeInplaceValueAndConvertToSpecializedNode(ts))>		
 	'}";
 }

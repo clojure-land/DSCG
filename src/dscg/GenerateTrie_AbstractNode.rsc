@@ -14,8 +14,8 @@ module dscg::GenerateTrie_AbstractNode
 import dscg::Common;
 
 str generateAbstractNodeClassString(TrieSpecifics ts) 
-	= generateClassString(ts, jdt, abstractNode())
-when jdt := abstractNode(ts);
+	= generateJdtString(ts, jdt, abstractNode())
+when jdt := abstractNode(ts, modifierList = [ "private", "final", "static" ]);
 
 str legacy_generateAbstractNodeClassString(TrieSpecifics ts) {
 	return 
