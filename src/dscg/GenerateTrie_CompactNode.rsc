@@ -15,6 +15,10 @@ import List;
 
 import dscg::Common;
 
+//str generateCompactNodeClassString(TrieSpecifics ts) 
+//	= generateJdtString(ts, jdt, compactNode())
+//when jdt := compactNode(ts, modifierList = [ "private", "abstract", "static" ]);
+
 // TODO: remove!!!
 str emptyTrieNodeConstantName = "EMPTY_NODE";
 

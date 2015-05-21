@@ -210,11 +210,13 @@ data Expression = notEquals(Expression x, Expression y);
 
 
 
+
 data Expression = and(list[Expression] exprList);
-str toString(Expression e:and(exprList)) = intercalate(" && ", exprList);
+str toString(Expression e:and(exprList)) = intercalate(" && ", [ toString(expr) | expr <- exprList ]);
+
 
 data Expression = or(list[Expression] exprList);
-str toString(Expression e:and(exprList)) = intercalate(" || ", exprList);
+str toString(Expression e:or(exprList)) = intercalate(" || ", [ toString(expr) | expr <- exprList ]);
 
 
 
@@ -792,6 +794,7 @@ str toString(Expression e) =
 when e is equals;
 	
 
+
 str eval(Expression e) =
 	"<eval(e.x)> != <eval(e.y)>"
 when e is notEquals;
@@ -837,7 +840,8 @@ when e is call;
 str eval(Expression e) = ""
 when e is emptyExpression;
 
-default str eval(Expression e) { throw "Ahhh, you forgot <e>"; }
+//default str eval(Expression e) { throw "Ahhh, you forgot <e>"; }
+default str eval(Expression e) = toString(e);
 
 str eval(list[Expression] xs) = intercalate(", ", mapper(xs, eval));
 default str eval(list[Expression] _) { throw "Ahhh"; }
@@ -926,8 +930,8 @@ data OverwriteType
 
 str implOrOverride(Method m, Statement bodyStmt, OverwriteType doOverride = override(), list[Annotation] annotations = []) = implOrOverride(m, toString(bodyStmt), doOverride = doOverride);
 
-default str implOrOverride(Method m, Expression bodyExpr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = implOrOverride(m, toString(exprToStmt(bodyExpr)), doOverride = doOverride);
-//str implOrOverride(Method m, Expression bodyExpr:result(nestedExpr), OverwriteType doOverride = override(), list[Annotation] annotations = []) = implOrOverride(m, "return <toString(nestedExpr)>;", doOverride = doOverride);
+str implOrOverride(Method m, Expression bodyExpr:result(nestedExpr), OverwriteType doOverride = override(), list[Annotation] annotations = []) = implOrOverride(m, "return <toString(nestedExpr)>;", doOverride = doOverride);
+str implOrOverride(Method m, Expression bodyExpr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = implOrOverride(m, toString(exprToStmt(bodyExpr)), doOverride = doOverride);
 
 str implOrOverride(Method m, str() lazyBodyStr, OverwriteType __doOverride = override(), list[Annotation] __annotations = []) {
 	if (m.isActive) { 
@@ -3031,19 +3035,6 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstract
 		and([notEquals(useExpr(x), NULL()), notEquals(useExpr(y), NULL()), embrace(or([equals(useExpr(x), useExpr(y)), equals(exprFromString("x.get()"), exprFromString("y.get()"))]))])
 	)
 when x := field(ts.mutatorType, "x") && y := field(ts.mutatorType, "y");
-	
-
-
-
-
-data PredefOp = tupleLength();
-
-Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::tupleLength())
-	= function(\return(primitive("int")), "tupleLength", visibility = "protected")
-when trieNode(abstractNode()) := artifact;
-	
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::tupleLength())
-	= iconst(tupleLength(ts.ds));
 
 
 
@@ -3059,11 +3050,11 @@ javaClass(str name,
 data PredefDataType
 	= unknownDataType();
 
-data JavaDataType(TrieSpecifics ts = undefinedTrieSpecifics())
+data JavaDataType(TrieSpecifics ts = undefinedTrieSpecifics(), list[str] modifierList = [])
 	= invalidJavaDataType(str typeName = "???", list[Type] typeArguments = [])
 	| javaRootClass()
-	| javaInterface(str typeName, list[Type] typeArguments = [], list[JavaDataType] extendsList = [], list[str] modifierList = [])
-	| javaClass(str typeName, list[Type] typeArguments = [], JavaDataType extends = javaRootClass(), list[JavaDataType] implementsList = [], list[str] modifierList = []);
+	| javaInterface(str typeName, list[Type] typeArguments = [], list[JavaDataType] extendsList = [])
+	| javaClass(str typeName, list[Type] typeArguments = [], JavaDataType extends = javaRootClass(), list[JavaDataType] implementsList = []);
 
 default bool isJdtActive(TrieSpecifics ts, PredefDataType dt) = true;
 
@@ -3238,14 +3229,15 @@ M3 getM3() {
 Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 	rel[TrieNodeType from, TrieNodeType to] refines = refines;
 	rel[TrieNodeType from, PredefOp to] declares = toSet(declares(abstractNode()) + declares(compactNode()));
-	rel[TrieNodeType from, PredefOp to] implements = {};	
+	rel[TrieNodeType from, PredefOp to] implements = {};
+	rel[OpBinding from, int to] placements = {}; // calculate an order between declares / implements / overrides	
 		
-	rel[OpBinding from, OpBinding to] operationRefinement; // ???
+	// rel[OpBinding from, OpBinding to] operationRefinement; // ???
 
 	set[TrieNodeType] allTrieNodeTypes = carrier(refines);
 	
-	// crawl all available implementations
 	for (current <- allTrieNodeTypes) {		
+		// crawl all available implementations		
 		TrieNodeType top = abstractNode();
 		set[PredefOp] transitiveOps = transitiveOps(refines, declares, top, current);
 		
@@ -3257,6 +3249,9 @@ Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 				implements += <current, op>;
 			}
 		}
+		
+		// calculate an order between declares / implements / overrides
+		// TODO
 	}	 
 	
 	// TODO: check for every defined method, at least one refinement/implementation
@@ -3282,7 +3277,7 @@ set[PredefOp] transitiveOps(
 data Model
 	= model(
 		rel[TrieNodeType from, TrieNodeType to] refines = {},
-		rel[TrieNodeType from, PredefOp to] declares = {},
+		rel[TrieNodeType from, PredefOp to] declares = {},		
 		rel[TrieNodeType from, PredefOp to] implements = {}
 	);
 
@@ -3447,12 +3442,29 @@ list[PredefOp] declaredMethodsByCompactNode = [
 
 rel[OpBinding from, OpBinding to] operationRefinement;
 
-str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType) =  
+str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType) {
+	list[str] nestedContent = [];
+
+	bool jdtIsAbstract = "abstract" in jdt.modifierList;
+
+	for (op <- ts.model.declares[nodeType]) {
+		if (<nodeType,op> in ts.model.implements) {
+			nestedContent += impl(ts, trieNode(nodeType), op);
+		} else {
+			nestedContent += dec(getDef(ts, trieNode(nodeType), op), asAbstract = jdtIsAbstract);
+		}
+	}
+
+	return 
 "<toString(jdt)> {
 
-	<for (op <- ts.model.declares[nodeType]) {><impl(ts, trieNode(nodeType), op)><}>
-
+	<for (item <- nestedContent) {>
+		<item>
+	<}>
 }";
+}
+
+
 
 
 default str impl(TrieSpecifics ts, Artifact artifact, PredefOp op) = "";
