@@ -387,9 +387,6 @@ data PredefOp
 data OpBinding 
 	= trieNodeOp(TrieNodeType nodeType, PredefOp op);	
 
-default Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp op) { throw "Not found <op> in context <artifact> for <ts.ds>"; } // TODO noop
-
-default str generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp op) = "";
 
 
 data PredefArgLabel
@@ -2421,20 +2418,6 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), node
 
 
 
-data PredefOp = getNode();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getNode())
-	= method(\return(jdtToType(abstractNode(ts))), "getNode", args = [ts.index]);
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), getNode())
-	= method(\return(jdtToType(compactNode(ts))), "getNode", args = [ts.index]);
-
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getNode())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
-
-
-
 data PredefOp = nodeIterator();
 
 // TODO: fix generics in return type
@@ -2518,18 +2501,6 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode
 	
 
 
-data PredefOp = payloadIterator();
-
-// TODO: fix generics in return type
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), payloadIterator())
-	= method(\return(generic(isOptionEnabled(ts.setup, useSupplierIterator()) ? "SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>" : "Iterator\<<typeToString(primitiveToClass(ts.keyType))>\>")), "payloadIterator", isActive = !isOptionEnabled(ts.setup, useFixedStackIterator()));
-
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), payloadIterator())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
-
-
-
 data PredefOp = hasSlots();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasSlots())
@@ -2563,17 +2534,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getS
 
 
 
-data PredefOp = arity();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), arity())
-	= method(\return(primitive("int")), "arity");
-
-
-
 data PredefOp = size();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::size())
-	= method(\return(primitive("int")), "size");
 
 Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::size())
 	= method(\return(primitive("int")), "size", visibility = "public")
@@ -3096,11 +3057,11 @@ default JavaDataType jul_Map_Entry(list[Type] types) = invalidJavaDataType();
 JavaDataType abstractNode(TrieSpecifics ts, list[str] modifierList = [])
 	= javaClass("Abstract<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), modifierList = modifierList);
 
-JavaDataType compactNode(TrieSpecifics ts)
-	= javaClass("Compact<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)));
+JavaDataType compactNode(TrieSpecifics ts, list[str] modifierList = [])
+	= javaClass("Compact<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), modifierList = modifierList);
 
-JavaDataType hashCollisionNode(TrieSpecifics ts)
-	= javaClass("HashCollision<toString(ts.ds)>Node<ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts));
+JavaDataType hashCollisionNode(TrieSpecifics ts, list[str] modifierList = [])
+	= javaClass("HashCollision<toString(ts.ds)>Node<ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts), modifierList = modifierList);
 
 //Method getDef(TrieSpecifics ts, Artifact artifact:, JavaDataType jdt, methodName:"__constructor")
 //	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ ts.keyHash, labeledArgumentList(payloadTuple(), [ appendToName(updateType(arg, asArray), "s") | arg <- payloadTupleArgs(ts) ]) ], generics = jdt.typeArguments, visibility = "public")
@@ -3273,12 +3234,31 @@ set[PredefOp] transitiveOps(
 	
 	return transitiveOps;
 } 
+
+/* redeclares signature? */ 
+bool isRedeclaration(Model m, TrieNodeType nodeType, PredefOp op) {
+	set[TrieNodeType] superTypes = (m.refines+)[nodeType];	
+	set[TrieNodeType] declarationSites = m.declares<1,0>[op];
+
+	return nodeType in declarationSites 
+			&& !isEmpty(superTypes & declarationSites);
+}
+
+/* implements of signature that is defined in this or supertype? */
+bool isRealization(Model m, TrieNodeType nodeType, PredefOp op) {
+	set[TrieNodeType] superTypes = (m.refines+)[nodeType];	
+	set[TrieNodeType] declarationSites = m.declares<1,0>[op];
+	
+	return (<nodeType, op> in m.implements)
+			&& !isEmpty(superTypes & declarationSites);
+}
  
 data Model
 	= model(
 		rel[TrieNodeType from, TrieNodeType to] refines = {},
 		rel[TrieNodeType from, PredefOp to] declares = {},		
-		rel[TrieNodeType from, PredefOp to] implements = {}
+		rel[TrieNodeType from, PredefOp to] implements = {},
+		rel[loc origin, loc comment] documentation = {}		
 	);
 
 public rel[TrieNodeType from, TrieNodeType to] refines = {
@@ -3288,157 +3268,9 @@ public rel[TrieNodeType from, TrieNodeType to] refines = {
 	<leafNode(), abstractNode()> 
 };
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType), PredefOp op) = getDef(ts, nodeType, op);
-
-Method getDef(TrieSpecifics ts, TrieNodeType nodeType, PredefOp op) {
-	TrieNodeType currentNodeType = nodeType; 
-	
-	while ((<currentNodeType, op> in ts.model.declares) == false) {
-		set[TrieNodeType] superTypes = ts.model.refines[currentNodeType];
-		
-		if(superTypes == {}) {
-			throw "Method <op> is neither defined in <nodeType> or any of its base types.";
-		} else {
-			currentNodeType = getOneFrom(superTypes);
-		}
-	}
-	
-	return getDef(ts, trieNode(currentNodeType), op);                                  
-}
-
-lrel[TrieNodeType from, PredefOp to] declares(TrieNodeType nodeType:abstractNode()) 
-	= [ <nodeType,method> | method <- declaredMethodsByAbstractNode];
-
-list[PredefOp] declaredMethodsByAbstractNode = [
-
-	tupleLength(), // TODO: implement as static final field
-
-	isAllowedToEdit(), // TODO: implement as static final method
-
-	containsKey(),
-	containsKey(customComparator = true),
-
-	get(),
-	get(customComparator = true),
-
-	insertTuple(),
-	insertTuple(customComparator = true),
-
-	removeTuple(),
-	removeTuple(customComparator = true),	
-		
-	hasNodes(),
-	nodeArity(),
-	getNode(),	
-	nodeIterator(),
-	
-	hasPayload(),
-	payloadArity(),
-	
-	getKey(),
-	getValue(),
-	getKeyValueEntry(),	
-	getTuple(),
-	payloadIterator(),
-	
-	hasSlots(),
-	slotArity(),
-	getSlot(),
-	
-	arity(),
-	size()	
-];
-
 lrel[TrieNodeType from, PredefOp to] declares(TrieNodeType nodeType:compactNode()) 
 	= [ <nodeType,method> | method <- declaredMethodsByCompactNode];
 
-data PredefOp = hashCodeLength();
-data PredefOp = bitPartitionSize();
-data PredefOp = bitPartitionMask();
-
-data PredefOp = sizeEmpty();
-data PredefOp = sizeOne();
-data PredefOp = sizeMoreThanOne();
-
-data PredefOp = nodeInvariant();
-data PredefOp = isTrieStructureValid();
-
-data PredefOp = emptyTrieNodeConstant();
-
-data PredefOp = nodeAt();
-
-data PredefOp = recoverMask();
-data PredefOp = toString();
-
-list[PredefOp] declaredMethodsByCompactNode = [
-
-	// TODO: this is implementation specific ...
-	// TODO: nodeOf() factory methods; also option to enable disable the use of factory methods.
-
-	hashCodeLength(), // TODO: implement as static final field
-	bitPartitionSize(), // TODO: implement as static final field
-	
-	// TODO: implement as static final field
-	// TODO: this is implementation specific
-	bitPartitionMask(),
-	
-	mask(),
-	bitpos(),
-	
-	nodeMap(),
-	dataMap(),
-	
-	sizeEmpty(),
-	sizeOne(),
-	sizeMoreThanOne(),
-
-	sizePredicate(),
-	
-	getNode(), // redeclaration (more specific return type)	
-	
-	nodeInvariant(),
-	isTrieStructureValid(),
-	
-	copyAndInsertNode(), // ???
-	copyAndRemoveNode(), // ???
-	copyAndSetValue(),
-	copyAndInsertValue(),
-	copyAndRemoveValue(),
-	copyAndSetNode(),
-	copyAndMigrateFromInlineToNode(),
-	copyAndMigrateFromNodeToInline(),
-	
-	removeInplaceValueAndConvertToSpecializedNode(),	
-
-	mergeTwoKeyValPairs(),
-	mergeNodeAndKeyValPair(),
-
-	emptyTrieNodeConstant(), // TODO: this is implementation specific
-
-	index2(),
-	index3(),
-	
-	dataIndex(),
-	nodeIndex(),
-	
-	nodeAt(), // TODO: get rid of?
-		
-//	containsKey(),
-//	containsKey(customComparator = true),
-//
-//	get(),
-//	get(customComparator = true),
-//
-//	insertTuple(),
-//	insertTuple(customComparator = true),
-//
-//	removeTuple(),
-//	removeTuple(customComparator = true),	
-		
-	recoverMask(),
-	toString()
-	
-];
 
 rel[OpBinding from, OpBinding to] operationRefinement;
 
@@ -3448,11 +3280,24 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 	bool jdtIsAbstract = "abstract" in jdt.modifierList;
 
 	for (op <- ts.model.declares[nodeType]) {
-		if (<nodeType,op> in ts.model.implements) {
-			nestedContent += impl(ts, trieNode(nodeType), op);
-		} else {
-			nestedContent += dec(getDef(ts, trieNode(nodeType), op), asAbstract = jdtIsAbstract);
+		str item = "";		
+		str documentation = getDocumentation(ts, trieNode(nodeType), op);
+		
+		if (documentation != "") {
+			item += "/**<documentation>*/\n";
 		}
+		
+		if (isRealization(ts.model, nodeType, op)) { // isRedeclaration(ts.model, nodeType, op) || 
+			item += "@Override\n";
+		}
+		
+		if (<nodeType,op> in ts.model.implements) {
+			item += impl(ts, trieNode(nodeType), op);
+		} else {
+			item += dec(getDef(ts, trieNode(nodeType), op), asAbstract = jdtIsAbstract);
+		}
+		
+		nestedContent += item;
 	}
 
 	return 
@@ -3463,8 +3308,6 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 	<}>
 }";
 }
-
-
 
 
 default str impl(TrieSpecifics ts, Artifact artifact, PredefOp op) = "";
@@ -3492,3 +3335,34 @@ Expression decOrImpl(TrieSpecifics ts, Artifact artifact, PredefOp op) {
 		;
 	}
 }
+
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType), PredefOp op) {
+	if (<nodeType, op> in ts.model.declares) {
+		fail getDef; // no search in type hierarchy necessary
+	}	
+		
+	TrieNodeType currentNodeType = nodeType; 
+	
+	while ((<currentNodeType, op> in ts.model.declares) == false) {
+		set[TrieNodeType] superTypes = ts.model.refines[currentNodeType];
+		
+		if(superTypes == {}) {
+			throw "Method <op> is neither defined in <nodeType> or any of its base types.";
+		} else {
+			currentNodeType = getOneFrom(superTypes);
+		}
+	}
+
+	return getDef(ts, trieNode(currentNodeType), op); 	
+}
+
+default Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp op) { throw "Not found <op> in context <artifact> for <ts.ds>"; } // TODO noop
+//Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType), PredefOp op) = getDef(ts, nodeType, op);
+
+
+default str getDocumentation(TrieSpecifics ts, Artifact artifact, PredefOp op) = ""; 
+
+
+// NOTE: return a valid 'Expression' used for crawling (in contrast to throwing an exception) due to crawling. 
+default Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp op) = emptyExpression();
