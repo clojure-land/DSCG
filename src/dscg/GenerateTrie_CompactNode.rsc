@@ -23,19 +23,28 @@ when jdt := compactNode(ts, modifierList = [ "private", "abstract", "static" ]);
 data PredefOp = hashCodeLength();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::hashCodeLength())
-	= method(\return(primitive("int")), "hashCodeLength");
+	= function(\return(primitive("int")), "hashCodeLength");
+	
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::hashCodeLength())
+	= result(iconst(32));
 
 
 data PredefOp = bitPartitionSize();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::bitPartitionSize())
-	= method(\return(primitive("int")), "bitPartitionSize");
+	= function(\return(primitive("int")), "bitPartitionSize");
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::bitPartitionSize())
+	= result(iconst(ts.bitPartitionSize));
 
 
 data PredefOp = bitPartitionMask();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::bitPartitionMask())
-	= method(\return(primitive("int")), "bitPartitionMask");
+	= function(\return(primitive("int")), "bitPartitionMask");
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::bitPartitionMask())
+	= result(binaryLiteral(ts.bitPartitionSize));
 
 
 data PredefOp = sizeEmpty();
@@ -956,7 +965,7 @@ list[Argument] invoke_getAndHashCode_for_payloadTuple(DataStructure ds:\set(), l
 default str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts) = 
 	"assert !(<equalityDefaultForArguments(key(ts.keyType, "key0"), key(ts.keyType, "key1"))>);
 	
-	if (<use(ts.shift)> \>= HASH_CODE_LENGTH) {
+	if (<use(ts.shift)> \>= <toString(call(getDef(ts, trieNode(compactNode()), hashCodeLength())))>) {
 		// throw new IllegalStateException(\"Hash collision not yet fixed.\");
 		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<typeToString(nodeTupleType(ts, 0))>[]) new <if (isPrimitive(nodeTupleArg(ts, 0))) {><typeToString(nodeTupleType(ts, 0))><} else {>Object<}>[] { <use(appendToName([ "0", "1" ], nodeTupleArg(ts, 0)))> }
 						<if (\map() := ts.ds) {>, (<typeToString(nodeTupleType(ts, 1))>[]) new <if (isPrimitive(nodeTupleArg(ts, 1))) {><typeToString(nodeTupleType(ts, 1))><} else {>Object<}>[] { <use(appendToName([ "0", "1" ], nodeTupleArg(ts, 1)))> }<}>);

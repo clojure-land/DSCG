@@ -170,6 +170,9 @@ Expression lconst(int i) = constant(primitive("long"), "<i>");
 Expression iconst(int i) = constant(primitive("int"), "<i>");
 Expression bconst(bool b) = constant(primitive("boolean"), "<b>");
 
+data Expression = binaryLiteral(int i);
+str toString(Expression e:binaryLiteral(i)) = "0b<for (_ <- [1..i+1]) {>1<}>";
+
 data Expression = embrace(Expression e);
 Expression embrace(Expression e) = e when e is useExpr;
 
@@ -2911,8 +2914,9 @@ data PredefOp = mergeTwoKeyValPairs();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs())
 	=  function(\return(jdtToType(compactNode(ts))), "mergeTwoKeyValPairs", args = [ *appendToName(__payloadTupleAtNode(ts.ds, ts.tupleTypes), "0"), ts.keyHash0, *appendToName(__payloadTupleAtNode(ts.ds, ts.tupleTypes), "1"), ts.keyHash1, ts.shift ], generics = ts.genericTupleTypes);
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs())
-	= generate_bodyOf_mergeTwoKeyValPairs(ts);
+Expression() generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs()) = Expression() { 
+	return exprFromString(generate_bodyOf_mergeTwoKeyValPairs(ts));
+};
 
 
 
@@ -3188,7 +3192,7 @@ M3 getM3() {
  
 // TODO: get ride of global dependencies
 Model buildLanguageAgnosticModel(TrieSpecifics ts) {
-	rel[TrieNodeType from, TrieNodeType to] refines = refines;
+	rel[TrieNodeType from, TrieNodeType to] refines = refines();
 	rel[TrieNodeType from, PredefOp to] declares = toSet(declares(abstractNode()) + declares(compactNode()));
 	rel[TrieNodeType from, PredefOp to] implements = {};
 	rel[OpBinding from, int to] placements = {}; // calculate an order between declares / implements / overrides	
@@ -3261,7 +3265,7 @@ data Model
 		rel[loc origin, loc comment] documentation = {}		
 	);
 
-public rel[TrieNodeType from, TrieNodeType to] refines = {
+rel[TrieNodeType from, TrieNodeType to] refines() = {
 	<compactNode(), abstractNode()>,
 	<bitmapIndexedNode(), compactNode()>,
 	<hashCollisionNode(), abstractNode()>,
@@ -3311,6 +3315,12 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 
 
 default str impl(TrieSpecifics ts, Artifact artifact, PredefOp op) = "";
+
+str impl(TrieSpecifics ts, Artifact artifact, PredefOp op, Method __def = getDef(ts, artifact, op)) 
+	= implOrOverride(__def, closure(), doOverride = \new())
+when __def.isActive
+	&& closure := generate_bodyOf(ts, artifact, op)
+	&& /func(adt("Expression", []), []) := typeOf(closure);
 
 str impl(TrieSpecifics ts, Artifact artifact, PredefOp op, Method __def = getDef(ts, artifact, op)) 
 	= implOrOverride(__def, generate_bodyOf(ts, artifact, op), doOverride = \new())
