@@ -356,16 +356,19 @@ when [*before, *old, *after] := xs;
 
 default list[&T] insertAfterOrDefaultAtFront(list[&T] xs, list[&T] old, list[&T] new) = new + xs;
 
+bool exists_bodyOf_updated(0, 0, str(str, str) eq)  = true;
 str generate_bodyOf_updated(0, 0, str(str, str) eq) = 
 	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
 	'return <ts.ResultStr>.modified(<nodeOf(0, 1, "mask, <keyName><if (\map() := ts.ds) {>, <valName><}>")>);"
 	;
 	
+bool exists_bodyOf_updated(_, _, _, rel[Option,bool] setup, str(str, str) eq)	 = true;
 str generate_bodyOf_updated(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 
+default bool exists_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq)  = true;
 default str generate_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) {	
 	// TODO merge both functions
 	replaceValueByNode = str (int i, int j) {	
@@ -476,15 +479,18 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,b
 	'return result;";	
 }	
 
+bool exists_bodyOf_removed(0, 0, _, _, str(str, str) eq) = true;
 str generate_bodyOf_removed(0, 0, _, _, str(str, str) eq)
 	= "return <ts.ResultStr>.unchanged(this);"
 	;
 	
+bool exists_bodyOf_removed(_, _, _, rel[Option,bool] setup, str(str, str) eq)	 = true;
 str generate_bodyOf_removed(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 
+bool exists_bodyOf_removed(0, 2, _, _, str(str, str) eq)  = true;
 str generate_bodyOf_removed(0, 2, _, _, str(str, str) eq) {
 	removed_clause_inline = str (int i) { return 
 		"if (mask == <keyPosName><i>) {
@@ -513,6 +519,7 @@ str generate_bodyOf_removed(0, 2, _, _, str(str, str) eq) {
 	'return result;";		
 }
 
+default bool exists_bodyOf_removed(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq)  = true;
 default str generate_bodyOf_removed(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) {	
 	removed_clause_inline = str (int i) { return 
 		"if (mask == <keyPosName><i>) {
@@ -568,15 +575,18 @@ default str generate_bodyOf_removed(int n, int m, DataStructure ds, rel[Option,b
 	'return result;";
 }
 		
+bool exists_bodyOf_containsKey(0, 0, _, _, str(str, str) eq)  = true;
 str generate_bodyOf_containsKey(0, 0, _, _, str(str, str) eq) 
 	= "return false;"
 	;
 	
+bool exists_bodyOf_containsKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	 = true;
 str generate_bodyOf_containsKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;
 
+default bool exists_bodyOf_containsKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq)  = true;
 default str generate_bodyOf_containsKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) 
 	= "final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);\n\n"	
 	+ intercalate(" else ", 
@@ -586,7 +596,8 @@ default str generate_bodyOf_containsKey(int n, int m, DataStructure ds, rel[Opti
 	;
 
 /* binary search version */
-//default str generate_bodyOf_containsKey(int n, int m, DataStructure ds, str(str, str) eq)
+//default bool exists_bodyOf_containsKey(int n, int m, DataStructure ds, str(str, str) eq) = true;
+//str generate_bodyOf_containsKey(int n, int m, DataStructure ds, str(str, str) eq)
 //	= 
 //	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);\n\n
 //	'<generate_bodyOf_containsKey_binarySearchPayload(1, m, eq)>
@@ -596,11 +607,13 @@ default str generate_bodyOf_containsKey(int n, int m, DataStructure ds, rel[Opti
 
 
 
+bool exists_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq)  = true;
 str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq) =
 	"return false;"
 when left > right;	
 
 
+bool exists_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq)  = true;
 str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq) =
 	"/*<left>..<right>*/
 	'if (mask == <nodePosName><left>) {
@@ -610,6 +623,7 @@ str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, s
 	'}"
 when left == right;	
 
+bool exists_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq)  = true;
 str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq) =
 	"/*<left>..<right>*/
 	'if (mask == <nodePosName><left>) {
@@ -625,6 +639,7 @@ str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, s
 	'}"
 when left == right - 1;	
 	
+default bool exists_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq)  = true;
 default str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq) { 	
  	int pivot = (left + right) / 2;
  	
@@ -651,11 +666,13 @@ default str generate_bodyOf_containsKey_binarySearchNode(int left, int right, st
 
 
 
+bool exists_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq)  = true;
 str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq) =
 	"//return false;"
 when left > right;	
 
 
+bool exists_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq)  = true;
 str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq) =
 	"/*<left>..<right>*/
 	'if (mask == <keyPosName><left> && <eq("<keyName>", "<keyName><left>")>) {
@@ -665,6 +682,7 @@ str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str
 	'}"
 when left == right;	
 
+bool exists_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq)  = true;
 str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq) =
 	"/*<left>..<right>*/
 	'if (mask == <keyPosName><left> && <eq("<keyName>", "<keyName><left>")>) {
@@ -680,6 +698,7 @@ str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str
 	'}"
 when left == right - 1;	
 	
+default bool exists_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq)  = true;
 default str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq) { 	
  	int pivot = (left + right) / 2;
  	
@@ -714,15 +733,18 @@ default str generate_bodyOf_containsKey_binarySearchPayload(int left, int right,
 
 
 	
+bool exists_bodyOf_findByKey(0, 0, _, _, str(str, str) eq)  = true;
 str generate_bodyOf_findByKey(0, 0, _, _, str(str, str) eq) 
 	= "return Optional.empty();"
 	;
 
+bool exists_bodyOf_findByKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	 = true;
 str generate_bodyOf_findByKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;
 
+default bool exists_bodyOf_findByKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq)  = true;
 default str generate_bodyOf_findByKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) 
 	= "final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);\n\n"	
 	+ intercalate(" else ", 
@@ -802,17 +824,21 @@ str generateGenericNodeClassString(int n, int m, ts:___expandedTrieSpecifics(ds,
 	}
 	";
 
+bool exists_bodyOf_hasSlots(0)  = true;
 str generate_bodyOf_hasSlots(0) = 
 	"return false;";
 	
+default bool exists_bodyOf_hasSlots(int mn)  = true;
 default str generate_bodyOf_hasSlots(int mn) = 	
 	"return true;";
 	
+bool exists_bodyOf_getSlot(TrieSpecifics ts, 0) = true;
 str generate_bodyOf_getSlot(TrieSpecifics ts, 0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when isOptionEnabled(ts.setup,useUntypedVariables())
 	;
 	
+bool exists_bodyOf_getSlot(TrieSpecifics ts, int mn)  = true;
 str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
 	"		switch(index) {
 	'			<for (i <- [0..mn]) {>case <i>:
@@ -823,6 +849,7 @@ str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) =
 when isOptionEnabled(ts.setup,useUntypedVariables())
 	;
 	
+bool exists_bodyOf_getSlot(TrieSpecifics ts, int mn)  = true;
 str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
 	"final int boundary = TUPLE_LENGTH * payloadArity();
 	'
@@ -838,6 +865,7 @@ str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) =
 when !isOptionEnabled(ts.setup,useUntypedVariables()) && \map() := ts.ds
 	;
 	
+bool exists_bodyOf_getSlot(TrieSpecifics ts, int mn)  = true;
 str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
 	"final int boundary = payloadArity();
 	'
@@ -849,14 +877,17 @@ str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) =
 when !isOptionEnabled(ts.setup,useUntypedVariables()) && ts.ds == \set()
 	;	
 	
+default bool exists_bodyOf_getSlot(TrieSpecifics ts, int mn)  = true;
 default str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) =	
 	"throw new UnsupportedOperationException();"
 	;
 	
+bool exists_bodyOf_getNode(0) = true;
 str generate_bodyOf_getNode(0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
 	
+default bool exists_bodyOf_getNode(int n)  = true;
 default str generate_bodyOf_getNode(int n) = 	
 	"		switch(index) {
 	'			<for (i <- [1..n+1]) {>case <i-1>:
@@ -866,10 +897,12 @@ default str generate_bodyOf_getNode(int n) =
 	'			}"
 	;	
 	
+bool exists_bodyOf_getKey(0) = true;
 str generate_bodyOf_getKey(0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
 	
+default bool exists_bodyOf_getKey(int m)  = true;
 default str generate_bodyOf_getKey(int m) = 	
 	"		switch(index) {
 	'			<for (i <- [1..m+1]) {>case <i-1>:
@@ -879,10 +912,12 @@ default str generate_bodyOf_getKey(int m) =
 	'			}"
 	;
 
+bool exists_bodyOf_getValue(0) = true;
 str generate_bodyOf_getValue(0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
 	
+default bool exists_bodyOf_getValue(int m)  = true;
 default str generate_bodyOf_getValue(int m) = 	
 	"		switch(index) {
 	'			<for (i <- [1..m+1]) {>case <i-1>:
@@ -892,11 +927,13 @@ default str generate_bodyOf_getValue(int m) =
 	'			}"
 	;
 
+bool exists_bodyOf_copyAndSetValue(_, 0, _, setup) = true;
 str generate_bodyOf_copyAndSetValue(_, 0, _, setup)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when !isOptionEnabled(setup,useUntypedVariables())
 	;
 
+bool exists_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
 	'	
@@ -912,7 +949,8 @@ str generate_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpecifics(ds
 when isOptionEnabled(setup,useUntypedVariables())	
 	;
 	
-default str generate_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
+default bool exists_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup)  = true;
+str generate_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
 	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
 	'	
 	'	<dec(ts.bitmapField)> = this.<use(bitmapMethod)>;
@@ -926,11 +964,13 @@ default str generate_bodyOf_copyAndSetValue(int n, int m, ts:___expandedTrieSpec
 	'	}"
 	;
 	
+bool exists_bodyOf_copyAndSetNode(0, _, _, setup) = true;
 str generate_bodyOf_copyAndSetNode(0, _, _, setup)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when !isOptionEnabled(setup,useUntypedVariables())
 	;
 	
+bool exists_bodyOf_copyAndSetNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndSetNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 
 	"	<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity() + nodeIndex(bitpos);
 	'
@@ -946,6 +986,7 @@ str generate_bodyOf_copyAndSetNode(int n, int m, ts:___expandedTrieSpecifics(ds,
 when isOptionEnabled(setup,useUntypedVariables())
 	;	
 	
+default bool exists_bodyOf_copyAndSetNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup)  = true;
 default str generate_bodyOf_copyAndSetNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
 	"	final int index = nodeIndex(bitpos);
 	'
@@ -961,11 +1002,13 @@ default str generate_bodyOf_copyAndSetNode(int n, int m, ts:___expandedTrieSpeci
 	;
 
 // TODO: check condition carefully
+bool exists_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
 	"throw new IllegalStateException();"
 when !isOptionEnabled(setup,useUntypedVariables()) && ((n + m) == nMax) ||
 		isOptionEnabled(setup,useUntypedVariables()) && (mn > tupleLength(ds) * (nMax - 1));
 		
+bool exists_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
 	'
@@ -983,6 +1026,7 @@ str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics
 when isOptionEnabled(setup,useUntypedVariables())	
 	;	
 
+default bool exists_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup)  = true;
 default str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
 	"	final int valIndex = dataIndex(bitpos);
 	'
@@ -1000,11 +1044,13 @@ default str generate_bodyOf_copyAndInsertValue(int n, int m, ts:___expandedTrieS
 	;
 	
 
+bool exists_bodyOf_copyAndInsertNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndInsertNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when !isOptionEnabled(setup,useUntypedVariables()) && (n + m ) >= nMax
 	;	
 
+bool exists_bodyOf_copyAndInsertNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndInsertNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
 	"	<dec(field(primitive("int"), "idx"))> = nodeIndex(bitpos);
 	'
@@ -1020,11 +1066,13 @@ str generate_bodyOf_copyAndInsertNode(int n, int m, ts:___expandedTrieSpecifics(
 when !isOptionEnabled(setup,useUntypedVariables()) && (n + m ) < nMax
 	;	
 	
+bool exists_bodyOf_copyAndInsertNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndInsertNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when isOptionEnabled(setup,useUntypedVariables()) && (mn >= tupleLength(ds) * nMax)
 	;	
 	
+bool exists_bodyOf_copyAndInsertNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndInsertNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity() + nodeIndex(bitpos);
 	'
@@ -1041,11 +1089,13 @@ when isOptionEnabled(setup,useUntypedVariables()) && (mn < tupleLength(ds) * nMa
 	;
 	
 	
+bool exists_bodyOf_copyAndRemoveNode(int n:0, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndRemoveNode(int n:0, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when !isOptionEnabled(setup,useUntypedVariables())
 	;	
 
+bool exists_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
 	"	<dec(field(primitive("int"), "idx"))> = nodeIndex(bitpos);
 	'
@@ -1061,6 +1111,7 @@ str generate_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(
 when !isOptionEnabled(setup,useUntypedVariables())
 	;
 	
+bool exists_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity() + nodeIndex(bitpos);
 	'
@@ -1076,11 +1127,13 @@ str generate_bodyOf_copyAndRemoveNode(int n, int m, ts:___expandedTrieSpecifics(
 when isOptionEnabled(setup,useUntypedVariables())	
 	;			
 	
+bool exists_bodyOf_copyAndRemoveValue(_, 0, _, setup) = true;
 str generate_bodyOf_copyAndRemoveValue(_, 0, _, setup)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when !isOptionEnabled(setup,useUntypedVariables())
 	;
 
+default bool exists_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
 	"	final int valIndex = dataIndex(bitpos);
 	'
@@ -1096,6 +1149,7 @@ default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieS
 when isOptionEnabled(setup,useUntypedVariables())	
 	;
 	
+default bool exists_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup)  = true;
 default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
 	"	final int valIndex = dataIndex(bitpos);
 	'
@@ -1110,11 +1164,13 @@ default str generate_bodyOf_copyAndRemoveValue(int n, int m, ts:___expandedTrieS
 	'	}"
 	;	
 	
+bool exists_bodyOf_copyAndMigrateFromInlineToNode(n, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndMigrateFromInlineToNode(n, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
 	"throw new IllegalStateException(\"Index out of range.\");"
 when !isOptionEnabled(setup,useUntypedVariables())
 	;
 	
+bool exists_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "bitIndex"))> = <use(tupleLengthConstant)> * (payloadArity() - 1) + nodeIndex(bitpos);
 	'	<dec(field(primitive("int"), "valIndex"))> = dataIndex(bitpos);
@@ -1138,6 +1194,7 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedT
 when isOptionEnabled(setup,useUntypedVariables())
 	;
 	
+default bool exists_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup)  = true;
 default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
@@ -1161,21 +1218,25 @@ default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, ts:___e
 	;
 
 
+bool exists_bodyOf_copyAndMigrateFromNodeToInline(n:0, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndMigrateFromNodeToInline(n:0, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =	
 	"throw new IllegalStateException(\"Index out of range.\");"
 when !isOptionEnabled(setup,useUntypedVariables())
 	;
 	
+//bool exists_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 //str generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 
 //	"throw new IllegalStateException(\"Index out of range.\");"
 //when isOptionEnabled(setup,useUntypedVariables())
 //	;	
 
+bool exists_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
 	"throw new IllegalStateException(\"Index out of range.\");"
 when isOptionEnabled(setup,useUntypedVariables()) && (mn == tupleLength(ds) * nMax)
 	;
 				
+bool exists_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = 	
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
@@ -1202,6 +1263,7 @@ str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedT
 when isOptionEnabled(setup,useUntypedVariables())	
 	;	
 	
+default bool exists_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup)  = true;
 default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 	
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
@@ -1228,10 +1290,12 @@ default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, ts:___e
 	;
 
 	
+bool exists_bodyOf_getKeyValueEntry(TrieSpecifics ts, 0) = true;
 str generate_bodyOf_getKeyValueEntry(TrieSpecifics ts, 0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
 	
+default bool exists_bodyOf_getKeyValueEntry(TrieSpecifics ts, int m)  = true;
 default str generate_bodyOf_getKeyValueEntry(TrieSpecifics ts, int m) = 	
 	"		switch(index) {
 	'			<for (i <- [1..m+1]) {>case <i-1>:
@@ -1279,11 +1343,13 @@ str generateCompactNodeString() =
 	}"
 	;
 	
+bool exists_bodyOf_GenericNode_containsKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	 = true;
 str generate_bodyOf_GenericNode_containsKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 	
+default bool exists_bodyOf_GenericNode_containsKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq)  = true;
 default str generate_bodyOf_GenericNode_containsKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (<keyName>Hash \>\>\> shift) & BIT_PARTITION_MASK;
 	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
@@ -1299,11 +1365,13 @@ default str generate_bodyOf_GenericNode_containsKey(int n, int m, ts:___expanded
 	'return false;"
 	;
 	
+bool exists_bodyOf_GenericNode_findByKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	 = true;
 str generate_bodyOf_GenericNode_findByKey(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;		
 	
+default bool exists_bodyOf_GenericNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq)  = true;
 default str generate_bodyOf_GenericNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
@@ -1331,11 +1399,13 @@ default str generate_bodyOf_GenericNode_findByKey(int n, int m, ts:___expandedTr
 	'return Optional.empty();"
 	;
 	
+bool exists_bodyOf_GenericNode_updated(_, _, _, rel[Option,bool] setup, str(str, str) eq)	 = true;
 str generate_bodyOf_GenericNode_updated(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 	
+default bool exists_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq)  = true;
 default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
@@ -1417,11 +1487,13 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrie
 	'	return <ts.ResultStr>.modified(thisNew);
 	'}";	
 		
+bool exists_bodyOf_GenericNode_removed(_, _, _, rel[Option,bool] setup, str(str, str) eq)	 = true;
 str generate_bodyOf_GenericNode_removed(_, _, _, rel[Option,bool] setup, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault))
 	;			
 		
+default bool exists_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq)  = true;
 default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) =
 	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
 	<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
@@ -1557,8 +1629,10 @@ list[Argument] generateSubnodeMembers(int n)
 	;	
 
 
+bool exists_valNodeOf_factoryMethod(0, 0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound))  = true;
 str generate_valNodeOf_factoryMethod(0, 0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) { throw "TODO"; }
 		
+bool exists_valNodeOf_factoryMethod(1, 0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound))  = true;
 str generate_valNodeOf_factoryMethod(1, 0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) { throw "TODO"; }
 
 //Method CompactNode_factoryMethod(int n, int m, TrieSpecifics ts) {
@@ -1573,6 +1647,7 @@ str generate_valNodeOf_factoryMethod(1, 0, ts:___expandedTrieSpecifics(ds, bitPa
 //	return method(ts.compactNodeClassReturn, "nodeOf", args = constructorArgs);
 //}
 
+bool exists_valNodeOf_factoryMethod(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound))  = true;
 str generate_valNodeOf_factoryMethod(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) {
 	// TODO: remove code duplication
 	members = generateMembers(n, m);
@@ -1857,11 +1932,15 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, ts:___expa
 	;
 }
 
+bool exists_bodyOf_sizePredicate(0, 0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound))  = true;
 str generate_bodyOf_sizePredicate(0, 0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = "SIZE_EMPTY";
+bool exists_bodyOf_sizePredicate(0, 1, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound))  = true;
 str generate_bodyOf_sizePredicate(0, 1, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = "SIZE_ONE";	
+default bool exists_bodyOf_sizePredicate(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound))  = true;
 default str generate_bodyOf_sizePredicate(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = "SIZE_MORE_THAN_ONE";
 
 
+bool exists_equalityComparisons(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq, int mn = tupleLength(ds)*m+n) = true;
 str generate_equalityComparisons(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq, int mn = tupleLength(ds)*m+n) =
 	"if (<use(bitmapMethod)> != that.<use(bitmapMethod)>) {
 	'	return false;
@@ -1877,6 +1956,7 @@ str generate_equalityComparisons(int n, int m, ts:___expandedTrieSpecifics(ds, b
 when isOptionEnabled(setup,useUntypedVariables())	
 	;
 	 
+bool exists_equalityComparisons(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq)  = true;
 str generate_equalityComparisons(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(Argument, Argument) eq) =
 	"if (<use(bitmapMethod)> != that.<use(bitmapMethod)>) {
 	'	return false;
@@ -1895,20 +1975,24 @@ str generate_equalityComparisons(int n, int m, ts:___expandedTrieSpecifics(ds, b
 	'}<}>"
 	;	 
 
+bool exists_bodyOf_inlineValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound))  = true;
 str generate_bodyOf_inlineValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) =
 	"return <nodeOf(n, m+1, use(payloadTriple("mask") + generateSubnodeMembers(n)))>;"
 when m == 0;
 
+default bool exists_bodyOf_inlineValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound))  = true;
 default str generate_bodyOf_inlineValue(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) =
 	"<intercalate(" else ", [ "if (mask \< <keyPosName><i>) { return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers(n, m), payloadTriple(i), payloadTriple("mask"))))>; }" | i <- [1..m+1] ])> else {
 	'	return <nodeOf(n, m+1, use(generatePayloadMembers(m) + payloadTriple("mask") + generateSubnodeMembers(n)))>;
 	'}"
 	;
 	
+bool exists_bodyOf_removeNodeAndInlineValue(int n, int m, int j)  = true;
 str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
 	"return <nodeOf(n-1, m+1, use(payloadTriple("mask") + generateSubnodeMembers(n) - subnodePair(j)))>;"
 when m == 0;
 
+default bool exists_bodyOf_removeNodeAndInlineValue(int n, int m, int j)  = true;
 default str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
 	"<intercalate(" else ", [ "if (mask \< <keyPosName><i>) { return <nodeOf(n-1, m+1, use(insertBeforeOrDefaultAtEnd(generatePayloadMembers(m), payloadTriple(i), payloadTriple("mask")) + generateSubnodeMembers(n) - subnodePair(j)))>; }" | i <- [1..m+1] ])> else {
 	'	return <nodeOf(n-1, m+1, use(generatePayloadMembers(m) + payloadTriple("mask") + generateSubnodeMembers(n) - subnodePair(j)))>;
@@ -2167,6 +2251,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	
 }
 
+bool exists_bodyOf_hashCode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_hashCode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
 "		<if ((n + m) > 0) {>final int prime = 31; int result = 1; result = prime * result + (<primitiveHashCode(___bitmapMethod(bitPartitionSize))>); result = prime * result + (<primitiveHashCode(___valmapMethod(bitPartitionSize))>);<} else {>int result = 1;<}>	
 '		<for (i <- [0..mn]) {>result = prime * result + <hashCode(slot(i))>;<}>	
@@ -2174,6 +2259,7 @@ str generate_bodyOf_hashCode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPa
 when isOptionEnabled(setup,useUntypedVariables())	
 	;
 
+default bool exists_bodyOf_hashCode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup)  = true;
 default str generate_bodyOf_hashCode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
 "		<if ((n + m) > 0) {>final int prime = 31; int result = 1; \n\n result = prime * result + (<primitiveHashCode(___bitmapMethod(bitPartitionSize))>); result = prime * result + (<primitiveHashCode(___valmapMethod(bitPartitionSize))>);<} else {>int result = 1;<}>
 '	
@@ -2185,16 +2271,19 @@ default str generate_bodyOf_hashCode(int n, int m, ts:___expandedTrieSpecifics(d
 '		return result;"
 ;
 
+bool exists_toString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_toString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
 	""
 	;
 
+//bool exists_toString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 //str generate_toString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
 //	""
 //when isOptionEnabled(setup,useUntypedVariables())	
 //	;
 //
-//default str generate_toString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
+//default bool exists_toString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup)  = true;
+//str generate_toString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) =
 //	"	@Override
 //	'	public String toString() {		
 //	'		<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (\map() := ts.ds) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(<use(valmapMethod)>, (byte) <i>)"), *__payloadTuple(ts.ds, ts.tupleTypes, i) | i <- [1..m+1]] + [ field("recoverMask(<use(bitmapMethod)>, (byte) <i>)"), \node(ts.ds, ts.tupleTypes, i)	| i <- [1..n+1]])>);<}>

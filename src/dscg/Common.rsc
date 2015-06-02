@@ -1332,6 +1332,7 @@ data PredefOp = getTuple();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), getTuple())
 	= method(\return(generic("T")), "getTuple", args = [ ts.index, field(generic("BiFunction\<K, V, T\>"), "tupleOf") ], generics = [ generic("T") ], isActive = false); // \map(multi = true) := ts.ds
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(_), getTuple())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(_), getTuple()) = 
 	"return tupleOf.apply((<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<typeToString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);";
 
@@ -1344,6 +1345,7 @@ data PredefOp = iterator();
 Method getDef(TrieSpecifics ts, Artifact artifact:core(_), iterator())
 	= method(\return(generic("Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)>")), "iterator", visibility = "public", isActive = ts.ds == \set());
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), iterator())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), iterator()) = "return keyIterator();"; 
 
 
@@ -1360,6 +1362,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:core(_), keyIterator())
 	= method(\return(generic("SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>")), "keyIterator", visibility = "public")
 when isOptionEnabled(ts.setup, useSupplierIterator());
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:keyIterator())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:keyIterator()) {
 	if (isOptionEnabled(ts.setup, useFixedStackIterator())) {
 		return "return new <classnamePrefixFor(artifact)><toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(<toString(rootNodeOrThis(artifact))>);";
@@ -1388,14 +1391,18 @@ data PredefOp = valueIterator();
 Method getDef(TrieSpecifics ts, Artifact artifact:core(_), valueIterator())
 	= method(\return(generic("Iterator\<<typeToString(primitiveToClass(ts.valType))>\>")), "valueIterator", visibility = "public", isActive = \map() := ts.ds);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:valueIterator())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:valueIterator()) = generate_bodyOf_CoreCommon_valueIterator(ts, artifact, op); 
 
+default bool exists_bodyOf_CoreCommon_valueIterator(TrieSpecifics ts, Artifact artifact, PredefOp _)  = true;
 default str generate_bodyOf_CoreCommon_valueIterator(TrieSpecifics ts, Artifact artifact, PredefOp _) { throw "Ahhh"; }
 
+bool exists_bodyOf_CoreCommon_valueIterator(TrieSpecifics ts, Artifact artifact, valueIterator())  = true;
 str generate_bodyOf_CoreCommon_valueIterator(TrieSpecifics ts, Artifact artifact, valueIterator()) = 
 	"return new <classnamePrefixFor(artifact)><toString(ts.ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(<toString(rootNodeOrThis(artifact))>);"
 when \map(multi = false) := ts.ds;
 
+bool exists_bodyOf_CoreCommon_valueIterator(TrieSpecifics ts, Artifact artifact, valueIterator())  = true;
 str generate_bodyOf_CoreCommon_valueIterator(TrieSpecifics ts, Artifact artifact, valueIterator()) = 
 	"return valueCollectionsStream().flatMap(Set::stream).iterator();"
 when \map(multi = true) := ts.ds;
@@ -1409,14 +1416,18 @@ data PredefOp = entryIterator();
 Method getDef(TrieSpecifics ts, Artifact artifact:core(_), entryIterator())
 	= method(\return(specific("Iterator", typeArguments = [ specific("Map.Entry", typeArguments = expandedExactBoundCollectionTypes(ts.ds, ts.tupleTypes)) ])), "entryIterator", visibility = "public", isActive = \map() := ts.ds);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:entryIterator())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:entryIterator()) = generate_bodyOf_CoreCommon_entryIterator(ts, artifact, op); 
 
+default bool exists_bodyOf_CoreCommon_entryIterator(TrieSpecifics ts, Artifact artifact, PredefOp _)  = true;
 default str generate_bodyOf_CoreCommon_entryIterator(TrieSpecifics ts, Artifact artifact, PredefOp _) { throw "Ahhh"; }
 
+bool exists_bodyOf_CoreCommon_entryIterator(TrieSpecifics ts, Artifact artifact, entryIterator())  = true;
 str generate_bodyOf_CoreCommon_entryIterator(TrieSpecifics ts, Artifact artifact, entryIterator()) = 
 	"return new <classnamePrefixFor(artifact)><toString(ts.ds)>EntryIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(<toString(rootNodeOrThis(artifact))>);"
 when \map(multi = false) := ts.ds;
 
+bool exists_bodyOf_CoreCommon_entryIterator(TrieSpecifics ts, Artifact artifact, entryIterator())  = true;
 str generate_bodyOf_CoreCommon_entryIterator(TrieSpecifics ts, Artifact artifact, entryIterator()) = 
 	"return new <classnamePrefixFor(artifact)><toString(ts.ds)>TupleIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(<toString(rootNodeOrThis(artifact))>, AbstractSpecialisedImmutableMap::entryOf);"
 when \map(multi = true) := ts.ds;
@@ -1430,6 +1441,7 @@ data PredefOp = valueCollectionsSpliterator();
 Method getDef(TrieSpecifics ts, Artifact artifact:core(_), valueCollectionsSpliterator(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) 
 	= method(\return(generic("Spliterator\<<typeToString(primitiveToClass(dsAtFunction__range_type(ts)))>\>")), "valueCollectionsSpliterator", visibility = "private", isActive = \map(multi = true) := ts.ds);
 	
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), valueCollectionsSpliterator())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), valueCollectionsSpliterator()) = 
 	"/* TODO: specialize between mutable / immutable ({@see Spliterator.IMMUTABLE}) */
 	'int characteristics = Spliterator.NONNULL | Spliterator.SIZED | Spliterator.SUBSIZED;
@@ -1444,6 +1456,7 @@ data PredefOp = valueCollectionsStream();
 Method getDef(TrieSpecifics ts, Artifact artifact:core(_), valueCollectionsStream(), TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) 
 	= method(\return(generic("Stream\<<typeToString(primitiveToClass(dsAtFunction__range_type(ts)))>\>")), "valueCollectionsStream", visibility = "private", isActive = \map(multi = true) := ts.ds);
 	
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), valueCollectionsStream())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), valueCollectionsStream()) = 
 	"boolean isParallel = false;
 	'return StreamSupport.stream(valueCollectionsSpliterator(), isParallel);";
@@ -1458,6 +1471,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:core(_), tupleIterator())
 	= method(\return(jdtToType(jul_Iterator(genericTypeT))), "tupleIterator", args = [ jdtToVal(juf_BiFunction(payloadTupleTypes(ts) + genericTypeT), "tupleOf") ], visibility = "public", generics = [ genericTypeT ], isActive = \map(multi = true) := ts.ds)
 when genericTypeT := generic("T");
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), tupleIterator())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), tupleIterator()) = 
 	"return new <classnamePrefixFor(artifact)><toString(ts.ds)>TupleIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(<toString(rootNodeOrThis(artifact))>, tupleOf);";
 
@@ -1481,6 +1495,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), get(customCompara
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), get(customComparator = true))
 	= method(\return(specific("Optional", typeArguments = [ primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)) ])), "findByKey", args = [ __labeledArgument(payloadTuple(), key(ts.keyType)), ts.keyHash, ts.shift, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()));
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:get())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:get()) = 
 	"try {
 		<toString(UNCHECKED_ANNOTATION())>
@@ -1501,6 +1516,8 @@ when rootNode := jdtToVal(abstractNode(ts), "rootNode");
 
 // TODO: getPayload function by index
 // previously used arguments (int n, int m)
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:get(), 
+	str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:get(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
 	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
@@ -1526,6 +1543,8 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	'return Optional.empty();"
 when result := val(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)), "result");
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:get(), 
+	str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:get(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
 	"for (int i = 0; i \< keys.length; i++) {
@@ -1559,6 +1578,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), containsKey(custo
 str containsKeyMethodName(DataStructure ds:\set()) = "contains";
 default str containsKeyMethodName(DataStructure _) = "containsKey"; 
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsKey())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsKey()) = 
 	"try {
 		<toString(UNCHECKED_ANNOTATION())>
@@ -1577,6 +1597,8 @@ when keyHashExpr := call(
 					);
 
 // previously used arguments (int n, int m)
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:containsKey(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:containsKey(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
 	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
@@ -1598,6 +1620,8 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	'return false;";
 
 // previously used arguments (int n, int m)
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:containsKey(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:containsKey(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) =
 	"if (this.hash == keyHash) {
@@ -1622,6 +1646,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:core(_), containsValue(customC
 	= method(\return(primitive("boolean")), "containsValueEquivalent", 	args = [ ts.stdObjectArg, ts.comparator ], visibility = "public", isActive = \map() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()));
 
 /* TODO: call correct containsValue (propagate customComparator) */
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsValue(), str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsValue(), str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
 	"for (Iterator\<<typeToString(primitiveToClass(ts.valType))>\> iterator = valueIterator(); iterator.hasNext();) {
 	'	if (<eq(val(ts.valType, "iterator.next()"), ts.stdObjectArg)>) {
@@ -1640,6 +1665,9 @@ Method getDef(TrieSpecifics ts, Artifact artifact:core(_), containsEntry(customC
 
 Method getDef(TrieSpecifics ts, Artifact artifact:core(_), containsEntry(customComparator = true))
 	= method(\return(primitive("boolean")), "containsEntryEquivalent", 	args = [ primitiveToClassArgument(ts.stdObjectArg0), primitiveToClassArgument(ts.stdObjectArg1), ts.comparator ], visibility = "public", isActive = \map(multi = true) := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()));
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsEntry(), 
+		TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = true; 
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsEntry(), 
 		TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
@@ -1708,6 +1736,9 @@ str insertTupleMethodName(DataStructure _, artifact:trieNode(_)) = "updated";
 
 default str insertTupleMethodName(DataStructure ds, Artifact artifact) { throw "Not supported {<ds>, <artifact>}"; }
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:insertTuple(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
+
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:insertTuple(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) =
 	"<dec(ts.keyHash)> = key.hashCode();
@@ -1740,6 +1771,7 @@ when valHashOld := val(primitive("int"), "valHashOld")
 		&& valHashNew := val(primitive("int"), "valHashNew")
 		&& rootNode := jdtToVal(abstractNode(ts), "rootNode");
 
+//bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertTuple(), = true;
 //str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertTuple(),
 //		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) =
 //	"if (mutator.get() == null) {
@@ -1775,6 +1807,8 @@ when valHashOld := val(primitive("int"), "valHashOld")
  * 			* return types;
  * 			* additional cases for handling value replacement.
  */
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertTuple(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertTuple(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) =
 	"if (mutator.get() == null) {
@@ -1871,10 +1905,15 @@ Expression updateProperty(TrieSpecifics ts, op:removeTuple(), hashCodeProperty()
 Expression updateProperty(TrieSpecifics ts, op:removeTuple(), sizeProperty(), onRemove(), Expression sizeProperty = useExpr(ts.sizeProperty))
 	= minus(sizeProperty, iconst(1));
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:insertTuple(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:insertTuple(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments)
 	= generate_bodyOf_SpecializedBitmapPositionNode_updated(ts, eq);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
+		TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
 		TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
@@ -1979,6 +2018,9 @@ Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), insertColle
 	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, artifact)>AllEquivalent", args = [ expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()));
 //when core(transient()) := artifact || unknownArtifact() := artifact;
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:insertCollection(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
+		Argument transientColl = val(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, transient()), "tmpTransient")) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:insertCollection(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
 		Argument transientColl = val(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, transient()), "tmpTransient")) = 
@@ -1990,6 +2032,10 @@ Argument typeDependentEntryOfCollection(Argument collection, str tupleName)
 	= val(specific("Map.Entry", typeArguments = collection.\type.typeArguments), tupleName)
 when specific(_, typeArguments = args) := collection.\type; 
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertCollection(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
+		Argument transientColl = exactBoundCollectionArg(ts.ds, ts.tupleTypes, transient()),
+		Argument entry = typeDependentEntryOfCollection(transientColl, "entry")) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertCollection(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
 		Argument transientColl = exactBoundCollectionArg(ts.ds, ts.tupleTypes, transient()),
@@ -2012,6 +2058,8 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:in
 	return modified;"
 when \map() := ts.ds;
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertCollection(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertCollection(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
 	"boolean modified = false;
@@ -2086,6 +2134,8 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), removeTuple(custo
 	= method(\return(jdtToType(compactNode(ts))), "removed", args = [ ts.mutator, __labeledArgument(payloadTuple(), payloadTupleArg(ts, 0)), ts.keyHash, ts.shift, ts.details, ts.comparator], ts = ts, isActive = isOptionEnabled(ts.setup, methodsWithComparator()))
 when !(\map(multi = true) := ts.ds);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:removeTuple(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:removeTuple(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
 	"<dec(ts.keyHash)> = key.hashCode();
@@ -2109,6 +2159,8 @@ when rootNode := jdtToVal(abstractNode(ts), "rootNode");
 /*
  * TODO: use different return types dependent on data types. 
  */
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:removeTuple(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:removeTuple(), 
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) =
 	"if (mutator.get() == null) {
@@ -2156,11 +2208,14 @@ Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple
 	= bconst(false)
 when !(\map(multi = false) := ts.ds);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple())
 	= generate_bodyOf_SpecializedBitmapPositionNode_removed(ts, op);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:removeTuple(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:removeTuple(),
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments)	= 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
 	"for (int idx = 0; idx \< keys.length; idx++) {
 		if (<eq(key(ts.keyType, "keys[idx]"), key(ts.keyType))>) {
 			<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = vals[idx]; details.updated(currentVal);<}><if (\set() := ts.ds) {>details.modified();<}>
@@ -2189,6 +2244,8 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNo
 when !(\map(multi = true) := ts.ds);
 	
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:removeTuple(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:removeTuple(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
 	"for (int idx = 0; idx \< keys.length; idx++) {
@@ -2267,6 +2324,9 @@ Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), removeColle
 	= method(\return(primitive("boolean")), "__removeAllEquivalent", args = [ expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, mutable()), ts.comparator ], visibility = "public", isActive = \set() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()));
 //when core(transient()) := artifact || unknownArtifact() := artifact;
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:removeCollection(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
+		Argument transientColl = val(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, transient()), "tmpTransient")) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:removeCollection(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
 		Argument transientColl = val(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, transient()), "tmpTransient")) = 
@@ -2275,6 +2335,8 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:re
 	'return <toString(call(transientColl, getDef(ts, core(transient()), freeze())))>;"
 when \set() := ts.ds;
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:removeCollection(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:removeCollection(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
 	"boolean modified = false;
@@ -2309,6 +2371,9 @@ Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), retainColle
 	= method(\return(primitive("boolean")), "__retainAllEquivalent", args = [ __labeledArgument(collection(), expandedUpperBoundCollectionArg(ts.ds, ts.tupleTypes, transient())), ts.comparator ], visibility = "public", isActive = \set() := ts.ds && isOptionEnabled(ts.setup, methodsWithComparator()));
 //when core(transient()) := artifact || unknownArtifact() := artifact;
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:retainCollection(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
+		Argument transientColl = val(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, transient()), "tmpTransient")) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:retainCollection(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
 		Argument transientColl = val(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, transient()), "tmpTransient")) = 
@@ -2317,6 +2382,9 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:re
 	'return <toString(call(transientColl, getDef(ts, core(transient()), freeze())))>;"
 when \set() := ts.ds;
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:retainCollection(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
+		Argument transientColl = exactBoundCollectionArg(ts.ds, ts.tupleTypes, transient())) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:retainCollection(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
 		Argument transientColl = exactBoundCollectionArg(ts.ds, ts.tupleTypes, transient())) = 
@@ -2398,15 +2466,10 @@ when trieNode(_) := artifact;
 
 
 
-
 data PredefOp = hasNodes();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasNodes())
 	= method(\return(primitive("boolean")), "hasNodes");
-
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasNodes())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
 
 
 
@@ -2414,10 +2477,6 @@ data PredefOp = nodeArity();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), nodeArity())
 	= method(\return(primitive("int")), "nodeArity");
-
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), nodeArity())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
 
 
 
@@ -2431,20 +2490,12 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), node
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeIterator())
 	= method(\return(generic("Iterator\<? extends <CompactNode(ts.ds)><ts.GenericsStr>\>")), "nodeIterator", isActive = !isOptionEnabled(ts.setup, useFixedStackIterator()));
 
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), nodeIterator())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
-
 
 
 data PredefOp = hasPayload();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasPayload())
 	= method(\return(primitive("boolean")), "hasPayload");
-
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasPayload())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
 
 
 
@@ -2453,10 +2504,6 @@ data PredefOp = payloadArity();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), payloadArity())
 	= method(\return(primitive("int")), "payloadArity");
 
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), payloadArity())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
-
 
 
 data PredefOp = getKey();
@@ -2464,10 +2511,7 @@ data PredefOp = getKey();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getKey())
 	= method(\return(ts.keyType), "getKey", args = [ts.index]);
 
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getKey())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
-
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKey()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKey())
 	= result(useExpr(key(ts.keyType)));
 
@@ -2478,10 +2522,7 @@ data PredefOp = getValue();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getValue())
 	= method(\return(__payloadTupleArgAtColl(ts.ds, ts.tupleTypes, 1).\type), "getValue", args = [ts.index], isActive = \map() := ts.ds);
 
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getValue())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
-
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getValue()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getValue())
 	= result(useExpr(key(ts.valType)));
 
@@ -2493,12 +2534,15 @@ Method getDef(TrieSpecifics ts, Artifact artifact, getKeyValueEntry())
 	= method(\return(jdtToType(jul_Map_Entry(nodeTupleTypes(ts)))), "getKeyValueEntry", args = [ts.index], isActive = \map(multi = false) := ts.ds)
 when trieNode(_) := artifact;	
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getKeyValueEntry())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getKeyValueEntry()) = 
 	"return entryOf(keys[index], vals[index]);";
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getKeyValueEntry())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getKeyValueEntry()) = 
 	"return entryOf((<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<typeToString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);";
 	
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKeyValueEntry()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKeyValueEntry())
 	= result(useExpr(this()));	
 	
@@ -2509,10 +2553,6 @@ data PredefOp = hasSlots();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasSlots())
 	= method(\return(primitive("boolean")), "hasSlots"); // isOptionEnabled(setup,useUntypedVariables()
 
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasSlots())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
-
 
 
 data PredefOp = slotArity();
@@ -2520,20 +2560,12 @@ data PredefOp = slotArity();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), slotArity())
 	= method(\return(primitive("int")), "slotArity"); // isOptionEnabled(setup,useUntypedVariables()
 
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), slotArity())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
-
 
 
 data PredefOp = getSlot();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getSlot())
 	= method(\return(object()), "getSlot", args = [ts.index], isActive = true); // isOptionEnabled(setup,useUntypedVariables())
-
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getSlot())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
 
 
 
@@ -2543,6 +2575,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::size())
 	= method(\return(primitive("int")), "size", visibility = "public")
 when artifact := core(immutable()) || artifact := core(transient());
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp::size()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp::size())
 	= result(useExpr(ts.sizeProperty))
 when artifact := core(immutable()) || artifact := core(transient());	
@@ -2747,6 +2780,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::transformHashCode()
 	= function(\return(primitive("int")), "transformHashCode", args = [ __labeledArgument(PredefArgLabel::hashCode(), val(primitive("int"), "hash")) ], visibility = "public")
 when core(_) := artifact;
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, op:transformHashCode())  = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, op:transformHashCode()) 
 	= result(useExpr(hash))
 when core(_) := artifact
@@ -2784,6 +2818,7 @@ data PredefOp = mask();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mask())
 	= function(\return(primitive("int")), "mask", args = [ts.keyHash, ts.shift]);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mask()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mask())
 	// "return (<use(ts.keyHash)> \>\>\> (Math.max(0, <32 - ts.bitPartitionSize> - <use(ts.shift)>))) & BIT_PARTITION_MASK;"
 	=
@@ -2794,6 +2829,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	'}"
 when isOptionEnabled(ts.setup, usePrefixInsteadOfPostfixEncoding());
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mask()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mask())
 	= "return (<use(ts.keyHash)> \>\>\> <use(ts.shift)>) & BIT_PARTITION_MASK;"
 when !isOptionEnabled(ts.setup, usePrefixInsteadOfPostfixEncoding());
@@ -2807,6 +2843,7 @@ data PredefOp = bitpos();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), bitpos())
 	= function(\return(chunkSizeToPrimitive(ts.bitPartitionSize)), "bitpos", args = [ts.mask]);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), bitpos()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), bitpos())
 	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
 when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
@@ -2820,6 +2857,7 @@ data PredefOp = index2();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), index2())
 	= function(\return(primitive("int")), "index", args = [ ___anybitmapField(ts.bitPartitionSize), ts.bitposField]);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), index2()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), index2())
 	= "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___anybitmapField(ts.bitPartitionSize))> & (bitpos - 1));";
 
@@ -2828,6 +2866,7 @@ data PredefOp = index3();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), index3())
 	= function(\return(primitive("int")), "index", args = [ ___anybitmapField(ts.bitPartitionSize), ts.mask, ts.bitposField]);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), index3())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), index3()) = 
 	"return (<useSafeUnsigned(___anybitmapField(ts.bitPartitionSize))> == -1) 
 	'	? mask 
@@ -2845,6 +2884,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::isEmpty())
 	= method(\return(primitive("boolean")), "isEmpty", visibility = "public")
 when artifact := core(immutable()) || artifact := core(transient());	
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp::isEmpty()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp::isEmpty())
 	= result(equals(useExpr(ts.sizeProperty), iconst(0)))
 when artifact := core(immutable()) || artifact := core(transient());	
@@ -2859,11 +2899,6 @@ data PredefOp = nodeMap();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeMap())
 	=  method(ts.bitmapField, ts.bitmapField.name);
 
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeMap())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
-
-
 
 
 
@@ -2872,11 +2907,6 @@ data PredefOp = dataMap();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataMap())
 	=  method(ts.valmapField, ts.valmapField.name);
-
-//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataMap())
-//	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), signedLeftBitShift(constOne, useExpr(ts.mask))))	
-//when constOne := ((ts.bitPartitionSize == 6) ? lconst(1) : iconst(1));
-
 
 
 
@@ -2887,6 +2917,7 @@ data PredefOp = nodeIndex();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeIndex())
 	=  method(\return(primitive("int")), "nodeIndex", args = [ts.bitposField]);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeIndex()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeIndex())
 	= "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___bitmapMethod(ts.bitPartitionSize))> & (bitpos - 1));";
 
@@ -2900,6 +2931,7 @@ data PredefOp = dataIndex();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataIndex())
 	=  method(\return(primitive("int")), "dataIndex", args = [ts.bitposField]);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataIndex()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataIndex())
 	= "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(ts.bitPartitionSize))> & (bitpos - 1));";
 
@@ -2916,6 +2948,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), merge
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs()) 
 	= true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs()) 
 	= generate_bodyOf_mergeTwoKeyValPairs(ts);
 
@@ -2929,6 +2962,7 @@ data PredefOp = mergeNodeAndKeyValPair();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeNodeAndKeyValPair())
 	=  function(\return(jdtToType(compactNode(ts))), "mergeNodeAndKeyValPair", args = [ \inode(ts.ds, ts.tupleTypes, 0), ts.keyHash0, *appendToName(__payloadTupleAtNode(ts.ds, ts.tupleTypes), "1"), ts.keyHash1, ts.shift ], generics = ts.genericTupleTypes, isActive = false);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeNodeAndKeyValPair()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeNodeAndKeyValPair())
 	= generate_bodyOf_mergeNodeAndKeyValPair(ts);
 
@@ -2953,6 +2987,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::isTrieStructureVali
 	= method(\return(primitive("boolean")), "isTrieStructureValid",  args = [ val(primitive("int"), "hashPrefix"), ts.shift ], visibility = "public", isActive = false)
 when trieNode(_) := artifact; // || jl_Object() := artifact;
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isTrieStructureValid())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isTrieStructureValid()) =
 "for (byte i = 0; i \< payloadArity(); i++) {
 	int hash = getKey(i).hashCode();
@@ -2983,6 +3018,7 @@ for (byte i = 0; i \< nodeArity(); i++) {
 
 return true;";
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::isTrieStructureValid())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::isTrieStructureValid()) =
 	"return true;";
 
@@ -2996,6 +3032,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::isAllowedToEdit())
 	= function(\return(primitive("boolean")), "isAllowedToEdit",  args = [ field(ts.mutatorType, "x"), field(ts.mutatorType, "y") ], visibility = "protected")
 when trieNode(abstractNode()) := artifact; // || jl_Object() := artifact;
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::isAllowedToEdit())  = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::isAllowedToEdit()) =
 	result(
 		and([notEquals(useExpr(x), NULL()), notEquals(useExpr(y), NULL()), embrace(or([equals(useExpr(x), useExpr(y)), equals(exprFromString("x.get()"), exprFromString("y.get()"))]))])
@@ -3156,6 +3193,7 @@ when jdt := leafNode(ts);
 
 list[Argument] getArgsOfDef(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), masterConstructor()) = getMembers(ts, artifact);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), op:masterConstructor()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), op:masterConstructor())
 	= initFieldsWithIdendity(getDef(ts, artifact, op).args);
 
@@ -3208,10 +3246,7 @@ Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 		set[PredefOp] transitiveOps = transitiveOps(refines, declares, top, current);
 		
 		for (op <- transitiveOps) {
-			value implementation = generate_bodyOf(ts, trieNode(current), op);
-	
-			// TODO: switch fully to Expression; provide a relation to query if there is a matching implementation	
-			if (implementation != ""	&& implementation != emptyExpression()) {
+			if (exists_bodyOf(ts, trieNode(current), op)) {
 				implements += <current, op>;
 			}
 		}
@@ -3377,4 +3412,4 @@ default str getDocumentation(TrieSpecifics ts, Artifact artifact, PredefOp op) =
 default bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp op) = false;
 
 // NOTE: return a valid 'Expression' used for crawling (in contrast to throwing an exception) due to crawling. 
-default Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp op) = emptyExpression();
+// default Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp op) = emptyExpression();

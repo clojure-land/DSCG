@@ -15,6 +15,7 @@ import List;
 import String;
 import dscg::Common;
 
+bool exists_checkHashCodeAndSize(TrieSpecifics ts)  = true;
 str generate_checkHashCodeAndSize(TrieSpecifics ts) =
 	"
 	private boolean checkHashCodeAndSize(final int targetHash, final int targetSize) {
@@ -33,6 +34,7 @@ str generate_checkHashCodeAndSize(TrieSpecifics ts) =
 	"
 when \set() := ts.ds;
 
+bool exists_checkHashCodeAndSize(TrieSpecifics ts)  = true;
 str generate_checkHashCodeAndSize(TrieSpecifics ts) =
 	"
 	private boolean checkHashCodeAndSize(final int targetHash, final int targetSize) {
@@ -53,8 +55,10 @@ str generate_checkHashCodeAndSize(TrieSpecifics ts) =
 	"
 when \map() := ts.ds;
 
+default bool exists_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass)  = true;
 default str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass) = "";
 
+bool exists_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass)  = true;
 str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass) =
 	"Set\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\> keySet = null;
 	'
@@ -91,8 +95,10 @@ str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass) =
 when \map() := ts.ds
 	;
 
+default bool exists_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass)  = true;
 default str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) = "";
 
+bool exists_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass)  = true;
 str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) = 
 	"Collection\<<typeToString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\> values = null;
 	'
@@ -129,8 +135,10 @@ str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) =
 when \map() := ts.ds
 	;
 	
+default bool exists_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass)  = true;
 default str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass) = "";	
 	
+bool exists_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass)  = true;
 str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass) = 
 	"Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet = null;
 	'
@@ -184,8 +192,10 @@ str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass) =
 when \map() := ts.ds
 	;
 	
+default bool exists_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts)  = true;
 default str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) = ""; // { throw "Ahhh"; } // we don't have lazy evaluation
 
+bool exists_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts)  = true;
 str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) =
 	"Object[] array = new Object[cachedSize];
 	'
@@ -198,8 +208,10 @@ str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) =
 when ts.ds == \set()
 	;	
 
+default bool exists_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts)  = true;
 default str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) = ""; // { throw "Ahhh"; } // we don't have lazy evaluation
 
+bool exists_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts)  = true;
 str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) =
 	"List<GenericsExpanded(ts.ds, ts.tupleTypes)> list = new ArrayList<GenericsExpanded(ts.ds, ts.tupleTypes)>(cachedSize);
 	'
@@ -211,8 +223,10 @@ str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) =
 when ts.ds == \set()
 	;	
 	
+default bool exists_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass)  = true;
 default str generate_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass) = "";
 
+bool exists_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass)  = true;
 str generate_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass) = 
 	"if (other == this) {
 		return true;
@@ -240,6 +254,7 @@ str generate_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass) =
 	
 	return false;";
 		
+bool exists_fragmentOf_CoreCommon_equals(TrieSpecifics ts)  = true;
 str generate_fragmentOf_CoreCommon_equals(TrieSpecifics ts) = 
 "
 if (other instanceof <toString(ts.ds)>) {
@@ -277,6 +292,7 @@ if (other instanceof <toString(ts.ds)>) {
 "
 when \map() := ts.ds;
 
+bool exists_fragmentOf_CoreCommon_equals(TrieSpecifics ts)  = true;
 str generate_fragmentOf_CoreCommon_equals(TrieSpecifics ts) = 
 "
 if (other instanceof <toString(ts.ds)>) {
@@ -290,4 +306,5 @@ if (other instanceof <toString(ts.ds)>) {
 "
 when ts.ds == \set();
 
+default bool exists_fragmentOf_CoreCommon_equals(TrieSpecifics ts)  = true;
 default str generate_fragmentOf_CoreCommon_equals(TrieSpecifics ts) { throw "Ahhh"; }	

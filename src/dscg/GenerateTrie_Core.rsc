@@ -76,10 +76,6 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	<toString(UNCHECKED_ANNOTATION())>
 	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(Compact<toString(ts.ds)>Node.<toString(call(getDef(ts, trieNode(compactNode()), emptyTrieNodeConstant())))>, 0, 0);
 
-	<call(getDef(ts, compactNode(), emptyTrieNodeConstant()))>
-	
-		
-
 	private static final boolean DEBUG = false;
 
 	private final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> rootNode;

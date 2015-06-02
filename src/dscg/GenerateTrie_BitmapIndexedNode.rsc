@@ -249,6 +249,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 list[Argument] headPayloadTuple(DataStructure ds:\map(), list[Type] tupleTypes:[keyType, valType, *_], Argument \node) = [ key(keyType, "<use(\node)>.getKey(0)"), val(valType, "<use(\node)>.getValue(0)") ];
 list[Argument] headPayloadTuple(DataStructure ds:\set(), list[Type] tupleTypes:[keyType, *_], Argument \node) = [ key(keyType, "<use(\node)>.getKey(0)") ];	
 
+default bool exists_removeInplaceValueAndConvertToSpecializedNode(TrieSpecifics ts)  = true;
 default str generate_removeInplaceValueAndConvertToSpecializedNode(TrieSpecifics ts) =
 	"	final int valIndex = dataIndex(bitpos);
 	'
@@ -279,15 +280,18 @@ default str generate_removeInplaceValueAndConvertToSpecializedNode(TrieSpecifics
 	'	}"
 	;
 	
+default bool exists_bodyOf_getNode(TrieSpecifics ts)  = true;
 default str generate_bodyOf_getNode(TrieSpecifics ts) = 
 	"final int offset = <use(tupleLengthConstant)> * payloadArity;
 	'return (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) nodes[offset + index];";
 	
+bool exists_bodyOf_getNode(TrieSpecifics ts)  = true;
 str generate_bodyOf_getNode(TrieSpecifics ts) = 
 	"return (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) nodes[nodes.length - 1 - index];"
 when isOptionEnabled(ts.setup, useSandwichArrays())
 	;	
 	
+bool exists_bodyOf_nodeIterator(TrieSpecifics ts)  = true;
 str generate_bodyOf_nodeIterator(TrieSpecifics ts) = 
 	"final int offset = <use(tupleLengthConstant)> * <use(ts.BitmapIndexedNode_payloadArity)>;
 	'final int length = <use(ts.BitmapIndexedNode_nodeArity)>;
@@ -302,6 +306,7 @@ str generate_bodyOf_nodeIterator(TrieSpecifics ts) =
 when !isOptionEnabled(ts.setup, useSandwichArrays())
 	;		
 	
+bool exists_bodyOf_nodeIterator(TrieSpecifics ts)  = true;
 str generate_bodyOf_nodeIterator(TrieSpecifics ts) = 
 	"final int length = nodeArity();
 	'final int offset = nodes.length - length;
@@ -316,26 +321,37 @@ str generate_bodyOf_nodeIterator(TrieSpecifics ts) =
 when isOptionEnabled(ts.setup, useSandwichArrays())	
 	;	
 		
+bool exists_bodyOf_hasPayload(TrieSpecifics ts)  = true;
 str generate_bodyOf_hasPayload(TrieSpecifics ts) = "return dataMap() != 0;" when isOptionEnabled(ts.setup, useSandwichArrays());
+default bool exists_bodyOf_hasPayload(TrieSpecifics ts)  = true;
 default str generate_bodyOf_hasPayload(TrieSpecifics ts) = "return <use(ts.BitmapIndexedNode_payloadArity)> != 0;";
 
+bool exists_bodyOf_payloadArity(TrieSpecifics ts)  = true;
 str generate_bodyOf_payloadArity(TrieSpecifics ts) = "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.valmapMethod)>);" when isOptionEnabled(ts.setup, useSandwichArrays());
+default bool exists_bodyOf_payloadArity(TrieSpecifics ts)  = true;
 default str generate_bodyOf_payloadArity(TrieSpecifics ts) = "return <use(ts.BitmapIndexedNode_payloadArity)>;";
 
+bool exists_bodyOf_hasNodes(TrieSpecifics ts)  = true;
 str generate_bodyOf_hasNodes(TrieSpecifics ts) = "return nodeMap() != 0;" when isOptionEnabled(ts.setup, useSandwichArrays());
+default bool exists_bodyOf_hasNodes(TrieSpecifics ts)  = true;
 default str generate_bodyOf_hasNodes(TrieSpecifics ts) = "return <use(ts.BitmapIndexedNode_nodeArity)> != 0;"; 
 // previously "return <use(tupleLengthConstant)> * payloadArity != nodes.length;";
 
+bool exists_bodyOf_nodeArity(TrieSpecifics ts)  = true;
 str generate_bodyOf_nodeArity(TrieSpecifics ts) = "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.bitmapMethod)>);" when isOptionEnabled(ts.setup, useSandwichArrays());
+default bool exists_bodyOf_nodeArity(TrieSpecifics ts)  = true;
 default str generate_bodyOf_nodeArity(TrieSpecifics ts) = "return <use(ts.BitmapIndexedNode_nodeArity)>;";
 // previously "return nodes.length - <use(tupleLengthConstant)> * payloadArity;";
 
+bool exists_bodyOf_payloadIterator(TrieSpecifics ts)  = true;
 str generate_bodyOf_payloadIterator(TrieSpecifics ts) 
 	= "return (Iterator) ArrayKeyValue<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>Supplier<}>Iterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity());"
 when \map() := ts.ds;
 
+bool exists_bodyOf_payloadIterator(TrieSpecifics ts)  = true;
 str generate_bodyOf_payloadIterator(TrieSpecifics ts) 
 	= "return (Iterator) Array<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>Supplier<}>Iterator.of(nodes, 0, payloadArity());"
 when ts.ds == \set();
 
+default bool exists_bodyOf_payloadIterator(TrieSpecifics ts)  = true;
 default str generate_bodyOf_payloadIterator(TrieSpecifics ts) { throw "Ahhh"; }

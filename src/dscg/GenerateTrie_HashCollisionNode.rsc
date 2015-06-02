@@ -230,6 +230,7 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts) {
 	;
 }
 
+bool exists_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound))  = true;
 str generate_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound)) = 
 	"
 		// TODO: change representation of keys and values
@@ -245,6 +246,7 @@ str generate_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPa
 	"
 	;
 	
+bool exists_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound))  = true;
 str generate_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound)) = 
 	"
 		final Object[] keysAndVals = new Object[2 * keys.length];

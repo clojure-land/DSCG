@@ -45,6 +45,7 @@ public interface <immutableInterfaceName(ts.ds)><ts.GenericsStr> extends <toStri
 		
 }";
 
+bool exists_bodyOf_ImmutableInterface(TrieSpecifics ts)  = true;
 str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) = 
 "
 	<dec(getDef(ts, core(immutable()), containsAll()))>
@@ -95,6 +96,7 @@ public interface <transientInterfaceName(ts.ds)><ts.GenericsStr> extends <toStri
 		
 }";
 
+bool exists_bodyOf_TransientInterface(TrieSpecifics ts)  = true;
 str generate_bodyOf_TransientInterface(TrieSpecifics ts) = 
 "
 	<dec(getDef(ts, core(transient()), containsAll()))>
