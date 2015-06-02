@@ -358,7 +358,7 @@ default list[&T] insertAfterOrDefaultAtFront(list[&T] xs, list[&T] old, list[&T]
 
 bool exists_bodyOf_updated(0, 0, str(str, str) eq)  = true;
 str generate_bodyOf_updated(0, 0, str(str, str) eq) = 
-	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
+	"final byte mask = (byte) ((keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>);
 	'return <ts.ResultStr>.modified(<nodeOf(0, 1, "mask, <keyName><if (\map() := ts.ds) {>, <valName><}>")>);"
 	;
 	
@@ -397,7 +397,7 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,b
 					'		}
 					'	} else {
 					'		// merge into node
-					'		final <CompactNode(ds)><GenericsStr(ts.tupleTypes)> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <valName><i>, <keyName>, <keyName>Hash, <valName>, shift + BIT_PARTITION_SIZE);
+					'		final <CompactNode(ds)><GenericsStr(ts.tupleTypes)> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <valName><i>, <keyName>, <keyName>Hash, <valName>, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
 					'		
 					'		<if (isOptionEnabled(setup, useStructuralEquality())) {><if (n == 0) {>result = <ts.ResultStr>.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = <ts.ResultStr>.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
 					'			result = <ts.ResultStr>.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);
@@ -412,7 +412,7 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,b
 					'		result = <ts.ResultStr>.unchanged(this);
 					'	} else {
 					'		// merge into node
-					'		final <CompactNode(ds)><GenericsStr(ts.tupleTypes)> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <keyName>, <keyName>Hash, shift + BIT_PARTITION_SIZE);
+					'		final <CompactNode(ds)><GenericsStr(ts.tupleTypes)> node = mergeNodes(<keyName><i>, <keyName><i>.hashCode(), <keyName>, <keyName>Hash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
 					'		
 					'		<if (n == 0) {>result = <ts.ResultStr>.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);<} else {><intercalate(" else ", [ "if (mask \< <nodePosName><j>) { result = <ts.ResultStr>.modified(<nodeOf(n+1, m-1, replaceValueByNode(i, j))>); }" | j <- [1..n+1] ])> else {
 					'			result = <ts.ResultStr>.modified(<nodeOf(n+1, m-1, replaceValueByNodeAtEnd(i))>);
@@ -431,7 +431,7 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,b
 				return 
 					"if (mask == <nodePosName><i>) {
 					'	final Result<ResultGenerics> <nestedResult> = <nodeName><i>.updated(
-					'					mutator, key, keyHash, val, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+					'					mutator, key, keyHash, val, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefault)) {>, <cmpName><}>);
 					'
 					'	if (<nestedResult>.isModified()) {
 					'		final <CompactNode(ds)><GenericsStr(ts.tupleTypes)> thisNew = <nodeOf(n, m, use(replace(generateMembers(n, m), subnodePair(i), [field("mask"), field("<nestedResult>.getNode()")])))>;
@@ -451,7 +451,7 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,b
 				return 
 					"if (mask == <nodePosName><i>) {
 					'	final Result<ResultGenerics> <nestedResult> = <nodeName><i>.updated(
-					'					mutator, key, keyHash, val, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+					'					mutator, key, keyHash, val, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefault)) {>, <cmpName><}>);
 					'
 					'	if (<nestedResult>.isModified()) {
 					'		final <CompactNode(ds)><GenericsStr(ts.tupleTypes)> thisNew = <nodeOf(n, m, use(replace(generateMembers(n, m), subnodePair(i), [field("mask"), field("<nestedResult>.getNode()")])))>;
@@ -468,7 +468,7 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, rel[Option,b
 	};
 	
 	return 
-	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
+	"final byte mask = (byte) ((keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>);
 	'final Result<ResultGenerics> result;		
 	'		
 	'<intercalate(" else ", [ updated_clause_inline(i)| i <- [1..m+1]] + [ updated_clause_node(i)| i <- [1..n+1]])> else {
@@ -500,7 +500,7 @@ str generate_bodyOf_removed(0, 2, _, _, str(str, str) eq) {
 		'		 * node will a) either become the new root returned, or b)
 		'		 * unwrapped and inlined.
 		'		 */
-		'		final byte <keyPosName><3 - i>AtShiftZero = (shift == 0) ? <keyPosName><3 - i> : (byte) (keyHash & BIT_PARTITION_MASK);
+		'		final byte <keyPosName><3 - i>AtShiftZero = (shift == 0) ? <keyPosName><3 - i> : (byte) (keyHash & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>);
 		'		result = <ts.ResultStr>.modified(<nodeOf(0, 1, use(payloadTriple("<keyPosName><3 - i>AtShiftZero", 3 - i)))>);
 		'	} else {
 		'		result = <ts.ResultStr>.unchanged(this);
@@ -509,7 +509,7 @@ str generate_bodyOf_removed(0, 2, _, _, str(str, str) eq) {
 	};
 		
 	return 
-	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
+	"final byte mask = (byte) ((keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>);
 	'final Result<ResultGenerics> result;		
 	'		
 	'<intercalate(" else ", [ removed_clause_inline(i) | i <- [1..3]])> else {
@@ -535,7 +535,7 @@ default str generate_bodyOf_removed(int n, int m, DataStructure ds, rel[Option,b
 	removed_clause_node = str (int i) { return 
 		"if (mask == <nodePosName><i>) {
 		'	final Result<ResultGenerics> <nestedResult> = <nodeName><i>.removed(
-		'					mutator, key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+		'					mutator, key, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefault)) {>, <cmpName><}>);
 		'
 		'	if (<nestedResult>.isModified()) {
 				final <CompactNode(ds)><GenericsStr(ts.tupleTypes)> updatedNode = <nestedResult>.getNode();
@@ -565,7 +565,7 @@ default str generate_bodyOf_removed(int n, int m, DataStructure ds, rel[Option,b
 	};
 	
 	return 
-	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);
+	"final byte mask = (byte) ((keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>);
 	'final Result<ResultGenerics> result;		
 	'		
 	'<intercalate(" else ", [ removed_clause_inline(i)| i <- [1..m+1]] + [ removed_clause_node(i)| i <- [1..n+1]])> else {
@@ -588,10 +588,10 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 
 default bool exists_bodyOf_containsKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq)  = true;
 default str generate_bodyOf_containsKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) 
-	= "final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);\n\n"	
+	= "final byte mask = (byte) ((keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>);\n\n"	
 	+ intercalate(" else ", 
 		["if(mask == <keyPosName><i>) { return <eq("<keyName>", "<keyName><i>")>; }" | i <- [1..m+1]] +
-		["if(mask == <nodePosName><i>) { return <nodeName><i>.containsKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>); }" | i <- [1..n+1]])
+		["if(mask == <nodePosName><i>) { return <nodeName><i>.containsKey(key, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefault)) {>, <cmpName><}>); }" | i <- [1..n+1]])
 	+ " else { return false; }"
 	;
 
@@ -599,7 +599,7 @@ default str generate_bodyOf_containsKey(int n, int m, DataStructure ds, rel[Opti
 //default bool exists_bodyOf_containsKey(int n, int m, DataStructure ds, str(str, str) eq) = true;
 //str generate_bodyOf_containsKey(int n, int m, DataStructure ds, str(str, str) eq)
 //	= 
-//	"final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);\n\n
+//	"final byte mask = (byte) ((keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>);\n\n
 //	'<generate_bodyOf_containsKey_binarySearchPayload(1, m, eq)>
 //	'<generate_bodyOf_containsKey_binarySearchNode(1, n, eq)>
 //	"	
@@ -617,7 +617,7 @@ bool exists_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, st
 str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq) =
 	"/*<left>..<right>*/
 	'if (mask == <nodePosName><left>) {
-	'	return <nodeName><left>.containsKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);	
+	'	return <nodeName><left>.containsKey(key, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefault)) {>, <cmpName><}>);	
 	'} else {
 	'	return false;	
 	'}"
@@ -628,11 +628,11 @@ str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, s
 	"/*<left>..<right>*/
 	'if (mask == <nodePosName><left>) {
 	'	/*<left>..<left>*/
-	'	return <nodeName><left>.containsKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);	
+	'	return <nodeName><left>.containsKey(key, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefault)) {>, <cmpName><}>);	
 	'} else {
 	'	/*<right>..<right>*/
 	'	if (mask == <nodePosName><right>) {
-	'		return <nodeName><right>.containsKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);			
+	'		return <nodeName><right>.containsKey(key, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefault)) {>, <cmpName><}>);			
 	'	} else {
 	'		return false;
 	'	}	
@@ -651,7 +651,7 @@ default str generate_bodyOf_containsKey_binarySearchNode(int left, int right, st
 	'	/*<left>..<pivot>*/	
 	'	if (mask == <nodePosName><pivot>) {
 	'		/*<pivot>..<pivot>*/
-	'		return <nodeName><pivot>.containsKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);	
+	'		return <nodeName><pivot>.containsKey(key, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefault)) {>, <cmpName><}>);	
 	'	} else {
 	'		<generate_bodyOf_containsKey_binarySearchNode(left, pivot - 1, eq)>	
 	'	}
@@ -746,10 +746,10 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 
 default bool exists_bodyOf_findByKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq)  = true;
 default str generate_bodyOf_findByKey(int n, int m, DataStructure ds, rel[Option,bool] setup, str(str, str) eq) 
-	= "final byte mask = (byte) ((keyHash \>\>\> shift) & BIT_PARTITION_MASK);\n\n"	
+	= "final byte mask = (byte) ((keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>);\n\n"	
 	+ intercalate(" else ", 
 		["if(mask == <keyPosName><i> && <eq("<keyName>", "<keyName><i>")>) { return Optional.of(<if (\map() := ts.ds) {>entryOf(<keyName><i>, <valName><i>)<} else {><keyName><i><}>); }" | i <- [1..m+1]] +
-		["if(mask == <nodePosName><i>) { return <nodeName><i>.findByKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>); }" | i <- [1..n+1]])
+		["if(mask == <nodePosName><i>) { return <nodeName><i>.findByKey(key, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefault)) {>, <cmpName><}>); }" | i <- [1..n+1]])
 	+ " else { return Optional.empty(); }"
 	;	
 			
@@ -1314,8 +1314,8 @@ str generateCompactNodeString() =
 		<toString(UNCHECKED_ANNOTATION())>
 		static <GenericsStr(ts.tupleTypes)> <CompactNode(ds)><GenericsStr(ts.tupleTypes)> mergeNodes(<CompactNode(ds)><GenericsStr(ts.tupleTypes)> node0, int hash0,
 						<CompactNode(ds)><GenericsStr(ts.tupleTypes)> node1, int hash1, int shift) {
-			final int mask0 = (hash0 \>\>\> shift) & BIT_PARTITION_MASK;
-			final int mask1 = (hash1 \>\>\> shift) & BIT_PARTITION_MASK;
+			final int mask0 = (hash0 \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>;
+			final int mask1 = (hash1 \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>;
 
 			if (mask0 != mask1) {
 				// both nodes fit on same level
@@ -1335,7 +1335,7 @@ str generateCompactNodeString() =
 				// values fit on next level
 				final int bitmap = (1 \<\< mask0);
 				final <AbstractNode(ds)><GenericsStr(ts.tupleTypes)> node = mergeNodes(node0, hash0, node1, hash1, shift
-								+ BIT_PARTITION_SIZE);
+								+ <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
 
 				return new IndexNode\<\>(bitmap, node, node.size());
 			}
@@ -1351,7 +1351,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 default bool exists_bodyOf_GenericNode_containsKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq)  = true;
 default str generate_bodyOf_GenericNode_containsKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
-	"final int mask = (<keyName>Hash \>\>\> shift) & BIT_PARTITION_MASK;
+	"final int mask = (<keyName>Hash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>;
 	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
 	'
 	'if ((valmap & bitpos) != 0) {
@@ -1359,7 +1359,7 @@ default str generate_bodyOf_GenericNode_containsKey(int n, int m, ts:___expanded
 	'}
 	'
 	'if ((bitmap & bitpos) != 0) {
-	'	return ((<AbstractNode(ds)><GenericsStr(ts.tupleTypes)>) nodes[bitIndex(bitpos)]).containsKey(<keyName>, <keyName>Hash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+	'	return ((<AbstractNode(ds)><GenericsStr(ts.tupleTypes)>) nodes[bitIndex(bitpos)]).containsKey(<keyName>, <keyName>Hash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefault)) {>, <cmpName><}>);
 	'}
 	'
 	'return false;"
@@ -1373,7 +1373,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 default bool exists_bodyOf_GenericNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq)  = true;
 default str generate_bodyOf_GenericNode_findByKey(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
-	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
+	"final int mask = (keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>;
 	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
 
 	'if ((valmap & bitpos) != 0) { // inplace value
@@ -1393,7 +1393,7 @@ default str generate_bodyOf_GenericNode_findByKey(int n, int m, ts:___expandedTr
 	'if ((bitmap & bitpos) != 0) { // node (not value)
 	'	final <AbstractNode(ds)><GenericsStr(ts.tupleTypes)> subNode = ((<AbstractNode(ds)><GenericsStr(ts.tupleTypes)>) nodes[bitIndex(bitpos)]);
 	'
-	'	return subNode.findByKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+	'	return subNode.findByKey(key, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefault)) {>, <cmpName><}>);
 	'}
 	'
 	'return Optional.empty();"
@@ -1407,7 +1407,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 	
 default bool exists_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq)  = true;
 default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) = 
-	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
+	"final int mask = (keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>;
 	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
 	'
 	'if ((valmap & bitpos) != 0) { // inplace value
@@ -1437,7 +1437,7 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrie
 	'
 	'		return <ts.ResultStr>.updated(thisNew, (V) currentVal);<}>
 	'	} else {
-	'		final <CompactNode(ds)><GenericsStr(ts.tupleTypes)> nodeNew = mergeNodes((K) nodes[valIndex], nodes[valIndex].hashCode(),<if (\map() := ts.ds) {> (V) nodes[valIndex + 1],<}> key, keyHash,<if (\map() := ts.ds) {> val,<}> shift + BIT_PARTITION_SIZE);
+	'		final <CompactNode(ds)><GenericsStr(ts.tupleTypes)> nodeNew = mergeNodes((K) nodes[valIndex], nodes[valIndex].hashCode(),<if (\map() := ts.ds) {> (V) nodes[valIndex + 1],<}> key, keyHash,<if (\map() := ts.ds) {> val,<}> shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
 	'
 	'		final int offset = <if (\map() := ts.ds) {>2 * <}>(payloadArity - 1);
 	'		final int index = Integer.bitCount(((bitmap | bitpos) ^ (valmap ^ bitpos)) & (bitpos - 1));
@@ -1452,7 +1452,7 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, ts:___expandedTrie
 	'	final int bitIndex = bitIndex(bitpos);
 	'	final <CompactNode(ds)><GenericsStr(ts.tupleTypes)> subNode = (<CompactNode(ds)><GenericsStr(ts.tupleTypes)>) nodes[bitIndex];
 	'
-	'	final Result<ResultGenerics> <nestedResult> = subNode.updated(mutator, key, keyHash, val, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+	'	final Result<ResultGenerics> <nestedResult> = subNode.updated(mutator, key, keyHash, val, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefault)) {>, <cmpName><}>);
 	'
 	'	if (!<nestedResult>.isModified()) {
 	'		return <ts.ResultStr>.unchanged(this);
@@ -1495,7 +1495,7 @@ when !(isOptionEnabled(setup,methodsWithComparator()) || (eq == equalityDefault)
 		
 default bool exists_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq)  = true;
 default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str(str, str) eq) =
-	"final int mask = (keyHash \>\>\> shift) & BIT_PARTITION_MASK;
+	"final int mask = (keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>;
 	<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
 
 	if ((valmap & bitpos) != 0) { // inplace value
@@ -1510,7 +1510,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 				 */
 				final <CompactNode(ds)><GenericsStr(ts.tupleTypes)> thisNew;
 				final int newValmap = (shift == 0) ? this.valmap ^ bitpos
-								: 1L \<\< (keyHash & BIT_PARTITION_MASK);
+								: 1L \<\< (keyHash & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>);
 
 				if (valIndex == 0) {
 					thisNew = <CompactNode(ds)>.<GenericsStr(ts.tupleTypes)> nodeOf(mutator, newValmap,
@@ -1547,7 +1547,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, ts:___expandedTrie
 		final int bitIndex = bitIndex(bitpos);
 		final <CompactNode(ds)><GenericsStr(ts.tupleTypes)> subNode = (<CompactNode(ds)><GenericsStr(ts.tupleTypes)>) nodes[bitIndex];
 		final Result<ResultGenerics> <nestedResult> = subNode.removed(
-						mutator, key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefault)) {>, <cmpName><}>);
+						mutator, key, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefault)) {>, <cmpName><}>);
 
 		if (!<nestedResult>.isModified()) {
 			return <ts.ResultStr>.unchanged(this);

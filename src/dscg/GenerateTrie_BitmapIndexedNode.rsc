@@ -15,6 +15,11 @@ import List;
 import dscg::Common;
 import dscg::ArrayUtils;
 
+//str generateBitmapIndexedNodeClassString(TrieSpecifics ts) 
+//	= generateJdtString(ts, jdt, compactNode())
+//when jdt := compactNode(ts, modifierList = [ "private", "abstract", "static" ]);
+
+
 str generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
 
 	//TrieSpecifics ts = setArtifact(tsSuper, trieNode(bitmapIndexedNode()));

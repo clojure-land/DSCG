@@ -163,7 +163,7 @@ data PredefOp = payloadIterator();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), payloadIterator())
 	= method(\return(generic(isOptionEnabled(ts.setup, useSupplierIterator()) ? "SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>" : "Iterator\<<typeToString(primitiveToClass(ts.keyType))>\>")), "payloadIterator", isActive = !isOptionEnabled(ts.setup, useFixedStackIterator()));
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::payloadIterator())  = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::payloadIterator()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::payloadIterator()) = 
 	"return new <if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}>() {
 	

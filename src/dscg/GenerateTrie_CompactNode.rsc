@@ -632,7 +632,7 @@ when \map(multi = true) := ts.ds;
 
 
 default str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq) = 
-	"<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex);<}> final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, <if (\map() := ts.ds) {> currentVal,<}><toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType, "currentKey")))))>, key, <if (\map() := ts.ds) {> val,<}> keyHash, shift + BIT_PARTITION_SIZE);
+	"<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex);<}> final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, <if (\map() := ts.ds) {> currentVal,<}><toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType, "currentKey")))))>, key, <if (\map() := ts.ds) {> val,<}> keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
 	'
 	'details.modified();
 	'return copyAndMigrateFromInlineToNode(mutator, bitpos, subNodeNew);";	
@@ -649,7 +649,7 @@ str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq, TrieSp
 	' <dec(collTupleArg(ts, 1))> = <tsSet.coreSpecializedClassName>.setOf(<use(val(ts.valType))>);
 	'
 	'<dec(replaceName(nodeTupleArg(ts, 1), "currentValNode"))> = getValue(dataIndex);
-	'final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentValNode, <toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType, "currentKey")))))>, key, <use(collTupleArg(ts, 1))>, keyHash, shift + BIT_PARTITION_SIZE);
+	'final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentValNode, <toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType, "currentKey")))))>, key, <use(collTupleArg(ts, 1))>, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
 	'
 	'details.modified();
 	'return copyAndMigrateFromInlineToNode(mutator, bitpos, subNodeNew);" 
@@ -702,7 +702,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(TrieSpecifics 
 	'	}
 	'} else if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
 	'	<dec(subNode)> = nodeAt(bitpos);
-	'	<dec(subNodeNew)> = <use(subNode)>.updated(mutator, <use(ts.payloadTuple)>, keyHash, shift + BIT_PARTITION_SIZE, <use(ts.details)><if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
+	'	<dec(subNodeNew)> = <use(subNode)>.updated(mutator, <use(ts.payloadTuple)>, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>, <use(ts.details)><if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
 	'
 	'	if (<use(ts.details)>.isModified()) {
 	'		return copyAndSetNode(mutator, bitpos, <use(subNodeNew)>);
@@ -779,7 +779,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(TrieSpecifics 
 		}
 	} else if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
 		<dec(subNode)> = nodeAt(bitpos);
-		<dec(subNodeNew)> = <toString(call(subNode, getDef(ts, trieNode(abstractNode()), op), argsOverride = (ts.shift: exprFromString("shift + BIT_PARTITION_SIZE"))))>;
+		<dec(subNodeNew)> = <toString(call(subNode, getDef(ts, trieNode(abstractNode()), op), argsOverride = (ts.shift: exprFromString("shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>"))))>;
 
 		if (!<use(ts.details)>.isModified()) {
 			return this;
@@ -1011,7 +1011,7 @@ default str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts) =
 		// both nodes fit on same level
 		<generate_bodyOf_mergeTwoValues(ts, ts.setup, positionBitmap())>
 	} else {
-		final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node = <toString(call(getDef(ts, trieNode(compactNode()), mergeTwoKeyValPairs()), argsOverride = (ts.shift: plus(useExpr(ts.shift), useExpr(ts.BIT_PARTITION_SIZE)))))>;
+		final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node = <toString(call(getDef(ts, trieNode(compactNode()), mergeTwoKeyValPairs()), argsOverride = (ts.shift: plus(useExpr(ts.shift), call(getDef(ts, trieNode(compactNode()), bitPartitionSize()))))))>;
 		// values fit on next level
 
 		<generate_bodyOf_mergeOnNextLevel(ts, ts.setup, positionBitmap())>
@@ -1032,7 +1032,7 @@ str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts) =
 	<dec(ts.mask1)> = <toString(call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.keyHash: useExpr(ts.keyHash1))))>;
 
 	while (mask0 == mask1) {
-		shift += BIT_PARTITION_SIZE;
+		shift += <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>;
 
 		mask0 = <toString(call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
 		mask1 = <toString(call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.keyHash: useExpr(ts.keyHash1))))>;
@@ -1067,7 +1067,7 @@ default str generate_bodyOf_mergeNodeAndKeyValPair(TrieSpecifics ts) =
 		<generate_bodyOf_mergeNodeAndValue(ts, ts.setup, positionBitmap())>
 	} else {
 		// values fit on next level
-		final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node = <toString(call(getDef(ts, trieNode(compactNode()), mergeNodeAndKeyValPair()), argsOverride = (ts.shift: plus(useExpr(ts.shift), useExpr(ts.BIT_PARTITION_SIZE)))))>;
+		final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node = <toString(call(getDef(ts, trieNode(compactNode()), mergeNodeAndKeyValPair()), argsOverride = (ts.shift: plus(useExpr(ts.shift), call(getDef(ts, trieNode(compactNode()), bitPartitionSize()))))))>;
 		
 		<generate_bodyOf_mergeOnNextLevel(ts, ts.setup, positionBitmap())>
 	}";	
@@ -1085,7 +1085,7 @@ str generate_bodyOf_mergeNodeAndKeyValPair(TrieSpecifics ts) =
 	<dec(ts.mask1)> = <toString(call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.keyHash: useExpr(ts.keyHash1))))>;
 
 	while (mask0 == mask1) {
-		shift += BIT_PARTITION_SIZE;
+		shift += <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>;
 
 		mask0 = <toString(call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
 		mask1 = <toString(call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.keyHash: useExpr(ts.keyHash1))))>;

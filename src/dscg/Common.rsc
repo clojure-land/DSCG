@@ -918,7 +918,7 @@ str toString(ds:\set()) = "Set";
 str toString(ds:\vector()) = "Vector";
 default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 
-str dec(Method m, bool asAbstract = false) = "<if (asAbstract) {>abstract <}> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>);" when m.isActive;
+str dec(Method m, bool asAbstract = false) = "<if (asAbstract) {>abstract <}> <m.visibility> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>);" when m.isActive;
 str dec(Method m, bool asAbstract = false) = "" when !m.isActive;
 default str dec(Method m, bool asAbstract = false) { throw "You forgot <m>!"; }
 
@@ -1537,7 +1537,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	'if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
 	'	final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNode = nodeAt(bitpos);
 	'
-	'	return subNode.findByKey(key, keyHash, shift + BIT_PARTITION_SIZE<if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
+	'	return subNode.findByKey(key, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
 	'}
 	'
 	'return Optional.empty();"
@@ -1614,7 +1614,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	'if ((nodeMap & bitpos) != 0) {
 	'	final int index = index(nodeMap, mask, bitpos);
 	'	return <toString(call(exprFromString("getNode(index)"), getDef(ts, artifact, containsKey(customComparator = op.customComparator)), 
-			argsOverride = (ts.shift: plus(useExpr(ts.shift), constant(ts.shift.\type, "BIT_PARTITION_SIZE")))))>;	
+			argsOverride = (ts.shift: plus(useExpr(ts.shift), call(getDef(ts, trieNode(compactNode()), bitPartitionSize()))))))>;	
 	'}
 	'
 	'return false;";
@@ -2820,18 +2820,18 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mask(
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mask()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mask())
-	// "return (<use(ts.keyHash)> \>\>\> (Math.max(0, <32 - ts.bitPartitionSize> - <use(ts.shift)>))) & BIT_PARTITION_MASK;"
+	// "return (<use(ts.keyHash)> \>\>\> (Math.max(0, <32 - ts.bitPartitionSize> - <use(ts.shift)>))) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>;"
 	=
 	"if (<use(ts.shift)> == 30) {
-	'	return keyHash & BIT_PARTITION_MASK;
+	'	return keyHash & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>;
 	'} else {
-	'	return (<use(ts.keyHash)> \>\>\> (<32 - ts.bitPartitionSize> - <use(ts.shift)>)) & BIT_PARTITION_MASK;
+	'	return (<use(ts.keyHash)> \>\>\> (<32 - ts.bitPartitionSize> - <use(ts.shift)>)) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>;
 	'}"
 when isOptionEnabled(ts.setup, usePrefixInsteadOfPostfixEncoding());
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mask()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mask())
-	= "return (<use(ts.keyHash)> \>\>\> <use(ts.shift)>) & BIT_PARTITION_MASK;"
+	= "return (<use(ts.keyHash)> \>\>\> <use(ts.shift)>) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>;"
 when !isOptionEnabled(ts.setup, usePrefixInsteadOfPostfixEncoding());
 
 
@@ -3011,7 +3011,7 @@ for (byte i = 0; i \< nodeArity(); i++) {
 	final int nestedHashPrefix = (recoveredMask \<\< shift) ^ hashPrefix;
 
 	// recurse
-	if (!getNode(i).isTrieStructureValid(nestedHashPrefix, shift + BIT_PARTITION_SIZE)) {
+	if (!getNode(i).isTrieStructureValid(nestedHashPrefix, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>)) {
 		return false;
 	}
 }
