@@ -80,7 +80,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 data PredefOp = emptyTrieNodeConstant();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), emptyTrieNodeConstant())
-	= method(\return(jdtToType(compactNode(ts))), "emptyTrieNodeConstant");
+	= function(\return(jdtToType(compactNode(ts))), "emptyTrieNodeConstant");
 	
 
 data PredefOp = getNode();
@@ -103,8 +103,11 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 
 data PredefOp = toString();
 
+/* 
+ * visibility is enforced through Object.toString 
+ */
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::toString())
-	= method(\return(specific("java.lang.String")), "toString");
+	= method(\return(specific("java.lang.String")), "toString", visibility = "public");
 
 
 list[PredefOp] declaredMethodsByCompactNode = [

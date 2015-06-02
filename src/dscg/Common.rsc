@@ -2914,9 +2914,10 @@ data PredefOp = mergeTwoKeyValPairs();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs())
 	=  function(\return(jdtToType(compactNode(ts))), "mergeTwoKeyValPairs", args = [ *appendToName(__payloadTupleAtNode(ts.ds, ts.tupleTypes), "0"), ts.keyHash0, *appendToName(__payloadTupleAtNode(ts.ds, ts.tupleTypes), "1"), ts.keyHash1, ts.shift ], generics = ts.genericTupleTypes);
 
-Expression() generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs()) = Expression() { 
-	return exprFromString(generate_bodyOf_mergeTwoKeyValPairs(ts));
-};
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs()) 
+	= true;
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs()) 
+	= generate_bodyOf_mergeTwoKeyValPairs(ts);
 
 
 
@@ -3317,14 +3318,13 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 default str impl(TrieSpecifics ts, Artifact artifact, PredefOp op) = "";
 
 str impl(TrieSpecifics ts, Artifact artifact, PredefOp op, Method __def = getDef(ts, artifact, op)) 
-	= implOrOverride(__def, closure(), doOverride = \new())
-when __def.isActive
-	&& closure := generate_bodyOf(ts, artifact, op)
-	&& /func(adt("Expression", []), []) := typeOf(closure);
-
-str impl(TrieSpecifics ts, Artifact artifact, PredefOp op, Method __def = getDef(ts, artifact, op)) 
 	= implOrOverride(__def, generate_bodyOf(ts, artifact, op), doOverride = \new())
 when __def.isActive;
+
+//str impl(TrieSpecifics ts, Artifact artifact, PredefOp op, Method __def = getDef(ts, artifact, op)) 
+//	= implOrOverride(__def, generate_bodyOf(ts, artifact, op), doOverride = \new())
+//when __def.isActive
+//	&& /func(adt("Expression", []), []) := typeOf(generate_bodyOf(ts, artifact, op));
 
 
 Expression decOrImpl(TrieSpecifics ts, Artifact artifact, PredefOp op) {
@@ -3373,6 +3373,8 @@ default Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp op) { throw 
 
 default str getDocumentation(TrieSpecifics ts, Artifact artifact, PredefOp op) = ""; 
 
+
+default bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp op) = false;
 
 // NOTE: return a valid 'Expression' used for crawling (in contrast to throwing an exception) due to crawling. 
 default Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp op) = emptyExpression();

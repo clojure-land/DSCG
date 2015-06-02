@@ -74,7 +74,11 @@ import java.util.stream.StreamSupport;
 public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
 
 	<toString(UNCHECKED_ANNOTATION())>
-	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(Compact<toString(ts.ds)>Node.<emptyTrieNodeConstantName>, 0, 0);
+	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(Compact<toString(ts.ds)>Node.<toString(call(getDef(ts, trieNode(compactNode()), emptyTrieNodeConstant())))>, 0, 0);
+
+	<call(getDef(ts, compactNode(), emptyTrieNodeConstant()))>
+	
+		
 
 	private static final boolean DEBUG = false;
 
