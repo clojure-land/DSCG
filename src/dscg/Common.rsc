@@ -171,7 +171,15 @@ Expression iconst(int i) = constant(primitive("int"), "<i>");
 Expression bconst(bool b) = constant(primitive("boolean"), "<b>");
 
 data Expression = binaryLiteral(int i);
-str toString(Expression e:binaryLiteral(i)) = "0b<for (_ <- [1..i+1]) {>1<}>";
+Expression binaryLiteral(str s) = binaryLiteral(parseInt(s, 2));
+str toString(Expression e:binaryLiteral(i)) = "0b<toBinaryString(i)>";
+Expression binaryLiteralOfOnes(int repeat) = binaryLiteral("<for (_ <- [1..repeat+1]) {>1<}>");
+
+@javaClass{dscg.Common}
+public java str toBinaryString(int i);
+
+@javaClass{dscg.Common}
+public java int parseInt(str s, int radix);
 
 data Expression = embrace(Expression e);
 Expression embrace(Expression e) = e when e is useExpr;
@@ -377,7 +385,8 @@ data Artifact(TrieSpecifics ts = undefinedTrieSpecifics())
 data TrieNodeType
 	= unknownNodeType()
 	| abstractNode()
-	| compactNode(BitmapSpecialization bitmapSpecialization = deferBitmapSpecialization())
+	| compactNode()
+	| compactNode(BitmapSpecialization bitmapSpecialization)
 	| hashCollisionNode()
 	| bitmapIndexedNode()
 	| leafNode();
@@ -2579,13 +2588,6 @@ when artifact := core(immutable()) || artifact := core(transient());
 
 
 
-data PredefOp = sizePredicate();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), sizePredicate())
-	= method(\return(primitive("byte")), "sizePredicate");
-
-
-
 data PredefOp = put();
 
 Method getDef(TrieSpecifics ts, Artifact artifact, put())
@@ -3099,9 +3101,9 @@ JavaDataType abstractNode(TrieSpecifics ts, list[str] modifierList = [])
 JavaDataType compactNode(TrieSpecifics ts, list[str] modifierList = [])
 	= javaClass(className_compactNode(ts, deferBitmapSpecialization()), typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = abstractNode(ts), modifierList = modifierList);
 
-JavaDataType compactNode(TrieSpecifics ts, TrieNodeType nodeType, list[str] modifierList = [])
-	= javaClass(className_compactNode(ts, nodeType.bitmapSpecialization), typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts), modifierList = modifierList)
-when nodeType is compactNode;
+JavaDataType compactNode(TrieSpecifics ts, TrieNodeType nodeType:compactNode(BitmapSpecialization bs), list[str] modifierList = [])
+	= javaClass(className_compactNode(ts, bs), typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts), modifierList = modifierList);
+
 
 str className_compactNode(TrieSpecifics ts, specializeByBitmap(true, true)) = "CompactMixed<toString(ts.ds)>Node";
 str className_compactNode(TrieSpecifics ts, specializeByBitmap(true, false)) = "CompactNodesOnly<toString(ts.ds)>Node";
@@ -3111,7 +3113,7 @@ str className_compactNode(TrieSpecifics ts, deferBitmapSpecialization()) = "Comp
 default str className_compactNode(TrieSpecifics ts, BitmapSpecialization bs) { throw "Unknown <bs>"; }
 
 JavaDataType bitmapIndexedNode(TrieSpecifics ts, list[str] modifierList = [])
-	= javaClass("BitmapIndexed<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts, compactNode(bitmapSpecialization = specializeByBitmap(true, true))), modifierList = modifierList);
+	= javaClass("BitmapIndexed<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts, compactNode(specializeByBitmap(true, true))), modifierList = modifierList);
 
 JavaDataType hashCollisionNode(TrieSpecifics ts, list[str] modifierList = [])
 	= javaClass("HashCollision<toString(ts.ds)>Node<ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts), modifierList = modifierList);
@@ -3314,11 +3316,11 @@ data Model
 
 rel[TrieNodeType from, TrieNodeType to] refines() = {
 	<compactNode(), abstractNode()>,
-	<compactNode(bitmapSpecialization = specializeByBitmap(true, true)), compactNode()>,
-	<compactNode(bitmapSpecialization = specializeByBitmap(true, false)), compactNode()>,
-	<compactNode(bitmapSpecialization = specializeByBitmap(false, true)), compactNode()>,
-	<compactNode(bitmapSpecialization = specializeByBitmap(false, false)), compactNode()>,
-	<bitmapIndexedNode(), compactNode(bitmapSpecialization = specializeByBitmap(true, true))>,
+	<compactNode(specializeByBitmap(true, true)), compactNode()>,
+	<compactNode(specializeByBitmap(true, false)), compactNode()>,
+	<compactNode(specializeByBitmap(false, true)), compactNode()>,
+	<compactNode(specializeByBitmap(false, false)), compactNode()>,
+	<bitmapIndexedNode(), compactNode(specializeByBitmap(true, true))>,
 	<hashCollisionNode(), abstractNode()>,
 	<leafNode(), abstractNode()> 
 };

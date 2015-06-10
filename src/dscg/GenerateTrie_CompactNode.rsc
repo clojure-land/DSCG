@@ -24,7 +24,7 @@ str generateCompactNodeClassString(TrieSpecifics ts) {
 	result += generateJdtString(ts, jdt, compactNode());
 	
 	for (bitmapCfg <- [ specializeByBitmap(n, v) | <n, v> <- booleanOptions * booleanOptions]) {
-		JavaDataType jdt = compactNode(ts, compactNode(bitmapSpecialization = bitmapCfg), modifierList = [ "private", "abstract", "static" ]);
+		JavaDataType jdt = compactNode(ts, compactNode(bitmapCfg), modifierList = [ "private", "abstract", "static" ]);
 		result += generateJdtString(ts, jdt, compactNode(bitmapSpecialization = bitmapCfg));
 	}
 	
@@ -59,25 +59,43 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::bitPartitionMask()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::bitPartitionMask())
-	= result(binaryLiteral(ts.bitPartitionSize));
+	= result(binaryLiteralOfOnes(ts.bitPartitionSize));
+
+
+data PredefOp = sizePredicate();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), sizePredicate())
+	= method(\return(primitive("byte")), "sizePredicate");
 
 
 data PredefOp = sizeEmpty();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeEmpty())
-	= method(\return(primitive("byte")), "sizeEmpty");
+	= function(\return(primitive("byte")), "sizeEmpty");
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeEmpty()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeEmpty())
+	= result(binaryLiteral("00"));
 
 
 data PredefOp = sizeOne();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeOne())
-	= method(\return(primitive("byte")), "sizeOne");
+	= function(\return(primitive("byte")), "sizeOne");
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeOne()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeOne())
+	= result(binaryLiteral("01"));
 
 
 data PredefOp = sizeMoreThanOne();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeMoreThanOne())
-	= method(\return(primitive("byte")), "sizeMoreThanOne");
+	= function(\return(primitive("byte")), "sizeMoreThanOne");
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeMoreThanOne()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeMoreThanOne())
+	= result(binaryLiteral("10"));
 
 
 data PredefOp = nodeInvariant();
@@ -129,14 +147,39 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 	= method(\return(specific("java.lang.String")), "toString", visibility = "public");
 
 
-data PredefOp = nodeFactory();
+data PredefOp = nodeFactory_Array();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory())
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Array())
 	= function(ts.compactNodeClassReturn, "nodeOf", generics = ts.genericTupleTypes, args = [ ts.mutator, ts.bitmapField, ts.valmapField, ts.BitmapIndexedNode_contentArray, ts.BitmapIndexedNode_payloadArity, ts.BitmapIndexedNode_nodeArity ], argsFilter = ts.argsFilter, isActive = !isOptionEnabled(ts.setup,useSpecialization()) || ts.nBound < ts.nMax);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory()) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory()) 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Array()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Array()) 
 	= result(call(ts.BitmapIndexedNode_constructor, inferredGenericsStr = InferredGenerics(ts.ds, ts.tupleTypes)));
+
+
+data PredefOp = nodeFactory_Empty();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Empty())
+	= function(ts.compactNodeClassReturn, "nodeOf", generics = ts.genericTupleTypes, args = [ ts.mutator ], argsFilter = ts.argsFilter, isActive = !isOptionEnabled(ts.setup,useSpecialization()) || ts.nBound < ts.nMax);
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Empty()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Empty()) 
+	= result(call(getDef(ts, trieNode(compactNode()), emptyTrieNodeConstant())));
+
+
+data PredefOp = nodeFactory_Singleton();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Singleton())
+	= function(ts.compactNodeClassReturn, "nodeOf", generics = ts.genericTupleTypes, args = [ ts.mutator, ts.bitmapField, ts.valmapField, *ts.payloadTuple ], argsFilter = ts.argsFilter, isActive = !isOptionEnabled(ts.setup,useSpecialization()));
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Singleton()) = true;
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Singleton()) =
+	"assert <use(bitmapField)> == 0;	
+	'return <toString(call(ts.nodeOf_BitmapIndexedNode, 
+		argsOverride = (ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.bitmapField.\type, "0")),						
+						ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(nodeTupleArgs(ts))> }"),
+						ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "1")),
+						ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "0")))))>;";
 
 
 //	<implOrOverride(ts.nodeOf_BitmapIndexedNode,
@@ -173,7 +216,9 @@ list[PredefOp] declaredMethodsByCompactNode = [
 
 	// TODO: this is implementation specific ...
 	// TODO: nodeOf() factory methods; also option to enable disable the use of factory methods.
-	nodeFactory(),
+	nodeFactory_Empty(),
+	nodeFactory_Singleton(),
+	nodeFactory_Array(),
 
 	hashCodeLength(), // TODO: implement as static final field
 	bitPartitionSize(), // TODO: implement as static final field
@@ -239,9 +284,6 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	toString()
 	
 ];
-
-// TODO: remove!!!
-str emptyTrieNodeConstantName = "EMPTY_NODE";
 
 //str legacy_generateCompactNodeClassString(TrieSpecifics ts) {
 //	
