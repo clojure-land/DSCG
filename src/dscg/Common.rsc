@@ -2893,22 +2893,6 @@ when artifact := core(immutable()) || artifact := core(transient());
 
 
 
-data PredefOp = nodeMap();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeMap())
-	=  method(ts.bitmapField, ts.bitmapField.name);
-
-
-
-
-
-data PredefOp = dataMap();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataMap())
-	=  method(ts.valmapField, ts.valmapField.name);
-
-
-
 
 
 data PredefOp = nodeIndex();

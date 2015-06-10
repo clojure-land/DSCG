@@ -25,11 +25,31 @@ str generateCompactNodeClassString(TrieSpecifics ts) {
 	
 	for (bitmapCfg <- [ specializeByBitmap(n, v) | <n, v> <- booleanOptions * booleanOptions]) {
 		JavaDataType jdt = compactNode(ts, compactNode(bitmapCfg), modifierList = [ "private", "abstract", "static" ]);
-		result += generateJdtString(ts, jdt, compactNode(bitmapSpecialization = bitmapCfg));
+		result += generateJdtString(ts, jdt, compactNode(bitmapCfg));
 	}
 	
 	return result;
 }
+
+
+data PredefOp = nodeMap();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeMap())
+	=  method(ts.bitmapField, ts.bitmapField.name);
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::nodeMap()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::nodeMap())
+	= bs.supportsNodes ? result(NULL()) : result(iconst(0)); // TODO: property + default
+
+
+data PredefOp = dataMap();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::dataMap())
+	=  method(ts.valmapField, ts.valmapField.name);
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::dataMap()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::dataMap())
+	= bs.supportsValues ? result(NULL()) : result(iconst(0)); // TODO: property + default
 
 
 data PredefOp = hashCodeLength();
