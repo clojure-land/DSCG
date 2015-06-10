@@ -344,10 +344,8 @@ Expression useExprList(list[Argument] xs) = compoundExpr(mapper(flattenArgumentL
  * lr = [ <"payloadTuple", collTupleArgs(ts)> ];
  * lr += <"keyHash", ts.keyHash>;
  * [ *liftToList(arg) | arg <- range(lr) ];
- *
- * TODO: store TrieSpecifics to be able to call methods without this global configuration.
  */	
-data Method(TrieSpecifics ts = undefinedTrieSpecifics())
+data Method
 	= method(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, list[Type] generics = [])
 	| function(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, list[Type] generics = [])
 	| constructor(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, list[Type] generics = []);
