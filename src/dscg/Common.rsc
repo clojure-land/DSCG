@@ -370,13 +370,21 @@ data Artifact(TrieSpecifics ts = undefinedTrieSpecifics())
 	| jl_Object()	
 	;
 
+/*
+ * TODO: decide if refinement structure should be 
+ * a graph / lattice with a top element or a tree?
+ */
 data TrieNodeType
 	= unknownNodeType()
 	| abstractNode()
-	| compactNode()
+	| compactNode(BitmapSpecialization bitmapSpecialization = deferBitmapSpecialization())
 	| hashCollisionNode()
 	| bitmapIndexedNode()
 	| leafNode();
+
+data BitmapSpecialization 
+	= deferBitmapSpecialization()
+	| specializeByBitmap(bool supportsNodes, bool supportsValues);
 	
 data UpdateSemantic
 	= unknownUpdateSemantic()
@@ -1164,14 +1172,6 @@ str equalityComparatorForArguments(Argument x, Argument y) = "<use(x)> == <use(y
 str equalityComparatorForArguments(Argument x, Argument y) = "<cmpName>.compare(<use(x)>, <use(y)>) == 0";
 default str equalityComparatorForArguments(Argument x, Argument y) { throw "Ahhh"; }
 
-/*
- * Mainly CompactNode specifics
- */
-str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:true) = "CompactMixed<toString(ds)>Node";
-str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:true, bool values:false) = "CompactNodesOnly<toString(ds)>Node";
-str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:false, bool values:true) = "CompactValuesOnly<toString(ds)>Node";
-str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes:false, bool values:false) = "CompactEmpty<toString(ds)>Node";
-default str className_compactNode(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, bool nodes, bool values) { throw "Ahhh"; }
 
 list[Argument] metadataArguments(TrieSpecifics ts) 
 	= [ ts.bitmapField, ts.valmapField ]
@@ -2537,10 +2537,6 @@ when trieNode(_) := artifact;
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getKeyValueEntry())  = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getKeyValueEntry()) = 
 	"return entryOf(keys[index], vals[index]);";
-
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getKeyValueEntry())  = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getKeyValueEntry()) = 
-	"return entryOf((<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<typeToString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1]);";
 	
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKeyValueEntry()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKeyValueEntry())
@@ -2575,7 +2571,8 @@ Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::size())
 	= method(\return(primitive("int")), "size", visibility = "public")
 when artifact := core(immutable()) || artifact := core(transient());
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp::size()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp::size()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), PredefOp::size()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp::size())
 	= result(useExpr(ts.sizeProperty))
 when artifact := core(immutable()) || artifact := core(transient());	
@@ -3100,7 +3097,21 @@ JavaDataType abstractNode(TrieSpecifics ts, list[str] modifierList = [])
 	= javaClass("Abstract<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), modifierList = modifierList);
 
 JavaDataType compactNode(TrieSpecifics ts, list[str] modifierList = [])
-	= javaClass("Compact<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), modifierList = modifierList);
+	= javaClass(className_compactNode(ts, deferBitmapSpecialization()), typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = abstractNode(ts), modifierList = modifierList);
+
+JavaDataType compactNode(TrieSpecifics ts, TrieNodeType nodeType, list[str] modifierList = [])
+	= javaClass(className_compactNode(ts, nodeType.bitmapSpecialization), typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts), modifierList = modifierList)
+when nodeType is compactNode;
+
+str className_compactNode(TrieSpecifics ts, specializeByBitmap(true, true)) = "CompactMixed<toString(ts.ds)>Node";
+str className_compactNode(TrieSpecifics ts, specializeByBitmap(true, false)) = "CompactNodesOnly<toString(ts.ds)>Node";
+str className_compactNode(TrieSpecifics ts, specializeByBitmap(false, true)) = "CompactValuesOnly<toString(ts.ds)>Node";
+str className_compactNode(TrieSpecifics ts, specializeByBitmap(false, false)) = "CompactEmpty<toString(ts.ds)>Node";
+str className_compactNode(TrieSpecifics ts, deferBitmapSpecialization()) = "Compact<toString(ts.ds)>Node";
+default str className_compactNode(TrieSpecifics ts, BitmapSpecialization bs) { throw "Unknown <bs>"; }
+
+JavaDataType bitmapIndexedNode(TrieSpecifics ts, list[str] modifierList = [])
+	= javaClass("BitmapIndexed<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts, compactNode(bitmapSpecialization = specializeByBitmap(true, true))), modifierList = modifierList);
 
 JavaDataType hashCollisionNode(TrieSpecifics ts, list[str] modifierList = [])
 	= javaClass("HashCollision<toString(ts.ds)>Node<ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts), modifierList = modifierList);
@@ -3303,14 +3314,14 @@ data Model
 
 rel[TrieNodeType from, TrieNodeType to] refines() = {
 	<compactNode(), abstractNode()>,
-	<bitmapIndexedNode(), compactNode()>,
+	<compactNode(bitmapSpecialization = specializeByBitmap(true, true)), compactNode()>,
+	<compactNode(bitmapSpecialization = specializeByBitmap(true, false)), compactNode()>,
+	<compactNode(bitmapSpecialization = specializeByBitmap(false, true)), compactNode()>,
+	<compactNode(bitmapSpecialization = specializeByBitmap(false, false)), compactNode()>,
+	<bitmapIndexedNode(), compactNode(bitmapSpecialization = specializeByBitmap(true, true))>,
 	<hashCollisionNode(), abstractNode()>,
 	<leafNode(), abstractNode()> 
 };
-
-lrel[TrieNodeType from, PredefOp to] declares(TrieNodeType nodeType:compactNode()) 
-	= [ <nodeType,method> | method <- declaredMethodsByCompactNode];
-
 
 rel[OpBinding from, OpBinding to] operationRefinement;
 
@@ -3319,25 +3330,27 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 
 	bool jdtIsAbstract = "abstract" in jdt.modifierList;
 
-	for (op <- ts.model.declares[nodeType]) {
-		str item = "";		
-		str documentation = getDocumentation(ts, trieNode(nodeType), op);
-		
-		if (documentation != "") {
-			item += "/**<documentation>*/\n";
+	for (op <- ts.model.declares[nodeType] + ts.model.implements[nodeType]) {
+		if (getDef(ts, trieNode(nodeType), op).isActive) {
+			str item = "";		
+			str documentation = getDocumentation(ts, trieNode(nodeType), op);
+			
+			if (documentation != "") {
+				item += "/**<documentation>*/\n";
+			}
+			
+			if (isRealization(ts.model, nodeType, op)) { // isRedeclaration(ts.model, nodeType, op) || 
+				item += "@Override\n";
+			}
+			
+			if (<nodeType,op> in ts.model.implements) {
+				item += impl(ts, trieNode(nodeType), op);
+			} else {
+				item += dec(getDef(ts, trieNode(nodeType), op), asAbstract = jdtIsAbstract);
+			}
+			
+			nestedContent += item;
 		}
-		
-		if (isRealization(ts.model, nodeType, op)) { // isRedeclaration(ts.model, nodeType, op) || 
-			item += "@Override\n";
-		}
-		
-		if (<nodeType,op> in ts.model.implements) {
-			item += impl(ts, trieNode(nodeType), op);
-		} else {
-			item += dec(getDef(ts, trieNode(nodeType), op), asAbstract = jdtIsAbstract);
-		}
-		
-		nestedContent += item;
 	}
 
 	return 
