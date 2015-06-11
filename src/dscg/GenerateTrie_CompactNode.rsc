@@ -15,21 +15,21 @@ import List;
 
 import dscg::Common;
 
-//str generateCompactNodeClassString(TrieSpecifics ts) {  
-//	str result = "";
-//	
-//	booleanOptions = { true, false };
-//
-//	JavaDataType jdt = compactNode(ts, modifierList = [ "private", "abstract", "static" ]);
-//	result += generateJdtString(ts, jdt, compactNode());
-//	
-//	for (bitmapCfg <- [ specializeByBitmap(n, v) | <n, v> <- booleanOptions * booleanOptions]) {
-//		JavaDataType jdt = compactNode(ts, compactNode(bitmapCfg), modifierList = [ "private", "abstract", "static" ]);
-//		result += generateJdtString(ts, jdt, compactNode(bitmapCfg));
-//	}
-//	
-//	return result;
-//}
+default str generateCompactNodeClassString(TrieSpecifics ts) {  
+	str result = "";
+	
+	booleanOptions = { true, false };
+
+	JavaDataType jdt = compactNode(ts, modifierList = [ "private", "abstract", "static" ]);
+	result += generateJdtString(ts, jdt, compactNode());
+	
+	for (bitmapCfg <- [ specializeByBitmap(n, v) | <n, v> <- booleanOptions * booleanOptions]) {
+		JavaDataType jdt = compactNode(ts, compactNode(bitmapCfg), modifierList = [ "private", "abstract", "static" ]);
+		result += generateJdtString(ts, jdt, compactNode(bitmapCfg));
+	}
+	
+	return result;
+}
 
 
 data PredefOp = nodeMap();
@@ -327,7 +327,7 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieNodeType nodeType:compactNode(
 	= [ <nodeType,nodeMap()>, <nodeType,dataMap()> ];
 
 str emptyTrieNodeConstantName = "EMPTY_NODE";
-str legacy_generateCompactNodeClassString(TrieSpecifics ts) {
+str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 	
 	//TrieSpecifics ts = setArtifact(tsSuper, trieNode(compactNode()));
 	

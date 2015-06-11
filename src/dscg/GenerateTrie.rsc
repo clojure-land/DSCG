@@ -149,7 +149,7 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 		<usePrefixInsteadOfPostfixEncoding(),false>,	
 		<usePathCompression(),false>,
 		<useIncrementalHashCodes(),true>,
-		<separateTrieAndLeafNodes(),true>
+		<separateTrieAndLeafNodes(),false>
 	}; // { compactionViaFieldToMethod() };
 
 	return trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup, unknownArtifact());
@@ -181,24 +181,26 @@ void doGenerate(TrieConfig cfg, str overideClassNamePostfixWith = "") {
 }
 	
 list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
+	bool isLegacy = false;
+
 	list[str] innerClassStrings 
 		= [ generateOptionalClassString() ]
 		+ [ generateResultClassString(ts, ts.setup) ]
 		+ [ generateAbstractAnyNodeClassString(ts, ts.setup)]
-		+ [ legacy_generateAbstractNodeClassString(ts)]
-		+ [ legacy_generateCompactNodeClassString(ts)];
+		+ [ generateAbstractNodeClassString(ts, isLegacy = isLegacy)]
+		+ [ generateCompactNodeClassString(ts, isLegacy = isLegacy)];
 
 	if (isOptionEnabled(ts.setup, separateTrieAndLeafNodes())) {
 		innerClassStrings = innerClassStrings + [ generateLeafNodeClassString(ts)];
 	}
 
 	if (!isOptionEnabled(ts.setup, useSpecialization()) || ts.nBound < ts.nMax) {
-		innerClassStrings = innerClassStrings + [ legacy_generateBitmapIndexedNodeClassString(ts)];
+		innerClassStrings = innerClassStrings + [ generateBitmapIndexedNodeClassString(ts, isLegacy = isLegacy)];
 	}
 
 	innerClassStrings 
 		= innerClassStrings
-		+ [ legacy_generateHashCollisionNodeClassString(ts)]
+		+ [ generateHashCollisionNodeClassString(ts, isLegacy = isLegacy)]
 		+ [ generateIteratorClassString(ts, ts.setup)] // , classNamePostfix
 		;
 	

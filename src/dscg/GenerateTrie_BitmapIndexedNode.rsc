@@ -15,7 +15,7 @@ import List;
 import dscg::Common;
 import dscg::ArrayUtils;
 
-str generateBitmapIndexedNodeClassString(TrieSpecifics ts) 
+default str generateBitmapIndexedNodeClassString(TrieSpecifics ts) 
 	= generateJdtString(ts, jdt, bitmapIndexedNode())
 when jdt := bitmapIndexedNode(ts, modifierList = [ "private", "static" ]);
 
@@ -52,7 +52,7 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIn
 
 
 
-str legacy_generateBitmapIndexedNodeClassString(TrieSpecifics ts) {
+str generateBitmapIndexedNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 
 	//TrieSpecifics ts = setArtifact(tsSuper, trieNode(bitmapIndexedNode()));
 

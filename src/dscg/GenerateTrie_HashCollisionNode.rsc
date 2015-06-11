@@ -14,7 +14,7 @@ module dscg::GenerateTrie_HashCollisionNode
 import dscg::Common;
 import dscg::ArrayUtils;
 
-str generateHashCollisionNodeClassString(TrieSpecifics ts) 
+default str generateHashCollisionNodeClassString(TrieSpecifics ts) 
 	= generateJdtString(ts, jdt, hashCollisionNode())
 when jdt := hashCollisionNode(ts, modifierList = [ "private", "static" ]);
 
@@ -26,7 +26,7 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashColl
 	= result(call(getDef(ts, trieNode(compactNode()), sizeMoreThanOne())));
 
 
-str legacy_generateHashCollisionNodeClassString(TrieSpecifics ts) {
+str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 
 	//TrieSpecifics ts = setArtifact(tsSuper, trieNode(hashCollisionNode()));
 

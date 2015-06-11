@@ -13,7 +13,7 @@ module dscg::GenerateTrie_AbstractNode
 
 import dscg::Common;
 
-str generateAbstractNodeClassString(TrieSpecifics ts) 
+default str generateAbstractNodeClassString(TrieSpecifics ts) 
 	= generateJdtString(ts, jdt, abstractNode())
 when jdt := abstractNode(ts, modifierList = [ "private", "abstract", "static" ]);
 
@@ -199,7 +199,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode())
 	};";
 
 	
-str legacy_generateAbstractNodeClassString(TrieSpecifics ts) { 
+str generateAbstractNodeClassString(TrieSpecifics ts, bool isLegacy = true) { 
 	return 
 	"protected static abstract class <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> implements <ts.abstractAnyNodeClassName><UnifiedGenericsExpanded(ts.ds, ts.tupleTypes)> {
 
