@@ -73,7 +73,7 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactN
 data PredefOp = hashCodeLength();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::hashCodeLength())
-	= function(\return(primitive("int")), "hashCodeLength");
+	= property(\return(primitive("int")), "hashCodeLength", isStateful = false, isConstant = true);
 	
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::hashCodeLength()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::hashCodeLength())
@@ -83,7 +83,7 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactN
 data PredefOp = bitPartitionSize();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::bitPartitionSize())
-	= function(\return(primitive("int")), "bitPartitionSize");
+	= property(\return(primitive("int")), "bitPartitionSize", isStateful = false, isConstant = true);
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::bitPartitionSize()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::bitPartitionSize())
@@ -93,7 +93,7 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactN
 data PredefOp = bitPartitionMask();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::bitPartitionMask())
-	= function(\return(primitive("int")), "bitPartitionMask");
+	= property(\return(primitive("int")), "bitPartitionMask", isStateful = false, isConstant = true);
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::bitPartitionMask()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::bitPartitionMask())
@@ -151,11 +151,11 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 data PredefOp = emptyTrieNodeConstant();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::emptyTrieNodeConstant())
-	= function(\return(jdtToType(compactNode(ts))), "emptyTrieNodeConstant", generics = ts.genericTupleTypes);
+	= property(\return(jdtToType(compactNode(ts))), "emptyTrieNodeConstant", generics = ts.genericTupleTypes, isStateful = false, isConstant = true);
 	
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::emptyTrieNodeConstant()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::emptyTrieNodeConstant())
-	= result(NULL()); // TODO: not implemented yet
+	= result(exprFromString("EMPTY_NODE"));
 		
 
 data PredefOp = getNode();
@@ -348,10 +348,9 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 	return
 	"protected static abstract class <className><GenericsStr(ts.tupleTypes)> extends Abstract<toString(ts.ds)>Node<GenericsStr(ts.tupleTypes)> {
 		
-		<dec(field(primitive("int"), "HASH_CODE_LENGTH"), constant(primitive("int"), "32"), isStatic = true, isFinal = true)>;
-		
-		<dec(field(primitive("int"), "BIT_PARTITION_SIZE"), constant(primitive("int"), "<ts.bitPartitionSize>"), isStatic = true, isFinal = true)>;
-		<dec(field(primitive("int"), "BIT_PARTITION_MASK"), constant(primitive("int"), "0b<for (i <- [1..ts.bitPartitionSize+1]) {>1<}>"), isStatic = true, isFinal = true)>;
+		<impl(ts, trieNode(compactNode()), hashCodeLength())>
+		<impl(ts, trieNode(compactNode()), bitPartitionSize())>
+		<impl(ts, trieNode(compactNode()), bitPartitionMask())>
 		
 		<impl(ts, trieNode(compactNode()), mask())>
 		<impl(ts, trieNode(compactNode()), bitpos())>		
@@ -407,6 +406,8 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 
 		<impl(ts, trieNode(compactNode()), mergeTwoKeyValPairs())>
 		<impl(ts, trieNode(compactNode()), mergeNodeAndKeyValPair())>
+
+		<impl(ts, trieNode(compactNode()), emptyTrieNodeConstant())>
 
 	'	static final <CompactNode(ts.ds)> <emptyTrieNodeConstantName>;
 

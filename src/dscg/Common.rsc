@@ -300,7 +300,9 @@ str toString(Expression c:call(m:method(_,_))) =
 	"<printNonEmptyCommentWithNewline(c.commentText)><m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
 when m.isActive;
 
-
+str toString(Expression c:call(m:property(_,_))) = 
+	"<printNonEmptyCommentWithNewline(c.commentText)><m.name>()"
+when m.isActive;
 
 //str toString(Expression c:call(TrieSpecifics ts, Argument arg, PredefOp op), Method m = getDef(ts, op)) = 
 //	"<printNonEmptyCommentWithNewline(c.commentText)><use(arg)>.<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
@@ -349,7 +351,7 @@ data Method(list[Type] generics = [], str visibility = "", bool isActive = true)
 	= method(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
 	| function(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
 	| constructor(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
-	| property(Argument returnArg, str name);
+	| property(Argument returnArg, str name, bool isStateful = false, bool isConstant = true);
 
 data Property
 	= hashCodeProperty()
@@ -980,14 +982,22 @@ str implOrOverride(m:function(_,_), str bodyStr, OverwriteType doOverride = over
 when m.isActive
 	;
 	
-str implOrOverride(m:property, str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
+str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
+	"<for(a <- annotations) {><toString(a)><}>
+	'<m.visibility> static final <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>() {
+	'	<bodyStr>
+	'}"
+when m.isActive && !m.isStateful && m.isConstant
+	;
+
+str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
 	'<m.visibility> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>() {
 	'	return <m.name>;
 	'}
 	'
 	'private final <typeToString(m.returnArg.\type)> <m.name>;"
-when m.isActive
+when m.isActive && m.isStateful // && m.isContant
 	;
 	
 str implOrOverride(m:constructor(_,_), str bodyStr,  OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
