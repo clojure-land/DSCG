@@ -185,20 +185,20 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 		= [ generateOptionalClassString() ]
 		+ [ generateResultClassString(ts, ts.setup) ]
 		+ [ generateAbstractAnyNodeClassString(ts, ts.setup)]
-		+ [ generateAbstractNodeClassString(ts)]
-		+ [ generateCompactNodeClassString(ts)];
+		+ [ legacy_generateAbstractNodeClassString(ts)]
+		+ [ legacy_generateCompactNodeClassString(ts)];
 
 	if (isOptionEnabled(ts.setup, separateTrieAndLeafNodes())) {
 		innerClassStrings = innerClassStrings + [ generateLeafNodeClassString(ts)];
 	}
 
 	if (!isOptionEnabled(ts.setup, useSpecialization()) || ts.nBound < ts.nMax) {
-		innerClassStrings = innerClassStrings + [ generateBitmapIndexedNodeClassString(ts)];
+		innerClassStrings = innerClassStrings + [ legacy_generateBitmapIndexedNodeClassString(ts)];
 	}
 
 	innerClassStrings 
 		= innerClassStrings
-		+ [ generateHashCollisionNodeClassString(ts)]
+		+ [ legacy_generateHashCollisionNodeClassString(ts)]
 		+ [ generateIteratorClassString(ts, ts.setup)] // , classNamePostfix
 		;
 	

@@ -933,7 +933,7 @@ str toString(ds:\set()) = "Set";
 str toString(ds:\vector()) = "Vector";
 default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 
-str dec(Method m:property, bool asAbstract = false) = "<m.visibility> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>();" when m.isActive;
+str dec(Method m:property(_,_), bool asAbstract = false) = "<m.visibility> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>();" when m.isActive;
 str dec(Method m, bool asAbstract = false) = "<if (asAbstract) {>abstract <}> <m.visibility> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>);" when m.isActive;
 str dec(Method m, bool asAbstract = false) = "" when !m.isActive;
 default str dec(Method m, bool asAbstract = false) { throw "You forgot <m>!"; }
