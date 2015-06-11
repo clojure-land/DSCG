@@ -345,11 +345,11 @@ Expression useExprList(list[Argument] xs) = compoundExpr(mapper(flattenArgumentL
  * lr += <"keyHash", ts.keyHash>;
  * [ *liftToList(arg) | arg <- range(lr) ];
  */	
-data Method
-	= method(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, list[Type] generics = [])
-	| function(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, list[Type] generics = [])
-	| constructor(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [], str visibility = "", bool isActive = true, list[Type] generics = []);
-
+data Method(list[Type] generics = [], str visibility = "", bool isActive = true)
+	= method(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
+	| function(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
+	| constructor(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
+	| property(Argument returnArg, str name);
 
 data Property
 	= hashCodeProperty()
@@ -642,9 +642,9 @@ public Argument bitposField = field("bitpos");
 
 Argument ___anybitmapField(int bitPartitionSize) = field(chunkSizeToPrimitive(bitPartitionSize), "bitmap");
 
-Argument ___bitmapField(int bitPartitionSize) = field(chunkSizeToPrimitive(bitPartitionSize), "nodeMap");
-Argument ___valmapField(int bitPartitionSize) = field(chunkSizeToPrimitive(bitPartitionSize), "dataMap");
-Argument ___bitposField(int bitPartitionSize) = field(chunkSizeToPrimitive(bitPartitionSize), "bitpos");
+Argument ___bitmapField(int bitPartitionSize) = val(chunkSizeToPrimitive(bitPartitionSize), "nodeMap");
+Argument ___valmapField(int bitPartitionSize) = val(chunkSizeToPrimitive(bitPartitionSize), "dataMap");
+Argument ___bitposField(int bitPartitionSize) = val(chunkSizeToPrimitive(bitPartitionSize), "bitpos");
 
 public Argument bitmapMethod = getter("nodeMap");
 public Argument valmapMethod = getter("dataMap");
@@ -933,6 +933,7 @@ str toString(ds:\set()) = "Set";
 str toString(ds:\vector()) = "Vector";
 default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 
+str dec(Method m:property, bool asAbstract = false) = "<m.visibility> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>();" when m.isActive;
 str dec(Method m, bool asAbstract = false) = "<if (asAbstract) {>abstract <}> <m.visibility> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>);" when m.isActive;
 str dec(Method m, bool asAbstract = false) = "" when !m.isActive;
 default str dec(Method m, bool asAbstract = false) { throw "You forgot <m>!"; }
@@ -979,12 +980,22 @@ str implOrOverride(m:function(_,_), str bodyStr, OverwriteType doOverride = over
 when m.isActive
 	;
 	
+str implOrOverride(m:property, str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
+	"<for(a <- annotations) {><toString(a)><}>
+	'<m.visibility> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>() {
+	'	return <m.name>;
+	'}
+	'
+	'private final <typeToString(m.returnArg.\type)> <m.name>;"
+when m.isActive
+	;
+	
 str implOrOverride(m:constructor(_,_), str bodyStr,  OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}><m.visibility> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>) {
 		<bodyStr>
 	}"
 when m.isActive
-	;		
+	;
 
 str implOrOverride(Method m, str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = "" when !m.isActive;
 
@@ -3224,16 +3235,18 @@ M3 getM3() {
  * Temporary Global Model
  */
  
+default lrel[TrieNodeType from, PredefOp to] declares(TrieNodeType nodeType) = []; 
+ 
 // TODO: get ride of global dependencies
 Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 	rel[TrieNodeType from, TrieNodeType to] refines = refines();
-	rel[TrieNodeType from, PredefOp to] declares = toSet(declares(abstractNode()) + declares(compactNode()));
 	rel[TrieNodeType from, PredefOp to] implements = {};
 	rel[OpBinding from, int to] placements = {}; // calculate an order between declares / implements / overrides	
 		
 	// rel[OpBinding from, OpBinding to] operationRefinement; // ???
 
 	set[TrieNodeType] allTrieNodeTypes = carrier(refines);
+	rel[TrieNodeType from, PredefOp to] declares = toSet([ *declares(current) | current <- allTrieNodeTypes ]);
 	
 	for (current <- allTrieNodeTypes) {		
 		// crawl all available implementations		
@@ -3327,10 +3340,12 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 				item += "@Override\n";
 			}
 			
-			if (<nodeType,op> in ts.model.implements) {
+			Method def = getDef(ts, trieNode(nodeType), op);
+			
+			if (<nodeType,op> in ts.model.implements) { // && !(property(_,_) := def)
 				item += impl(ts, trieNode(nodeType), op);
 			} else {
-				item += dec(getDef(ts, trieNode(nodeType), op), asAbstract = jdtIsAbstract);
+				item += dec(def, asAbstract = jdtIsAbstract);
 			}
 			
 			nestedContent += item;

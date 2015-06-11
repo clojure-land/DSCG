@@ -35,21 +35,39 @@ str generateCompactNodeClassString(TrieSpecifics ts) {
 data PredefOp = nodeMap();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeMap())
-	=  method(ts.bitmapField, ts.bitmapField.name);
+	= method(ts.bitmapField, ts.bitmapField.name);
 
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::nodeMap())
+	= property(ts.bitmapField, ts.bitmapField.name)
+when bs.supportsNodes;
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::nodeMap())
+	= method(ts.bitmapField, ts.bitmapField.name)
+when !bs.supportsNodes;
+
+// Default Value for Property
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::nodeMap()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::nodeMap())
-	= bs.supportsNodes ? result(NULL()) : result(iconst(0)); // TODO: property + default
+	= result(iconst(0));
 
 
 data PredefOp = dataMap();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::dataMap())
-	=  method(ts.valmapField, ts.valmapField.name);
+	= method(ts.valmapField, ts.valmapField.name);
 
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::dataMap())
+	= property(ts.valmapField, ts.valmapField.name)
+when bs.supportsValues;
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::dataMap())
+	= method(ts.valmapField, ts.valmapField.name)
+when !bs.supportsValues;
+
+// Default Value for Property
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::dataMap()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::dataMap())
-	= bs.supportsValues ? result(NULL()) : result(iconst(0)); // TODO: property + default
+	= result(iconst(0));
 
 
 data PredefOp = hashCodeLength();
@@ -304,6 +322,10 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	toString()
 	
 ];
+
+lrel[TrieNodeType from, PredefOp to] declares(TrieNodeType nodeType:compactNode(BitmapSpecialization _)) 
+	= [ <nodeType,nodeMap()>, <nodeType,dataMap()> ];
+
 
 //str legacy_generateCompactNodeClassString(TrieSpecifics ts) {
 //	
