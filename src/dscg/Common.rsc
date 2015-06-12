@@ -537,9 +537,10 @@ TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound, 
 	int nMax = toInt(pow(2, bitPartitionSize));
 	
 	if (nBound > nMax) {
-		throw "Specialization bound (<nBound>) must be smaller than the number of buckets (<nMax>)";
+		nBound = nMax;
+		//throw "Specialization bound (<nBound>) must be smaller than the number of buckets (<nMax>)";
 	}
-	
+		
 	return ___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound, keyType = __keyType, valType = __valType, classNamePostfix = __classNamePostfix, setup = __setup, artifact = __artifact);
 }
 
