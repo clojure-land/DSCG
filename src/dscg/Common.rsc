@@ -166,7 +166,7 @@ Expression assign(Argument lhs, Expression rhs:useExpr(lhs)) = emptyExpression()
 Expression assign(Argument lhs, Expression rhs:plus(useExpr(lhs), Expression tail)) = assignPlusEq(lhs, tail);
 
 data Expression = constant(Type \type, str constantString);
-Expression lconst(int i) = constant(primitive("long"), "<i>");
+Expression lconst(int i) = constant(primitive("long"), "<i>L");
 Expression iconst(int i) = constant(primitive("int"), "<i>");
 Expression bconst(bool b) = constant(primitive("boolean"), "<b>");
 
@@ -658,11 +658,15 @@ Argument ___bitposMethod(int bitPartitionSize) = getter(chunkSizeToPrimitive(bit
 
 public Argument thisMutator = field(specific("Void"), "null");
 
+@memo Type chunkSizeToPrimitive(int _:1) = primitive("byte");
+@memo Type chunkSizeToPrimitive(int _:2) = primitive("byte");
 @memo Type chunkSizeToPrimitive(int _:3) = primitive("byte");
 @memo Type chunkSizeToPrimitive(int _:4) = primitive("short");
 @memo Type chunkSizeToPrimitive(int _:5) = primitive("int");
 @memo Type chunkSizeToPrimitive(int _:6) = primitive("long");
 
+str chunkSizeToObject(int _:1) = "java.lang.Byte";
+str chunkSizeToObject(int _:2) = "java.lang.Byte";
 str chunkSizeToObject(int _:3) = "java.lang.Byte";
 str chunkSizeToObject(int _:4) = "java.lang.Short";
 str chunkSizeToObject(int _:5) = "java.lang.Integer";

@@ -68,6 +68,11 @@ void doGenerateCurrent() {
 }
 
 void doGenerateBleedingEdge() {
+	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");
+	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");	
+}
+
+void doGenerateBleedingEdgeExpanded() {
 	// generate map and set interfaces
 	doGenerateInterfaces();
 
