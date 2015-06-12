@@ -1633,13 +1633,13 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
 	'<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;
 	'
-	'final int dataMap = <use(valmapMethod)>;
+	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = <use(valmapMethod)>;
 	'if ((dataMap & bitpos) != 0) {
 	'	final int index = index(dataMap, mask, bitpos);
 	'	return <eq(key(ts.keyType, "getKey(index)"), key(ts.keyType))>;
 	'}
 	'
-	'final int nodeMap = <use(bitmapMethod)>;
+	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = <use(bitmapMethod)>;
 	'if ((nodeMap & bitpos) != 0) {
 	'	final int index = index(nodeMap, mask, bitpos);
 	'	return <toString(call(exprFromString("getNode(index)"), getDef(ts, artifact, containsKey(customComparator = op.customComparator)), 
