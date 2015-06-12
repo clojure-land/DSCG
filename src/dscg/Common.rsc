@@ -442,6 +442,7 @@ data Option // TODO: finish!
 	// | useNonCachedHashCodes() // TODO
 	| separateTrieAndLeafNodes()
 	| compareValueAtMapPut()
+	| useHeterogeneousEncoding()
 	;
 
 data TrieSpecifics 

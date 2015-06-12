@@ -155,7 +155,8 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 		<usePathCompression(),false>,
 		<useIncrementalHashCodes(),true>,
 		<separateTrieAndLeafNodes(),false>,
-		<compareValueAtMapPut(),false>	
+		<compareValueAtMapPut(),false>,
+		<useHeterogeneousEncoding(),true>
 	}; // { compactionViaFieldToMethod() };
 
 	return trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup, unknownArtifact());
@@ -2010,7 +2011,7 @@ default str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
 str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix, int mn = tupleLength(ds)*m+n) {
 	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, setup);
 
-	extendsClassName = "<if (isOptionEnabled(setup,useUntypedVariables())) {><className_compactNode(ts, setup, true, true)><} else {><className_compactNode(ts, setup, n != 0, m != 0)><}>";
+	extendsClassName = "<if (isOptionEnabled(setup,useUntypedVariables())) {><className_compactNode(ts, specializeByBitmap(true, true))><} else {><className_compactNode(ts, specializeByBitmap(n != 0, m != 0))><}>";
 
 	return
 	"private static final class <specializedClassName(n, m, ts)><GenericsStr(ts.tupleTypes)> extends <extendsClassName><GenericsStr(ts.tupleTypes)> {
