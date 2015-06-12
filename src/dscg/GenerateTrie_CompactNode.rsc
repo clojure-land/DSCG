@@ -735,7 +735,15 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq) =
 	'	details.updated(currentVal);
 	'	return copyAndSetValue(mutator, bitpos, val);
 	'}" 
-when \map(multi = false) := ts.ds;
+when \map(multi = false) := ts.ds && isOptionEnabled(ts.setup, compareValueAtMapPut());
+
+str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq) = 
+	"<dec(val(ts.valType, "currentVal"))> = getValue(dataIndex);
+	'
+	'// update mapping
+	'details.updated(currentVal);
+	'return copyAndSetValue(mutator, bitpos, val);" 
+when \map(multi = false) := ts.ds && !isOptionEnabled(ts.setup, compareValueAtMapPut());
 
 // TODO: lost knowledge about 'customComparator'
 // TODO: lost knowledge about 'artifact'

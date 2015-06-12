@@ -149,7 +149,8 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 		<usePrefixInsteadOfPostfixEncoding(),false>,	
 		<usePathCompression(),false>,
 		<useIncrementalHashCodes(),true>,
-		<separateTrieAndLeafNodes(),false>
+		<separateTrieAndLeafNodes(),false>,
+		<compareValueAtMapPut(),false>	
 	}; // { compactionViaFieldToMethod() };
 
 	return trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup, unknownArtifact());

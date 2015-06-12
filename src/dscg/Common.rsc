@@ -441,6 +441,7 @@ data Option // TODO: finish!
 	// | useLazyHashCodes() // TODO
 	// | useNonCachedHashCodes() // TODO
 	| separateTrieAndLeafNodes()
+	| compareValueAtMapPut()
 	;
 
 data TrieSpecifics 
@@ -1725,11 +1726,9 @@ data PredefOp = insertTuple(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), insertTuple(customComparator = false))
 	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, artifact)>", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true);
-//when core(immutable()) := artifact || unknownArtifact() := artifact;
 
 Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), insertTuple(customComparator = true))
 	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, artifact)>Equivalent", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()));
-//when core(immutable()) := artifact || unknownArtifact() := artifact;
 
 Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), insertTuple(customComparator = false))
 	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, artifact)>", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true)
