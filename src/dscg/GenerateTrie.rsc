@@ -68,8 +68,8 @@ void doGenerateCurrent() {
 }
 
 void doGenerateBleedingEdge() {
-	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");
-	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], withoutSpecialization()), overideClassNamePostfixWith = "BleedingEdge");	
+	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(8, true)), overideClassNamePostfixWith = "BleedingEdge");
+	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(8, true)), overideClassNamePostfixWith = "BleedingEdge");	
 }
 
 void doGenerateBleedingEdgeExpanded() {
@@ -156,7 +156,7 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 		<useIncrementalHashCodes(),true>,
 		<separateTrieAndLeafNodes(),false>,
 		<compareValueAtMapPut(),false>,
-		<useHeterogeneousEncoding(),true>
+		<useHeterogeneousEncoding(),false>
 	}; // { compactionViaFieldToMethod() };
 
 	return trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup, unknownArtifact());
@@ -196,6 +196,10 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 		+ [ generateAbstractAnyNodeClassString(ts, ts.setup)]
 		+ [ generateAbstractNodeClassString(ts, isLegacy = isLegacy)]
 		+ [ generateCompactNodeClassString(ts, isLegacy = isLegacy)];
+
+	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
+		innerClassStrings = innerClassStrings + [ generateCompactHeterogeneousNodeClassString(ts, isLegacy = isLegacy)];
+	}
 
 	if (isOptionEnabled(ts.setup, separateTrieAndLeafNodes())) {
 		innerClassStrings = innerClassStrings + [ generateLeafNodeClassString(ts)];
@@ -2011,7 +2015,7 @@ default str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
 str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix, int mn = tupleLength(ds)*m+n) {
 	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, setup);
 
-	extendsClassName = "<if (isOptionEnabled(setup,useUntypedVariables())) {><className_compactNode(ts, specializeByBitmap(true, true))><} else {><className_compactNode(ts, specializeByBitmap(n != 0, m != 0))><}>";
+	extendsClassName = "<if (isOptionEnabled(setup,useUntypedVariables())) {><className(ts, compactNode(specializeByBitmap(true, true)))><} else {><className(ts, compactNode(specializeByBitmap(n != 0, m != 0)))><}>";
 
 	return
 	"private static final class <specializedClassName(n, m, ts)><GenericsStr(ts.tupleTypes)> extends <extendsClassName><GenericsStr(ts.tupleTypes)> {

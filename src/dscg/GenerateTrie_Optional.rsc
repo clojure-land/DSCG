@@ -16,10 +16,8 @@ import dscg::GenerateTrie;
 
 str generateOptionalClassString() {
 
-	className = "Optional";
-
 	return
-	"abstract static class <className>\<T\> {
+	"abstract static class Optional\<T\> {
 		private static final Optional EMPTY = new Optional() {
 			@Override
 			boolean isPresent() {

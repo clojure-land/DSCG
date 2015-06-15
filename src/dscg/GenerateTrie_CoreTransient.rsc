@@ -21,18 +21,18 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 	
 	//TrieSpecifics ts = setArtifact(tsSuper, core(transient()));
 	
-	str className = "TransientTrie<toString(ts.ds)><ts.classNamePostfix>";	
+	str classNameStr = "TransientTrie<toString(ts.ds)><ts.classNamePostfix>";	
 	str persistentClassName = "Trie<toString(ts.ds)><ts.classNamePostfix>";
 	
 	return
-	"static final class <className><GenericsStr(ts.tupleTypes)> implements
+	"static final class <classNameStr><GenericsStr(ts.tupleTypes)> implements
 					Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
 		final private AtomicReference\<Thread\> mutator;
 		private <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> rootNode;
 		private int hashCode;
 		private int cachedSize;
 
-		<className>(<persistentClassName><GenericsStr(ts.tupleTypes)> <uncapitalize(persistentClassName)>) {
+		<classNameStr>(<persistentClassName><GenericsStr(ts.tupleTypes)> <uncapitalize(persistentClassName)>) {
 			this.mutator    = new AtomicReference\<Thread\>(Thread.currentThread());
 			this.rootNode   = <uncapitalize(persistentClassName)>.rootNode;
 			this.hashCode   = <uncapitalize(persistentClassName)>.hashCode;

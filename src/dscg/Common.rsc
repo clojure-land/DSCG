@@ -387,6 +387,8 @@ data TrieNodeType
 	| abstractNode()
 	| compactNode()
 	| compactNode(BitmapSpecialization bitmapSpecialization)
+	| compactHeterogeneousNode()
+	| compactHeterogeneousNode(BitmapSpecialization bitmapSpecialization)
 	| hashCollisionNode()
 	| bitmapIndexedNode()
 	| leafNode();
@@ -3102,23 +3104,34 @@ JavaDataType jul_Iterator(Type typeArgument) = javaInterface("Iterator", typeArg
 JavaDataType jul_Map_Entry([Type keyType, Type valType]) = javaInterface("Map.Entry", typeArguments = [ primitiveToClass(keyType), primitiveToClass(valType) ]);
 default JavaDataType jul_Map_Entry(list[Type] types) = invalidJavaDataType();
 
-
 JavaDataType abstractNode(TrieSpecifics ts, list[str] modifierList = [])
 	= javaClass("Abstract<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), modifierList = modifierList);
 
 JavaDataType compactNode(TrieSpecifics ts, list[str] modifierList = [])
-	= javaClass(className_compactNode(ts, deferBitmapSpecialization()), typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = abstractNode(ts), modifierList = modifierList);
+	= javaClass(className(ts, compactNode(deferBitmapSpecialization())), typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = abstractNode(ts), modifierList = modifierList);
 
 JavaDataType compactNode(TrieSpecifics ts, TrieNodeType nodeType:compactNode(BitmapSpecialization bs), list[str] modifierList = [])
-	= javaClass(className_compactNode(ts, bs), typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts), modifierList = modifierList);
+	= javaClass(className(ts, nodeType), typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts), modifierList = modifierList);
 
+JavaDataType compactHeterogeneousNode(TrieSpecifics ts, list[str] modifierList = [])
+	= javaClass(className(ts, compactHeterogeneousNode(deferBitmapSpecialization())), typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts), modifierList = modifierList);
 
-str className_compactNode(TrieSpecifics ts, specializeByBitmap(true, true)) = "CompactMixed<toString(ts.ds)>Node";
-str className_compactNode(TrieSpecifics ts, specializeByBitmap(true, false)) = "CompactNodesOnly<toString(ts.ds)>Node";
-str className_compactNode(TrieSpecifics ts, specializeByBitmap(false, true)) = "CompactValuesOnly<toString(ts.ds)>Node";
-str className_compactNode(TrieSpecifics ts, specializeByBitmap(false, false)) = "CompactEmpty<toString(ts.ds)>Node";
-str className_compactNode(TrieSpecifics ts, deferBitmapSpecialization()) = "Compact<toString(ts.ds)>Node";
-default str className_compactNode(TrieSpecifics ts, BitmapSpecialization bs) { throw "Unknown <bs>"; }
+JavaDataType compactHeterogeneousNode(TrieSpecifics ts, TrieNodeType nodeType:compactHeterogeneousNode(BitmapSpecialization bs), list[str] modifierList = [])
+	= javaClass(className(ts, nodeType), typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactHeterogeneousNode(ts), modifierList = modifierList);
+
+str className(TrieSpecifics ts, TrieNodeType nodetype:compactNode(specializeByBitmap(true, true))) = "CompactMixed<toString(ts.ds)>Node";
+str className(TrieSpecifics ts, TrieNodeType nodetype:compactNode(specializeByBitmap(true, false))) = "CompactNodesOnly<toString(ts.ds)>Node";
+str className(TrieSpecifics ts, TrieNodeType nodetype:compactNode(specializeByBitmap(false, true))) = "CompactValuesOnly<toString(ts.ds)>Node";
+str className(TrieSpecifics ts, TrieNodeType nodetype:compactNode(specializeByBitmap(false, false))) = "CompactEmpty<toString(ts.ds)>Node";
+str className(TrieSpecifics ts, TrieNodeType nodetype:compactNode(deferBitmapSpecialization())) = "Compact<toString(ts.ds)>Node";
+
+str className(TrieSpecifics ts, TrieNodeType nodetype:compactHeterogeneousNode(specializeByBitmap(true, true))) = "CompactMixedHeterogeneous<toString(ts.ds)>Node";
+str className(TrieSpecifics ts, TrieNodeType nodetype:compactHeterogeneousNode(specializeByBitmap(true, false))) = "CompactNodesOnlyHeterogeneous<toString(ts.ds)>Node";
+str className(TrieSpecifics ts, TrieNodeType nodetype:compactHeterogeneousNode(specializeByBitmap(false, true))) = "CompactValuesOnlyHeterogeneous<toString(ts.ds)>Node";
+str className(TrieSpecifics ts, TrieNodeType nodetype:compactHeterogeneousNode(specializeByBitmap(false, false))) = "CompactEmptyHeterogeneous<toString(ts.ds)>Node";
+str className(TrieSpecifics ts, TrieNodeType nodetype:compactHeterogeneousNode(deferBitmapSpecialization())) = "CompactHeterogeneous<toString(ts.ds)>Node";
+
+default str className(TrieSpecifics ts, TrieNodeType nodeType) { throw "Unknown class name for <nodeType>"; }
 
 JavaDataType bitmapIndexedNode(TrieSpecifics ts, list[str] modifierList = [])
 	= javaClass("BitmapIndexed<toString(ts.ds)>Node", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts, compactNode(specializeByBitmap(true, true))), modifierList = modifierList);
@@ -3330,6 +3343,13 @@ rel[TrieNodeType from, TrieNodeType to] refines() = {
 	<compactNode(specializeByBitmap(true, false)), compactNode()>,
 	<compactNode(specializeByBitmap(false, true)), compactNode()>,
 	<compactNode(specializeByBitmap(false, false)), compactNode()>,
+	
+	<compactHeterogeneousNode(), compactNode()>,
+	<compactHeterogeneousNode(specializeByBitmap(true, true)), compactHeterogeneousNode()>,
+	<compactHeterogeneousNode(specializeByBitmap(true, false)), compactHeterogeneousNode()>,
+	<compactHeterogeneousNode(specializeByBitmap(false, true)), compactHeterogeneousNode()>,
+	<compactHeterogeneousNode(specializeByBitmap(false, false)), compactHeterogeneousNode()>,	
+	
 	<bitmapIndexedNode(), compactNode(specializeByBitmap(true, true))>,
 	<hashCollisionNode(), abstractNode()>,
 	<leafNode(), abstractNode()> 

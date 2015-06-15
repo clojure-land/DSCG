@@ -21,6 +21,7 @@ extend dscg::GenerateTrie_Result;
 extend dscg::GenerateTrie_AbstractAnyNode;
 extend dscg::GenerateTrie_AbstractNode;
 extend dscg::GenerateTrie_CompactNode;
+extend dscg::GenerateTrie_CompactHeterogeneousNode;
 extend dscg::GenerateTrie_BitmapIndexedNode;
 extend dscg::GenerateTrie_HashCollisionNode;
 extend dscg::GenerateTrie_LeafNode;

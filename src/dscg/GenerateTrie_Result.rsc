@@ -16,10 +16,10 @@ import dscg::GenerateTrie;
 
 str generateResultClassString(TrieSpecifics ts, rel[Option,bool] setup) {
 
-	className = "<ts.ResultStr>";
+	classNameStr = "<ts.ResultStr>";
 
 	return
-	"static final class <className><GenericsStr(ts.tupleTypes)> {
+	"static final class <classNameStr><GenericsStr(ts.tupleTypes)> {
 		private <typeToString(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes))> replacedValue;
 		private boolean isModified;
 		private boolean isReplaced;
@@ -36,11 +36,11 @@ str generateResultClassString(TrieSpecifics ts, rel[Option,bool] setup) {
 		}
 
 		// update: neither element, nor element count changed
-		public static <GenericsStr(ts.tupleTypes)> <className><GenericsStr(ts.tupleTypes)> unchanged() {
-			return new <className><InferredGenerics(ts.ds, ts.tupleTypes)>();
+		public static <GenericsStr(ts.tupleTypes)> <classNameStr><GenericsStr(ts.tupleTypes)> unchanged() {
+			return new <classNameStr><InferredGenerics(ts.ds, ts.tupleTypes)>();
 		}
 
-		private <className>() {
+		private <classNameStr>() {
 		}
 
 		public boolean isModified() {

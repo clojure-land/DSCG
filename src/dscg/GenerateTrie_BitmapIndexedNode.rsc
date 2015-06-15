@@ -60,7 +60,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 	fields = [ts.mutator, ts.BitmapIndexedNode_contentArray, ts.BitmapIndexedNode_payloadArity, ts.BitmapIndexedNode_nodeArity] - ts.BitmapIndexedNode_constructor.argsFilter;
 
 	return
-	"private static final class <ts.bitmapIndexedNodeClassName><GenericsStr(ts.tupleTypes)> extends <className_compactNode(ts, specializeByBitmap(true, true))><GenericsStr(ts.tupleTypes)> {
+	"private static final class <ts.bitmapIndexedNodeClassName><GenericsStr(ts.tupleTypes)> extends <className(ts, compactNode(specializeByBitmap(true, true)))><GenericsStr(ts.tupleTypes)> {
 
 		<decFields(fields)>
 		

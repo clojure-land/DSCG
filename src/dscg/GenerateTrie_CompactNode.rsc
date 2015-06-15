@@ -340,13 +340,13 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 		  ts.mutator 
 		+ members);
 
-	str className = "<CompactNode(ts.ds)>"; 
+	str classNameStr = "<CompactNode(ts.ds)>"; 
 
 	int n = 0; // TODO: remove
 	int m = 0; // TODO: remove
 
 	return
-	"protected static abstract class <className><GenericsStr(ts.tupleTypes)> extends Abstract<toString(ts.ds)>Node<GenericsStr(ts.tupleTypes)> {
+	"protected static abstract class <classNameStr><GenericsStr(ts.tupleTypes)> extends Abstract<toString(ts.ds)>Node<GenericsStr(ts.tupleTypes)> {
 		
 		<impl(ts, trieNode(compactNode()), hashCodeLength())>
 		<impl(ts, trieNode(compactNode()), bitPartitionSize())>
@@ -453,7 +453,6 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 	'	}
 	<}>
 
-
 	<generate_specializationFactoryMethods(ts, ts.setup)>
 
 	<impl(ts, trieNode(compactNode()), index2())>
@@ -539,12 +538,12 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 	
 	'}
 	
-	protected static abstract class <className_compactNode(ts, specializeByBitmap(true, true))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
+	protected static abstract class <className(ts, compactNode(specializeByBitmap(true, true)))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
 
 		private <dec(ts.bitmapField)>;
 		private <dec(ts.valmapField)>;
 
-		<className_compactNode(ts, specializeByBitmap(true, true))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
+		<className(ts, compactNode(specializeByBitmap(true, true)))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
 			this.<bitmapField.name> = <bitmapField.name>;
 			this.<valmapField.name> = <valmapField.name>;
 		}
@@ -562,11 +561,11 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 	}
 
 	<if (isOptionEnabled(ts.setup,useSpecialization())) {>
-	protected static abstract class <className_compactNode(ts, specializeByBitmap(true, false))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
+	protected static abstract class <className(ts, compactNode(specializeByBitmap(true, false)))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
 
 		private <dec(ts.bitmapField)>;
 
-		<className_compactNode(ts, specializeByBitmap(true, false))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
+		<className(ts, compactNode(specializeByBitmap(true, false)))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
 			this.<bitmapField.name> = <bitmapField.name>;
 		}
 
@@ -582,11 +581,11 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 
 	}
 
-	protected static abstract class <className_compactNode(ts, specializeByBitmap(false, true))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
+	protected static abstract class <className(ts, compactNode(specializeByBitmap(false, true)))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
 
 		private <dec(ts.valmapField)>;
 
-		<className_compactNode(ts, specializeByBitmap(false, true))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
+		<className(ts, compactNode(specializeByBitmap(false, true)))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
 			this.<valmapField.name> = <valmapField.name>;
 		}
 
@@ -602,9 +601,9 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 
 	}
 	
-	protected static abstract class <className_compactNode(ts, specializeByBitmap(false, false))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
+	protected static abstract class <className(ts, compactNode(specializeByBitmap(false, false)))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
 
-		<className_compactNode(ts, specializeByBitmap(false, false))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
+		<className(ts, compactNode(specializeByBitmap(false, false)))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
 		}
 
 		@Override
@@ -1045,7 +1044,7 @@ default str generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts,
 }
 
 
-bool generate_valNodeOf_factoryMethod_bitmap_untyped(mn:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int n = 0, int m = 0) = true; 
+bool exists_valNodeOf_factoryMethod_bitmap_untyped(mn:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int n = 0, int m = 0) = true; 
 str generate_valNodeOf_factoryMethod_bitmap_untyped(mn:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int n = 0, int m = 0) { 
 	// TODO: remove code duplication
 	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
@@ -1076,7 +1075,7 @@ str generate_valNodeOf_factoryMethod_bitmap_untyped(mn:0, ts:___expandedTrieSpec
 //	;
 //}
 
-default str generate_valNodeOf_factoryMethod_bitmap_untyped(int mn, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int n = mn, int m = 0) = true;
+bool exists_valNodeOf_factoryMethod_bitmap_untyped(int mn, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int n = mn, int m = 0) = true;
 default str generate_valNodeOf_factoryMethod_bitmap_untyped(int mn, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int n = mn, int m = 0) {
 	// TODO: remove code duplication
 	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
