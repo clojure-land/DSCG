@@ -15,17 +15,26 @@ import List;
 import dscg::Common;
 import dscg::ArrayUtils;
 
-//default str generateSpecializedBitmapIndexedNodeClassString(TrieSpecifics ts) 
-//	= generateJdtString(ts, jdt, specializedBitmapIndexedNode())
-//when jdt := specializedBitmapIndexedNode(ts, modifierList = [ "private", "static" ]);
+default str generateSpecializedBitmapIndexedNodeClassString(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m)) 
+	= generateJdtString(ts, jdt, nodeType)
+when jdt := specializedBitmapIndexedNode(ts, nodeType, modifierList = [ "private", "static" ]);
+
+JavaDataType specializedBitmapIndexedNode(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m), list[str] modifierList = [])
+	= javaClass("<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts, compactNode(specializeByBitmap(true, true))), modifierList = modifierList);
 
 str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix, int mn = tupleLength(ds)*m+n) {
 	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, setup);
 
 	extendsClassName = "<if (isOptionEnabled(setup,useUntypedVariables())) {><className(ts, compactNode(specializeByBitmap(true, true)))><} else {><className(ts, compactNode(specializeByBitmap(n != 0, m != 0)))><}>";
 
+	specializedClassNameStr = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
+
+	TrieNodeType nodeType = specializedBitmapIndexedNode(n, m);
+
+	Artifact thisArtifact = trieNode(specializedBitmapIndexedNode(n, m));
+
 	return
-	"private static final class <specializedClassName(n, m, ts)><GenericsStr(ts.tupleTypes)> extends <extendsClassName><GenericsStr(ts.tupleTypes)> {
+	"private static final class <specializedClassNameStr><GenericsStr(ts.tupleTypes)> extends <extendsClassName><GenericsStr(ts.tupleTypes)> {
 	
 	'	<intercalate("\n", mapper(contentArguments(n, m, ts, setup), str(Argument a) { 
 			str dec = "private <dec(a)>;";
@@ -37,7 +46,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 			} 
 		}))>
 			
-	'	<specializedClassName(n, m, ts)>(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
+	'	<specializedClassNameStr>(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 	'		super(mutator, <use(bitmapField)>, <use(valmapField)>);
 	'		<intercalate("\n", mapper(contentArguments(n, m, ts, setup), str(Argument a) { 
 				str dec = "this.<use(a)> = <use(a)>;";
@@ -65,148 +74,25 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'	}	
 	<}>
 	<}>
+
+	<impl(ts, thisArtifact, hasSlots())>
+	<impl(ts, thisArtifact, slotArity())>
+	<impl(ts, thisArtifact, getSlot())>
+
+	<impl(ts, thisArtifact, getKey())>
+	<impl(ts, thisArtifact, getValue())>
+	<impl(ts, thisArtifact, getKeyValueEntry())>
+
+	<impl(ts, thisArtifact, getNode())>
+	<impl(ts, thisArtifact, nodeIterator())>
+
+	<impl(ts, thisArtifact, hasNodes())>
+	<impl(ts, thisArtifact, nodeArity())>
 	
-	<implOrOverride(getDef(ts, trieNode(abstractNode()), hasSlots()), 
-		generate_bodyOf_hasSlots(mn))>
+	<impl(ts, thisArtifact, hasPayload())>
+	<impl(ts, thisArtifact, payloadArity())>
 
-	<implOrOverride(getDef(ts, trieNode(abstractNode()), slotArity()), 
-		"return <mn>;")>
-
-	<implOrOverride(getDef(ts, trieNode(abstractNode()), getSlot()),
-		generate_bodyOf_getSlot(ts, mn))> 
-
-	<if (isOptionEnabled(setup, useUntypedVariables())) {>
-
-		<if (!isPrimitive(key(ts.keyType))) {><toString(UNCHECKED_ANNOTATION())><}>
-		@Override
-		<typeToString(ts.keyType)> getKey(int index) {
-			return (<typeToString(ts.keyType)>) getSlot(<use(tupleLengthConstant)> * index);
-		}
-	
-		<if (\map() := ts.ds) {>
-		<if (!isPrimitive(val(ts.valType))) {><toString(UNCHECKED_ANNOTATION())><}>
-		@Override
-		<typeToString(ts.valType)> getValue(int index) {
-			return (<typeToString(ts.valType)>) getSlot(<use(tupleLengthConstant)> * index + 1);
-		}
-		<}>
-
-		<if (\map() := ts.ds) {>
-		<toString(UNCHECKED_ANNOTATION())>
-		@Override
-		Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> getKeyValueEntry(int index) {
-			return entryOf((<typeToString(ts.keyType)>) getSlot(<use(tupleLengthConstant)> * index), (<typeToString(ts.valType)>) getSlot(<use(tupleLengthConstant)> * index + 1));
-		}
-		<}>
-
-		<toString(UNCHECKED_ANNOTATION())>
-		@Override
-		public <CompactNode(ds)><GenericsStr(ts.tupleTypes)> getNode(int index) {
-			final int offset = <use(tupleLengthConstant)> * payloadArity();
-			return (<CompactNode(ds)><GenericsStr(ts.tupleTypes)>) getSlot(offset + index);
-		}
-		
-		<toString(UNCHECKED_ANNOTATION())>
-		@Override
-		Iterator\<<CompactNode(ds)><GenericsStr(ts.tupleTypes)>\> nodeIterator() {
-			final int offset = <use(tupleLengthConstant)> * payloadArity();
-			final Object[] nodes = new Object[<mn> - offset];
-
-			for (int i = 0; i \< <mn> - offset; i++) {
-				// assert ((getSlot(offset + i) instanceof <AbstractNode(ds)>) == true);
-				nodes[i] = getSlot(offset + i);
-			}
-
-			return (Iterator) ArrayIterator.of(nodes);
-		}		
-		
-		@Override
-		boolean hasNodes() {
-			return <use(tupleLengthConstant)> * payloadArity() != <mn>;
-		}
-
-		@Override
-		int nodeArity() {
-			return <mn> - <use(tupleLengthConstant)> * payloadArity();
-		}
-		
-		@Override
-		boolean hasPayload() {
-			return payloadArity() != 0;
-		}
-
-		@Override
-		int payloadArity() {
-			return <integerOrLongObject(bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(bitPartitionSize))>);
-		}
-		
-		@Override
-		byte sizePredicate() {
-			if (this.nodeArity() == 0 && this.payloadArity() == 0) {
-				return SIZE_EMPTY;
-			} else if (this.nodeArity() == 0 && this.payloadArity() == 1) {
-				return SIZE_ONE;
-			} else {
-				return SIZE_MORE_THAN_ONE;
-			}
-		}		
-	<} else {>
-	'	@Override
-	'	<CompactNode(ds)><GenericsStr(ts.tupleTypes)> getNode(int index) {
-	'		<generate_bodyOf_getNode(n)>
-	'	}
-	
-	'	@Override
-	'	<typeToString(ts.keyType)> getKey(int index) {
-	'		<generate_bodyOf_getKey(m)>
-	'	}
-
-	<if (\map() := ts.ds) {>
-	'	@Override
-	'	<typeToString(ts.valType)> getValue(int index) {
-	'		<generate_bodyOf_getValue(m)>
-	'	}
-	<}>
-	
-	<if (\map() := ts.ds) {>
-	'	@Override
-	'	Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> getKeyValueEntry(int index) {
-	'		<generate_bodyOf_getKeyValueEntry(ts, m)>
-	'	}
-	<}>	
-
-	<if (false) {>	
-	'	@Override
-	'	Iterator\<<CompactNode(ds)><GenericsStr(ts.tupleTypes)>\> nodeIterator() {
-	'		<if (n > 0) {>return ArrayIterator.of(<intercalate(", ", ["<nodeName><i>" | i <- [1..n+1]])>);<} else {>return Collections.\<<CompactNode(ds)><GenericsStr(ts.tupleTypes)>\>emptyIterator();<}>
-	'	}
-	<}>
-
-	'	@Override
-	'	boolean hasNodes() {
-	'		return <if (n > 0) {>true<} else {>false<}>;
-	'	}
-
-	'	@Override
-	'	int nodeArity() {
-	'		return <n>;
-	'	}
-	
-	'	@Override
-	'	boolean hasPayload() {
-	'		return <if (m > 0) {>true<} else {>false<}>;
-	'	}
-
-	'	@Override
-	'	int payloadArity() {
-	'		return <m>;
-	'	}	
-	
-	'	@Override
-	'	byte sizePredicate() {
-	'		return <generate_bodyOf_sizePredicate(n, m, ts)>;
-	'	}	
-	<}>
+	<impl(ts, thisArtifact, sizePredicate())>
 
 	<if (\map() := ts.ds) {>
 	'	@Override
@@ -256,7 +142,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	'		if (getClass() != other.getClass()) {
 	'			return false;
 	'		}
-	'		<if ((n + m) > 0) {><specializedClassName(n, m, ts)><QuestionMarkGenerics(ts.ds, ts.tupleTypes)> that = (<specializedClassName(n, m, ts)><QuestionMarkGenerics(ts.ds, ts.tupleTypes)>) other;
+	'		<if ((n + m) > 0) {><specializedClassNameStr><QuestionMarkGenerics(ts.ds, ts.tupleTypes)> that = (<specializedClassNameStr><QuestionMarkGenerics(ts.ds, ts.tupleTypes)>) other;
 	'
 	'		<generate_equalityComparisons(n, m, ts, setup, equalityDefaultForArguments)><}>
 	'
@@ -270,6 +156,178 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___ex
 	;	
 	
 }
+
+
+int slotCount(TrieSpecifics ts, specializedBitmapIndexedNode(int n, int m)) = tupleLength(ts.ds)*m+n;
+
+
+data PredefOp = hasSlots();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), hasSlots()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), hasSlots())
+	= result(bconst(slotCount(ts, nodeType) != 0)); 	
+	
+	
+data PredefOp = slotArity();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), slotArity()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), slotArity())
+	= result(iconst(slotCount(ts, nodeType)));
+
+
+data PredefOp = getSlot();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getSlot()) = true;
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getSlot())
+	= generate_bodyOf_getSlot(ts, slotCount(ts, nodeType));
+	
+
+data PredefOp = getKey();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getKey()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getKey())
+	= "return (<typeToString(ts.keyType)>) getSlot(<use(tupleLengthConstant)> * index);"
+when isOptionEnabled(ts.setup, useUntypedVariables());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getKey())
+	= generate_bodyOf_getKey(m)
+when !isOptionEnabled(ts.setup, useUntypedVariables());
+
+
+data PredefOp = getValue();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getValue()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getValue())
+	= "return (<typeToString(ts.valType)>) getSlot(<use(tupleLengthConstant)> * index + 1);"
+when isOptionEnabled(ts.setup, useUntypedVariables());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getValue())
+	= generate_bodyOf_getValue(m)
+when !isOptionEnabled(ts.setup, useUntypedVariables());
+
+
+data PredefOp = getKeyValueEntry();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getKeyValueEntry()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getKeyValueEntry())
+	= "return entryOf((<typeToString(ts.keyType)>) getSlot(<use(tupleLengthConstant)> * index), (<typeToString(ts.valType)>) getSlot(<use(tupleLengthConstant)> * index + 1));"
+when isOptionEnabled(ts.setup, useUntypedVariables());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getKeyValueEntry())
+	= generate_bodyOf_getKeyValueEntry(ts, m)
+when !isOptionEnabled(ts.setup, useUntypedVariables());
+
+
+data PredefOp = getNode();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getNode()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getNode()) =
+	"final int offset = <use(tupleLengthConstant)> * payloadArity();
+	'return (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) getSlot(offset + index);"
+when isOptionEnabled(ts.setup, useUntypedVariables());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getNode())
+	= generate_bodyOf_getNode(n)
+when !isOptionEnabled(ts.setup, useUntypedVariables());
+
+
+data PredefOp = nodeIterator();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), nodeIterator()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), nodeIterator()) = 
+	"final int offset = <use(tupleLengthConstant)> * payloadArity();
+	'final Object[] nodes = new Object[<mn> - offset];
+	'
+	'for (int i = 0; i \< <mn> - offset; i++) {
+	'	// assert ((getSlot(offset + i) instanceof <AbstractNode(ts.ds)>) == true);
+	'	nodes[i] = getSlot(offset + i);
+	'}
+	'
+	'return (Iterator) ArrayIterator.of(nodes);"
+when isOptionEnabled(ts.setup, useUntypedVariables())
+		&& mn := slotCount(ts, nodeType);
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), nodeIterator()) 
+	= "<if (n > 0) {>return ArrayIterator.of(<intercalate(", ", ["<nodeName><i>" | i <- [1..n+1]])>);<} else {>return Collections.\<<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>\>emptyIterator();<}>" 
+when !isOptionEnabled(ts.setup, useUntypedVariables());
+
+
+data PredefOp = hasNodes();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), hasNodes()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), hasNodes())
+	= "return <use(tupleLengthConstant)> * payloadArity() != <mn>;"
+when isOptionEnabled(ts.setup, useUntypedVariables())
+		&& mn := slotCount(ts, nodeType);
+	
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), hasNodes())
+	= "return <if (n > 0) {>true<} else {>false<}>;"	
+when !isOptionEnabled(ts.setup, useUntypedVariables());	
+	
+data PredefOp = nodeArity();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), nodeArity()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), nodeArity())
+	= "return <mn> - <use(tupleLengthConstant)> * payloadArity();"
+when isOptionEnabled(ts.setup, useUntypedVariables())
+		&& mn := slotCount(ts, nodeType);
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), nodeArity())
+	= result(iconst(n))
+when !isOptionEnabled(ts.setup, useUntypedVariables());	
+	
+
+data PredefOp = hasPayload();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), hasPayload()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), hasPayload())
+	= "return payloadArity() != 0;"
+when isOptionEnabled(ts.setup, useUntypedVariables());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), hasPayload())
+	= "return <if (m > 0) {>true<} else {>false<}>;"
+when !isOptionEnabled(ts.setup, useUntypedVariables());
+
+	
+data PredefOp = payloadArity();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), payloadArity()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), payloadArity())
+	= "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(ts.bitPartitionSize))>);"
+when isOptionEnabled(ts.setup, useUntypedVariables());
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), payloadArity())
+	= result(iconst(m))
+when !isOptionEnabled(ts.setup, useUntypedVariables());	
+
+
+data PredefOp = sizePredicate();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), sizePredicate()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), sizePredicate()) = 
+	"if (this.nodeArity() == 0 && this.payloadArity() == 0) {
+	'	return SIZE_EMPTY;
+	'} else if (this.nodeArity() == 0 && this.payloadArity() == 1) {
+	'	return SIZE_ONE;
+	'} else {
+	'	return SIZE_MORE_THAN_ONE;
+	'}"
+when isOptionEnabled(ts.setup, useUntypedVariables());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), sizePredicate()) 
+	= "return <generate_bodyOf_sizePredicate(n, m, ts)>;"
+when !isOptionEnabled(ts.setup, useUntypedVariables());
+
 
 bool exists_bodyOf_hashCode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) = true;
 str generate_bodyOf_hashCode(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int mn = tupleLength(ds)*m+n) =
@@ -844,14 +902,6 @@ str generateGenericNodeClassString(int n, int m, ts:___expandedTrieSpecifics(ds,
 	}
 	";
 
-bool exists_bodyOf_hasSlots(0)  = true;
-str generate_bodyOf_hasSlots(0) = 
-	"return false;";
-	
-default bool exists_bodyOf_hasSlots(int mn)  = true;
-default str generate_bodyOf_hasSlots(int mn) = 	
-	"return true;";
-	
 bool exists_bodyOf_getSlot(TrieSpecifics ts, 0) = true;
 str generate_bodyOf_getSlot(TrieSpecifics ts, 0)
 	= "throw new IllegalStateException(\"Index out of range.\");"

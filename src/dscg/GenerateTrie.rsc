@@ -69,8 +69,14 @@ void doGenerateCurrent() {
 }
 
 void doGenerateBleedingEdge() {
+	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(8, true)), overideClassNamePostfixWith = "BleedingEdge_Untyped");
+	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(8, true)), overideClassNamePostfixWith = "BleedingEdge_Untyped");	
+
+	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(8, false)), overideClassNamePostfixWith = "BleedingEdge_Typed");
+	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(8, false)), overideClassNamePostfixWith = "BleedingEdge_Typed");	
+
 	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "BleedingEdge");
-	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "BleedingEdge");	
+	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "BleedingEdge");
 }
 
 void doGenerateBleedingEdgeExpanded() {
@@ -246,6 +252,12 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 		innerClassStrings = innerClassStrings + 
 		[ generateSpecializedNodeWithBitmapPositionsClassString(mn, 0, ts, ts.setup, ts.classNamePostfix) | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound ];
 	}
+	
+	// TODO: fix correct creation of mn instead of m and n		
+	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables())) {
+		innerClassStrings = innerClassStrings + 
+		[ generateSpecializedBitmapIndexedNodeClassString(ts, specializedBitmapIndexedNode(n, m)) | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound ];
+	}	
 	
 	return innerClassStrings;
 }

@@ -391,6 +391,7 @@ data TrieNodeType
 	| compactHeterogeneousNode(BitmapSpecialization bitmapSpecialization)
 	| hashCollisionNode()
 	| bitmapIndexedNode()
+	| specializedBitmapIndexedNode(int n, int m) // bool supportsNodes = (n != 0), bool supportsValues = (m != 0))
 	| leafNode();
 
 data BitmapSpecialization 
@@ -1253,6 +1254,11 @@ list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bi
 	+ [ \node(ts.ds, ts.tupleTypes, i) | i <- [1..n+1]]
 when !isOptionEnabled(setup,useUntypedVariables());
 
+list[Argument] contentArguments(int n, int m, TrieSpecifics ts, rel[Option,bool] setup) 
+	= [ *appendToName(nodeTupleArgs(ts), "<i>") | i <- [1..m+1]] 
+	+ [ slot(i) | i <- [1..n+1]]
+when isOptionEnabled(setup,useHeterogeneousEncoding());
+
 list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
 	= [ slot(i) | i <- [0..2*m + n]]
 when (\map() := ds || ds == \vector()) 
@@ -1380,10 +1386,7 @@ list[&T] times(&T template, int count)
 	
 default str nodeOf(int n, int m, str args)
 	= "nodeOf(mutator, <args>)" 	//= "new Value<m>Index<n>Node(<args>)"
-	;	
-
-	
-default str specializedClassName(int n, int m, TrieSpecifics ts) = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
+	;
 
 
 str immutableInterfaceName(DataStructure ds) = "Immutable<toString(ds)>";
@@ -3296,7 +3299,16 @@ default lrel[TrieNodeType from, PredefOp to] declares(TrieNodeType nodeType) = [
  
 // TODO: get ride of global dependencies
 Model buildLanguageAgnosticModel(TrieSpecifics ts) {
-	rel[TrieNodeType from, TrieNodeType to] refines = refines();
+	rel[TrieNodeType from, TrieNodeType to] refines = staticRefines();
+	
+	if (isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useUntypedVariables())) {
+		refines += { <specializedBitmapIndexedNode(n, m), compactNode()> | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound };
+	}
+		
+	if (isOptionEnabled(ts.setup, useSpecialization()) && isOptionEnabled(ts.setup, useUntypedVariables())) {
+		refines += { <specializedBitmapIndexedNode(mn, 0), compactNode()> | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound };
+	}
+	
 	rel[TrieNodeType from, PredefOp to] implements = {};
 	rel[OpBinding from, int to] placements = {}; // calculate an order between declares / implements / overrides	
 		
@@ -3366,7 +3378,7 @@ data Model
 		rel[loc origin, loc comment] documentation = {}		
 	);
 
-rel[TrieNodeType from, TrieNodeType to] refines() = {
+rel[TrieNodeType from, TrieNodeType to] staticRefines() = {
 	<compactNode(), abstractNode()>,
 	<compactNode(specializeByBitmap(true, true)), compactNode()>,
 	<compactNode(specializeByBitmap(true, false)), compactNode()>,
@@ -3488,4 +3500,6 @@ default str getDocumentation(TrieSpecifics ts, Artifact artifact, PredefOp op) =
 default bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp op) = false;
 
 // NOTE: return a valid 'Expression' used for crawling (in contrast to throwing an exception) due to crawling. 
-// default Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp op) = emptyExpression();
+//default Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp op) = emptyExpression();
+
+default Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp op) { throw "Unsupported operation <artifact>, <op>."; }

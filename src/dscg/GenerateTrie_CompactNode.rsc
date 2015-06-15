@@ -1006,7 +1006,7 @@ str generate_bodyOf_factoryMethod_bitmap(int n:0, int m:0, TrieSpecifics ts, Met
 //	// TODO: remove code duplication
 //	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
 //
-//	specializedClassName = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
+//	specializedClassNameStr = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
 //
 //	return
 //	"static final <GenericsStr(ts.tupleTypes)> <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
@@ -1022,9 +1022,9 @@ str generate_bodyOf_factoryMethod_bitmap(int n:0, int m:0, TrieSpecifics ts, Met
 
 bool exists_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration)  = true;
 str generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration) 
-	= "return new <specializedClassName(n, m, ts)><InferredGenerics(ts.ds, ts.tupleTypes)>(<use(decleration.args)>);"
+	= "return new <specializedClassNameStr><InferredGenerics(ts.ds, ts.tupleTypes)>(<use(decleration.args)>);"
 when (n + m) <= ts.nBound
-	;
+		&& specializedClassNameStr := "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
 
 /* TODO: fix argument lists! */
 bool exists_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration)  = true;
@@ -1061,7 +1061,7 @@ str generate_valNodeOf_factoryMethod_bitmap_untyped(mn:0, ts:___expandedTrieSpec
 //	// TODO: remove code duplication
 //	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
 //
-//	specializedClassName = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
+//	specializedClassNameStr = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
 //
 //	return
 //	"static final <GenericsStr(ts.tupleTypes)> <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
@@ -1080,10 +1080,12 @@ default str generate_valNodeOf_factoryMethod_bitmap_untyped(int mn, ts:___expand
 	// TODO: remove code duplication
 	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
 
+	specializedClassNameStr = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
+
 	if ((mn) <= tupleLength(ts.ds) * ts.nBound) {		
 		return
 		"static final <GenericsStr(ts.tupleTypes)> <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
-		'	return new <specializedClassName(n, m, ts)><InferredGenerics(ts.ds, ts.tupleTypes)>(<intercalate(", ", mapper(constructorArgs, use))>);
+		'	return new <specializedClassNameStr><InferredGenerics(ts.ds, ts.tupleTypes)>(<intercalate(", ", mapper(constructorArgs, use))>);
 		'}
 		"; 
 	} else if ((mn) > tupleLength(ts.ds) * ts.nBound && (mn) <= tupleLength(ts.ds) * ts.nBound + tupleLength(ts.ds) && (mn) < tupleLength(ts.ds) * ts.nMax) {
