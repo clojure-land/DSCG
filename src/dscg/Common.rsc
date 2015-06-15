@@ -1178,6 +1178,35 @@ str QuestionMarkGenerics(DataStructure ds:\set(), list[Type] tupleTypes:[Type ke
 default str QuestionMarkGenerics(DataStructure ds:\set(), list[Type] tupleTypes:[Type keyType, *_]) = "\<?\>";
 
 
+
+/* 
+ * List Utility Functions
+ */
+// TODO: move to List.rsc?
+list[&T] replace(list[&T] xs, list[&T] old, list[&T] new) 
+	= before + new + after
+when [*before, *old, *after] := xs;
+	
+default list[&T] replace(list[&T] xs, list[&T] old, list[&T] new) {throw "aaahh";}	
+
+//default list[&T] replace(list[&T] xs, list[&T] old, list[&T] new) = xs;
+
+// TODO: move to List.rsc?
+list[&T] insertBeforeOrDefaultAtEnd(list[&T] xs, list[&T] old, list[&T] new)
+	= before + new + old + after
+when [*before, *old, *after] := xs;	
+
+default list[&T] insertBeforeOrDefaultAtEnd(list[&T] xs, list[&T] old, list[&T] new) = xs + new;		
+
+// TODO: move to List.rsc?
+list[&T] insertAfterOrDefaultAtFront(list[&T] xs, list[&T] old, list[&T] new)
+	= before + old + new + after
+when [*before, *old, *after] := xs;	
+
+default list[&T] insertAfterOrDefaultAtFront(list[&T] xs, list[&T] old, list[&T] new) = new + xs;
+
+
+
 /* 
  * Configuration 
  */
