@@ -2807,6 +2807,13 @@ when core(_) := artifact;
 
 
 
+data PredefOp = toString();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::toString())
+	= method(\return(specific("String")), "toString", visibility = "public");
+
+
+
 data PredefOp = equals();
 
 Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::equals())

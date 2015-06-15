@@ -63,7 +63,11 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 	// slotIterator?
 	
 	arity(),
-	size()	
+	size(),
+	
+	equals(),
+	hashCode(),
+	toString()
 ];
 
 
