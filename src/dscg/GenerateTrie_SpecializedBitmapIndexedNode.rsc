@@ -234,12 +234,13 @@ str generate_bodyOf_getSlot(TrieSpecifics ts, 0)
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) || isOptionEnabled(ts.setup, useUntypedVariables());
 	
 str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
-	"switch(index) {
-	'<for (i <- [0..mn]) {>case <i>:
-	'	return <slotName><i>;
-	'<}>default:
-	'	throw new IllegalStateException(\"Index out of range.\");
-	'}"
+	"throw new UnsupportedOperationException(); // TODO: to implement"
+	//"switch(index) {
+	//'<for (i <- [0..mn]) {>case <i>:
+	//'	return <slotName><i>;
+	//'<}>default:
+	//'	throw new IllegalStateException(\"Index out of range.\");
+	//'}"
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) || isOptionEnabled(ts.setup, useUntypedVariables());
 	
 str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
