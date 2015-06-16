@@ -33,7 +33,7 @@ default str generateCompactHeterogeneousNodeClassString(TrieSpecifics ts) {
 }
 
 
-lrel[TrieNodeType from, PredefOp to] declares(TrieNodeType nodeType:compactHeterogeneousNode()) 
+lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:compactHeterogeneousNode()) 
 	= [ <nodeType,method> | method <- declaredMethodsByCompactHeterogeneousNode];
 
 list[PredefOp] declaredMethodsByCompactHeterogeneousNode = [

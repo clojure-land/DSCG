@@ -17,7 +17,7 @@ default str generateAbstractNodeClassString(TrieSpecifics ts)
 	= generateJdtString(ts, jdt, abstractNode())
 when jdt := abstractNode(ts, modifierList = [ "private", "abstract", "static" ]);
 
-lrel[TrieNodeType from, PredefOp to] declares(TrieNodeType nodeType:abstractNode()) 
+lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:abstractNode()) 
 	= [ <nodeType,method> | method <- declaredMethodsByAbstractNode];
 
 list[PredefOp] declaredMethodsByAbstractNode = [

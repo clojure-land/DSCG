@@ -69,11 +69,14 @@ void doGenerateCurrent() {
 }
 
 void doGenerateBleedingEdge() {
-	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(8, true)), overideClassNamePostfixWith = "BleedingEdge_Untyped");
-	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(8, true)), overideClassNamePostfixWith = "BleedingEdge_Untyped");	
+//	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(8, true)), overideClassNamePostfixWith = "BleedingEdge_Untyped");
+//	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(8, true)), overideClassNamePostfixWith = "BleedingEdge_Untyped");	
+//
+//	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(8, false)), overideClassNamePostfixWith = "BleedingEdge_Typed");
+//	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(8, false)), overideClassNamePostfixWith = "BleedingEdge_Typed");	
 
-	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(8, false)), overideClassNamePostfixWith = "BleedingEdge_Typed");
-	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(8, false)), overideClassNamePostfixWith = "BleedingEdge_Typed");	
+	genericTsSet = expandConfigurationAndCreateModel(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], heterogeneousSpecializationConfig(8)), "BleedingEdge");
+	genericTsMap = expandConfigurationAndCreateModel(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], heterogeneousSpecializationConfig(8)), "BleedingEdge");
 
 	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "BleedingEdge");
 	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "BleedingEdge");
@@ -132,7 +135,7 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 	if (heterogeneousSpecializationConfig(__specializeTo) := specializationConfig) {
 		flagHeterogeneousSpecialization = true;
 		specializeTo = __specializeTo;
-		flagUntypedVariables = true;
+		flagUntypedVariables = false; // heterogeneous config implies untyped, hower the option are distinct for easier pattern matching.
 	}
 		
 	str classNamePostfix = "_<bitPartitionSize>Bits";
@@ -170,7 +173,7 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 		<useIncrementalHashCodes(),true>,
 		<separateTrieAndLeafNodes(),false>,
 		<compareValueAtMapPut(),false>,
-		<useHeterogeneousEncoding(),false>
+		<useHeterogeneousEncoding(),true>
 	}; // { compactionViaFieldToMethod() };
 
 	return trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup, unknownArtifact());
@@ -254,9 +257,10 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 	}
 	
 	// TODO: fix correct creation of mn instead of m and n		
-	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables())) {
+	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
 		innerClassStrings = innerClassStrings + 
 		[ generateSpecializedBitmapIndexedNodeClassString(ts, specializedBitmapIndexedNode(n, m)) | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound ];
+		//[ generateSpecializedNodeWithBitmapPositionsClassString(mn, 0, ts, ts.setup, ts.classNamePostfix) | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound ];
 	}	
 	
 	return innerClassStrings;

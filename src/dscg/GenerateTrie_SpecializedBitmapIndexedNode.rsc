@@ -22,6 +22,40 @@ when jdt := specializedBitmapIndexedNode(ts, nodeType, modifierList = [ "private
 JavaDataType specializedBitmapIndexedNode(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m), list[str] modifierList = [])
 	= javaClass("<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts, compactNode(specializeByBitmap(true, true))), modifierList = modifierList);
 
+lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m)) { 
+	list[PredefOp] declaredMethods = [
+		contentArgumentList()
+	];
+
+	return  [ <nodeType,method> | method <- declaredMethods]; 
+}
+
+list[Argument] contentArguments(int n, int m, TrieSpecifics ts, rel[Option,bool] setup) 
+	= [ *appendToName(nodeTupleArgs(ts), "<i>") | i <- [1..m+1]] 
+	+ [ slot(i) | i <- [1..n+1]]
+when isOptionEnabled(setup,useHeterogeneousEncoding());
+
+
+
+//lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m)) { 
+//	list[PredefOp] declaredMethods = [
+//		*[ property(arg, arg.name) | arg <- contentArguments(n, m, ts, ts.setup)]
+//	];
+//
+//	return  [ <nodeType,method> | method <- declaredMethods]; 
+//}
+
+data PredefOp = contentArgumentList();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(specializedBitmapIndexedNode(n, m)), PredefOp::contentArgumentList())
+	= property(ts.sizeProperty, ts.sizeProperty.name, isStateful = true, isConstant = false);
+
+// Default Value for Property
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(specializedBitmapIndexedNode(n, m)), PredefOp::contentArgumentList()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(specializedBitmapIndexedNode(n, m)), PredefOp::contentArgumentList())
+	= result(iconst(0));
+
+
 str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix, int mn = tupleLength(ds)*m+n) {
 	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
 

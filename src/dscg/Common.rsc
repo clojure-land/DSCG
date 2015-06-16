@@ -3302,7 +3302,7 @@ M3 getM3() {
  * Temporary Global Model
  */
  
-default lrel[TrieNodeType from, PredefOp to] declares(TrieNodeType nodeType) = []; 
+default lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType) = []; 
  
 // TODO: get ride of global dependencies
 Model buildLanguageAgnosticModel(TrieSpecifics ts) {
@@ -3316,13 +3316,17 @@ Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 		refines += { <specializedBitmapIndexedNode(mn, 0), compactNode()> | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound };
 	}
 	
+	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
+		refines += { <specializedBitmapIndexedNode(mn, 0), compactNode()> | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound };
+	}
+	
 	rel[TrieNodeType from, PredefOp to] implements = {};
 	rel[OpBinding from, int to] placements = {}; // calculate an order between declares / implements / overrides	
 		
 	// rel[OpBinding from, OpBinding to] operationRefinement; // ???
 
 	set[TrieNodeType] allTrieNodeTypes = carrier(refines);
-	rel[TrieNodeType from, PredefOp to] declares = toSet([ *declares(current) | current <- allTrieNodeTypes ]);
+	rel[TrieNodeType from, PredefOp to] declares = toSet([ *declares(ts, current) | current <- allTrieNodeTypes ]);
 	
 	for (current <- allTrieNodeTypes) {		
 		// crawl all available implementations		

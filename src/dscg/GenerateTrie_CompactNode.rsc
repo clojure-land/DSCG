@@ -247,7 +247,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 //	<}>
 
 
-lrel[TrieNodeType from, PredefOp to] declares(TrieNodeType nodeType:compactNode()) 
+lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:compactNode()) 
 	= [ <nodeType,method> | method <- declaredMethodsByCompactNode];
 
 list[PredefOp] declaredMethodsByCompactNode = [
@@ -323,7 +323,7 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	
 ];
 
-lrel[TrieNodeType from, PredefOp to] declares(TrieNodeType nodeType:compactNode(BitmapSpecialization _)) 
+lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:compactNode(BitmapSpecialization _)) 
 	= [ <nodeType,nodeMap()>, <nodeType,dataMap()> ];
 
 str emptyTrieNodeConstantName = "EMPTY_NODE";
