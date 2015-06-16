@@ -351,6 +351,10 @@ data PredefOp = nodeIterator();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeIterator()) = true;
 
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeIterator()) 
+	= "throw new UnsupportedOperationException(); // TODO: to implement" 
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeIterator()) = 
 	"final int offset = <use(tupleLengthConstant)> * payloadArity();
 	'final Object[] nodes = new Object[<mn> - offset];
@@ -361,12 +365,12 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 	'}
 	'
 	'return (Iterator) ArrayIterator.of(nodes);"
-when isOptionEnabled(ts.setup, useUntypedVariables())
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables())
 		&& mn := slotCount(ts, nodeType);
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeIterator()) 
 	= "<if (n > 0) {>return ArrayIterator.of(<intercalate(", ", ["<nodeName><i>" | i <- [1..n+1]])>);<} else {>return Collections.\<<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>\>emptyIterator();<}>" 
-when !isOptionEnabled(ts.setup, useUntypedVariables());
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
 
 
 data PredefOp = hasNodes();
@@ -445,8 +449,55 @@ when !isOptionEnabled(ts.setup, useUntypedVariables());
 data PredefOp = copyAndSetValue();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue()) =
+	"if (isRare(<use(ts.bitposField)>)) { // TODO: support migration if partial
+	'	// TODO: use correct index
+	'	<generate_bodyOf_copyAndSetValue_untyped_nonHeterogeneous(n, m, ts, mn = n)>
+	'} else {
+	'	// TODO: use correct index
+	'	<generate_bodyOf_copyAndSetValue_typed_nonHeterogeneous(n, m, ts, mn = n)>
+	'}"
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue()) 
-	= generate_bodyOf_copyAndSetValue(n, m, ts);
+	= generate_bodyOf_copyAndSetValue_untyped_nonHomogeneous(n, m, ts)
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue()) 
+	= generate_bodyOf_copyAndSetValue_typed_nonHomogeneous(n, m, ts)
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());	
+
+str generate_bodyOf_copyAndSetValue_untyped_nonHeterogeneous(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
+	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
+	'	
+	'	<dec(ts.bitmapField)> = this.<use(bitmapMethod)>;
+	'	<dec(ts.valmapField)> = this.<use(valmapMethod)>;
+	'	
+	'	switch(idx) {
+	'		<for (i <- [0..mn/tupleLength(ts.ds)]) {>case <i>:
+	'			return <nodeOf(n, m, use(replace(metadataArguments(ts) + contentArguments(n, m, ts), [ slot(tupleLength(ts.ds)*i+1) ], [ field(valName) ])))>;
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");
+	'	}";
+	
+str generate_bodyOf_copyAndSetValue_typed_nonHeterogeneous(int n, int m:0, TrieSpecifics ts)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+when !isOptionEnabled(ts.setup,useUntypedVariables());
+
+str generate_bodyOf_copyAndSetValue_typed_nonHeterogeneous(int n, int m, TrieSpecifics ts) = 	
+	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
+	'	
+	'	<dec(ts.bitmapField)> = this.<use(bitmapMethod)>;
+	'	<dec(ts.valmapField)> = this.<use(valmapMethod)>;
+	'	
+	'	switch(idx) {
+	'		<for (i <- [1..m+1]) {>case <i-1>:
+	'			return <nodeOf(n, m, use(replace(metadataArguments(ts) + contentArguments(n, m, ts), [ val(ts.valType, i) ], [ field(valName) ])))>;
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");
+	'	}"
+	;
 
 
 data PredefOp = copyAndInsertValue();
@@ -702,13 +753,38 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 data PredefOp = hashCode();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hashCode()) = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hashCode()) 
-	= generate_bodyOf_hashCode(n, m, ts);
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hashCode())
+	= "throw new UnsupportedOperationException(); // TODO: to implement"
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hashCode()) =
+	"<if ((n + m) > 0) {>final int prime = 31; int result = 1; result = prime * result + (<primitiveHashCode(___bitmapMethod(ts.bitPartitionSize))>); result = prime * result + (<primitiveHashCode(___valmapMethod(ts.bitPartitionSize))>);<} else {>int result = 1;<}>	
+	'<for (i <- [0..mn]) {>result = prime * result + <hashCode(slot(i))>;<}>	
+	'return result;" 
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables())
+		&& mn := tupleLength(ts.ds)*m+n; 	
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hashCode()) =
+	"<if ((n + m) > 0) {>final int prime = 31; int result = 1; \n\n result = prime * result + (<primitiveHashCode(___bitmapMethod(ts.bitPartitionSize))>); result = prime * result + (<primitiveHashCode(___valmapMethod(ts.bitPartitionSize))>);<} else {>int result = 1;<}>
+	'
+	'<for (i <- [1..m+1]) {>		
+	'result = prime * result + <hashCode(key(ts.keyType, i))>; <if (\map() := ts.ds) {>result = prime * result + <hashCode(val(ts.valType, i))>;<}> <}>
+	'<for (i <- [1..n+1]) {>
+	'result = prime * result + <hashCode(\node(ts.ds, ts.tupleTypes, i))>;<}>
+	'		
+	'return result;"
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
 
 
 data PredefOp = equals();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::equals()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::equals())
+	= "throw new UnsupportedOperationException(); // TODO: to implement"
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::equals()) = 	
 	"		if (null == other) {
 	'			return false;
@@ -727,43 +803,17 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 when specializedClassNameStr := "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
 
 
-
 data PredefOp = toString();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::toString()) = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::toString()) 
-	= generate_bodyOf_toString(n, m, ts)
-when !isOptionEnabled(ts.setup, useUntypedVariables());	
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::toString()) 
-	= "return \"\";"
-when isOptionEnabled(ts.setup, useUntypedVariables());	
+	= "<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (\map() := ts.ds) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(<use(valmapMethod)>, (byte) <i>)"), *__payloadTuple(ts.ds, ts.tupleTypes, i) | i <- [1..m+1]] + [ field("recoverMask(<use(bitmapMethod)>, (byte) <i>)"), \node(ts.ds, ts.tupleTypes, i)	| i <- [1..n+1]])>);<}>"
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());	
 
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::toString()) 
+	= "return \"\";";
 
-bool exists_bodyOf_hashCode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
-str generate_bodyOf_hashCode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =
-"		<if ((n + m) > 0) {>final int prime = 31; int result = 1; result = prime * result + (<primitiveHashCode(___bitmapMethod(ts.bitPartitionSize))>); result = prime * result + (<primitiveHashCode(___valmapMethod(ts.bitPartitionSize))>);<} else {>int result = 1;<}>	
-'		<for (i <- [0..mn]) {>result = prime * result + <hashCode(slot(i))>;<}>	
-'		return result;"
-when isOptionEnabled(ts.setup,useUntypedVariables())	
-	;
-
-default bool exists_bodyOf_hashCode(int n, int m, TrieSpecifics ts)  = true;
-default str generate_bodyOf_hashCode(int n, int m, TrieSpecifics ts) =
-"		<if ((n + m) > 0) {>final int prime = 31; int result = 1; \n\n result = prime * result + (<primitiveHashCode(___bitmapMethod(ts.bitPartitionSize))>); result = prime * result + (<primitiveHashCode(___valmapMethod(ts.bitPartitionSize))>);<} else {>int result = 1;<}>
-'	
-'		<for (i <- [1..m+1]) {>		
-'		result = prime * result + <hashCode(key(ts.keyType, i))>; <if (\map() := ts.ds) {>result = prime * result + <hashCode(val(ts.valType, i))>;<}> <}>
-'		<for (i <- [1..n+1]) {>
-'		result = prime * result + <hashCode(\node(ts.ds, ts.tupleTypes, i))>;<}>
-'			
-'		return result;"
-;
-
-
-default bool exists_toString(int n, int m, TrieSpecifics ts) = true;
-str generate_bodyOf_toString(int n, int m, TrieSpecifics ts) =
-	"<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (\map() := ts.ds) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(<use(valmapMethod)>, (byte) <i>)"), *__payloadTuple(ts.ds, ts.tupleTypes, i) | i <- [1..m+1]] + [ field("recoverMask(<use(bitmapMethod)>, (byte) <i>)"), \node(ts.ds, ts.tupleTypes, i)	| i <- [1..n+1]])>);<}>";
 
 bool exists_bodyOf_sizePredicate(0, 0, TrieSpecifics ts)  = true;
 str generate_bodyOf_sizePredicate(0, 0, TrieSpecifics ts) = "SIZE_EMPTY";
@@ -773,7 +823,6 @@ default bool exists_bodyOf_sizePredicate(int n, int m, TrieSpecifics ts)  = true
 default str generate_bodyOf_sizePredicate(int n, int m, TrieSpecifics ts) = "SIZE_MORE_THAN_ONE";
 
 
-bool exists_equalityComparisons(int n, int m, TrieSpecifics ts, str(Argument, Argument) eq, int mn = tupleLength(ts.ds)*m+n) = true;
 str generate_equalityComparisons(int n, int m, TrieSpecifics ts, str(Argument, Argument) eq, int mn = tupleLength(ts.ds)*m+n) =
 	"if (<use(bitmapMethod)> != that.<use(bitmapMethod)>) {
 	'	return false;
@@ -786,10 +835,9 @@ str generate_equalityComparisons(int n, int m, TrieSpecifics ts, str(Argument, A
 	'if (!(<eq(key(ts.keyType, "<slotName><i>"), key(ts.keyType, "that.<slotName><i>"))>)) {
 	'	return false;
 	'}<}>"
-when isOptionEnabled(ts.setup,useUntypedVariables())	
-	;
+when isOptionEnabled(ts.setup,useUntypedVariables());
 	 
-bool exists_equalityComparisons(int n, int m, TrieSpecifics ts, str(Argument, Argument) eq)  = true;
+
 str generate_equalityComparisons(int n, int m, TrieSpecifics ts, str(Argument, Argument) eq) =
 	"if (<use(bitmapMethod)> != that.<use(bitmapMethod)>) {
 	'	return false;
@@ -808,29 +856,27 @@ str generate_equalityComparisons(int n, int m, TrieSpecifics ts, str(Argument, A
 	'}<}>"
 	;	 
 
-bool exists_bodyOf_inlineValue(int n, int m, TrieSpecifics ts)  = true;
+
 str generate_bodyOf_inlineValue(int n, int m, TrieSpecifics ts) =
 	"return <nodeOf(n, m+1, use(payloadTriple("mask") + generateSubnodeMembers(n)))>;"
 when m == 0;
 
-default bool exists_bodyOf_inlineValue(int n, int m, TrieSpecifics ts)  = true;
+
 default str generate_bodyOf_inlineValue(int n, int m, TrieSpecifics ts) =
 	"<intercalate(" else ", [ "if (mask \< <keyPosName><i>) { return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(generateMembers(n, m), payloadTriple(i), payloadTriple("mask"))))>; }" | i <- [1..m+1] ])> else {
 	'	return <nodeOf(n, m+1, use(generatePayloadMembers(m) + payloadTriple("mask") + generateSubnodeMembers(n)))>;
-	'}"
-	;
+	'}";
 	
-bool exists_bodyOf_removeNodeAndInlineValue(int n, int m, int j)  = true;
+	
 str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
 	"return <nodeOf(n-1, m+1, use(payloadTriple("mask") + generateSubnodeMembers(n) - subnodePair(j)))>;"
 when m == 0;
 
-default bool exists_bodyOf_removeNodeAndInlineValue(int n, int m, int j)  = true;
 default str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
 	"<intercalate(" else ", [ "if (mask \< <keyPosName><i>) { return <nodeOf(n-1, m+1, use(insertBeforeOrDefaultAtEnd(generatePayloadMembers(m), payloadTriple(i), payloadTriple("mask")) + generateSubnodeMembers(n) - subnodePair(j)))>; }" | i <- [1..m+1] ])> else {
 	'	return <nodeOf(n-1, m+1, use(generatePayloadMembers(m) + payloadTriple("mask") + generateSubnodeMembers(n) - subnodePair(j)))>;
-	'}"
-	;
+	'}";
+	
 	
 bool exists_bodyOf_updated(0, 0, str(str, str) eq)  = true;
 str generate_bodyOf_updated(0, 0, str(str, str) eq) = 
@@ -1329,45 +1375,7 @@ default str generate_bodyOf_getValue(int m) =
 	'				throw new IllegalStateException(\"Index out of range.\");
 	'			}"
 	;
-
-bool exists_bodyOf_copyAndSetValue(_, 0, ts) = true;
-str generate_bodyOf_copyAndSetValue(_, 0, ts)
-	= "throw new IllegalStateException(\"Index out of range.\");"
-when !isOptionEnabled(ts.setup,useUntypedVariables())
-	;
-
-bool exists_bodyOf_copyAndSetValue(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
-str generate_bodyOf_copyAndSetValue(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
-	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
-	'	
-	'	<dec(ts.bitmapField)> = this.<use(bitmapMethod)>;
-	'	<dec(ts.valmapField)> = this.<use(valmapMethod)>;
-	'	
-	'	switch(idx) {
-	'		<for (i <- [0..mn/tupleLength(ts.ds)]) {>case <i>:
-	'			return <nodeOf(n, m, use(replace(metadataArguments(ts) + contentArguments(n, m, ts), [ slot(tupleLength(ts.ds)*i+1) ], [ field(valName) ])))>;
-	'		<}>default:
-	'			throw new IllegalStateException(\"Index out of range.\");
-	'	}"
-when isOptionEnabled(ts.setup,useUntypedVariables())	
-	;
 	
-default bool exists_bodyOf_copyAndSetValue(int n, int m, TrieSpecifics ts)  = true;
-str generate_bodyOf_copyAndSetValue(int n, int m, TrieSpecifics ts) = 	
-	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
-	'	
-	'	<dec(ts.bitmapField)> = this.<use(bitmapMethod)>;
-	'	<dec(ts.valmapField)> = this.<use(valmapMethod)>;
-	'	
-	'	switch(idx) {
-	'		<for (i <- [1..m+1]) {>case <i-1>:
-	'			return <nodeOf(n, m, use(replace(metadataArguments(ts) + contentArguments(n, m, ts), [ val(ts.valType, i) ], [ field(valName) ])))>;
-	'		<}>default:
-	'			throw new IllegalStateException(\"Index out of range.\");
-	'	}"
-	;
-		
-
 bool exists_bodyOf_copyAndInsertNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
 str generate_bodyOf_copyAndInsertNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n)
 	= "throw new IllegalStateException(\"Index out of range.\");"
