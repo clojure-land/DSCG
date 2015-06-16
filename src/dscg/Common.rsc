@@ -1188,7 +1188,7 @@ list[&T] replace(list[&T] xs, list[&T] old, list[&T] new)
 	= before + new + after
 when [*before, *old, *after] := xs;
 	
-default list[&T] replace(list[&T] xs, list[&T] old, list[&T] new) {throw "aaahh";}	
+default list[&T] replace(list[&T] xs, list[&T] old, list[&T] new) { throw "Did not find <old> in <xs>."; }	
 
 //default list[&T] replace(list[&T] xs, list[&T] old, list[&T] new) = xs;
 
@@ -1197,7 +1197,18 @@ list[&T] insertBeforeOrDefaultAtEnd(list[&T] xs, list[&T] old, list[&T] new)
 	= before + new + old + after
 when [*before, *old, *after] := xs;	
 
-default list[&T] insertBeforeOrDefaultAtEnd(list[&T] xs, list[&T] old, list[&T] new) = xs + new;		
+default list[&T] insertBeforeOrDefaultAtEnd(list[&T] xs, list[&T] old, list[&T] new) = xs + new;
+
+// TODO: move to List.rsc?
+list[&T] insertBeforeTryTwiceOrDefaultAtEnd(list[&T] xs, list[&T] candidate1, list[&T] candidate2, list[&T] new)
+	= before + new + candidate1 + after
+when [*before, *candidate1, *after] := xs;	
+
+list[&T] insertBeforeTryTwiceOrDefaultAtEnd(list[&T] xs, list[&T] candidate1, list[&T] candidate2, list[&T] new)
+	= before + new + candidate2 + after
+when [*before, *candidate2, *after] := xs;
+
+default list[&T] insertBeforeTryTwiceOrDefaultAtEnd(list[&T] xs, list[&T] candidate1, list[&T] candidate2, list[&T] new) = xs + new;		
 
 // TODO: move to List.rsc?
 list[&T] insertAfterOrDefaultAtFront(list[&T] xs, list[&T] old, list[&T] new)
@@ -1254,9 +1265,10 @@ list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bi
 	+ [ \node(ts.ds, ts.tupleTypes, i) | i <- [1..n+1]]
 when !isOptionEnabled(ts.setup,useUntypedVariables()) && !isOptionEnabled(ts.setup,useHeterogeneousEncoding());
 
+// TODO: enforce: all indices by 0
 list[Argument] contentArguments(int n, int m, TrieSpecifics ts) 
 	= [ *appendToName(nodeTupleArgs(ts), "<i>") | i <- [1..m+1]] 
-	+ [ slot(i) | i <- [1..n+1]]
+	+ [ slot(i) | i <- [0..n]]
 when isOptionEnabled(ts.setup,useHeterogeneousEncoding());
 
 list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) 

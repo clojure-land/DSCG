@@ -35,7 +35,7 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nod
 
 list[PredefOp] createContentArgumentList(ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m)) 
 	= [ contentArgument_PayloadTuple(rowId, columnId) | rowId <- [1..m+1], columnId <- [0..size(nodeTupleArgs(ts))] ]
-	+ [ contentArgument_Slot(rowId) | rowId <- [1..n+1]];
+	+ [ contentArgument_Slot(rowId) | rowId <- [0..n]];
 //when isOptionEnabled(ts.setup,useHeterogeneousEncoding());
 
 
@@ -71,12 +71,8 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType
 
 data PredefOp = constructor();
 
-// ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts)
-
-// Method BitmapIndexedNode_constructor = constructor(bitmapIndexedNodeClassReturn, "<bitmapIndexedNodeClassName>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ], visibility = "private", argsFilter = argsFilter),
-
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
-	= constructor(\return(\type), jdt.typeName, args = [ ts.mutator ] + metadataArguments(ts) + contentArguments(n, m, ts))
+	= constructor(\return(\type), jdt.typeName, args = [ ts.mutator ] + metadataArguments(ts) + contentArguments(n, m, ts), visibility = "private", argsFilter = ts.argsFilter)
 when jdt := specializedBitmapIndexedNode(ts, nodeType) 
 		&& \type := jdtToType(jdt);
 	
@@ -85,8 +81,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:special
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
 	= compoundExpr([
 		super(exprFromString("<if (isOptionEnabled(ts.setup, useStagedMutability())) {>mutator<} else {>null<}>, <use(ts.bitmapField)>, <use(ts.valmapField)>")),
-		exprFromString(initFieldsWithIdendity(def.args))		
-		//, assign(qualifiedArgument(this(), collection), useExpr(collection))
+		exprFromString(initFieldsWithIdendity(contentArguments(n, m, ts))) // TODO: automatically infer which def.args need to be initialized
 	])
 when def := getDef(ts, artifact, constructor());
 
@@ -118,7 +113,6 @@ when def := getDef(ts, artifact, constructor());
 			}
 			
 			<if (isOptionEnabled(ts.setup,useSpecialization()) && ts.nBound < ts.nMax) {>assert arity() \> <ts.nBound>;<}>assert nodeInvariant();")>					
-
 */
 
 
@@ -234,7 +228,47 @@ data PredefOp = getSlot();
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getSlot()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getSlot())
 	= generate_bodyOf_getSlot(ts, slotCount(ts, nodeType));
+
+str generate_bodyOf_getSlot(TrieSpecifics ts, 0)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) || isOptionEnabled(ts.setup, useUntypedVariables());
 	
+str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
+	"switch(index) {
+	'<for (i <- [0..mn]) {>case <i>:
+	'	return <slotName><i>;
+	'<}>default:
+	'	throw new IllegalStateException(\"Index out of range.\");
+	'}"
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) || isOptionEnabled(ts.setup, useUntypedVariables());
+	
+str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
+	"final int boundary = TUPLE_LENGTH * payloadArity();
+	'
+	'if (index \< boundary) {
+	'	if (index % 2 == 0) {
+	'		return getKey(index / 2);
+	'	} else {
+	'		return getValue(index / 2);
+	'	}
+	'} else {
+	'	return getNode(index - boundary);
+	'}"
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup,useUntypedVariables()) && \map() := ts.ds;
+	
+str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
+	"final int boundary = payloadArity();
+	'
+	'if (index \< boundary) {
+	'	return getKey(index);
+	'} else {
+	'	return getNode(index - boundary);
+	'}"
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup,useUntypedVariables()) && ts.ds == \set();	
+	
+default str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) =	
+	"throw new UnsupportedOperationException();";
+
 
 data PredefOp = getKey();
 
@@ -279,14 +313,38 @@ data PredefOp = getNode();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getNode()) = true;
 
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n:0, int m)), PredefOp::getNode())
+	= "throw new IllegalStateException(\"Index out of range.\");"
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getNode()) =
+	"switch(index) {
+	'<for (i <- [0..n]) {>case <i>:
+	'	return (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) <slotName><n-1-i>;
+	'<}>default:
+	'	throw new IllegalStateException(\"Index out of range.\");
+	'}"
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getNode()) =
 	"final int offset = <use(tupleLengthConstant)> * payloadArity();
 	'return (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) getSlot(offset + index);"
-when isOptionEnabled(ts.setup, useUntypedVariables());
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getNode())
-	= generate_bodyOf_getNode(n)
-when !isOptionEnabled(ts.setup, useUntypedVariables());
+	= generate_bodyOf_getNode_typed_nonHeterogeneous(n)
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
+
+str generate_bodyOf_getNode_typed_nonHeterogeneous(0)
+	= "throw new IllegalStateException(\"Index out of range.\");";
+	
+default str generate_bodyOf_getNode_typed_nonHeterogeneous(int n) = 	
+	"switch(index) {
+	'<for (i <- [1..n+1]) {>case <i-1>:
+	'	return <nodeName><i>;
+	'<}>default:
+	'	throw new IllegalStateException(\"Index out of range.\");
+	'}";
 
 
 data PredefOp = nodeIterator();
@@ -390,55 +448,85 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:special
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue()) 
 	= generate_bodyOf_copyAndSetValue(n, m, ts);
 
-str generate_bodyOf_copyAndSetNode(0, _, _, setup)
-	= "throw new IllegalStateException(\"Index out of range.\");"
-when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
-	
-str generate_bodyOf_copyAndSetNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 
-	"	<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity() + nodeIndex(bitpos);
-	'
-	'	<dec(ts.bitmapField)> = this.<use(bitmapMethod)>;
-	'	<dec(ts.valmapField)> = this.<use(valmapMethod)>;
-	'	
-	'	switch(idx) {
-	'		<for (i <- [0..mn]) {>case <i>:
-	'			return <nodeOf(n, m, use(replace(metadataArguments(ts) + contentArguments(n, m, ts), [ slot(i) ], [ field(nodeName) ])))>;
-	'		<}>default:
-	'			throw new IllegalStateException(\"Index out of range.\");	
-	'	}"	
-when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());	
-	
-str generate_bodyOf_copyAndSetNode(int n, int m, TrieSpecifics ts) = 
-	"	final int index = nodeIndex(bitpos);
-	'
-	'	<dec(ts.bitmapField)> = this.<use(bitmapMethod)>;
-	'	<dec(ts.valmapField)> = this.<use(valmapMethod)>;
-	'	
-	'	switch(index) {
-	'		<for (i <- [1..n+1]) {>case <i-1>:
-	'			return <nodeOf(n, m, use(replace(metadataArguments(ts) + contentArguments(n, m, ts), [ \node(ts.ds, ts.tupleTypes, i) ], [ field(nodeName) ])))>;
-	'		<}>default:
-	'			throw new IllegalStateException(\"Index out of range.\");	
-	'	}"	
-when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());
-
-default str generate_bodyOf_copyAndSetNode(int n, int m, TrieSpecifics ts) = "";
-
 
 data PredefOp = copyAndInsertValue();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndInsertValue()) = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndInsertValue()) 
-	= generate_bodyOf_copyAndInsertValue(n, m, ts);
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndInsertValue()) =
+	"if (isRare(<use(__payloadTuple(ts.ds, ts.tupleTypes))>)) {
+	'	// TODO: use correct index
+	'	<generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(n, m, ts, mn = n)>
+	'} else {
+	'	// TODO: use correct index
+	'	<generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(n, m, ts, mn = n)>
+	'}"
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndInsertValue())
+	= generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(n, m, ts)
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndInsertValue())
+	= generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(n, m, ts)
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
+
+str generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =
+	"throw new IllegalStateException();"
+when (mn > tupleLength(ts.ds) * (ts.nMax - 1));
+		
+str generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
+	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
+	'
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)>);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
+	'
+	'	switch(idx) {
+	'		<for (i <- [0..mn/tupleLength(ts.ds)]) {>case <i>:
+	'			return <nodeOf(n, m+1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts), __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i), ts.payloadTuple + __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i))))>;
+	'		<}>case <mn/tupleLength(ts.ds)>:
+	'			return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(metadataArguments(ts) + contentArguments(n, m, ts), [ slot(tupleLength(ts.ds)*ceil(mn/tupleLength(ts.ds))) ], ts.payloadTuple )))>;
+	'		default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}";	
+
+str generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =
+	"throw new IllegalStateException();"
+when (n + m) == ts.nMax;
+
+// TODO: homogenize payload indices (start with 0)
+str generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(int n, int m, TrieSpecifics ts) = 
+	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
+	'
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)>);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
+	'
+	'	switch(idx) {
+	'		<for (i <- [1..m+1]) {>case <i-1>:
+	'			return <nodeOf(n, m+1, use(metadataArguments(ts) + replace(contentArguments(n, m, ts), __payloadTuple(ts.ds, ts.tupleTypes, i), ts.payloadTuple + __payloadTuple(ts.ds, ts.tupleTypes, i) )))>;
+	'		<}>case <m>:
+	'			return <nodeOf(n, m+1, use(metadataArguments(ts) + insertBeforeTryTwiceOrDefaultAtEnd(contentArguments(n, m, ts), [ \node(ts.ds, ts.tupleTypes, 1) ], [ \slot(0) ], ts.payloadTuple )))>;
+	'		default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}";
 
 
 data PredefOp = copyAndRemoveValue();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndRemoveValue()) = true;
+
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndRemoveValue()) 
 	= generate_bodyOf_copyAndRemoveValue(n, m, ts);
 
-str generate_bodyOf_copyAndRemoveValue(_, 0, _, setup)
+str generate_bodyOf_copyAndRemoveValue(int n, int m:0, TrieSpecifics ts)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+str generate_bodyOf_copyAndRemoveValue(int n, int m, TrieSpecifics ts) =  
+	"throw new UnsupportedOperationException(); // TODO: to implement" 
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());	
+
+str generate_bodyOf_copyAndRemoveValue(int n, int m:0, TrieSpecifics ts)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
 
@@ -476,8 +564,61 @@ default str generate_bodyOf_copyAndRemoveValue(int n, int m, TrieSpecifics ts) =
 data PredefOp = copyAndSetNode();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetNode()) = true;
+
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetNode()) 
 	= generate_bodyOf_copyAndSetNode(n, m, ts);
+
+str generate_bodyOf_copyAndSetNode(int n:0, int m, TrieSpecifics ts)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+str generate_bodyOf_copyAndSetNode(int n, int m, TrieSpecifics ts) =  
+	"	<dec(field(primitive("int"), "idx"))> = nodeIndex(bitpos);
+	'
+	'	<dec(ts.bitmapField)> = this.<use(bitmapMethod)>; // TODO: rawMap1
+	'	<dec(ts.valmapField)> = this.<use(valmapMethod)>; // TODO: rawMap2
+	'	
+	'	switch(idx) {
+	'		<for (i <- [0..n]) {>case <i>:
+	'			return <nodeOf(n, m, use(replace(metadataArguments(ts) + contentArguments(n, m, ts), [ slot(n-1-i) ], [ field(nodeName) ])))>;
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}"
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());	
+
+str generate_bodyOf_copyAndSetNode(int n:0, int m, TrieSpecifics ts)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
+	
+str generate_bodyOf_copyAndSetNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 
+	"	<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity() + nodeIndex(bitpos);
+	'
+	'	<dec(ts.bitmapField)> = this.<use(bitmapMethod)>;
+	'	<dec(ts.valmapField)> = this.<use(valmapMethod)>;
+	'	
+	'	switch(idx) {
+	'		<for (i <- [0..mn]) {>case <i>:
+	'			return <nodeOf(n, m, use(replace(metadataArguments(ts) + contentArguments(n, m, ts), [ slot(i) ], [ field(nodeName) ])))>;
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}"	
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());	
+	
+str generate_bodyOf_copyAndSetNode(int n, int m, TrieSpecifics ts) = 
+	"	final int index = nodeIndex(bitpos);
+	'
+	'	<dec(ts.bitmapField)> = this.<use(bitmapMethod)>;
+	'	<dec(ts.valmapField)> = this.<use(valmapMethod)>;
+	'	
+	'	switch(index) {
+	'		<for (i <- [1..n+1]) {>case <i-1>:
+	'			return <nodeOf(n, m, use(replace(metadataArguments(ts) + contentArguments(n, m, ts), [ \node(ts.ds, ts.tupleTypes, i) ], [ field(nodeName) ])))>;
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}"	
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());
+
+// default str generate_bodyOf_copyAndSetNode(int n, int m, TrieSpecifics ts) = "";
 
 
 data PredefOp = copyAndInsertNode();
@@ -1158,72 +1299,7 @@ str generateGenericNodeClassString(int n, int m, TrieSpecifics ts) =
 	'	}
 	}
 	";
-
-bool exists_bodyOf_getSlot(TrieSpecifics ts, 0) = true;
-str generate_bodyOf_getSlot(TrieSpecifics ts, 0)
-	= "throw new IllegalStateException(\"Index out of range.\");"
-when isOptionEnabled(ts.setup,useUntypedVariables())
-	;
-	
-bool exists_bodyOf_getSlot(TrieSpecifics ts, int mn)  = true;
-str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
-	"		switch(index) {
-	'			<for (i <- [0..mn]) {>case <i>:
-	'				return <slotName><i>;
-	'			<}>default:
-	'				throw new IllegalStateException(\"Index out of range.\");
-	'			}"
-when isOptionEnabled(ts.setup,useUntypedVariables())
-	;
-	
-bool exists_bodyOf_getSlot(TrieSpecifics ts, int mn)  = true;
-str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
-	"final int boundary = TUPLE_LENGTH * payloadArity();
-	'
-	'if (index \< boundary) {
-	'	if (index % 2 == 0) {
-	'		return getKey(index / 2);
-	'	} else {
-	'		return getValue(index / 2);
-	'	}
-	'} else {
-	'	return getNode(index - boundary);
-	'}"
-when !isOptionEnabled(ts.setup,useUntypedVariables()) && \map() := ts.ds
-	;
-	
-bool exists_bodyOf_getSlot(TrieSpecifics ts, int mn)  = true;
-str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) = 	
-	"final int boundary = payloadArity();
-	'
-	'if (index \< boundary) {
-	'	return getKey(index);
-	'} else {
-	'	return getNode(index - boundary);
-	'}"
-when !isOptionEnabled(ts.setup,useUntypedVariables()) && ts.ds == \set()
-	;	
-	
-default bool exists_bodyOf_getSlot(TrieSpecifics ts, int mn)  = true;
-default str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) =	
-	"throw new UnsupportedOperationException();"
-	;
-	
-bool exists_bodyOf_getNode(0) = true;
-str generate_bodyOf_getNode(0)
-	= "throw new IllegalStateException(\"Index out of range.\");"
-	;
-	
-default bool exists_bodyOf_getNode(int n)  = true;
-default str generate_bodyOf_getNode(int n) = 	
-	"		switch(index) {
-	'			<for (i <- [1..n+1]) {>case <i-1>:
-	'				return <nodeName><i>;
-	'			<}>default:
-	'				throw new IllegalStateException(\"Index out of range.\");
-	'			}"
-	;	
-	
+		
 bool exists_bodyOf_getKey(0) = true;
 str generate_bodyOf_getKey(0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
@@ -1254,8 +1330,8 @@ default str generate_bodyOf_getValue(int m) =
 	'			}"
 	;
 
-bool exists_bodyOf_copyAndSetValue(_, 0, _, setup) = true;
-str generate_bodyOf_copyAndSetValue(_, 0, _, setup)
+bool exists_bodyOf_copyAndSetValue(_, 0, ts) = true;
+str generate_bodyOf_copyAndSetValue(_, 0, ts)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when !isOptionEnabled(ts.setup,useUntypedVariables())
 	;
@@ -1290,49 +1366,7 @@ str generate_bodyOf_copyAndSetValue(int n, int m, TrieSpecifics ts) =
 	'			throw new IllegalStateException(\"Index out of range.\");
 	'	}"
 	;
-
-// TODO: check condition carefully
-bool exists_bodyOf_copyAndInsertValue(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
-str generate_bodyOf_copyAndInsertValue(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =
-	"throw new IllegalStateException();"
-when !isOptionEnabled(ts.setup,useUntypedVariables()) && ((n + m) == ts.nMax) ||
-		isOptionEnabled(ts.setup,useUntypedVariables()) && (mn > tupleLength(ts.ds) * (ts.nMax - 1));
 		
-bool exists_bodyOf_copyAndInsertValue(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
-str generate_bodyOf_copyAndInsertValue(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
-	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
-	'
-	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)>);
-	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
-	'
-	'	switch(idx) {
-	'		<for (i <- [0..mn/tupleLength(ts.ds)]) {>case <i>:
-	'			return <nodeOf(n, m+1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts), __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i), ts.payloadTuple + __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i))))>;
-	'		<}>case <mn/tupleLength(ts.ds)>:
-	'			return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(metadataArguments(ts) + contentArguments(n, m, ts), [ slot(tupleLength(ts.ds)*ceil(mn/tupleLength(ts.ds))) ], ts.payloadTuple )))>;
-	'		default:
-	'			throw new IllegalStateException(\"Index out of range.\");	
-	'	}"
-when isOptionEnabled(ts.setup,useUntypedVariables())	
-	;	
-
-default bool exists_bodyOf_copyAndInsertValue(int n, int m, TrieSpecifics ts)  = true;
-default str generate_bodyOf_copyAndInsertValue(int n, int m, TrieSpecifics ts) = 	
-	"	final int valIndex = dataIndex(bitpos);
-	'
-	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)>);
-	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
-	'
-	'	switch(valIndex) {
-	'		<for (i <- [1..m+1]) {>case <i-1>:
-	'			return <nodeOf(n, m+1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts), __payloadTuple(ts.ds, ts.tupleTypes, i), ts.payloadTuple + __payloadTuple(ts.ds, ts.tupleTypes, i) )))>;
-	'		<}>case <m>:
-	'			return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(metadataArguments(ts) + contentArguments(n, m, ts), [ \node(ts.ds, ts.tupleTypes, 1) ], ts.payloadTuple )))>;
-	'		default:
-	'			throw new IllegalStateException(\"Index out of range.\");	
-	'	}"	
-	;
-	
 
 bool exists_bodyOf_copyAndInsertNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
 str generate_bodyOf_copyAndInsertNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n)
