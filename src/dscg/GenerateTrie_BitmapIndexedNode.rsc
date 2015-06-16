@@ -309,7 +309,7 @@ default str generate_removeInplaceValueAndConvertToSpecializedNode(TrieSpecifics
 	
 	'		<for (i <- [1..n+1]) {><dec(\node(ts.ds, ts.tupleTypes, i))> = getNode(<i-1>);<}>
 	
-	'		return <nodeOf(n, m-1, use(metadataArguments(ts) + typedContentArguments(n, m-1, ts, ts.setup)))>;
+	'		return <nodeOf(n, m-1, use(metadataArguments(ts) + typedContentArguments(n, m-1, ts)))>;
 			
 	
 	'	}<}>default:

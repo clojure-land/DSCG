@@ -1244,25 +1244,25 @@ list[Argument] metadataArguments(TrieSpecifics ts)
 	= [ ts.bitmapField, ts.valmapField ]
 	;
 
-list[Argument] typedContentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup)
+list[Argument] typedContentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound))
 	= [ *appendToName(nodeTupleArgs(ts), "<i>") | i <- [1..m+1]] 
 	+ [ \node(ts.ds, ts.tupleTypes, i) | i <- [1..n+1]]
 	;
 
-list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
+list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) 
 	= [ *appendToName(nodeTupleArgs(ts), "<i>") | i <- [1..m+1]] 
 	+ [ \node(ts.ds, ts.tupleTypes, i) | i <- [1..n+1]]
-when !isOptionEnabled(setup,useUntypedVariables());
+when !isOptionEnabled(ts.setup,useUntypedVariables()) && !isOptionEnabled(ts.setup,useHeterogeneousEncoding());
 
-list[Argument] contentArguments(int n, int m, TrieSpecifics ts, rel[Option,bool] setup) 
+list[Argument] contentArguments(int n, int m, TrieSpecifics ts) 
 	= [ *appendToName(nodeTupleArgs(ts), "<i>") | i <- [1..m+1]] 
 	+ [ slot(i) | i <- [1..n+1]]
-when isOptionEnabled(setup,useHeterogeneousEncoding());
+when isOptionEnabled(ts.setup,useHeterogeneousEncoding());
 
-list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
+list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) 
 	= [ slot(i) | i <- [0..2*m + n]]
-when (\map() := ds || ds == \vector()) 
-		&& isOptionEnabled(setup,useUntypedVariables());
+when (\map() := ts.ds || ts.ds == \vector()) 
+		&& isOptionEnabled(ts.setup,useUntypedVariables()) && !isOptionEnabled(ts.setup,useHeterogeneousEncoding());
 
 //list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
 //	= [ key(ts.keyType, i)         | i <- [1..m+1]] 
@@ -3317,7 +3317,8 @@ Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 	}
 	
 	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
-		refines += { <specializedBitmapIndexedNode(mn, 0), compactNode()> | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound };
+		refines += { <specializedBitmapIndexedNode(n, m), compactNode()> | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound };
+		//refines += { <specializedBitmapIndexedNode(mn, 0), compactNode()> | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound };
 	}
 	
 	rel[TrieNodeType from, PredefOp to] implements = {};

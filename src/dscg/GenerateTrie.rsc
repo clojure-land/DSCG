@@ -245,13 +245,13 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 		innerClassStrings = innerClassStrings + [ generateCoreTransientClassString(ts)];
 	}	
 		
-	if (isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useUntypedVariables())) {
+	if (isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useUntypedVariables()) && !useHeterogeneousEncoding()) {
 		innerClassStrings = innerClassStrings + 
 		[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ts, ts.setup, ts.classNamePostfix) | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound ];
 	}
 
 	// TODO: fix correct creation of mn instead of m and n		
-	if (isOptionEnabled(ts.setup, useSpecialization()) && isOptionEnabled(ts.setup, useUntypedVariables())) {
+	if (isOptionEnabled(ts.setup, useSpecialization()) && isOptionEnabled(ts.setup, useUntypedVariables()) && !useHeterogeneousEncoding()) {
 		innerClassStrings = innerClassStrings + 
 		[ generateSpecializedNodeWithBitmapPositionsClassString(mn, 0, ts, ts.setup, ts.classNamePostfix) | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound ];
 	}
