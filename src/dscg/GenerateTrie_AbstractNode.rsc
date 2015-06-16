@@ -55,6 +55,9 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 	/***/
 	payloadIterator(),
 	
+	getRareKey(),
+	getRareValue(),	
+	
 	hasSlots(),
 	slotArity(),
 	/***/
@@ -167,10 +170,24 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getK
 
 
 
+data PredefOp = getRareKey();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getRareKey())
+	= method(\return(object()), "getRareKey", args = [ts.index]); // TODO: fix return type
+
+
+
 data PredefOp = getValue();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getValue())
 	= method(\return(__payloadTupleArgAtColl(ts.ds, ts.tupleTypes, 1).\type), "getValue", args = [ts.index], isActive = \map() := ts.ds);
+
+
+
+data PredefOp = getRareValue();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getRareValue())
+	= method(\return(object()), "getRareValue", args = [ts.index], isActive = \map() := ts.ds); // TODO: fix return type
 
 
 
@@ -320,7 +337,9 @@ str generateAbstractNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 					return nextIndex \< payloadArity;
 				}
 			};", doOverride = new())>
-	
+		
+		<dec(getDef(ts, trieNode(abstractNode()), getRareKey()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), getRareValue()), asAbstract = true)>	
 	
 		<dec(getDef(ts, trieNode(abstractNode()), hasSlots()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(abstractNode()), slotArity()), asAbstract = true)>	
