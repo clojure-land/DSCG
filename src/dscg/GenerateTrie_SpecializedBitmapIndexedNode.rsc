@@ -689,14 +689,26 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 data PredefOp = copyAndMigrateFromInlineToNode();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) 
-	= generate_bodyOf_copyAndMigrateFromInlineToNode(n, m, ts);
 
-str generate_bodyOf_copyAndMigrateFromInlineToNode(n, m:0, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =
-	"throw new IllegalStateException(\"Index out of range.\");"
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) =
+	"if (isRare(<use(ts.bitposField)>)) { // TODO: support migration if partial
+	'	// TODO: use correct index
+	'	<generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_heterogeneous(n, m, ts, mn = n)>
+	'} else {
+	'	// TODO: use correct index
+	'	<generate_bodyOf_copyAndMigrateFromInlineToNode_typed_heterogeneous(n, m, ts, mn = n)>
+	'}"
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) 
+	= generate_bodyOf_copyAndMigrateFromInlineToNode_typed_nonHeterogeneous(n, m, ts)
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) 
+	= generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_nonHeterogeneous(n, m, ts)
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());	
 	
-str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
+str generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_nonHeterogeneous(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "bitIndex"))> = <use(tupleLengthConstant)> * (payloadArity() - 1) + nodeIndex(bitpos);
 	'	<dec(field(primitive("int"), "valIndex"))> = dataIndex(bitpos);
 	'
@@ -706,19 +718,43 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, TrieSpecifics t
 	'	switch(valIndex) {
 	'		<for (i <- [0..mn/tupleLength(ts.ds)]) {>case <i>:
 	'			switch(bitIndex) {
-	'				<for (j <- [tupleLength(ts.ds)*(i+1)..mn]) {>case <j-tupleLength(ts.ds)>:
-	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i), [ slot(j) ], [ field(nodeName), slot(j) ])))>;
-	'				<}>case <mn-tupleLength(ts.ds)>:
+	'				case <0>:
 	'					return <nodeOf(n+1, m-1, use(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i) + [ field(nodeName) ]))>;
-	'				default:
+	'				<for (j <- [tupleLength(ts.ds)*(i+1)..mn]) {>case <mn-j-tupleLength(ts.ds)>:
+	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i), [ slot(j) ], [ field(nodeName), slot(j) ])))>;
+	'				<}>default:
+	'					throw new IllegalStateException(\"Index out of range.\");	
+	'			}
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}";
+
+str generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_heterogeneous(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
+	"	<dec(field(primitive("int"), "bitIndex"))> = <use(tupleLengthConstant)> * (payloadArity() - 1) + nodeIndex(bitpos);
+	'	<dec(field(primitive("int"), "valIndex"))> = dataIndex(bitpos);
+	'
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
+	'
+	'	switch(valIndex) {
+	'		<for (i <- [0..mn/tupleLength(ts.ds)]) {>case <i>:
+	'			switch(bitIndex) {
+	'				case <0>:
+	'					return <nodeOf(n+1, m-1, use(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i) + [ field(nodeName) ]))>;
+	'				<for (j <- reverse([tupleLength(ts.ds)*(i+1)..mn])) {>case <mn-j>:
+	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i), [ slot(j) ], [ field(nodeName), slot(j) ])))>;
+	'				<}>default:
 	'					throw new IllegalStateException(\"Index out of range.\");	
 	'			}
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"
-when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());
+when isOptionEnabled(ts.setup, useSandwichArrays());
 	
-str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, TrieSpecifics ts) = 	
+str generate_bodyOf_copyAndMigrateFromInlineToNode_typed_nonHeterogeneous(n, m:0, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =
+	"throw new IllegalStateException(\"Index out of range.\");";
+
+str generate_bodyOf_copyAndMigrateFromInlineToNode_typed_nonHeterogeneous(int n, int m, TrieSpecifics ts) = 	
 	"	final int bitIndex = nodeIndex(bitpos);
 	'	final int valIndex = dataIndex(bitpos);
 	'
@@ -737,10 +773,45 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, TrieSpecifics t
 	'			}
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
-	'	}"
-when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
+	'	}";
 
-default str generate_bodyOf_copyAndMigrateFromInlineToNode(int n, int m, TrieSpecifics ts) = "";
+str generate_bodyOf_copyAndMigrateFromInlineToNode_typed_heterogeneous(int n, int m, TrieSpecifics ts) = 	
+	"	final int bitIndex = nodeIndex(bitpos);
+	'	final int valIndex = dataIndex(bitpos);
+	'
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
+	'
+	'	switch(valIndex) {
+	'		<for (i <- [1..m+1]) {>case <i-1>:
+	'			switch(bitIndex) {
+	'				case <0>:
+	'					return <nodeOf(n+1, m-1, use(metadataArguments(ts) + contentArguments(n, m, ts) - __payloadTuple(ts.ds, ts.tupleTypes, i) + [ field(nodeName) ]))>;
+	'				<for (j <- [0..n]) {>case <j+1>:
+	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - __payloadTuple(ts.ds, ts.tupleTypes, i), [ slot(n-1-j) ], [ field(nodeName), slot(n-1-j) ])))>;
+	'				<}>default:
+	'					throw new IllegalStateException(\"Index out of range.\");	
+	'			}
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}"
+when isOptionEnabled(ts.setup, useSandwichArrays());	
+	
+/*
+	'	switch(valIndex) {
+	'		<for (i <- [0..mn/tupleLength(ts.ds)]) {>case <i>:
+	'			switch(bitIndex) {
+	'				<for (j <- [tupleLength(ts.ds)*(i+1)..mn]) {>case <j-tupleLength(ts.ds)>:
+	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i), [ slot(j) ], [ field(nodeName), slot(j) ])))>;
+	'				<}>case <mn-tupleLength(ts.ds)>:
+	'					return <nodeOf(n+1, m-1, use(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i) + [ field(nodeName) ]))>;
+	'				default:
+	'					throw new IllegalStateException(\"Index out of range.\");	
+	'			}
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+
+*/	
 
 
 data PredefOp = copyAndMigrateFromNodeToInline();
