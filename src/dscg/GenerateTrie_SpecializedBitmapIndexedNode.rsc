@@ -731,6 +731,10 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_nonHeterogeneous(int 
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}";
 
+/*
+ *  nodeOf(n+1-tupleLength(ts.ds), m, ...):
+ *		-> only modifications within nodes: two become one	
+ */
 str generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_heterogeneous(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "bitIndex"))> = <use(tupleLengthConstant)> * (payloadArity() - 1) + nodeIndex(bitpos);
 	'	<dec(field(primitive("int"), "valIndex"))> = dataIndex(bitpos);
@@ -742,9 +746,9 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_heterogeneous(int n, 
 	'		<for (i <- [0..mn/tupleLength(ts.ds)]) {>case <i>:
 	'			switch(bitIndex) {
 	'				case <0>:
-	'					return <nodeOf(n+1-tupleLength(ts.ds), max(0, m-1), use(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i) + [ field(nodeName) ]))>;
+	'					return <nodeOf(n+1-tupleLength(ts.ds), m, use(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i) + [ field(nodeName) ]))>;
 	'				<for (j <- reverse([tupleLength(ts.ds)*(i+1)..mn])) {>case <mn-j>:
-	'					return <nodeOf(n+1-tupleLength(ts.ds), max(0, m-1), use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i), [ slot(j) ], [ field(nodeName), slot(j) ])))>;
+	'					return <nodeOf(n+1-tupleLength(ts.ds), m, use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i), [ slot(j) ], [ field(nodeName), slot(j) ])))>;
 	'				<}>default:
 	'					throw new IllegalStateException(\"Index out of range.\");	
 	'			}
