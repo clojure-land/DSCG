@@ -32,6 +32,36 @@ default str generateCompactNodeClassString(TrieSpecifics ts) {
 }
 
 
+data PredefOp = isRare1();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRare1())
+	= function(\return(primitive("boolean")), "isRare", args = [ ts.stdObjectArg ]);
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRare1()) = true;
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRare1())
+	= "throw new UnsupportedOperationException(); // TODO: to implement";
+
+
+data PredefOp = isRare2();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRare2())
+	= function(\return(primitive("boolean")), "isRare", args = [ ts.stdObjectArg0, ts.stdObjectArg1 ]);
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRare2()) = true;
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRare2())
+	= "throw new UnsupportedOperationException(); // TODO: to implement";
+	
+	
+data PredefOp = isRareBitpos();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRareBitpos())
+	= function(\return(primitive("boolean")), "isRare", args = [ ts.bitposField ]);
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRareBitpos()) = true;
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRareBitpos())
+	= "throw new UnsupportedOperationException(); // TODO: to implement";	
+
+
 data PredefOp = nodeMap();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeMap())
@@ -272,6 +302,10 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	nodeMap(),
 	dataMap(),
 	
+	isRare1(),
+	isRare2(),
+	isRareBitpos(),
+	
 	sizeEmpty(),
 	sizeOne(),
 	sizeMoreThanOne(),
@@ -358,6 +392,10 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 		
 		<dec(getDef(ts, trieNode(compactNode()), nodeMap()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(compactNode()), dataMap()), asAbstract = true)>
+		
+		<impl(ts, trieNode(compactNode()), isRare1())>
+		<impl(ts, trieNode(compactNode()), isRare2())>
+		<impl(ts, trieNode(compactNode()), isRareBitpos())>		
 		
 		<dec(field(primitive("byte"), "SIZE_EMPTY"), 		constant(primitive("byte"), "0b00"), isStatic = true)>;
 		<dec(field(primitive("byte"), "SIZE_ONE"), 			constant(primitive("byte"), "0b01"), isStatic = true)>;
