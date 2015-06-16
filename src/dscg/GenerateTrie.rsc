@@ -75,11 +75,11 @@ void doGenerateBleedingEdge() {
 //	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(8, false)), overideClassNamePostfixWith = "BleedingEdge_Typed");
 //	doGenerate(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], specializationConfig(8, false)), overideClassNamePostfixWith = "BleedingEdge_Typed");	
 
-	genericTsSet = expandConfigurationAndCreateModel(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], heterogeneousSpecializationConfig(8)), "BleedingEdge");
-	genericTsMap = expandConfigurationAndCreateModel(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], heterogeneousSpecializationConfig(8)), "BleedingEdge");
+	//genericTsSet = expandConfigurationAndCreateModel(hashTrieConfig(\set(), 5, [generic("K"), generic("V")], heterogeneousSpecializationConfig(8)), "BleedingEdge");
+	//genericTsMap = expandConfigurationAndCreateModel(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], heterogeneousSpecializationConfig(8)), "BleedingEdge");
 
-	doGenerate(hashTrieConfig(\map(), 5, [object(), object()], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "BleedingEdge");
-	doGenerate(hashTrieConfig(\set(), 5, [object(), object()], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "BleedingEdge");
+	doGenerate(hashTrieConfig(\map(), 5, [object(), object()], heterogeneousSpecializationConfig(4)), overideClassNamePostfixWith = "BleedingEdge");
+	//doGenerate(hashTrieConfig(\set(), 5, [object(), object()], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "BleedingEdge");
 }
 
 void doGenerateBleedingEdgeExpanded() {

@@ -1397,7 +1397,7 @@ list[&T] times(&T template, int count)
 	= [ template | i <- [0..count]];
 	
 default str nodeOf(int n, int m, str args)
-	= "nodeOf(mutator, <args>)" 	//= "new Value<m>Index<n>Node(<args>)"
+	= "nodeOf<n>x<m>(mutator, <args>)" 	//= "new Value<m>Index<n>Node(<args>)"
 	;
 
 

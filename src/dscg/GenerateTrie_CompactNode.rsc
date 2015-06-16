@@ -248,7 +248,8 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 
 
 lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:compactNode()) 
-	= [ <nodeType,method> | method <- declaredMethodsByCompactNode];
+	= [ <nodeType,method> | method <- declaredMethodsByCompactNode]
+	+ [ <nodeType,method> | method <- createNodeFactorySpecializationList(ts, nodeType)];
 
 list[PredefOp] declaredMethodsByCompactNode = [
 
@@ -256,7 +257,7 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	// TODO: nodeOf() factory methods; also option to enable disable the use of factory methods.
 	nodeFactory_Empty(),
 	nodeFactory_Singleton(),
-	nodeFactory_Array(),
+	nodeFactory_Array(),	
 
 	hashCodeLength(), // TODO: implement as static final field
 	bitPartitionSize(), // TODO: implement as static final field
@@ -454,6 +455,10 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 	<}>
 
 	<generate_specializationFactoryMethods(ts, ts.setup)>
+
+	<for (op <- createNodeFactorySpecializationList(ts, compactNode())) {>
+		<impl(ts, trieNode(compactNode()), op)>
+	<}>
 
 	<impl(ts, trieNode(compactNode()), index2())>
 	<impl(ts, trieNode(compactNode()), index3())>
@@ -990,13 +995,51 @@ int oneShiftedLeftBy(31) = -2147483648;
 default int oneShiftedLeftBy(int count) { throw "Not supported!"; }
 
 
+
+
+list[PredefOp] createNodeFactorySpecializationList(TrieSpecifics ts, TrieNodeType nodeType:compactNode()) 
+	= [ nodeFactory_Specialization(i, j) | j <- [0..ts.nMax+1], i <- [0..ts.nMax+1], ((i + j) <= ts.nMax && (i + j) <= ts.nBound + 1)]; 
+
+data PredefOp = nodeFactory_Specialization(int n, int m);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Specialization(int n, int m))
+	= function(ts.compactNodeClassReturn, "nodeOf<n>x<m>", generics = ts.genericTupleTypes, args = [ ts.mutator ] + metadataArguments(ts) + contentArguments(n, m, ts), argsFilter = ts.argsFilter);
+// isActive = isOptionEnabled(ts.setup, useSpecialization())
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Specialization(int n, int m)) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Specialization(int n, int m)) =
+	generate_bodyOf_factoryMethod_bitmap(n, m, ts, CompactNode_factoryMethod_bitmap(n, m, ts))
+; // when isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup,useUntypedVariables());
+
+
+str generate_specializationFactoryMethods(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
+	"<for(j <- [0..ts.nMax+1], i <- [0..ts.nMax+1], ((i + j) <= ts.nMax && (i + j) <= ts.nBound + 1)) {>
+	'	<implOrOverride(CompactNode_factoryMethod_bitmap(i, j, ts), generate_bodyOf_factoryMethod_bitmap(i, j, ts, CompactNode_factoryMethod_bitmap(i, j, ts)))>
+	'<}>"
+when isOptionEnabled(ts.setup,useSpecialization()) && !isOptionEnabled(ts.setup,useUntypedVariables());
+	
+/**
+ * More complicated slot count expression.
+ * sort(toList({ n + 2 * m | n <- [0..32+1], m <- [0..32+1], ((n + m) <= 32)}))
+ */
+str generate_specializationFactoryMethods(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
+	"<for(mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound + tupleLength(ts.ds)) {>
+	'	<generate_valNodeOf_factoryMethod_bitmap_untyped(mn, ts, ts.setup)>
+	'<}>"
+when isOptionEnabled(ts.setup,useSpecialization()) && isOptionEnabled(ts.setup,useUntypedVariables());
+
+default str generate_specializationFactoryMethods(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = "";
+
+
+
+
 Method CompactNode_factoryMethod_bitmap(int n, int m, TrieSpecifics ts) {
-	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
+	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts);
 
 	return function(ts.compactNodeClassReturn, "nodeOf", generics = ts.tupleTypes, args = constructorArgs);	
 }
 
-bool exists_bodyOf_factoryMethod_bitmap(int n:0, int m:0, TrieSpecifics ts, Method decleration)  = true;
 str generate_bodyOf_factoryMethod_bitmap(int n:0, int m:0, TrieSpecifics ts, Method decleration) { 
 	return "return <emptyTrieNodeConstantName>;";
 }
@@ -1004,7 +1047,7 @@ str generate_bodyOf_factoryMethod_bitmap(int n:0, int m:0, TrieSpecifics ts, Met
 //bool exists_valNodeOf_factoryMethod_bitmap(n:1, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup: = true;
 //str generate_valNodeOf_factoryMethod_bitmap(n:1, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, compactionViaFieldToMethod()}) {
 //	// TODO: remove code duplication
-//	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
+//	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts);
 //
 //	specializedClassNameStr = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
 //
@@ -1020,25 +1063,22 @@ str generate_bodyOf_factoryMethod_bitmap(int n:0, int m:0, TrieSpecifics ts, Met
 //	;
 //}
 
-bool exists_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration)  = true;
 str generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration) 
 	= "return new <specializedClassNameStr><InferredGenerics(ts.ds, ts.tupleTypes)>(<use(decleration.args)>);"
 when (n + m) <= ts.nBound
 		&& specializedClassNameStr := "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
 
 /* TODO: fix argument lists! */
-bool exists_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration)  = true;
 str generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration) {
 	if (!((n + m) == ts.nBound + 1 && (n + m) < ts.nMax)) {
 		fail;
 	}
 
-	list[Argument] argsForArray = contentArguments(n, m, ts, ts.setup);
+	list[Argument] argsForArray = contentArguments(n, m, ts);
 
 	return "return nodeOf(mutator, <bitmapField.name>, <valmapField.name>, new Object[] { <use(argsForArray)> }<if (!isOptionEnabled(ts.setup,useSandwichArrays())) {>, (byte) <m><}>);";
 }
 
-default bool exists_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration) = true;
 default str generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration) { 
 	throw "Arguments out of bounds (n = <n>, m = <m>)."; 
 }
@@ -1047,7 +1087,7 @@ default str generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts,
 bool exists_valNodeOf_factoryMethod_bitmap_untyped(mn:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int n = 0, int m = 0) = true; 
 str generate_valNodeOf_factoryMethod_bitmap_untyped(mn:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int n = 0, int m = 0) { 
 	// TODO: remove code duplication
-	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
+	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts);
 
 	return
 	"static final <GenericsStr(ts.tupleTypes)> <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
@@ -1059,7 +1099,7 @@ str generate_valNodeOf_factoryMethod_bitmap_untyped(mn:0, ts:___expandedTrieSpec
 //bool exists_valNodeOf_factoryMethod_bitmap_untyped(n:1, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup: = true;
 //str generate_valNodeOf_factoryMethod_bitmap_untyped(n:1, m:0, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup:{_*, compactionViaFieldToMethod()}) {
 //	// TODO: remove code duplication
-//	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
+//	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts);
 //
 //	specializedClassNameStr = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
 //
@@ -1078,7 +1118,7 @@ str generate_valNodeOf_factoryMethod_bitmap_untyped(mn:0, ts:___expandedTrieSpec
 bool exists_valNodeOf_factoryMethod_bitmap_untyped(int mn, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int n = mn, int m = 0) = true;
 default str generate_valNodeOf_factoryMethod_bitmap_untyped(int mn, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, int n = mn, int m = 0) {
 	// TODO: remove code duplication
-	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts, ts.setup);
+	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts);
 
 	specializedClassNameStr = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
 
@@ -1089,7 +1129,7 @@ default str generate_valNodeOf_factoryMethod_bitmap_untyped(int mn, ts:___expand
 		'}
 		"; 
 	} else if ((mn) > tupleLength(ts.ds) * ts.nBound && (mn) <= tupleLength(ts.ds) * ts.nBound + tupleLength(ts.ds) && (mn) < tupleLength(ts.ds) * ts.nMax) {
-		list[Argument] argsForArray = contentArguments(n, m, ts, ts.setup);
+		list[Argument] argsForArray = contentArguments(n, m, ts);
 
 		return
 		"static final <GenericsStr(ts.tupleTypes)> <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> nodeOf(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
@@ -1101,37 +1141,6 @@ default str generate_valNodeOf_factoryMethod_bitmap_untyped(int mn, ts:___expand
 	}
 }
 
-
-
-// 		<generate_valNodeOf_factoryMethod_bitmap(i, j, ts, ts.setup)>
-bool exists_specializationFactoryMethods(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup)  = true;
-str generate_specializationFactoryMethods(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
-	//  && !(i == ts.nBound + 1)
-
-	"
-	<for(j <- [0..ts.nMax+1], i <- [0..ts.nMax+1], ((i + j) <= ts.nMax && (i + j) <= ts.nBound + 1)) {>
-		<implOrOverride(CompactNode_factoryMethod_bitmap(i, j, ts), generate_bodyOf_factoryMethod_bitmap(i, j, ts, CompactNode_factoryMethod_bitmap(i, j, ts)))>
-	<}>
-	"
-when isOptionEnabled(ts.setup,useSpecialization()) && !isOptionEnabled(ts.setup,useUntypedVariables())
-	;
-	
-/**
- * More complicated slot count expression.
- * sort(toList({ n + 2 * m | n <- [0..32+1], m <- [0..32+1], ((n + m) <= 32)}))
- */
-bool exists_specializationFactoryMethods(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup)  = true;
-str generate_specializationFactoryMethods(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
-	"
-	<for(mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound + tupleLength(ts.ds)) {>
-		<generate_valNodeOf_factoryMethod_bitmap_untyped(mn, ts, ts.setup)>
-	<}>
-	"
-when isOptionEnabled(ts.setup,useSpecialization()) && isOptionEnabled(ts.setup,useUntypedVariables())
-	;
-		
-default bool exists_specializationFactoryMethods(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup)  = true;
-default str generate_specializationFactoryMethods(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = "";
 
 
 

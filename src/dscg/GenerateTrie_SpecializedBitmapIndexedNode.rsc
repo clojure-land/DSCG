@@ -14,6 +14,7 @@ module dscg::GenerateTrie_SpecializedBitmapIndexedNode
 import List;
 import dscg::Common;
 import dscg::ArrayUtils;
+import util::Math;
 
 default str generateSpecializedBitmapIndexedNodeClassString(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m)) 
 	= generateJdtString(ts, jdt, nodeType)
@@ -741,9 +742,9 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_heterogeneous(int n, 
 	'		<for (i <- [0..mn/tupleLength(ts.ds)]) {>case <i>:
 	'			switch(bitIndex) {
 	'				case <0>:
-	'					return <nodeOf(n+1, m-1, use(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i) + [ field(nodeName) ]))>;
+	'					return <nodeOf(n+1-tupleLength(ts.ds), max(0, m-1), use(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i) + [ field(nodeName) ]))>;
 	'				<for (j <- reverse([tupleLength(ts.ds)*(i+1)..mn])) {>case <mn-j>:
-	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i), [ slot(j) ], [ field(nodeName), slot(j) ])))>;
+	'					return <nodeOf(n+1-tupleLength(ts.ds), max(0, m-1), use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i), [ slot(j) ], [ field(nodeName), slot(j) ])))>;
 	'				<}>default:
 	'					throw new IllegalStateException(\"Index out of range.\");	
 	'			}
@@ -798,28 +799,76 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode_typed_heterogeneous(int n, in
 	'	}"
 when isOptionEnabled(ts.setup, useSandwichArrays());	
 	
-/*
-	'	switch(valIndex) {
-	'		<for (i <- [0..mn/tupleLength(ts.ds)]) {>case <i>:
-	'			switch(bitIndex) {
-	'				<for (j <- [tupleLength(ts.ds)*(i+1)..mn]) {>case <j-tupleLength(ts.ds)>:
-	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i), [ slot(j) ], [ field(nodeName), slot(j) ])))>;
-	'				<}>case <mn-tupleLength(ts.ds)>:
-	'					return <nodeOf(n+1, m-1, use(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i) + [ field(nodeName) ]))>;
+	
+data PredefOp = copyAndMigrateFromNodeToInline();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromNodeToInline()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromNodeToInline()) 
+	= "throw new UnsupportedOperationException(); // TODO: to implement"
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays()); 
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromNodeToInline()) 
+	= generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts);
+	
+str generate_bodyOf_copyAndMigrateFromNodeToInline(int n:0, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =	
+	"throw new IllegalStateException(\"Index out of range.\");"
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
+	
+str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =
+	"throw new IllegalStateException(\"Index out of range.\");"
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup,useUntypedVariables()) 
+		&& (mn == tupleLength(ts.ds) * ts.nMax);
+				
+str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
+	"	final int bitIndex = nodeIndex(bitpos);
+	'	final int valIndex = dataIndex(bitpos);
+	'	
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
+	'
+	'	<dec(key(ts.keyType))> = <nodeName>.getKey(0);
+	'	<if (\map() := ts.ds) {><dec(val(ts.valType))> = <nodeName>.getValue(0);<}>	
+	'
+	'	switch(bitIndex) {
+	'		<for (i <- [0..mn]) {>case <i>:
+	'			switch(valIndex) {
+	'				<for (j <- [0..i/2]) {>case <j>:
+	'					return <nodeOf(n-1, m+1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - [ slot(i) ], __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*j), ts.payloadTuple + __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*j))))>;
+	'				<}>case <i/2>:
+	'					return <nodeOf(n-1, m+1, use([ bitmapField, valmapField ] + insertAfterOrDefaultAtFront(contentArguments(n, m, ts) - [ slot(i) ], __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*(i/2-1)), ts.payloadTuple)))>;
 	'				default:
 	'					throw new IllegalStateException(\"Index out of range.\");	
 	'			}
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
-
-*/	
-
-
-data PredefOp = copyAndMigrateFromNodeToInline();
-
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromNodeToInline()) = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromNodeToInline()) 
-	= generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts);
+	'	}"
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());	
+	
+str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, TrieSpecifics ts) = 	
+	"	final int bitIndex = nodeIndex(bitpos);
+	'	final int valIndex = dataIndex(bitpos);
+	'	
+	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
+	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
+	'
+	'	<dec(key(ts.keyType))> = <nodeName>.getKey(0);
+	'	<if (\map() := ts.ds) {><dec(val(ts.valType))> = <nodeName>.getValue(0);<}>	
+	'
+	'	switch(bitIndex) {
+	'		<for (i <- [1..n+1]) {>case <i-1>:
+	'			switch(valIndex) {
+	'				<for (j <- [1..m+1]) {>case <j-1>:
+	'					return <nodeOf(n-1, m+1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - [ \node(ts.ds, ts.tupleTypes, i) ], __payloadTuple(ts.ds, ts.tupleTypes, j), ts.payloadTuple + __payloadTuple(ts.ds, ts.tupleTypes, j))))>;
+	'				<}>case <m>:
+	'					return <nodeOf(n-1, m+1, use([ bitmapField, valmapField ] + insertAfterOrDefaultAtFront(contentArguments(n, m, ts) - [ \node(ts.ds, ts.tupleTypes, i) ], __payloadTuple(ts.ds, ts.tupleTypes, m), ts.payloadTuple)))>;
+	'				default:
+	'					throw new IllegalStateException(\"Index out of range.\");	
+	'			}
+	'		<}>default:
+	'			throw new IllegalStateException(\"Index out of range.\");	
+	'	}"
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
 
 
 data PredefOp = hashCode();
@@ -1530,78 +1579,6 @@ str generate_bodyOf_copyAndRemoveNode(int n, int m, TrieSpecifics ts, int mn = t
 	'	}"
 when isOptionEnabled(ts.setup,useUntypedVariables())	
 	;			
-	
-bool exists_bodyOf_copyAndMigrateFromNodeToInline(n:0, m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
-str generate_bodyOf_copyAndMigrateFromNodeToInline(n:0, m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =	
-	"throw new IllegalStateException(\"Index out of range.\");"
-when !isOptionEnabled(ts.setup,useUntypedVariables())
-	;
-	
-//bool exists_bodyOf_copyAndMigrateFromNodeToInline(n, m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
-//str generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 
-//	"throw new IllegalStateException(\"Index out of range.\");"
-//when isOptionEnabled(ts.setup,useUntypedVariables())
-//	;	
-
-bool exists_bodyOf_copyAndMigrateFromNodeToInline(n, m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
-str generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =
-	"throw new IllegalStateException(\"Index out of range.\");"
-when isOptionEnabled(ts.setup,useUntypedVariables()) && (mn == tupleLength(ts.ds) * ts.nMax)
-	;
-				
-bool exists_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
-str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
-	"	final int bitIndex = nodeIndex(bitpos);
-	'	final int valIndex = dataIndex(bitpos);
-	'	
-	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
-	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
-	'
-	'	<dec(key(ts.keyType))> = <nodeName>.getKey(0);
-	'	<if (\map() := ts.ds) {><dec(val(ts.valType))> = <nodeName>.getValue(0);<}>	
-	'
-	'	switch(bitIndex) {
-	'		<for (i <- [0..mn]) {>case <i>:
-	'			switch(valIndex) {
-	'				<for (j <- [0..i/2]) {>case <j>:
-	'					return <nodeOf(n-1, m+1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - [ slot(i) ], __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*j), ts.payloadTuple + __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*j))))>;
-	'				<}>case <i/2>:
-	'					return <nodeOf(n-1, m+1, use([ bitmapField, valmapField ] + insertAfterOrDefaultAtFront(contentArguments(n, m, ts) - [ slot(i) ], __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*(i/2-1)), ts.payloadTuple)))>;
-	'				default:
-	'					throw new IllegalStateException(\"Index out of range.\");	
-	'			}
-	'		<}>default:
-	'			throw new IllegalStateException(\"Index out of range.\");	
-	'	}"
-when isOptionEnabled(ts.setup,useUntypedVariables())	
-	;	
-	
-default bool exists_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, TrieSpecifics ts)  = true;
-default str generate_bodyOf_copyAndMigrateFromNodeToInline(int n, int m, TrieSpecifics ts) = 	
-	"	final int bitIndex = nodeIndex(bitpos);
-	'	final int valIndex = dataIndex(bitpos);
-	'	
-	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)> ^ bitpos);	
-	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
-	'
-	'	<dec(key(ts.keyType))> = <nodeName>.getKey(0);
-	'	<if (\map() := ts.ds) {><dec(val(ts.valType))> = <nodeName>.getValue(0);<}>	
-	'
-	'	switch(bitIndex) {
-	'		<for (i <- [1..n+1]) {>case <i-1>:
-	'			switch(valIndex) {
-	'				<for (j <- [1..m+1]) {>case <j-1>:
-	'					return <nodeOf(n-1, m+1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - [ \node(ts.ds, ts.tupleTypes, i) ], __payloadTuple(ts.ds, ts.tupleTypes, j), ts.payloadTuple + __payloadTuple(ts.ds, ts.tupleTypes, j))))>;
-	'				<}>case <m>:
-	'					return <nodeOf(n-1, m+1, use([ bitmapField, valmapField ] + insertAfterOrDefaultAtFront(contentArguments(n, m, ts) - [ \node(ts.ds, ts.tupleTypes, i) ], __payloadTuple(ts.ds, ts.tupleTypes, m), ts.payloadTuple)))>;
-	'				default:
-	'					throw new IllegalStateException(\"Index out of range.\");	
-	'			}
-	'		<}>default:
-	'			throw new IllegalStateException(\"Index out of range.\");	
-	'	}"
-	;
-
 	
 bool exists_bodyOf_getKeyValueEntry(TrieSpecifics ts, 0) = true;
 str generate_bodyOf_getKeyValueEntry(TrieSpecifics ts, 0)
