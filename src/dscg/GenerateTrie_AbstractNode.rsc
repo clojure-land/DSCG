@@ -160,6 +160,28 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode())
 
 
 
+data PredefOp = getKey();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getKey())
+	= method(\return(ts.keyType), "getKey", args = [ts.index]);
+
+
+
+data PredefOp = getValue();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getValue())
+	= method(\return(__payloadTupleArgAtColl(ts.ds, ts.tupleTypes, 1).\type), "getValue", args = [ts.index], isActive = \map() := ts.ds);
+
+
+
+data PredefOp = getKeyValueEntry();
+
+Method getDef(TrieSpecifics ts, Artifact artifact, getKeyValueEntry())
+	= method(\return(jdtToType(jul_Map_Entry(nodeTupleTypes(ts)))), "getKeyValueEntry", args = [ts.index], isActive = \map(multi = false) := ts.ds)
+when trieNode(_) := artifact;	
+
+
+
 data PredefOp = payloadIterator();
 
 // TODO: @Deprecated

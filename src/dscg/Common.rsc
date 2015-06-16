@@ -2582,45 +2582,7 @@ data PredefOp = payloadArity();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), payloadArity())
 	= method(\return(primitive("int")), "payloadArity");
-
-
-
-data PredefOp = getKey();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getKey())
-	= method(\return(ts.keyType), "getKey", args = [ts.index]);
-
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKey()) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKey())
-	= result(useExpr(key(ts.keyType)));
-
-
-
-data PredefOp = getValue();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getValue())
-	= method(\return(__payloadTupleArgAtColl(ts.ds, ts.tupleTypes, 1).\type), "getValue", args = [ts.index], isActive = \map() := ts.ds);
-
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getValue()) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getValue())
-	= result(useExpr(key(ts.valType)));
-
-
-
-data PredefOp = getKeyValueEntry();
-
-Method getDef(TrieSpecifics ts, Artifact artifact, getKeyValueEntry())
-	= method(\return(jdtToType(jul_Map_Entry(nodeTupleTypes(ts)))), "getKeyValueEntry", args = [ts.index], isActive = \map(multi = false) := ts.ds)
-when trieNode(_) := artifact;	
-
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getKeyValueEntry())  = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getKeyValueEntry()) = 
-	"return entryOf(keys[index], vals[index]);";
-	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKeyValueEntry()) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKeyValueEntry())
-	= result(useExpr(this()));	
-	
+		
 
 
 data PredefOp = hasSlots();

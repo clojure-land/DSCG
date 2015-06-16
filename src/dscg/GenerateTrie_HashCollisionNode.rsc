@@ -26,6 +26,13 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashColl
 	= result(call(getDef(ts, trieNode(compactNode()), sizeMoreThanOne())));
 
 
+data PredefOp = getKeyValueEntry();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getKeyValueEntry())  = true;
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getKeyValueEntry()) = 
+	"return entryOf(keys[index], vals[index]);";
+
+
 str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 
 	//TrieSpecifics ts = setArtifact(tsSuper, trieNode(hashCollisionNode()));

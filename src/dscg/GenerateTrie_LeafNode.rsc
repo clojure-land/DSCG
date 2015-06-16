@@ -14,6 +14,28 @@ module dscg::GenerateTrie_LeafNode
 import dscg::Common;
 import dscg::ArrayUtils;
 
+
+data PredefOp = getKey();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKey()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKey())
+	= result(useExpr(key(ts.keyType)));
+
+
+data PredefOp = getValue();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getValue()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getValue())
+	= result(useExpr(key(ts.valType)));
+
+
+data PredefOp = getKeyValueEntry();
+	
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKeyValueEntry()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKeyValueEntry())
+	= result(useExpr(this()));	
+
+
 str generateLeafNodeClassString(TrieSpecifics ts) {
 
 //	"private static final class LeafNode<GenericsStr(ts.tupleTypes)> extends <CompactNode(ds)><GenericsStr(ts.tupleTypes)> implements Map.Entry<GenericsStr(ts.tupleTypes)> {
