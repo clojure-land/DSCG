@@ -35,7 +35,7 @@ default str generateCompactNodeClassString(TrieSpecifics ts) {
 data PredefOp = isRare1();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRare1())
-	= function(\return(primitive("boolean")), "isRare", args = [ ts.stdObjectArg ]);
+	= function(\return(primitive("boolean")), "isRare", args = [ ts.stdObjectArg ], isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRare1()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRare1())
@@ -45,7 +45,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 data PredefOp = isRare2();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRare2())
-	= function(\return(primitive("boolean")), "isRare", args = [ ts.stdObjectArg0, ts.stdObjectArg1 ]);
+	= function(\return(primitive("boolean")), "isRare", args = [ ts.stdObjectArg0, ts.stdObjectArg1 ], isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRare2()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRare2())
@@ -55,7 +55,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 data PredefOp = isRareBitpos();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRareBitpos())
-	= function(\return(primitive("boolean")), "isRare", args = [ ts.bitposField ]);
+	= function(\return(primitive("boolean")), "isRare", args = [ ts.bitposField ], isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRareBitpos()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::isRareBitpos())
@@ -98,6 +98,24 @@ when !bs.supportsValues;
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::dataMap()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::dataMap())
 	= result(iconst(0));
+
+
+data PredefOp = rawMap1();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::rawMap1())
+	= method(ts.valmapField, "rawMap1", isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding())); // TODO: fix reference in return
+
+
+data PredefOp = rawMap2();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::rawMap2())
+	= method(ts.valmapField, "rawMap2", isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding())); // TODO: fix reference in return
+
+
+data PredefOp = rareMap();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::rareMap())
+	= method(ts.valmapField, "rareMap", isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding())); // TODO: fix reference in return
 
 
 data PredefOp = hashCodeLength();
@@ -302,6 +320,10 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	nodeMap(),
 	dataMap(),
 	
+	rareMap(),
+	rawMap1(),
+	rawMap2(),
+	
 	isRare1(),
 	isRare2(),
 	isRareBitpos(),
@@ -392,6 +414,10 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 		
 		<dec(getDef(ts, trieNode(compactNode()), nodeMap()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(compactNode()), dataMap()), asAbstract = true)>
+
+		<dec(getDef(ts, trieNode(compactNode()), rareMap()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), rawMap1()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), rawMap2()), asAbstract = true)>
 		
 		<impl(ts, trieNode(compactNode()), isRare1())>
 		<impl(ts, trieNode(compactNode()), isRare2())>
