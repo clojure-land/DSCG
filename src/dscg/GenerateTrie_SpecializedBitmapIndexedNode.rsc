@@ -629,9 +629,6 @@ Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Pr
 	= bitwiseOr(call(getDef(ts, trieNode(compactNode()), rawMap2())), useExpr(ts.bitposField))
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
-//Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_index(), Event e:isRare())
-//	= emptyExpression();
-
 str generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(int n, int m, TrieSpecifics ts, Event event, int mn = tupleLength(ts.ds)*m+n) =
 	"throw new IllegalStateException();"
 when (n + m) == ts.nMax;
@@ -795,12 +792,12 @@ data PredefOp = copyAndMigrateFromInlineToNode();
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) = true;
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) =
-	"if (isRare(<use(ts.bitposField)>)) { // TODO: support migration if partial
-	'	// TODO: use correct index
-	'	<generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_heterogeneous(n, m, ts, mn = n)>
+	"// TODO: support migration if partial
+	'if (isRare(<use(ts.bitposField)>)) {
+	'	<generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_heterogeneous(n, m, ts, Event::isRare(), mn = n)>
 	'} else {
 	'	// TODO: use correct index
-	'	<generate_bodyOf_copyAndMigrateFromInlineToNode_typed_heterogeneous(n, m, ts, mn = n)>
+	'	<generate_bodyOf_copyAndMigrateFromInlineToNode_typed_heterogeneous(n, m, ts, Event::isRegular(), mn = n)>
 	'}"
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
@@ -834,19 +831,21 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_nonHeterogeneous(int 
 	'	}";
 
 /*
- *  nodeOf(n+1-tupleLength(ts.ds), m, ...):
- *		-> only modifications within nodes: two become one	
+ * nodeOf(n+1-tupleLength(ts.ds), m, ...):
+ *     -> only modifications within nodes: two slots collapse to one
+ *
+ * 	TODO: document constants / index calcuations better
  */
-str generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_heterogeneous(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
-	"	<dec(field(primitive("int"), "bitIndex"))> = <use(tupleLengthConstant)> * (payloadArity() - 1) + nodeIndex(bitpos);
-	'	<dec(field(primitive("int"), "valIndex"))> = dataIndex(bitpos);
+str generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_heterogeneous(int n, int m, TrieSpecifics ts, Event event, int mn = tupleLength(ts.ds)*m+n) = 	
+	"	<dec(field(primitive("int"), "idxOld"))> = rareIndex(bitpos);
+	'	<dec(field(primitive("int"), "idxNew"))> = <n-1> - <use(tupleLengthConstant)> + 1 - nodeIndex(bitpos);
 	'
-	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
-	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
+	'	<dec(ts.bitmapField)> = <eval(updateProperty(ts, copyAndMigrateFromInlineToNode(), copyAndMigrateFromInlineToNode_bitmap1(), event))>;
+	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndMigrateFromInlineToNode(), copyAndMigrateFromInlineToNode_bitmap2(), event))>;
 	'
-	'	switch(valIndex) {
+	'	switch(idxOld) {
 	'		<for (i <- [0..mn/tupleLength(ts.ds)]) {>case <i>:
-	'			switch(bitIndex) {
+	'			switch(idxNew) {
 	'				case <0>:
 	'					return <nodeOf(n+1-tupleLength(ts.ds), m, use(metadataArguments(ts) + contentArguments(n, m, ts) - __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i) + [ field(nodeName) ]))>;
 	'				<for (j <- reverse([tupleLength(ts.ds)*(i+1)..mn])) {>case <mn-j>:
@@ -859,19 +858,35 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_heterogeneous(int n, 
 	'	}"
 when isOptionEnabled(ts.setup, useSandwichArrays());
 	
+data Property = copyAndMigrateFromInlineToNode_index();
+data Property = copyAndMigrateFromInlineToNode_bitmap1();
+data Property = copyAndMigrateFromInlineToNode_bitmap2();
+
+//Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndMigrateFromInlineToNode(), Property p:copyAndMigrateFromInlineToNode_index(), Event e:isRare()) 
+//	= call(getDef(ts, trieNode(compactNode()), rareIndex()))
+//when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndMigrateFromInlineToNode(), Property p:copyAndMigrateFromInlineToNode_bitmap1(), Event e:isRare()) 
+	= bitwiseOr(call(getDef(ts, trieNode(compactNode()), rawMap1())), useExpr(ts.bitposField))
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndMigrateFromInlineToNode(), Property p:copyAndMigrateFromInlineToNode_bitmap2(), Event e:isRare()) 
+	= bitwiseXor(call(getDef(ts, trieNode(compactNode()), rawMap2())), useExpr(ts.bitposField))
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+	
 str generate_bodyOf_copyAndMigrateFromInlineToNode_typed_nonHeterogeneous(n, m:0, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =
 	"throw new IllegalStateException(\"Index out of range.\");";
 
 str generate_bodyOf_copyAndMigrateFromInlineToNode_typed_nonHeterogeneous(int n, int m, TrieSpecifics ts) = 	
-	"	final int bitIndex = nodeIndex(bitpos);
-	'	final int valIndex = dataIndex(bitpos);
+	"	final int idxOld = dataIndex(bitpos);
+	'	final int idxNew = nodeIndex(bitpos);
 	'
 	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
 	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
 	'
-	'	switch(valIndex) {
+	'	switch(idxOld) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
-	'			switch(bitIndex) {
+	'			switch(idxNew) {
 	'				<for (j <- [1..n+1]) {>case <j-1>:
 	'					return <nodeOf(n+1, m-1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts) - __payloadTuple(ts.ds, ts.tupleTypes, i), [ \node(ts.ds, ts.tupleTypes, j) ], [ field(nodeName), \node(ts.ds, ts.tupleTypes, j) ])))>;
 	'				<}>case <n>:
@@ -883,16 +898,16 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode_typed_nonHeterogeneous(int n,
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}";
 
-str generate_bodyOf_copyAndMigrateFromInlineToNode_typed_heterogeneous(int n, int m, TrieSpecifics ts) = 	
-	"	final int bitIndex = nodeIndex(bitpos);
-	'	final int valIndex = dataIndex(bitpos);
+str generate_bodyOf_copyAndMigrateFromInlineToNode_typed_heterogeneous(int n, int m, TrieSpecifics ts, Event event) = 	
+	"	final int idxOld = dataIndex(bitpos);
+	'	final int idxNew = <n-1> - <use(tupleLengthConstant)> - nodeIndex(bitpos);
 	'
-	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)> | bitpos);
-	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> ^ bitpos);
+	'	<dec(ts.bitmapField)> = <eval(updateProperty(ts, copyAndMigrateFromInlineToNode(), copyAndMigrateFromInlineToNode_bitmap1(), event))>;
+	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndMigrateFromInlineToNode(), copyAndMigrateFromInlineToNode_bitmap2(), event))>;
 	'
-	'	switch(valIndex) {
+	'	switch(idxOld) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
-	'			switch(bitIndex) {
+	'			switch(idxNew) {
 	'				case <0>:
 	'					return <nodeOf(n+1, m-1, use(metadataArguments(ts) + contentArguments(n, m, ts) - __payloadTuple(ts.ds, ts.tupleTypes, i) + [ field(nodeName) ]))>;
 	'				<for (j <- [0..n]) {>case <j+1>:
@@ -903,9 +918,21 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode_typed_heterogeneous(int n, in
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"
-when isOptionEnabled(ts.setup, useSandwichArrays());	
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());	
 	
+//Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndMigrateFromInlineToNode(), Property p:copyAndMigrateFromInlineToNode_index(), Event e:isRegular()) 
+//	= call(getDef(ts, trieNode(compactNode()), rareIndex()))
+//when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndMigrateFromInlineToNode(), Property p:copyAndMigrateFromInlineToNode_bitmap1(), Event e:isRegular()) 
+	= bitwiseOr(call(getDef(ts, trieNode(compactNode()), rawMap1())), useExpr(ts.bitposField))
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndMigrateFromInlineToNode(), Property p:copyAndMigrateFromInlineToNode_bitmap2(), Event e:isRegular()) 
+	= bitwiseXor(call(getDef(ts, trieNode(compactNode()), rawMap2())), useExpr(ts.bitposField))
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 	
+		
 data PredefOp = copyAndMigrateFromNodeToInline();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromNodeToInline()) = true;
