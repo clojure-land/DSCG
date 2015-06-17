@@ -611,6 +611,16 @@ str generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(int n, int m, Tr
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}";	
 
+data Property = copyAndInsertValue_index();
+
+data Event = isRare();
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_index(), Event e:isRare()) 
+	= call(getDef(ts, trieNode(compactNode()), rareIndex()))
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+	
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_index(), Event e:isRare())
+	= emptyExpression(); // call(dataIndex());
+
 str generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =
 	"throw new IllegalStateException();"
 when (n + m) == ts.nMax;

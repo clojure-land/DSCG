@@ -2932,37 +2932,6 @@ when artifact := core(immutable()) || artifact := core(transient());
 
 
 
-
-
-data PredefOp = nodeIndex();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeIndex())
-	=  method(\return(primitive("int")), "nodeIndex", args = [ts.bitposField]);
-
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeIndex()) = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeIndex())
-	= "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___bitmapMethod(ts.bitPartitionSize))> & (bitpos - 1));";
-
-
-
-
-
-
-data PredefOp = dataIndex();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataIndex())
-	=  method(\return(primitive("int")), "dataIndex", args = [ts.bitposField]);
-
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataIndex()) = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataIndex())
-	= "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(ts.bitPartitionSize))> & (bitpos - 1));";
-
-
-
-
-
-
-
 data PredefOp = mergeTwoKeyValPairs();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs())

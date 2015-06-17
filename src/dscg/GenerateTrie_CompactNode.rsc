@@ -118,6 +118,36 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 	= method(ts.valmapField, "rareMap", isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding())); // TODO: fix reference in return
 
 
+data PredefOp = nodeIndex();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeIndex())
+	=  method(\return(primitive("int")), "nodeIndex", args = [ts.bitposField]);
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeIndex()) = true;
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeIndex())
+	= "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___bitmapMethod(ts.bitPartitionSize))> & (bitpos - 1));";
+
+
+data PredefOp = dataIndex();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataIndex())
+	=  method(\return(primitive("int")), "dataIndex", args = [ts.bitposField]);
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataIndex()) = true;
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), dataIndex())
+	= "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(ts.bitPartitionSize))> & (bitpos - 1));";
+
+
+data PredefOp = rareIndex();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), rareIndex())
+	=  method(\return(primitive("int")), "rareIndex", args = [ts.bitposField], isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
+
+//bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), rareIndex()) = true;
+//str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), rareIndex())
+//	= "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(ts.bitPartitionSize))> & (bitpos - 1));";
+
+
 data PredefOp = hashCodeLength();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::hashCodeLength())
@@ -360,6 +390,7 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	
 	dataIndex(),
 	nodeIndex(),
+	rareIndex(),
 	
 	nodeAt(), // TODO: get rid of?
 		
@@ -529,6 +560,7 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 
 	<impl(ts, trieNode(compactNode()), dataIndex())>
 	<impl(ts, trieNode(compactNode()), nodeIndex())>
+	<impl(ts, trieNode(compactNode()), rareIndex())>
 	
 	<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> nodeAt(<dec(ts.bitposField)>) {
 		return getNode(nodeIndex(bitpos)); 
