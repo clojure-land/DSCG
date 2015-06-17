@@ -143,9 +143,9 @@ data PredefOp = rareIndex();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), rareIndex())
 	=  method(\return(primitive("int")), "rareIndex", args = [ts.bitposField], isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
 
-//bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), rareIndex()) = true;
-//str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), rareIndex())
-//	= "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(ts.bitPartitionSize))> & (bitpos - 1));";
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), rareIndex()) = true;
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), rareIndex())
+	= "throw new UnsupportedOperationException(); // TODO: to implement";
 
 
 data PredefOp = hashCodeLength();

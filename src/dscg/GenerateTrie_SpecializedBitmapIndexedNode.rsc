@@ -576,31 +576,30 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:special
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndInsertValue()) =
 	"if (isRare(<use(__payloadTuple(ts.ds, ts.tupleTypes))>)) {
-	'	// TODO: use correct index
-	'	<generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(n, m, ts, mn = n)>
+	'	<generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(n, m, ts, Event::isRare(), mn = n)>
 	'} else {
-	'	// TODO: use correct index
-	'	<generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(n, m, ts, mn = n)>
+	'	<generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(n, m, ts, Event::isRegular(), mn = n)>
 	'}"
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndInsertValue())
-	= generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(n, m, ts)
+	= generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(n, m, ts, Event::isRegular())
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndInsertValue())
-	= generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(n, m, ts)
+	= generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(n, m, ts, Event::isRegular())
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
 
-str generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =
+str generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(int n, int m, TrieSpecifics ts, Event event, int mn = tupleLength(ts.ds)*m+n) =
 	"throw new IllegalStateException();"
 when (mn > tupleLength(ts.ds) * (ts.nMax - 1));
 		
-str generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
-	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
+str generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(int n, int m, TrieSpecifics ts, Event event, int mn = tupleLength(ts.ds)*m+n) = 	
+	"	<dec(field(primitive("int"), "idx"))> = <eval(updateProperty(ts, copyAndInsertValue(), copyAndInsertValue_index(), event))>;
 	'
-	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)>);
-	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
+	'	// TODO: improve naming of bitmaps in heterogeneous
+	'	<dec(ts.bitmapField)> = <eval(updateProperty(ts, copyAndInsertValue(), copyAndInsertValue_bitmap1(), event))>;
+	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndInsertValue(), copyAndInsertValue_bitmap1(), event))>;
 	'
 	'	switch(idx) {
 	'		<for (i <- [0..mn/tupleLength(ts.ds)]) {>case <i>:
@@ -612,25 +611,38 @@ str generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(int n, int m, Tr
 	'	}";	
 
 data Property = copyAndInsertValue_index();
+data Property = copyAndInsertValue_bitmap1();
+data Property = copyAndInsertValue_bitmap2();
 
 data Event = isRare();
+data Event = isRegular();
+
 Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_index(), Event e:isRare()) 
 	= call(getDef(ts, trieNode(compactNode()), rareIndex()))
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
-	
-Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_index(), Event e:isRare())
-	= emptyExpression(); // call(dataIndex());
 
-str generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_bitmap1(), Event e:isRare()) 
+	= bitwiseOr(call(getDef(ts, trieNode(compactNode()), rawMap1())), useExpr(ts.bitposField))
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_bitmap2(), Event e:isRare()) 
+	= bitwiseOr(call(getDef(ts, trieNode(compactNode()), rawMap2())), useExpr(ts.bitposField))
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+//Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_index(), Event e:isRare())
+//	= emptyExpression();
+
+str generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(int n, int m, TrieSpecifics ts, Event event, int mn = tupleLength(ts.ds)*m+n) =
 	"throw new IllegalStateException();"
 when (n + m) == ts.nMax;
 
 // TODO: homogenize payload indices (start with 0)
-str generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(int n, int m, TrieSpecifics ts) = 
-	"	<dec(field(primitive("int"), "idx"))> = dataIndex(bitpos);
+str generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(int n, int m, TrieSpecifics ts, Event event) = 
+	"	<dec(field(primitive("int"), "idx"))> = <eval(updateProperty(ts, copyAndInsertValue(), copyAndInsertValue_index(), event))>;
 	'
-	'	<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(bitmapMethod)>);
-	'	<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (this.<use(valmapMethod)> | bitpos);
+	'	// TODO: improve naming of bitmaps in heterogeneous	
+	'	<dec(ts.bitmapField)> = <eval(updateProperty(ts, copyAndInsertValue(), copyAndInsertValue_bitmap1(), event))>;
+	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndInsertValue(), copyAndInsertValue_bitmap2(), event))>;
 	'
 	'	switch(idx) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
@@ -640,6 +652,18 @@ str generate_bodyOf_copyAndInsertValue_typed_nonHeterogeneous(int n, int m, Trie
 	'		default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}";
+
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_index(), Event e:isRegular()) 
+	= call(getDef(ts, trieNode(compactNode()), dataIndex()))
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_bitmap1(), Event e:isRegular()) 
+	= call(getDef(ts, trieNode(compactNode()), rawMap1()))
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_bitmap2(), Event e:isRegular()) 
+	= bitwiseOr(call(getDef(ts, trieNode(compactNode()), rawMap2())), useExpr(ts.bitposField))
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
 
 data PredefOp = copyAndRemoveValue();
