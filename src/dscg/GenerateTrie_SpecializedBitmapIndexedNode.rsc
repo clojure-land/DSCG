@@ -284,6 +284,21 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 	= generate_bodyOf_getKey(m)
 when !isOptionEnabled(ts.setup, useUntypedVariables());
 
+bool exists_bodyOf_getKey(0) = true;
+str generate_bodyOf_getKey(0)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+	;
+	
+default bool exists_bodyOf_getKey(int m)  = true;
+default str generate_bodyOf_getKey(int m) = 	
+	"		switch(index) {
+	'			<for (i <- [1..m+1]) {>case <i-1>:
+	'				return <keyName><i>;
+	'			<}>default:
+	'				throw new IllegalStateException(\"Index out of range.\");
+	'			}"
+	;
+
 
 data PredefOp = getValue();
 
@@ -296,6 +311,59 @@ when isOptionEnabled(ts.setup, useUntypedVariables());
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getValue())
 	= generate_bodyOf_getValue(m)
 when !isOptionEnabled(ts.setup, useUntypedVariables());
+
+bool exists_bodyOf_getValue(0) = true;
+str generate_bodyOf_getValue(0)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+	;
+	
+default bool exists_bodyOf_getValue(int m)  = true;
+default str generate_bodyOf_getValue(int m) = 	
+	"		switch(index) {
+	'			<for (i <- [1..m+1]) {>case <i-1>:
+	'				return <valName><i>;
+	'			<}>default:
+	'				throw new IllegalStateException(\"Index out of range.\");
+	'			}"
+	;
+
+
+data PredefOp = getRareKey();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getRareKey()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getRareKey())
+	= generate_bodyOf_getRareKey(ts, n);
+
+str generate_bodyOf_getRareKey(TrieSpecifics ts, 0)
+	= "throw new IllegalStateException(\"Index out of range.\");";
+	
+default str generate_bodyOf_getRareKey(TrieSpecifics ts, int n) = 	
+	"switch(index) {
+	'<for (i <- [0..n/tupleLength(ts.ds)]) {>case <i>:
+	'	return <slotName><i*tupleLength(ts.ds)>;
+	'<}>default:
+	'	throw new IllegalStateException(\"Index out of range.\");
+	'}";
+
+
+data PredefOp = getRareValue();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getRareValue()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getRareValue())
+	= generate_bodyOf_getRareValue(ts, n);
+
+str generate_bodyOf_getRareValue(TrieSpecifics ts, 0)
+	= "throw new IllegalStateException(\"Index out of range.\");";
+	
+default str generate_bodyOf_getRareValue(TrieSpecifics ts, int n) = 	
+	"switch(index) {
+	'<for (i <- [0..n/tupleLength(ts.ds)]) {>case <i>:
+	'	return <slotName><i*tupleLength(ts.ds) + 1>;
+	'<}>default:
+	'	throw new IllegalStateException(\"Index out of range.\");
+	'}";
 
 
 data PredefOp = getKeyValueEntry();
@@ -1470,36 +1538,7 @@ str generateGenericNodeClassString(int n, int m, TrieSpecifics ts) =
 	'	}
 	}
 	";
-		
-bool exists_bodyOf_getKey(0) = true;
-str generate_bodyOf_getKey(0)
-	= "throw new IllegalStateException(\"Index out of range.\");"
-	;
-	
-default bool exists_bodyOf_getKey(int m)  = true;
-default str generate_bodyOf_getKey(int m) = 	
-	"		switch(index) {
-	'			<for (i <- [1..m+1]) {>case <i-1>:
-	'				return <keyName><i>;
-	'			<}>default:
-	'				throw new IllegalStateException(\"Index out of range.\");
-	'			}"
-	;
 
-bool exists_bodyOf_getValue(0) = true;
-str generate_bodyOf_getValue(0)
-	= "throw new IllegalStateException(\"Index out of range.\");"
-	;
-	
-default bool exists_bodyOf_getValue(int m)  = true;
-default str generate_bodyOf_getValue(int m) = 	
-	"		switch(index) {
-	'			<for (i <- [1..m+1]) {>case <i-1>:
-	'				return <valName><i>;
-	'			<}>default:
-	'				throw new IllegalStateException(\"Index out of range.\");
-	'			}"
-	;
 	
 bool exists_bodyOf_copyAndInsertNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
 str generate_bodyOf_copyAndInsertNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n)
