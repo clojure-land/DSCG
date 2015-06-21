@@ -1092,9 +1092,13 @@ default int oneShiftedLeftBy(int count) { throw "Not supported!"; }
 
 
 
-
+/*
+ * Factory methods are generated until <= ts.nBound + tupleLength(ts.ds) 
+ * because untyped specializations (especially for heterogeneous representations) 
+ * could add tupleLength(ts.ds) slots per operation.  
+ */
 list[PredefOp] createNodeFactorySpecializationList(TrieSpecifics ts, TrieNodeType nodeType:compactNode()) 
-	= [ nodeFactory_Specialization(i, j) | j <- [0..ts.nMax+1], i <- [0..ts.nMax+1], ((i + j) <= ts.nMax && (i + j) <= ts.nBound + 1)]; 
+	= [ nodeFactory_Specialization(i, j) | j <- [0..ts.nMax+1], i <- [0..ts.nMax+1], ((i + j) <= ts.nMax && (i + j) <= ts.nBound + tupleLength(ts.ds))]; 
 
 data PredefOp = nodeFactory_Specialization(int n, int m);
 

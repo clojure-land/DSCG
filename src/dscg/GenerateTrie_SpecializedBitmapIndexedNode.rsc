@@ -371,12 +371,16 @@ data PredefOp = getKeyValueEntry();
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getKeyValueEntry()) = true;
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getKeyValueEntry())
+	= "throw new UnsupportedOperationException(); // TODO: to implement" 
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getKeyValueEntry())
 	= "return entryOf((<typeToString(ts.keyType)>) getSlot(<use(tupleLengthConstant)> * index), (<typeToString(ts.valType)>) getSlot(<use(tupleLengthConstant)> * index + 1));"
-when isOptionEnabled(ts.setup, useUntypedVariables());
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getKeyValueEntry())
 	= generate_bodyOf_getKeyValueEntry(ts, m)
-when !isOptionEnabled(ts.setup, useUntypedVariables());
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
 
 
 data PredefOp = getNode();
@@ -625,13 +629,13 @@ str generate_bodyOf_copyAndInsertValue_untyped_nonHeterogeneous(int n, int m, Tr
 	'
 	'	// TODO: improve naming of bitmaps in heterogeneous
 	'	<dec(ts.bitmapField)> = <eval(updateProperty(ts, copyAndInsertValue(), copyAndInsertValue_bitmap1(), event))>;
-	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndInsertValue(), copyAndInsertValue_bitmap1(), event))>;
+	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndInsertValue(), copyAndInsertValue_bitmap2(), event))>;
 	'
 	'	switch(idx) {
 	'		<for (i <- [0..mn/tupleLength(ts.ds)]) {>case <i>:
-	'			return <nodeOf(n, m+1, use(replace(metadataArguments(ts) + contentArguments(n, m, ts), __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i), ts.payloadTuple + __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i))))>;
+	'			return <nodeOf(n+tupleLength(ts.ds), m, use(replace(metadataArguments(ts) + contentArguments(n, m, ts), __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i), ts.payloadTuple + __untypedPayloadTuple(ts.ds, ts.tupleTypes, tupleLength(ts.ds)*i))))>;
 	'		<}>case <mn/tupleLength(ts.ds)>:
-	'			return <nodeOf(n, m+1, use(insertBeforeOrDefaultAtEnd(metadataArguments(ts) + contentArguments(n, m, ts), [ slot(tupleLength(ts.ds)*ceil(mn/tupleLength(ts.ds))) ], ts.payloadTuple )))>;
+	'			return <nodeOf(n+tupleLength(ts.ds), m, use(insertBeforeOrDefaultAtEnd(metadataArguments(ts) + contentArguments(n, m, ts), [ slot(tupleLength(ts.ds)*ceil(mn/tupleLength(ts.ds))) ], ts.payloadTuple )))>;
 	'		default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}";	
@@ -752,7 +756,7 @@ str generate_bodyOf_copyAndSetNode(int n:0, int m, TrieSpecifics ts)
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
 str generate_bodyOf_copyAndSetNode(int n, int m, TrieSpecifics ts, Event event = isNode()) =  
-	"	<dec(field(primitive("int"), "idx"))> = <n-1> - <eval(updateProperty(ts, copyAndSetNode(), copyAndSetNode_index(), event))>; 
+	"	<dec(field(primitive("int"), "idx"))> = <eval(updateProperty(ts, copyAndSetNode(), copyAndSetNode_index(), event))>; 
 	'
 	'	<dec(ts.bitmapField)> = <eval(updateProperty(ts, copyAndSetNode(), copyAndSetNode_bitmap1(), event))>;
 	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndSetNode(), copyAndSetNode_bitmap2(), event))>;
@@ -880,7 +884,7 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_nonHeterogeneous(int 
  */
 str generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_heterogeneous(int n, int m, TrieSpecifics ts, Event event, int mn = tupleLength(ts.ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "idxOld"))> = rareIndex(bitpos);
-	'	<dec(field(primitive("int"), "idxNew"))> = <n-1> - <use(tupleLengthConstant)> + 1 - nodeIndex(bitpos);
+	'	<dec(field(primitive("int"), "idxNew"))> = nodeIndex(bitpos);
 	'
 	'	<dec(ts.bitmapField)> = <eval(updateProperty(ts, copyAndMigrateFromInlineToNode(), copyAndMigrateFromInlineToNode_bitmap1(), event))>;
 	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndMigrateFromInlineToNode(), copyAndMigrateFromInlineToNode_bitmap2(), event))>;
@@ -942,7 +946,7 @@ str generate_bodyOf_copyAndMigrateFromInlineToNode_typed_nonHeterogeneous(int n,
 
 str generate_bodyOf_copyAndMigrateFromInlineToNode_typed_heterogeneous(int n, int m, TrieSpecifics ts, Event event) = 	
 	"	final int idxOld = dataIndex(bitpos);
-	'	final int idxNew = <n-1> - <use(tupleLengthConstant)> - nodeIndex(bitpos);
+	'	final int idxNew = nodeIndex(bitpos);
 	'
 	'	<dec(ts.bitmapField)> = <eval(updateProperty(ts, copyAndMigrateFromInlineToNode(), copyAndMigrateFromInlineToNode_bitmap1(), event))>;
 	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndMigrateFromInlineToNode(), copyAndMigrateFromInlineToNode_bitmap2(), event))>;
