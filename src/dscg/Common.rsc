@@ -1014,10 +1014,14 @@ when m.isActive && m.isStateful && !m.isConstant
 str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
 	'<m.visibility> static final <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>() {
-	'	<bodyStr>
+	'	return <m.name>;
 	'}
 	'
-	'private static final <typeToString(m.returnArg.\type)> <m.name> = <m.name>();"
+	'private static final <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> initialize<capitalize(m.name)>() {
+	'	<bodyStr>
+	'}
+	'	
+	'private static final <typeToString(m.returnArg.\type)> <m.name> = initialize<capitalize(m.name)>();"
 when m.isActive && m.isStateful && m.isConstant;
 	
 str implOrOverride(m:constructor(_,_), str bodyStr,  OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
@@ -2492,66 +2496,6 @@ when \set() := ts.ds
 		// NAME BINDINGS
 		&& thisMethod := getDef(ts, artifact, op)
 		&& /labeledArgumentList(collection(), [ argCollection ]) := thisMethod.args;
-
-
-
-
-data PredefOp = copyAndRemoveValue(bool customComparator = false);
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveValue())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndRemoveValue", args = [ts.mutator, ts.bitposField]);
-
-
-data PredefOp = copyAndInsertValue(bool customComparator = false);
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertValue())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertValue", args = [ts.mutator, ts.bitposField, *nodeTupleArgs(ts)]);
-
-
-data PredefOp = copyAndSetValue(bool customComparator = false);
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetValue())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndSetValue", lazyArgs = list[Argument]() { return [ts.mutator, ts.bitposField, nodeTupleArg(ts, 1) ]; }, isActive = \map() := ts.ds);
-
-
-data PredefOp = copyAndSetNode(bool customComparator = false);
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetNode())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndSetNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
-
-
-data PredefOp = copyAndInsertNode(bool customComparator = false);
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertNode())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)], isActive = false);
-
-
-data PredefOp = copyAndMigrateFromInlineToNode(bool customComparator = false);
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromInlineToNode())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromInlineToNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
-
-		
-data PredefOp = copyAndMigrateFromNodeToInline(bool customComparator = false);
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromNodeToInline())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromNodeToInline", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
-
-		
-data PredefOp = copyAndRemoveNode(bool customComparator = false);
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveNode())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertNode", args = [ts.mutator, ts.bitposField], isActive = false);
-
-
-data PredefOp = removeInplaceValueAndConvertToSpecializedNode(bool customComparator = false);
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode())
-	= method(\return(jdtToType(compactNode(ts))), "removeInplaceValueAndConvertToSpecializedNode", args = [ts.mutator, ts.bitposField], isActive = isOptionEnabled(ts.setup, useSpecialization()));
-
-Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, removeInplaceValueAndConvertToSpecializedNode()) 
-	= UNSUPPORTED_OPERATION_EXCEPTION
-when trieNode(_) := artifact;
 
 
 

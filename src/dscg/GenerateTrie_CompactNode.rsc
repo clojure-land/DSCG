@@ -298,31 +298,110 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 						ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "0")))))>;";
 
 
-//	<implOrOverride(ts.nodeOf_BitmapIndexedNode,
-//			
-//	
-//	<if (!isOptionEnabled(ts.setup,useSpecialization()) || ts.nBound < ts.nMax) {>
-//	'	<toString(UNCHECKED_ANNOTATION())>
-//	'	static final <GenericsStr(ts.tupleTypes)> <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> nodeOf(AtomicReference\<Thread\> mutator) {
-//	'		return <emptyTrieNodeConstantName>;
-//	'	}
-//	<} else {>
-//	'	// TODO: consolidate and remove
-//	'	static final <GenericsStr(ts.tupleTypes)> <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> nodeOf(AtomicReference\<Thread\> mutator) {
-//	'		return nodeOf(mutator, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0);
-//	'	}
-//	<}>
-//
-//	<if (!isOptionEnabled(ts.setup,useSpecialization())) {>
-//	'	static final <GenericsStr(ts.tupleTypes)> <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> nodeOf(AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>, <dec(nodeTupleArgs(ts))>) {
-//	'		assert <use(bitmapField)> == 0;	
-//	'		return <toString(call(ts.nodeOf_BitmapIndexedNode, 
-//				argsOverride = (ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.bitmapField.\type, "0")),						
-//								ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(nodeTupleArgs(ts))> }"),
-//								ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "1")),
-//								ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "0")))))>;
-//	'	}
-//	<}>
+data PredefOp = copyAndInsertValue(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertValue())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertValue", args = [ts.mutator, ts.bitposField, *nodeTupleArgs(ts)]);
+
+
+data PredefOp = copyAndInsertValue_nextClass();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertValue_nextClass())
+	= method(\return(specific("java.lang.Class")), "copyAndInsertValue_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+
+data PredefOp = copyAndRemoveValue(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveValue())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndRemoveValue", args = [ts.mutator, ts.bitposField]);
+
+
+data PredefOp = copyAndRemoveValue_nextClass();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveValue_nextClass())
+	= method(\return(specific("java.lang.Class")), "copyAndRemoveValue_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+
+data PredefOp = copyAndSetValue(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetValue())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndSetValue", lazyArgs = list[Argument]() { return [ts.mutator, ts.bitposField, nodeTupleArg(ts, 1) ]; }, isActive = \map() := ts.ds);
+
+
+data PredefOp = copyAndSetValue_nextClass();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetValue_nextClass())
+	= method(\return(specific("java.lang.Class")), "copyAndSetValue_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+
+data PredefOp = copyAndSetNode_nextClass();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetNode_nextClass())
+	= method(\return(specific("java.lang.Class")), "copyAndSetNode_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+
+data PredefOp = copyAndSetNode(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetNode())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndSetNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+
+
+data PredefOp = copyAndInsertNode_nextClass();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertNode_nextClass())
+	= method(\return(specific("java.lang.Class")), "copyAndInsertNode_nextClass", isActive = false);
+
+
+data PredefOp = copyAndInsertNode(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertNode())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)], isActive = false);
+
+
+data PredefOp = copyAndMigrateFromInlineToNode_nextClass();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromInlineToNode_nextClass())
+	= method(\return(specific("java.lang.Class")), "copyAndMigrateFromInlineToNode_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+
+data PredefOp = copyAndMigrateFromInlineToNode(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromInlineToNode())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromInlineToNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+
+
+data PredefOp = copyAndMigrateFromNodeToInline_nextClass();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass())
+	= method(\return(specific("java.lang.Class")), "copyAndMigrateFromNodeToInline_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+		
+data PredefOp = copyAndMigrateFromNodeToInline(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromNodeToInline())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromNodeToInline", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+
+
+data PredefOp = copyAndRemoveNode_nextClass();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveNode_nextClass())
+	= method(\return(specific("java.lang.Class")), "copyAndRemoveNode_nextClass", isActive = false);
+
+		
+data PredefOp = copyAndRemoveNode(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveNode())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertNode", args = [ts.mutator, ts.bitposField], isActive = false);
+
+
+data PredefOp = removeInplaceValueAndConvertToSpecializedNode(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode())
+	= method(\return(jdtToType(compactNode(ts))), "removeInplaceValueAndConvertToSpecializedNode", args = [ts.mutator, ts.bitposField], isActive = isOptionEnabled(ts.setup, useSpecialization()));
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, removeInplaceValueAndConvertToSpecializedNode()) 
+	= UNSUPPORTED_OPERATION_EXCEPTION
+when trieNode(_) := artifact;
 
 
 lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:compactNode()) 
@@ -370,13 +449,28 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	isTrieStructureValid(),
 	
 	copyAndInsertNode(), // ???
+	copyAndInsertNode_nextClass(), // ???
+	
 	copyAndRemoveNode(), // ???
+	copyAndRemoveNode_nextClass(), // ???
+	
 	copyAndSetValue(),
+	copyAndSetValue_nextClass(),
+	
 	copyAndInsertValue(),
+	copyAndInsertValue_nextClass(),
+	
 	copyAndRemoveValue(),
+	copyAndRemoveValue_nextClass(),
+	
 	copyAndSetNode(),
+	copyAndSetNode_nextClass(),
+	
 	copyAndMigrateFromInlineToNode(),
+	copyAndMigrateFromInlineToNode_nextClass(),
+	
 	copyAndMigrateFromNodeToInline(),
+	copyAndMigrateFromNodeToInline_nextClass(),
 	
 	removeInplaceValueAndConvertToSpecializedNode(),	
 
@@ -486,16 +580,26 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 		}
 
 		<impl(ts, trieNode(compactNode()), copyAndInsertNode())>
+		<impl(ts, trieNode(compactNode()), copyAndInsertNode_nextClass())>
 		<impl(ts, trieNode(compactNode()), copyAndRemoveNode())>
+		<impl(ts, trieNode(compactNode()), copyAndRemoveNode_nextClass())>
 
 		<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode_nextClass()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode_nextClass()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue_nextClass()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue_nextClass()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue_nextClass()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(compactNode()), copyAndSetNode()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndSetNode_nextClass()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode_nextClass()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()), asAbstract = true)>
+		<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass()), asAbstract = true)>
 		
 		</* TODO: specialize removed(..) to remove this method from this interface */"">
 		<impl(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode())>
