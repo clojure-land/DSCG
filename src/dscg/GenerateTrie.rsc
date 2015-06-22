@@ -79,8 +79,10 @@ void doGenerateBleedingEdge() {
 	genericTsMap = expandConfigurationAndCreateModel(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], heterogeneousSpecializationConfig(8)), "BleedingEdge");
 	ts = genericTsMap;
 
-	doGenerate(hashTrieConfig(\map(), 5, [object(), object()], heterogeneousSpecializationConfig(4)), overideClassNamePostfixWith = "BleedingEdge");
+	//doGenerate(hashTrieConfig(\map(), 5, [object(), object()], heterogeneousSpecializationConfig(4)), overideClassNamePostfixWith = "BleedingEdge");
 	//doGenerate(hashTrieConfig(\set(), 5, [object(), object()], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "BleedingEdge");
+	
+	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(8, false)), overideClassNamePostfixWith = "BleedingEdge");	
 }
 
 void doGenerateBleedingEdgeExpanded() {
@@ -174,7 +176,7 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 		<useIncrementalHashCodes(),true>,
 		<separateTrieAndLeafNodes(),false>,
 		<compareValueAtMapPut(),false>,
-		<useHeterogeneousEncoding(),true>
+		<useHeterogeneousEncoding(),false>
 	}; // { compactionViaFieldToMethod() };
 
 	return trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup, unknownArtifact());
@@ -213,7 +215,8 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 		+ [ generateResultClassString(ts, ts.setup) ]
 		+ [ generateAbstractAnyNodeClassString(ts, ts.setup)]
 		+ [ generateAbstractNodeClassString(ts, isLegacy = isLegacy)]
-		+ [ generateCompactNodeClassString(ts, isLegacy = isLegacy)];
+		+ [ generateCompactNodeClassString(ts, isLegacy = isLegacy)]
+		+ [ generateFeatureFlagsClassString(ts, isLegacy = true)];
 
 	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
 		innerClassStrings = innerClassStrings + [ generateCompactHeterogeneousNodeClassString(ts, isLegacy = isLegacy)];
@@ -246,15 +249,15 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 		innerClassStrings = innerClassStrings + [ generateCoreTransientClassString(ts)];
 	}	
 		
-	if (isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useUntypedVariables()) && !useHeterogeneousEncoding()) {
+	if (isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useUntypedVariables()) && !isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
 		innerClassStrings = innerClassStrings + 
-		[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ts, ts.setup, ts.classNamePostfix) | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound ];
+		[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ts, ts.classNamePostfix) | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound ];
 	}
 
 	// TODO: fix correct creation of mn instead of m and n		
-	if (isOptionEnabled(ts.setup, useSpecialization()) && isOptionEnabled(ts.setup, useUntypedVariables()) && !useHeterogeneousEncoding()) {
+	if (isOptionEnabled(ts.setup, useSpecialization()) && isOptionEnabled(ts.setup, useUntypedVariables()) && !isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
 		innerClassStrings = innerClassStrings + 
-		[ generateSpecializedNodeWithBitmapPositionsClassString(mn, 0, ts, ts.setup, ts.classNamePostfix) | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound ];
+		[ generateSpecializedNodeWithBitmapPositionsClassString(mn, 0, ts, ts.classNamePostfix) | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound ];
 	}
 	
 	// TODO: fix correct creation of mn instead of m and n		

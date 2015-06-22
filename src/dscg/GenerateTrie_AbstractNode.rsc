@@ -173,7 +173,8 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getK
 data PredefOp = getRareKey();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getRareKey())
-	= method(\return(object()), "getRareKey", args = [ts.index]); // TODO: fix return type
+	= method(\return(object()), "getRareKey", args = [ts.index], 
+		isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding())); // TODO: fix return type
 
 
 
@@ -187,7 +188,8 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getV
 data PredefOp = getRareValue();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getRareValue())
-	= method(\return(object()), "getRareValue", args = [ts.index], isActive = \map() := ts.ds); // TODO: fix return type
+	= method(\return(object()), "getRareValue", args = [ts.index], 
+		isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && \map() := ts.ds); // TODO: fix return type
 
 
 

@@ -365,7 +365,7 @@ data Event
 	| onRemove()
 	| onRemoveNotFound();
 
-default Expression updateProperty(TrieSpecifics ts, PredefOp op, Property p, Event e) = emptyExpression();
+default Expression updateProperty(TrieSpecifics ts, PredefOp op, Property p, Event e) { throw "Unsupported."; } // = emptyExpression();
 
 
 data Artifact(TrieSpecifics ts = undefinedTrieSpecifics())

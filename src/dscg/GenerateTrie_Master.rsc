@@ -18,6 +18,7 @@ extend dscg::GenerateImmutableMap;
 extend dscg::GenerateTrie_Optional;
 extend dscg::GenerateTrie_Result;
 
+extend dscg::GenerateTrie_FeatureFlags;
 extend dscg::GenerateTrie_AbstractAnyNode;
 extend dscg::GenerateTrie_AbstractNode;
 extend dscg::GenerateTrie_CompactNode;

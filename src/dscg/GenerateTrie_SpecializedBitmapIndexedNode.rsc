@@ -534,11 +534,11 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue()) 
-	= generate_bodyOf_copyAndSetValue_untyped_nonHomogeneous(n, m, ts)
+	= generate_bodyOf_copyAndSetValue_untyped_nonHeterogeneous(n, m, ts, Event::isRegular())
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue()) 
-	= generate_bodyOf_copyAndSetValue_typed_nonHomogeneous(n, m, ts)
+	= generate_bodyOf_copyAndSetValue_typed_nonHeterogeneous(n, m, ts, Event::isRegular())
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());	
 
 str generate_bodyOf_copyAndSetValue_untyped_nonHeterogeneous(int n, int m, TrieSpecifics ts, Event event, int mn = tupleLength(ts.ds)*m+n) = 	
@@ -598,6 +598,15 @@ when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts
 Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(), Property p:copyAndSetValue_bitmap2(), Event e:isRegular()) 
 	= call(getDef(ts, trieNode(compactNode()), rawMap2()))
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(), Property p:copyAndSetValue_index(), Event e:isRegular()) 
+	= call(getDef(ts, trieNode(compactNode()), dataIndex()));
+
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(), Property p:copyAndSetValue_bitmap1(), Event e:isRegular()) 
+	= call(getDef(ts, trieNode(compactNode()), nodeMap()));
+
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(), Property p:copyAndSetValue_bitmap2(), Event e:isRegular()) 
+	= call(getDef(ts, trieNode(compactNode()), dataMap()));
 
 
 data PredefOp = copyAndInsertValue();
@@ -692,6 +701,15 @@ when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts
 Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_bitmap2(), Event e:isRegular()) 
 	= bitwiseOr(call(getDef(ts, trieNode(compactNode()), rawMap2())), useExpr(ts.bitposField))
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_index(), Event e:isRegular()) 
+	= call(getDef(ts, trieNode(compactNode()), dataIndex()));
+
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_bitmap1(), Event e:isRegular()) 
+	= call(getDef(ts, trieNode(compactNode()), nodeMap()));
+
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Property p:copyAndInsertValue_bitmap2(), Event e:isRegular()) 
+	= bitwiseOr(call(getDef(ts, trieNode(compactNode()), dataMap())), useExpr(ts.bitposField));
 
 
 data PredefOp = copyAndRemoveValue();
@@ -815,9 +833,7 @@ str generate_bodyOf_copyAndSetNode(int n, int m, TrieSpecifics ts) =
 	'		<}>default:
 	'			throw new IllegalStateException(\"Index out of range.\");	
 	'	}"	
-when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());
-
-// default str generate_bodyOf_copyAndSetNode(int n, int m, TrieSpecifics ts) = "";
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
 
 
 data PredefOp = copyAndInsertNode();
