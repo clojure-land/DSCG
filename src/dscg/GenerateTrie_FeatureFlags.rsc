@@ -22,6 +22,7 @@ import util::Math;
 
 str generateFeatureFlagsClassString(TrieSpecifics ts, bool isLegacy = true) =
 	"static final class FeatureFlags {
+	'	public static final long SUPPORTS_NOTHING = 0;
 	'	public static final long SUPPORTS_NODES =   1 \<\< 0;
 	'	public static final long SUPPORTS_PAYLOAD = 1 \<\< 1;
 	'}";

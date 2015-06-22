@@ -446,6 +446,7 @@ data Option // TODO: finish!
 	| separateTrieAndLeafNodes()
 	| compareValueAtMapPut()
 	| useHeterogeneousEncoding()
+	| useSunMiscUnsafe()
 	;
 
 data TrieSpecifics 
@@ -1007,8 +1008,17 @@ str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = over
 	'}
 	'
 	'private final <typeToString(m.returnArg.\type)> <m.name>;"
-when m.isActive && m.isStateful // && m.isContant
+when m.isActive && m.isStateful && !m.isConstant
 	;
+
+str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
+	"<for(a <- annotations) {><toString(a)><}>
+	'<m.visibility> static final <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>() {
+	'	<bodyStr>
+	'}
+	'
+	'private static final <typeToString(m.returnArg.\type)> <m.name> = <m.name>();"
+when m.isActive && m.isStateful && m.isConstant;
 	
 str implOrOverride(m:constructor(_,_), str bodyStr,  OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}><m.visibility> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>) {

@@ -26,12 +26,36 @@ JavaDataType specializedBitmapIndexedNode(TrieSpecifics ts, TrieNodeType nodeTyp
 
 lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(int n, int m)) { 
 	list[PredefOp] declaredMethods = [
+		featureFlags(),
 		constructor(),
 		*createContentArgumentList(ts, nodeType)
 	];
 
 	return  [ <nodeType,method> | method <- declaredMethods]; 
 }
+
+
+data PredefOp = featureFlags();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::featureFlags())
+	= property(\return(primitive("long")), "featureFlags", isStateful = true, isConstant = true, 
+		isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+// Default Value for Property
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::featureFlags()) = true;
+
+// TODO: does not work for untyped yet.
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n:0, int m:0)), PredefOp::featureFlags())
+	= result(exprFromString("FeatureFlags.SUPPORTS_NOTHING"));
+	
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m:0)), PredefOp::featureFlags())
+	= result(exprFromString("FeatureFlags.SUPPORTS_NODES"));
+	
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n:0, int m)), PredefOp::featureFlags())
+	= result(exprFromString("FeatureFlags.SUPPORTS_PAYLOAD"));	
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::featureFlags())
+	= result(exprFromString("FeatureFlags.SUPPORTS_NODES | FeatureFlags.SUPPORTS_PAYLOAD"));
 
 
 list[PredefOp] createContentArgumentList(ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m)) 
@@ -130,6 +154,8 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, TrieSpec
 
 	return
 	"private static final class <specializedClassNameStr><GenericsStr(ts.tupleTypes)> extends <extendsClassName><GenericsStr(ts.tupleTypes)> {
+	
+		<impl(ts, thisArtifact, featureFlags())>
 	
 	'	<intercalate("\n", mapper(contentArguments(n, m, ts), str(Argument a) { 
 			str dec = "private <dec(a)>;";
