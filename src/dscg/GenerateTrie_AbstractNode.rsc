@@ -248,6 +248,20 @@ str generateAbstractNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 	return 
 	"protected static abstract class <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> implements <ts.abstractAnyNodeClassName><UnifiedGenericsExpanded(ts.ds, ts.tupleTypes)> {
 
+		<if (isOptionEnabled(ts.setup, useSunMiscUnsafe())) {>
+		protected static final sun.misc.Unsafe unsafe;
+		 
+		static {
+			try {
+				Field field = sun.misc.Unsafe.class.getDeclaredField(\"theUnsafe\");
+				field.setAccessible(true);
+				unsafe = (sun.misc.Unsafe) field.get(null);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+		<}>
+		
 		static final int TUPLE_LENGTH = <tupleLength(ts.ds)>;
 
 		<dec(getDef(ts, trieNode(abstractNode()), containsKey()), asAbstract = true)>

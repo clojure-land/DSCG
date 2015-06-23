@@ -2580,6 +2580,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact, put())
 	= method(\return(primitiveToClass(ts.valType)), "put", args = [ key(primitiveToClass(ts.keyType)), val(primitiveToClass(ts.valType)) ], visibility = "public", isActive = \map() := ts.ds)
 when core(_) := artifact || ju_Map() := artifact;
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, put()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, put()) 
 	= UNSUPPORTED_OPERATION_EXCEPTION
 when core(_) := artifact || ju_Map() := artifact;
@@ -2592,6 +2593,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact, putAll())
 	= method(\return(notApplicable()), "putAll", args = [ field(generic("<toString(ts.ds)><GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "m") ], visibility = "public", isActive = \map() := ts.ds)
 when core(_) := artifact || ju_Map() := artifact;
 	
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, putAll()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, putAll()) 
 	= UNSUPPORTED_OPERATION_EXCEPTION
 when core(_) := artifact || ju_Map() := artifact;
@@ -2605,6 +2607,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact, add())
 when core(_) := artifact || ju_Set() := artifact;
 	
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, add()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, add()) 
 	= UNSUPPORTED_OPERATION_EXCEPTION
 when core(_) := artifact || ju_Set() := artifact;
@@ -2617,6 +2620,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact, addAll())
 	= method(\return(primitive("boolean")), "addAll", args = [ field(generic("Collection<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "c") ], visibility = "public", isActive = ts.ds == \set())
 when core(_) := artifact || ju_Set() := artifact;	
 
+bool exits_bodyOf(TrieSpecifics ts, Artifact artifact, addAll()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, addAll()) 
 	= UNSUPPORTED_OPERATION_EXCEPTION
 when core(_) := artifact || ju_Set() := artifact;
@@ -2637,6 +2641,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::remove())
 	= method(\return(primitive("boolean")), "remove", args = [ field(object(), "<keyName>") ], visibility = "public", isActive = ts.ds == \set())
 when core(_) := artifact && \set() := ts.ds;	
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp::remove()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp::remove()) 
 	= UNSUPPORTED_OPERATION_EXCEPTION
 when core(_) := artifact;
@@ -2649,6 +2654,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact, removeAll())
 	= method(\return(primitive("boolean")), "removeAll", args = [ field(generic("Collection\<?\>"), "c") ], visibility = "public", isActive = ts.ds == \set())
 when core(_) := artifact;
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, removeAll()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, removeAll()) 
 	= UNSUPPORTED_OPERATION_EXCEPTION
 when core(_) := artifact;
@@ -2661,6 +2667,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact, retainAll())
 	= method(\return(primitive("boolean")), "retainAll", args = [ field(generic("Collection\<?\>"), "c") ], visibility = "public", isActive = ts.ds == \set())
 when core(_) := artifact;	
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, retainAll()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, retainAll()) 
 	= UNSUPPORTED_OPERATION_EXCEPTION
 when core(_) := artifact;
@@ -2677,6 +2684,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact, clear())
 	= method(\return(notApplicable()), "clear", visibility = "public", isActive = ts.ds == \set())
 when core(_) := artifact && \set() := ts.ds;
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, clear()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, clear()) 
 	= UNSUPPORTED_OPERATION_EXCEPTION
 when core(_) := artifact;
@@ -3202,7 +3210,7 @@ M3 getM3() {
 default lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType) = []; 
  
 // TODO: get ride of global dependencies
-Model buildLanguageAgnosticModel(TrieSpecifics ts) {
+@memo Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 	rel[TrieNodeType from, TrieNodeType to] refines = staticRefines();
 	
 	if (isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useUntypedVariables())) {
@@ -3351,7 +3359,7 @@ default str impl(TrieSpecifics ts, Artifact artifact, PredefOp op) = "";
 
 str impl(TrieSpecifics ts, Artifact artifact, PredefOp op, Method __def = getDef(ts, artifact, op)) 
 	= implOrOverride(__def, generate_bodyOf(ts, artifact, op), doOverride = \new())
-when __def.isActive;
+when __def.isActive && exists_bodyOf(ts, artifact, op);
 
 //str impl(TrieSpecifics ts, Artifact artifact, PredefOp op, Method __def = getDef(ts, artifact, op)) 
 //	= implOrOverride(__def, generate_bodyOf(ts, artifact, op), doOverride = \new())

@@ -304,6 +304,104 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyA
 	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertValue", args = [ts.mutator, ts.bitposField, *nodeTupleArgs(ts)]);
 
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndInsertValue()) 
+	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndInsertValue()) =
+	"
+	final int SIZEOF_INT = 4;
+	final int SIZEOF_REFERENCE = 4; // compressed oops
+	
+	try {
+		final int valIdx = dataIndex(bitpos);
+		
+		final Class srcClass = this.getClass();
+		final Class dstClass = copyAndInsertValue_nextClass();
+		
+		<CompactNode(ts.ds)> src = this;
+		<CompactNode(ts.ds)> dst = (<CompactNode(ts.ds)>) unsafe.allocateInstance(dstClass);				
+
+		final long srcFeatureFlags = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
+				.getDeclaredField(\"featureFlags\")));
+		
+		final long dstFeatureFlags = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
+				.getDeclaredField(\"featureFlags\")));
+		
+		long srcOffset = 12L;
+		long dstOffset = 12L;
+										
+		// copy and update bitmaps
+		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+				unsafe.putInt(dst, dstOffset, unsafe.getInt(src, srcOffset));
+				srcOffset += SIZEOF_INT;
+				dstOffset += SIZEOF_INT;
+			} else {
+				unsafe.putInt(dst, dstOffset, 0);
+				dstOffset += SIZEOF_INT;
+			}
+		} else {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+				srcOffset += SIZEOF_INT;
+			} else {
+				// NOTHING
+			}
+		}
+
+		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+				unsafe.putInt(dst, dstOffset, unsafe.getInt(src, srcOffset) | bitpos);
+				srcOffset += SIZEOF_INT;
+				dstOffset += SIZEOF_INT;
+			} else {
+				unsafe.putInt(dst, dstOffset, bitpos);
+				dstOffset += SIZEOF_INT;
+			}
+		} else {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+				srcOffset += SIZEOF_INT;
+			} else {
+				// NOTHING
+			}
+		}
+		
+		// copy \'src\' and insert 2 element(s) at position \'valIdx\'
+		for (int i = 0; i \< valIdx; i++) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;					
+		}
+		
+		unsafe.putObject(dst, dstOffset, key);
+		dstOffset += SIZEOF_REFERENCE;
+		unsafe.putObject(dst, dstOffset, val);
+		dstOffset += SIZEOF_REFERENCE;
+		
+		for (int i = valIdx; i \< payloadArity(); i++) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;					
+		}
+		
+		// copy nodes range
+		for (int i = nodeArity() - 1; i \>= 0; i--) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+		}
+		
+		return dst;
+	} catch (InstantiationException | NoSuchFieldException e) {
+		throw new RuntimeException(e);
+	}		
+	";
+
+
 data PredefOp = copyAndInsertValue_nextClass();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertValue_nextClass())
@@ -315,6 +413,101 @@ data PredefOp = copyAndRemoveValue(bool customComparator = false);
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveValue())
 	= method(\return(jdtToType(compactNode(ts))), "copyAndRemoveValue", args = [ts.mutator, ts.bitposField]);
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndRemoveValue()) 
+	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndRemoveValue()) =
+	"
+	final int SIZEOF_INT = 4;
+	final int SIZEOF_REFERENCE = 4; // compressed oops
+	
+	try {
+		final int valIdx = dataIndex(bitpos);
+		
+		final Class srcClass = this.getClass();
+		final Class dstClass = copyAndRemoveValue_nextClass();
+		
+		<CompactNode(ts.ds)> src = this;
+		<CompactNode(ts.ds)> dst = (<CompactNode(ts.ds)>) unsafe.allocateInstance(dstClass);				
+
+		final long srcFeatureFlags = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
+				.getDeclaredField(\"featureFlags\")));
+		
+		final long dstFeatureFlags = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
+				.getDeclaredField(\"featureFlags\")));
+		
+		long srcOffset = 12L;
+		long dstOffset = 12L;
+										
+		// copy and update bitmaps
+		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+				unsafe.putInt(dst, dstOffset, unsafe.getInt(src, srcOffset));
+				srcOffset += SIZEOF_INT;
+				dstOffset += SIZEOF_INT;
+			} else {
+				unsafe.putInt(dst, dstOffset, 0);
+				dstOffset += SIZEOF_INT;
+			}
+		} else {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+				srcOffset += SIZEOF_INT;
+			} else {
+				// NOTHING
+			}
+		}		
+
+		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+				unsafe.putInt(dst, dstOffset, unsafe.getInt(src, srcOffset) | bitpos);
+				srcOffset += SIZEOF_INT;
+				dstOffset += SIZEOF_INT;
+			} else {
+				unsafe.putInt(dst, dstOffset, bitpos);
+				dstOffset += SIZEOF_INT;
+			}
+		} else {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+				srcOffset += SIZEOF_INT;
+			} else {
+				// NOTHING
+			}
+		}
+		
+		// copy \'src\' and remove 2 element(s) at position \'valIdx\'
+		for (int i = 0; i \< valIdx; i++) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;					
+		}
+		
+		// adjust \'srcOffset\' to position of \'valIdx + 1\'
+		srcOffset += SIZEOF_REFERENCE;
+		srcOffset += SIZEOF_REFERENCE;
+		
+		for (int i = valIdx + 1; i \< payloadArity(); i++) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;					
+		}
+		
+		// copy nodes range
+		for (int i = nodeArity() - 1; i \>= 0; i--) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+		}
+		
+		return dst;
+	} catch (InstantiationException | NoSuchFieldException e) {
+		throw new RuntimeException(e);
+	}	
+	";
 
 data PredefOp = copyAndRemoveValue_nextClass();
 
@@ -328,10 +521,209 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyA
 	= method(\return(jdtToType(compactNode(ts))), "copyAndSetValue", lazyArgs = list[Argument]() { return [ts.mutator, ts.bitposField, nodeTupleArg(ts, 1) ]; }, isActive = \map() := ts.ds);
 
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndSetValue()) 
+	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndSetValue()) =
+	"
+	final int SIZEOF_INT = 4;
+	final int SIZEOF_REFERENCE = 4; // compressed oops
+	
+	try {
+		final int valIdx = dataIndex(bitpos);
+		
+		final Class srcClass = this.getClass();
+		final Class dstClass = copyAndInsertValue_nextClass();
+		
+		<CompactNode(ts.ds)> src = this;
+		<CompactNode(ts.ds)> dst = (<CompactNode(ts.ds)>) unsafe.allocateInstance(dstClass);				
+
+		final long srcFeatureFlags = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
+				.getDeclaredField(\"featureFlags\")));
+		
+		final long dstFeatureFlags = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
+				.getDeclaredField(\"featureFlags\")));
+		
+		long srcOffset = 12L;
+		long dstOffset = 12L;
+										
+		// copy and update bitmaps
+		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+				unsafe.putInt(dst, dstOffset, unsafe.getInt(src, srcOffset));
+				srcOffset += SIZEOF_INT;
+				dstOffset += SIZEOF_INT;
+			} else {
+				unsafe.putInt(dst, dstOffset, 0);
+				dstOffset += SIZEOF_INT;
+			}
+		} else {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+				srcOffset += SIZEOF_INT;
+			} else {
+				// NOTHING
+			}
+		}
+
+		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+				unsafe.putInt(dst, dstOffset, unsafe.getInt(src, srcOffset));
+				srcOffset += SIZEOF_INT;
+				dstOffset += SIZEOF_INT;
+			} else {
+				unsafe.putInt(dst, dstOffset, 0);
+				dstOffset += SIZEOF_INT;
+			}
+		} else {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+				srcOffset += SIZEOF_INT;
+			} else {
+				// NOTHING
+			}
+		}
+		
+		// copy \'src\' and insert 2 element(s) at position \'valIdx\'
+		for (int i = 0; i \< valIdx; i++) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;					
+		}
+		
+		unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+		srcOffset += SIZEOF_REFERENCE;
+		dstOffset += SIZEOF_REFERENCE;
+		unsafe.putObject(dst, dstOffset, val);
+		srcOffset += SIZEOF_REFERENCE;
+		dstOffset += SIZEOF_REFERENCE;
+		
+		for (int i = valIdx - 1; i \< payloadArity(); i++) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;					
+		}
+		
+		// copy nodes range
+		for (int i = nodeArity() - 1; i \>= 0; i--) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+		}
+		
+		return dst;
+	} catch (InstantiationException | NoSuchFieldException e) {
+		throw new RuntimeException(e);
+	}		
+	";
+
+
 data PredefOp = copyAndSetValue_nextClass();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetValue_nextClass())
 	= method(\return(specific("java.lang.Class")), "copyAndSetValue_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+
+data PredefOp = copyAndSetNode(bool customComparator = false);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetNode())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndSetNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndSetNode()) 
+	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndSetNode()) =
+	"
+	final int SIZEOF_INT = 4;
+	final int SIZEOF_REFERENCE = 4; // compressed oops
+	
+	try {
+		final int idx = nodeIndex(bitpos);
+		
+		final Class srcClass = this.getClass();
+		final Class dstClass = this.getClass();
+		
+		<CompactNode(ts.ds)> src = this;
+		<CompactNode(ts.ds)> dst = (<CompactNode(ts.ds)>) unsafe.allocateInstance(dstClass);				
+
+		final long srcFeatureFlags = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
+				.getDeclaredField(\"featureFlags\")));
+		
+		final long dstFeatureFlags = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
+				.getDeclaredField(\"featureFlags\")));
+		
+		long srcOffset = 12L;
+		long dstOffset = 12L;
+										
+		// copy and update bitmaps
+		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+				unsafe.putInt(dst, dstOffset, unsafe.getInt(src, srcOffset));
+				srcOffset += SIZEOF_INT;
+				dstOffset += SIZEOF_INT;
+			} else {
+				unsafe.putInt(dst, dstOffset, 0);
+				dstOffset += SIZEOF_INT;
+			}
+		} else {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+				srcOffset += SIZEOF_INT;
+			} else {
+				// NOTHING
+			}
+		}
+
+		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+				unsafe.putInt(dst, dstOffset, unsafe.getInt(src, srcOffset));
+				srcOffset += SIZEOF_INT;
+				dstOffset += SIZEOF_INT;
+			} else {
+				unsafe.putInt(dst, dstOffset, 0);
+				dstOffset += SIZEOF_INT;
+			}
+		} else {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+				srcOffset += SIZEOF_INT;
+			} else {
+				// NOTHING
+			}
+		}
+		
+		// copy payload range
+		for (int i = 0; i \< payloadArity(); i++) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;					
+		}
+		
+		// copy nodes range
+		for (int i = nodeArity() - 1; i \> idx; i--) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+		}
+		
+		unsafe.putObject(dst, dstOffset, node);
+		srcOffset += SIZEOF_REFERENCE;
+		dstOffset += SIZEOF_REFERENCE;
+
+		for (int i = idx - 1; i \>= 0; i--) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+		}
+						
+		return dst;
+	} catch (InstantiationException | NoSuchFieldException e) {
+		throw new RuntimeException(e);
+	}	
+	";
 
 
 data PredefOp = copyAndSetNode_nextClass();
@@ -340,10 +732,16 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyA
 	= method(\return(specific("java.lang.Class")), "copyAndSetNode_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
 
 
-data PredefOp = copyAndSetNode(bool customComparator = false);
+data PredefOp = copyAndInsertNode(bool customComparator = false);
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetNode())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndSetNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertNode())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)], isActive = false);
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndInsertNode()) 
+	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndInsertNode()) =
+	"
+	";
 
 
 data PredefOp = copyAndInsertNode_nextClass();
@@ -352,10 +750,116 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyA
 	= method(\return(specific("java.lang.Class")), "copyAndInsertNode_nextClass", isActive = false);
 
 
-data PredefOp = copyAndInsertNode(bool customComparator = false);
+data PredefOp = copyAndMigrateFromInlineToNode(bool customComparator = false);
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertNode())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)], isActive = false);
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromInlineToNode())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromInlineToNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndMigrateFromInlineToNode()) 
+	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndMigrateFromInlineToNode()) =
+	"
+	final int SIZEOF_INT = 4;
+	final int SIZEOF_REFERENCE = 4; // compressed oops
+	
+	try {
+		final int idxOld = dataIndex(bitpos);
+		final int idxNew = nodeIndex(bitpos);
+		
+		final Class srcClass = this.getClass();
+		final Class dstClass = copyAndMigrateFromInlineToNode_nextClass();
+		
+		<CompactNode(ts.ds)> src = this;
+		<CompactNode(ts.ds)> dst = (<CompactNode(ts.ds)>) unsafe.allocateInstance(dstClass);
+
+		final long srcFeatureFlags = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
+				.getDeclaredField(\"featureFlags\")));
+		
+		final long dstFeatureFlags = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
+				.getDeclaredField(\"featureFlags\")));
+		
+		long srcOffset = 12L;
+		long dstOffset = 12L;
+										
+		// copy and update bitmaps
+		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+				unsafe.putInt(dst, dstOffset, unsafe.getInt(src, srcOffset) | bitpos);
+				srcOffset += SIZEOF_INT;
+				dstOffset += SIZEOF_INT;
+			} else {
+				unsafe.putInt(dst, dstOffset, bitpos);
+				dstOffset += SIZEOF_INT;
+			}
+		} else {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+				srcOffset += SIZEOF_INT;
+			} else {
+				// NOTHING
+			}
+		}
+
+		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+				unsafe.putInt(dst, dstOffset, unsafe.getInt(src, srcOffset) ^ bitpos);
+				srcOffset += SIZEOF_INT;
+				dstOffset += SIZEOF_INT;
+			} else {
+				unsafe.putInt(dst, dstOffset, 0);
+				dstOffset += SIZEOF_INT;
+			}
+		} else {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+				srcOffset += SIZEOF_INT;
+			} else {
+				// NOTHING
+			}
+		}
+		
+		// copy \'src\' and remove 2 element(s) at position \'valIdx\'
+		for (int i = 0; i \< idxOld; i++) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;					
+		}
+		
+		// adjust \'srcOffset\' to position of \'valIdx + 1\'
+		srcOffset += SIZEOF_REFERENCE;
+		srcOffset += SIZEOF_REFERENCE;
+		
+		for (int i = idxOld + 1; i \< payloadArity(); i++) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;					
+		}
+		
+		// copy nodes range
+		for (int i = nodeArity() - 1; i \> idxNew; i--) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+		}
+		
+		unsafe.putObject(dst, dstOffset, node);
+		dstOffset += SIZEOF_REFERENCE;
+
+		for (int i = idxNew; i \>= 0; i--) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+		}
+						
+		return dst;
+	} catch (InstantiationException | NoSuchFieldException e) {
+		throw new RuntimeException(e);
+	}	
+	";
 
 
 data PredefOp = copyAndMigrateFromInlineToNode_nextClass();
@@ -364,10 +868,117 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyA
 	= method(\return(specific("java.lang.Class")), "copyAndMigrateFromInlineToNode_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
 
 
-data PredefOp = copyAndMigrateFromInlineToNode(bool customComparator = false);
+data PredefOp = copyAndMigrateFromNodeToInline(bool customComparator = false);
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromInlineToNode())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromInlineToNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromNodeToInline())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromNodeToInline", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndMigrateFromNodeToInline()) 
+	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndMigrateFromNodeToInline()) =
+	"
+	final int SIZEOF_INT = 4;
+	final int SIZEOF_REFERENCE = 4; // compressed oops
+	
+	try {
+		final int idxOld = nodeIndex(bitpos);
+		final int idxNew = dataIndex(bitpos);
+		
+		final Class srcClass = this.getClass();
+		final Class dstClass = copyAndMigrateFromNodeToInline_nextClass();
+		
+		<CompactNode(ts.ds)> src = this;
+		<CompactNode(ts.ds)> dst = (<CompactNode(ts.ds)>) unsafe.allocateInstance(dstClass);				
+
+		final long srcFeatureFlags = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
+				.getDeclaredField(\"featureFlags\")));
+		
+		final long dstFeatureFlags = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
+				.getDeclaredField(\"featureFlags\")));
+		
+		long srcOffset = 12L;
+		long dstOffset = 12L;
+										
+		// copy and update bitmaps
+		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+				unsafe.putInt(dst, dstOffset, unsafe.getInt(src, srcOffset) ^ bitpos);
+				srcOffset += SIZEOF_INT;
+				dstOffset += SIZEOF_INT;
+			} else {
+				unsafe.putInt(dst, dstOffset, 0);
+				dstOffset += SIZEOF_INT;
+			}
+		} else {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
+				srcOffset += SIZEOF_INT;
+			} else {
+				// NOTHING
+			}
+		}
+
+		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+				unsafe.putInt(dst, dstOffset, unsafe.getInt(src, srcOffset) | bitpos);
+				srcOffset += SIZEOF_INT;
+				dstOffset += SIZEOF_INT;
+			} else {
+				unsafe.putInt(dst, dstOffset, bitpos);
+				dstOffset += SIZEOF_INT;
+			}
+		} else {
+			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
+				srcOffset += SIZEOF_INT;
+			} else {
+				// NOTHING
+			}
+		}
+		
+		// copy \'src\' and insert 2 element(s) at position \'valIdx\'
+		for (int i = 0; i \< idxNew; i++) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;					
+		}
+		
+		unsafe.putObject(dst, dstOffset, node.getKey(0));
+		dstOffset += SIZEOF_REFERENCE;
+		unsafe.putObject(dst, dstOffset, node.getValue(0));
+		dstOffset += SIZEOF_REFERENCE;
+		
+		for (int i = idxNew; i \< payloadArity(); i++) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;					
+		}
+		
+		// copy nodes range
+		for (int i = nodeArity() - 1; i \> idxOld; i--) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+		}
+		
+		// adjust \'srcOffset\' to position of \'idxOld + 1\'
+		srcOffset += SIZEOF_REFERENCE;
+
+		for (int i = idxOld; i \>= 0; i--) {
+			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
+			srcOffset += SIZEOF_REFERENCE;
+			dstOffset += SIZEOF_REFERENCE;
+		}
+		
+		return dst;
+	} catch (InstantiationException | NoSuchFieldException e) {
+		throw new RuntimeException(e);
+	}	
+	";
 
 
 data PredefOp = copyAndMigrateFromNodeToInline_nextClass();
@@ -376,10 +987,16 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyA
 	= method(\return(specific("java.lang.Class")), "copyAndMigrateFromNodeToInline_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
 
 		
-data PredefOp = copyAndMigrateFromNodeToInline(bool customComparator = false);
+data PredefOp = copyAndRemoveNode(bool customComparator = false);
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromNodeToInline())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromNodeToInline", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveNode())
+	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertNode", args = [ts.mutator, ts.bitposField], isActive = false);
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndRemoveNode()) 
+	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndRemoveNode()) =
+	"
+	";
 
 
 data PredefOp = copyAndRemoveNode_nextClass();
@@ -388,17 +1005,12 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyA
 	= method(\return(specific("java.lang.Class")), "copyAndRemoveNode_nextClass", isActive = false);
 
 		
-data PredefOp = copyAndRemoveNode(bool customComparator = false);
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveNode())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertNode", args = [ts.mutator, ts.bitposField], isActive = false);
-
-
 data PredefOp = removeInplaceValueAndConvertToSpecializedNode(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode())
 	= method(\return(jdtToType(compactNode(ts))), "removeInplaceValueAndConvertToSpecializedNode", args = [ts.mutator, ts.bitposField], isActive = isOptionEnabled(ts.setup, useSpecialization()));
 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, removeInplaceValueAndConvertToSpecializedNode()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, removeInplaceValueAndConvertToSpecializedNode()) 
 	= UNSUPPORTED_OPERATION_EXCEPTION
 when trieNode(_) := artifact;
@@ -584,22 +1196,41 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 		<impl(ts, trieNode(compactNode()), copyAndRemoveNode())>
 		<impl(ts, trieNode(compactNode()), copyAndRemoveNode_nextClass())>
 
-		<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode_nextClass()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode_nextClass()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue_nextClass()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue_nextClass()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue_nextClass()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndSetNode()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndSetNode_nextClass()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode_nextClass()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass()), asAbstract = true)>
+		<if (isOptionEnabled(ts.setup, useSunMiscUnsafe())) {>
+			<impl(ts, trieNode(compactNode()), copyAndInsertNode())>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode_nextClass()), asAbstract = true)>
+			<impl(ts, trieNode(compactNode()), copyAndRemoveNode())>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode_nextClass()), asAbstract = true)>
+			<impl(ts, trieNode(compactNode()), copyAndSetValue())>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue_nextClass()), asAbstract = true)>
+			<impl(ts, trieNode(compactNode()), copyAndInsertValue())>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue_nextClass()), asAbstract = true)>
+			<impl(ts, trieNode(compactNode()), copyAndRemoveValue())>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue_nextClass()), asAbstract = true)>
+			<impl(ts, trieNode(compactNode()), copyAndSetNode())>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndSetNode_nextClass()), asAbstract = true)>
+			<impl(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode())>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode_nextClass()), asAbstract = true)>
+			<impl(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline())>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass()), asAbstract = true)>		
+		< } else {>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode_nextClass()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode_nextClass()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue_nextClass()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue_nextClass()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue_nextClass()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndSetNode()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndSetNode_nextClass()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode_nextClass()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()), asAbstract = true)>
+			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass()), asAbstract = true)>			
+		<}>
 		
 		</* TODO: specialize removed(..) to remove this method from this interface */"">
 		<impl(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode())>

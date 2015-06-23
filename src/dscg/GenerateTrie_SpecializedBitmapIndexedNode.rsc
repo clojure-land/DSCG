@@ -557,7 +557,8 @@ when !isOptionEnabled(ts.setup, useUntypedVariables());
 
 data PredefOp = copyAndSetValue();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue())
+	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue()) =
 	"// TODO: support migration if partial
@@ -646,7 +647,8 @@ Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(), Prope
 
 data PredefOp = copyAndInsertValue();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndInsertValue()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndInsertValue()) 
+	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndInsertValue()) =
 	"if (isRare(<use(__payloadTuple(ts.ds, ts.tupleTypes))>)) {
@@ -749,7 +751,8 @@ Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndInsertValue(), Pr
 
 data PredefOp = copyAndRemoveValue();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndRemoveValue()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndRemoveValue())
+	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndRemoveValue()) 
 	= generate_bodyOf_copyAndRemoveValue(n, m, ts);
@@ -799,7 +802,8 @@ default str generate_bodyOf_copyAndRemoveValue(int n, int m, TrieSpecifics ts) =
 
 data PredefOp = copyAndSetNode();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetNode()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetNode()) 
+	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetNode()) 
 	= generate_bodyOf_copyAndSetNode(n, m, ts);
@@ -888,7 +892,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 data PredefOp = copyAndMigrateFromInlineToNode();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) 
-	= !isOptionEnabled(ts.setup, useSunMiscUnsafe());
+	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) =
 	"// TODO: support migration if partial
@@ -897,15 +901,15 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 	'} else {
 	'	<generate_bodyOf_copyAndMigrateFromInlineToNode_typed_heterogeneous(n, m, ts, Event::isRegular(), mn = n)>
 	'}"
-when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+when !isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) 
 	= generate_bodyOf_copyAndMigrateFromInlineToNode_typed_nonHeterogeneous(n, m, ts)
-when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
+when !isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) 
 	= generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_nonHeterogeneous(n, m, ts)
-when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());	
+when !isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());	
 	
 str generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_nonHeterogeneous(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "bitIndex"))> = <use(tupleLengthConstant)> * (payloadArity() - 1) + nodeIndex(bitpos);
@@ -1034,14 +1038,15 @@ when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts
 data PredefOp = copyAndMigrateFromNodeToInline();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromNodeToInline())
-	= !isOptionEnabled(ts.setup, useSunMiscUnsafe());
+	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromNodeToInline()) 
 	= "throw new UnsupportedOperationException(); // TODO: to implement"
-when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays()); 
+when !isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays()); 
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromNodeToInline()) 
-	= generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts);
+	= generate_bodyOf_copyAndMigrateFromNodeToInline(n, m, ts)
+when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 	
 str generate_bodyOf_copyAndMigrateFromNodeToInline(int n:0, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =	
 	"throw new IllegalStateException(\"Index out of range.\");"
@@ -2432,7 +2437,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:special
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndInsertValue_nextClass(), int nNew = n, int mNew = m+1)
 	= "throw new IllegalStateException(\"Index out of range.\");"
-when (nNew + mNew) == 0 || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
+when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndInsertValue_nextClass(), int nNew = n, int mNew = m+1)
 	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
@@ -2444,7 +2449,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:special
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndRemoveValue_nextClass(), int nNew = n, int mNew = m-1)
 	= "throw new IllegalStateException(\"Index out of range.\");"
-when (nNew + mNew) == 0 || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
+when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndRemoveValue_nextClass(), int nNew = n, int mNew = m-1)
 	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
@@ -2456,7 +2461,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:special
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndSetValue_nextClass(), int nNew = n, int mNew = m)
 	= "throw new IllegalStateException(\"Index out of range.\");"
-when (nNew + mNew) == 0 || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
+when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndSetValue_nextClass(), int nNew = n, int mNew = m)
 	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
@@ -2468,7 +2473,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:special
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndSetNode_nextClass(), int nNew = n, int mNew = m)
 	= "throw new IllegalStateException(\"Index out of range.\");"
-when (nNew + mNew) == 0 || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
+when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndSetNode_nextClass(), int nNew = n, int mNew = m)
 	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
@@ -2480,7 +2485,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:special
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndInsertNode_nextClass(), int nNew = n+1, int mNew = m)
 	= "throw new IllegalStateException(\"Index out of range.\");"
-when (nNew + mNew) == 0 || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
+when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndInsertNode_nextClass(), int nNew = n+1, int mNew = m)
 	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
@@ -2492,7 +2497,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:special
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromInlineToNode_nextClass(), int nNew = n+1, int mNew = m-1)
 	= "throw new IllegalStateException(\"Index out of range.\");"
-when (nNew + mNew) == 0 || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
+when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromInlineToNode_nextClass(), int nNew = n+1, int mNew = m-1)
 	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
@@ -2504,7 +2509,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:special
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromNodeToInline_nextClass(), int nNew = n-1, int mNew = m+1)
 	= "throw new IllegalStateException(\"Index out of range.\");"
-when (nNew + mNew) == 0 || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
+when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromNodeToInline_nextClass(), int nNew = n-1, int mNew = m+1)
 	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
@@ -2516,7 +2521,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:special
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndRemoveNode_nextClass(), int nNew = n-1, int mNew = m)
 	= "throw new IllegalStateException(\"Index out of range.\");"
-when (nNew + mNew) == 0 || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
+when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndRemoveNode_nextClass(), int nNew = n-1, int mNew = m)
 	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
