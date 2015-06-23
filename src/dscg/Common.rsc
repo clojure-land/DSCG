@@ -1285,10 +1285,10 @@ list[Argument] contentArguments(int n, int m, TrieSpecifics ts)
 	+ [ slot(i) | i <- [0..n]]
 when isOptionEnabled(ts.setup,useHeterogeneousEncoding());
 
-list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) 
-	= [ slot(i) | i <- [0..2*m + n]]
-when (\map() := ts.ds || ts.ds == \vector()) 
-		&& isOptionEnabled(ts.setup,useUntypedVariables()) && !isOptionEnabled(ts.setup,useHeterogeneousEncoding());
+//list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) 
+//	= [ slot(i) | i <- [0..2*m + n]]
+//when (\map() := ts.ds || ts.ds == \vector()) 
+//		&& isOptionEnabled(ts.setup,useUntypedVariables()) && !isOptionEnabled(ts.setup,useHeterogeneousEncoding());
 
 //list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
 //	= [ key(ts.keyType, i)         | i <- [1..m+1]] 
@@ -1296,10 +1296,14 @@ when (\map() := ts.ds || ts.ds == \vector())
 //when (ds == \set()) 
 //		&& !isOptionEnabled(setup,useUntypedVariables());	
 
-list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
-	= [ slot(i) | i <- [0..1*m + n]]
-when (ds == \set()) 
-		&& isOptionEnabled(setup,useUntypedVariables());
+//list[Argument] contentArguments(int n, int m, ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) 
+//	= [ slot(i) | i <- [0..1*m + n]]
+//when (ds == \set()) 
+//		&& isOptionEnabled(setup,useUntypedVariables());
+
+list[Argument] contentArguments(int n, int m, TrieSpecifics ts) 
+	= [ val(def.returnArg.\type, def.name) | op <- createContentArgumentList(ts, nodeType) ]
+when def := getDef(ts, artifact, op);
 
 list[Argument] __payloadTuple_Core_remove(ds:\map(multi = true), list[Type] tupleTypes:[Type keyType, Type valType, *_]) = [ key(keyType), val(valType) ];
 list[Argument] __payloadTuple_Core_remove(ds:\map(multi = false), list[Type] tupleTypes:[Type keyType, *_]) = [ key(keyType) ];

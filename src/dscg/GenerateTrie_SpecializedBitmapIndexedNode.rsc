@@ -27,6 +27,7 @@ JavaDataType specializedBitmapIndexedNode(TrieSpecifics ts, TrieNodeType nodeTyp
 lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(int n, int m)) { 
 	list[PredefOp] declaredMethods = [
 		featureFlags(),
+		arrayOffsets(),
 		constructor(),
 		*createContentArgumentList(ts, nodeType)
 	];
@@ -58,16 +59,48 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType
 	= result(exprFromString("FeatureFlags.SUPPORTS_NODES | FeatureFlags.SUPPORTS_PAYLOAD"));
 
 
+data PredefOp = arrayOffsets();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::arrayOffsets())
+	= property(\return(primitive("long", isArray = true)), "arrayOffsets", isStateful = true, isConstant = true, 
+		isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+// Default Value for Property
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::arrayOffsets()) = true;
+
+// TODO: does not work for untyped yet.
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::arrayOffsets(), int mn = tupleLength(ts.ds)*m+n) {
+
+	list[str] propertyList = [ getDef(ts, artifact, op).name | op <- createContentArgumentList(ts, nodeType) ];
+	str thisClassStr = "<specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(n, m)).typeName>.class";
+	
+	lrel[int,str] idxToPropertyNameRelation = [ <i,propertyList[i]> | i <- [0..mn] ];
+
+return 
+"try {
+	long[] arrayOffsets = new long[<mn>];
+	
+	<for (<i,name> <- idxToPropertyNameRelation) {>
+	arrayOffsets[<i>] = unsafe.objectFieldOffset(<thisClassStr>.getDeclaredField(\"<name>\"));<}>
+	
+	return arrayOffsets;
+} catch (<if (mn > 0) {>NoSuchFieldException | <}>SecurityException e) {
+	throw new RuntimeException(e);
+}";
+}
+
+
+// TODO: obsolete 'contentArguments'
 list[PredefOp] createContentArgumentList(ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m)) 
 	= [ contentArgument_PayloadTuple(rowId, columnId) | rowId <- [1..m+1], columnId <- [0..size(nodeTupleArgs(ts))] ]
-	+ [ contentArgument_Slot(rowId) | rowId <- [0..n]];
-//when isOptionEnabled(ts.setup,useHeterogeneousEncoding());
+	+ [ contentArgument_Slot(rowId) | rowId <- [0..n]]
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding());
 
-
-//list[Argument] contentArguments(int n, int m, TrieSpecifics ts) 
-//	= [ *appendToName(nodeTupleArgs(ts), "<i>") | i <- [1..m+1]] 
-//	+ [ slot(i) | i <- [1..n+1]];
-////when isOptionEnabled(ts.setup,useHeterogeneousEncoding());
+// TODO: obsolete 'contentArguments'
+list[PredefOp] createContentArgumentList(ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m)) 
+	= [ contentArgument_PayloadTuple(rowId, columnId) | rowId <- [1..m+1], columnId <- [0..size(nodeTupleArgs(ts))] ]
+	+ [ contentArgument_Node(rowId) | rowId <- [1..n+1]]
+when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
 
 
 data PredefOp = contentArgument_PayloadTuple(int rowId, int columnId);
@@ -91,6 +124,18 @@ when arg := slot(rowId);
 // Default Value for Property
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Slot(int rowId)) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Slot(int rowId))
+	= result(NULL());
+
+
+data PredefOp = contentArgument_Node(int rowId);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Node(int rowId))
+	= property(arg, arg.name, isStateful = true, isConstant = false)
+when arg := \node(ts.ds, ts.tupleTypes, rowId);
+
+// Default Value for Property
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Node(int rowId)) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Node(int rowId))
 	= result(NULL());
 
 
@@ -156,6 +201,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, TrieSpec
 	"private static final class <specializedClassNameStr><GenericsStr(ts.tupleTypes)> extends <extendsClassName><GenericsStr(ts.tupleTypes)> {
 	
 		<impl(ts, thisArtifact, featureFlags())>
+		<impl(ts, thisArtifact, arrayOffsets())>
 	
 	'	<intercalate("\n", mapper(contentArguments(n, m, ts), str(Argument a) { 
 			str dec = "private <dec(a)>;";

@@ -82,7 +82,7 @@ void doGenerateBleedingEdge() {
 	//doGenerate(hashTrieConfig(\map(), 5, [object(), object()], heterogeneousSpecializationConfig(4)), overideClassNamePostfixWith = "BleedingEdge");
 	//doGenerate(hashTrieConfig(\set(), 5, [object(), object()], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "BleedingEdge");
 	
-	doGenerate(hashTrieConfig(\map(), 5, [generic("K"), generic("V")], specializationConfig(32, false)), overideClassNamePostfixWith = "BleedingEdge");	
+	doGenerate(hashTrieConfig(\map(), 3, [generic("K"), generic("V")], specializationConfig(8, false)), overideClassNamePostfixWith = "BleedingEdge");	
 }
 
 void doGenerateBleedingEdgeExpanded() {
