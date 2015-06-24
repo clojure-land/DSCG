@@ -27,6 +27,8 @@ JavaDataType specializedBitmapIndexedNode(TrieSpecifics ts, TrieNodeType nodeTyp
 lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(int n, int m)) { 
 	list[PredefOp] declaredMethods = [
 		featureFlags(),
+		bitmapOffset("nodeMap"),
+		bitmapOffset("dataMap"),
 		arrayOffsets(),
 		constructor(),
 		*createContentArgumentList(ts, nodeType)
@@ -40,7 +42,7 @@ data PredefOp = featureFlags();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::featureFlags())
 	= property(\return(primitive("long")), "featureFlags", isStateful = true, isConstant = true, 
-		isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+		isActive = false); // isOptionEnabled(ts.setup, useSunMiscUnsafe())
 
 // Default Value for Property
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::featureFlags()) = true;
@@ -59,6 +61,46 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType
 	= result(exprFromString("FeatureFlags.SUPPORTS_NODES | FeatureFlags.SUPPORTS_PAYLOAD"));
 
 
+data PredefOp = bitmapOffset(str bitmapName);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::bitmapOffset(str bitmapName))
+	= property(\return(primitive("long")), "<bitmapName>Offset", isStateful = true, isConstant = true, 
+		isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+// Default Value for Property
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::bitmapOffset(str bitmapName)) = true;
+
+// TODO: does not work for untyped yet.
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::bitmapOffset(str bitmapName)) {
+	str thisClassStr = "<specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(n, m)).typeName>.class";
+	Argument mapField = val(specific("java.util.Optional\<Field\>"), "<bitmapName>Field");
+return 
+"try {
+	List\<Class\> bottomUpHierarchy = new LinkedList\<\>();
+	
+	Class currentClass = <thisClassStr>;
+	while (currentClass != null) {
+		bottomUpHierarchy.add(currentClass);
+		currentClass = currentClass.getSuperclass();
+	}
+
+	<dec(mapField)> = bottomUpHierarchy.stream()
+		.flatMap(clazz -\> Stream.of(clazz.getDeclaredFields()))
+		.filter(f -\> f.getName().equals(\"<bitmapName>\")).findFirst();
+			
+	if (<use(mapField)>.isPresent()) {
+		System.out.println(unsafe.objectFieldOffset(<use(mapField)>.get()));		
+		return unsafe.objectFieldOffset(<use(mapField)>.get());
+	} else {
+		System.out.println(sun.misc.Unsafe.INVALID_FIELD_OFFSET);
+		return sun.misc.Unsafe.INVALID_FIELD_OFFSET;
+	}
+} catch (SecurityException e) {
+	throw new RuntimeException(e);
+}";
+}
+
+
 data PredefOp = arrayOffsets();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::arrayOffsets())
@@ -75,7 +117,6 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 	str thisClassStr = "<specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(n, m)).typeName>.class";
 	
 	lrel[int,str] idxToPropertyNameRelation = [ <i,propertyList[i]> | i <- [0..mn] ];
-
 return 
 "try {
 	long[] arrayOffsets = new long[<mn>];
@@ -83,6 +124,17 @@ return
 	<for (<i,name> <- idxToPropertyNameRelation) {>
 	arrayOffsets[<i>] = unsafe.objectFieldOffset(<thisClassStr>.getDeclaredField(\"<name>\"));<}>
 	
+	// I want a foldLeft in the Stream API ...
+	boolean isSorted = true;
+	// assumes INVALID_FIELD_OFFSET == -1;
+	long minOffset = sun.misc.Unsafe.INVALID_FIELD_OFFSET; 
+	for (long offset : arrayOffsets) {
+		isSorted |= minOffset \< offset;
+	}				
+	assert isSorted;
+
+	System.out.println(Arrays.toString(arrayOffsets));
+	System.out.println();
 	return arrayOffsets;
 } catch (<if (mn > 0) {>NoSuchFieldException | <}>SecurityException e) {
 	throw new RuntimeException(e);
@@ -201,6 +253,8 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, TrieSpec
 	"private static final class <specializedClassNameStr><GenericsStr(ts.tupleTypes)> extends <extendsClassName><GenericsStr(ts.tupleTypes)> {
 	
 		<impl(ts, thisArtifact, featureFlags())>
+		<impl(ts, thisArtifact, bitmapOffset("nodeMap"))>
+		<impl(ts, thisArtifact, bitmapOffset("dataMap"))>
 		<impl(ts, thisArtifact, arrayOffsets())>
 	
 	'	<intercalate("\n", mapper(contentArguments(n, m, ts), str(Argument a) { 
@@ -355,7 +409,8 @@ default str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) =
 
 data PredefOp = getKey();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getKey()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getKey())
+	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getKey())
 	= "return (<typeToString(ts.keyType)>) getSlot(<use(tupleLengthConstant)> * index);"
@@ -383,7 +438,8 @@ default str generate_bodyOf_getKey(int m) =
 
 data PredefOp = getValue();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getValue()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getValue())
+	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getValue())
 	= "return (<typeToString(ts.valType)>) getSlot(<use(tupleLengthConstant)> * index + 1);"
@@ -449,7 +505,8 @@ default str generate_bodyOf_getRareValue(TrieSpecifics ts, int n) =
 
 data PredefOp = getKeyValueEntry();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getKeyValueEntry()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getKeyValueEntry())
+	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getKeyValueEntry())
 	= "throw new UnsupportedOperationException(); // TODO: to implement" 
@@ -466,7 +523,8 @@ when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(
 
 data PredefOp = getNode();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getNode()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getNode())
+	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n:0, int m)), PredefOp::getNode())
 	= "throw new IllegalStateException(\"Index out of range.\");"
@@ -487,19 +545,29 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getNode())
-	= generate_bodyOf_getNode_typed_nonHeterogeneous(n)
+	= generate_bodyOf_getNode_typed_nonHeterogeneous(ts, n)
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
 
-str generate_bodyOf_getNode_typed_nonHeterogeneous(0)
+str generate_bodyOf_getNode_typed_nonHeterogeneous(TrieSpecifics ts, 0)
 	= "throw new IllegalStateException(\"Index out of range.\");";
 	
-default str generate_bodyOf_getNode_typed_nonHeterogeneous(int n) = 	
+str generate_bodyOf_getNode_typed_nonHeterogeneous(TrieSpecifics ts, int n) = 	
 	"switch(index) {
 	'<for (i <- [1..n+1]) {>case <i-1>:
 	'	return <nodeName><i>;
 	'<}>default:
 	'	throw new IllegalStateException(\"Index out of range.\");
-	'}";
+	'}"
+when !isOptionEnabled(ts.setup, useSandwichArrays());
+
+str generate_bodyOf_getNode_typed_nonHeterogeneous(TrieSpecifics ts, int n) = 	
+	"switch(index) {
+	'<for (i <- [0..n]) {>case <i>:
+	'	return <nodeName><n - 1 - i + 1>; </* + 1 because index starts at 1*/"">
+	'<}>default:
+	'	throw new IllegalStateException(\"Index out of range.\");
+	'}"
+when isOptionEnabled(ts.setup, useSandwichArrays());
 
 
 data PredefOp = nodeIterator();
@@ -1209,7 +1277,8 @@ when specializedClassNameStr := "<toString(ts.ds)><m>To<n>Node<ts.classNamePostf
 
 data PredefOp = toString();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::toString()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::toString()) 
+	= true when isOptionEnabled(ts.setup, toStringOnTrieNodes());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::toString()) 
 	= "<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (\map() := ts.ds) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(<use(valmapMethod)>, (byte) <i>)"), *__payloadTuple(ts.ds, ts.tupleTypes, i) | i <- [1..m+1]] + [ field("recoverMask(<use(bitmapMethod)>, (byte) <i>)"), \node(ts.ds, ts.tupleTypes, i)	| i <- [1..n+1]])>);<}>"

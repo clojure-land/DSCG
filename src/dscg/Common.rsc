@@ -447,6 +447,7 @@ data Option // TODO: finish!
 	| compareValueAtMapPut()
 	| useHeterogeneousEncoding()
 	| useSunMiscUnsafe()
+	| toStringOnTrieNodes()
 	;
 
 data TrieSpecifics 
