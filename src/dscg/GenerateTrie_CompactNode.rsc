@@ -1289,6 +1289,7 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	isTrieStructureValid(),
 	
 	arrayOffsetsFunction(),
+	bitmapOffsetFunction(),
 	
 	copyAndInsertNode(), // ???
 	copyAndInsertNode_nextClass(), // ???
@@ -1424,6 +1425,7 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 
 		<if (isOptionEnabled(ts.setup, useSunMiscUnsafe())) {>			
 			<impl(ts, trieNode(compactNode()), arrayOffsetsFunction())>
+			<impl(ts, trieNode(compactNode()), bitmapOffsetFunction())>			
 
 			<impl(ts, trieNode(compactNode()), getKey())>
 			<impl(ts, trieNode(compactNode()), getValue())>
@@ -2432,6 +2434,47 @@ return
 	System.out.println();
 	return arrayOffsets;
 } catch (NoSuchFieldException | SecurityException e) {
+	throw new RuntimeException(e);
+}";
+}
+
+data PredefOp = bitmapOffsetFunction();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::bitmapOffsetFunction())
+	= function(\return(primitive("long")), "bitmapOffset", args = [ val(specific("Class"), "clazz"), val(specific("String"), "bitmapName") ], 
+		isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+// Default Value for Property
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::bitmapOffsetFunction()) = true;
+
+// TODO: does not work for untyped yet.
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::bitmapOffsetFunction()) {
+	Argument clazz = val(specific("Class"), "clazz");
+	//Argument bitmap = val(specific("String"), "bitmapName");
+
+	Argument mapField = val(specific("java.util.Optional\<Field\>"), "bitmapNameField");
+return 
+"try {
+	List\<Class\> bottomUpHierarchy = new LinkedList\<\>();
+	
+	Class currentClass = <use(clazz)>;
+	while (currentClass != null) {
+		bottomUpHierarchy.add(currentClass);
+		currentClass = currentClass.getSuperclass();
+	}
+
+	<dec(mapField)> = bottomUpHierarchy.stream()
+		.flatMap(hierarchyClass -\> Stream.of(hierarchyClass.getDeclaredFields()))
+		.filter(f -\> f.getName().equals(bitmapName)).findFirst();
+			
+	if (<use(mapField)>.isPresent()) {
+		System.out.println(unsafe.objectFieldOffset(<use(mapField)>.get()));		
+		return unsafe.objectFieldOffset(<use(mapField)>.get());
+	} else {
+		System.out.println(sun.misc.Unsafe.INVALID_FIELD_OFFSET);
+		return sun.misc.Unsafe.INVALID_FIELD_OFFSET;
+	}
+} catch (SecurityException e) {
 	throw new RuntimeException(e);
 }";
 }

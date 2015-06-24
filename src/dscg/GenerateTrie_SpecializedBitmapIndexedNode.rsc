@@ -75,29 +75,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 	str thisClassStr = "<specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(n, m)).typeName>.class";
 	Argument mapField = val(specific("java.util.Optional\<Field\>"), "<bitmapName>Field");
 return 
-"try {
-	List\<Class\> bottomUpHierarchy = new LinkedList\<\>();
-	
-	Class currentClass = <thisClassStr>;
-	while (currentClass != null) {
-		bottomUpHierarchy.add(currentClass);
-		currentClass = currentClass.getSuperclass();
-	}
-
-	<dec(mapField)> = bottomUpHierarchy.stream()
-		.flatMap(clazz -\> Stream.of(clazz.getDeclaredFields()))
-		.filter(f -\> f.getName().equals(\"<bitmapName>\")).findFirst();
-			
-	if (<use(mapField)>.isPresent()) {
-		System.out.println(unsafe.objectFieldOffset(<use(mapField)>.get()));		
-		return unsafe.objectFieldOffset(<use(mapField)>.get());
-	} else {
-		System.out.println(sun.misc.Unsafe.INVALID_FIELD_OFFSET);
-		return sun.misc.Unsafe.INVALID_FIELD_OFFSET;
-	}
-} catch (SecurityException e) {
-	throw new RuntimeException(e);
-}";
+"return bitmapOffset(<thisClassStr>, \"<bitmapName>\");";
 }
 
 
@@ -118,27 +96,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 	
 	lrel[int,str] idxToPropertyNameRelation = [ <i,propertyList[i]> | i <- [0..mn] ];
 return 
-"try {
-	long[] arrayOffsets = new long[<mn>];
-	
-	<for (<i,name> <- idxToPropertyNameRelation) {>
-	arrayOffsets[<i>] = unsafe.objectFieldOffset(<thisClassStr>.getDeclaredField(\"<name>\"));<}>
-	
-	// I want a foldLeft in the Stream API ...
-	boolean isSorted = true;
-	// assumes INVALID_FIELD_OFFSET == -1;
-	long minOffset = sun.misc.Unsafe.INVALID_FIELD_OFFSET; 
-	for (long offset : arrayOffsets) {
-		isSorted |= minOffset \< offset;
-	}				
-	assert isSorted;
-
-	System.out.println(Arrays.toString(arrayOffsets));
-	System.out.println();
-	return arrayOffsets;
-} catch (<if (mn > 0) {>NoSuchFieldException | <}>SecurityException e) {
-	throw new RuntimeException(e);
-}";
+"return arrayOffsets(<thisClassStr>, new String[] { <intercalate(", ", mapper(contentArguments(n, m, ts), str(Argument arg) { return "\"<arg.name>\""; }))> });";
 }
 
 
