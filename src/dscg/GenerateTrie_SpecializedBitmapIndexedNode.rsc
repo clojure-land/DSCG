@@ -155,6 +155,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedB
 	= constructor(\return(\type), jdt.typeName, args = [ ts.mutator ] + metadataArguments(ts) + contentArguments(n, m, ts), visibility = "private", argsFilter = ts.argsFilter)
 when jdt := specializedBitmapIndexedNode(ts, nodeType) 
 		&& \type := jdtToType(jdt);
+// isActive = !isOptionEnabled(ts.setup, useSunMiscUnsafe())
 	
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor()) = true;
 
