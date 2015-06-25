@@ -1427,6 +1427,7 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 			<impl(ts, trieNode(compactNode()), arrayOffsetsFunction())>
 			<impl(ts, trieNode(compactNode()), bitmapOffsetFunction())>			
 
+			<impl(ts, trieNode(compactNode()), getSlot())>
 			<impl(ts, trieNode(compactNode()), getKey())>
 			<impl(ts, trieNode(compactNode()), getValue())>
 			<impl(ts, trieNode(compactNode()), getKeyValueEntry())>
@@ -2355,6 +2356,21 @@ str generate_bodyOf_mergeNodeAndKeyValPair(TrieSpecifics ts) =
 		return new BitmapIndexedMapNode_Mixed\<\>(null, nodeMap, dataMap, content);
 	}"
 when isOptionEnabled(ts.setup, usePathCompression());
+
+
+data PredefOp = getSlot();
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getSlot())
+	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getSlot()) = 
+	"try {
+	'	final long[] arrayOffsets = (long[]) unsafe.getObject(this.getClass(), unsafe.staticFieldOffset(this.getClass().getDeclaredField(\"arrayOffsets\")));
+	'	return (<typeToString(ts.keyType)>) unsafe.getObject(this, arrayOffsets[<use(ts.index)>]);
+	'} catch (NoSuchFieldException | SecurityException e) {
+	'	throw new RuntimeException(e);
+	'}"
+when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 
 data PredefOp = getKey();

@@ -322,7 +322,9 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType
 
 data PredefOp = getSlot();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getSlot()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getSlot())
+	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
+
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getSlot())
 	= generate_bodyOf_getSlot(ts, slotCount(ts, nodeType));
 
