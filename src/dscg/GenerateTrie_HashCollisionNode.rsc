@@ -237,6 +237,26 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 		<implOrOverride(getDef(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode()), 
 			UNSUPPORTED_OPERATION_EXCEPTION)>	
 			
+		<if (isOptionEnabled(ts.setup, useSunMiscUnsafe())) {>			
+			<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetValue_nextClass()), 
+				UNSUPPORTED_OPERATION_EXCEPTION)>
+			
+			<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndInsertValue_nextClass()), 
+				UNSUPPORTED_OPERATION_EXCEPTION)>
+			
+			<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndRemoveValue_nextClass()), 
+				UNSUPPORTED_OPERATION_EXCEPTION)>
+			
+			<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetNode_nextClass()), 
+				UNSUPPORTED_OPERATION_EXCEPTION)>
+			
+			<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode_nextClass()), 
+				UNSUPPORTED_OPERATION_EXCEPTION)>
+			
+			<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass()), 
+				UNSUPPORTED_OPERATION_EXCEPTION)>
+		<}>
+			
 		<implOrOverride(getDef(ts, trieNode(compactNode()), nodeMap()), 
 			UNSUPPORTED_OPERATION_EXCEPTION)>
 			
