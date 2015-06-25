@@ -207,6 +207,8 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, TrieSpec
 
 	Artifact thisArtifact = trieNode(specializedBitmapIndexedNode(n, m));
 
+	println("LOG: Generating <nodeType>");
+
 	return
 	"private static final class <specializedClassNameStr><GenericsStr(ts.tupleTypes)> extends <extendsClassName><GenericsStr(ts.tupleTypes)> {
 	
