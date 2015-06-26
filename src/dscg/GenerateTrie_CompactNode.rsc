@@ -298,143 +298,79 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 						ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "0")))))>;";
 
 
+str generate_copyAnd_generalPrelude(TrieSpecifics ts, Artifact artifact, PredefOp op) =
+	"
+	final Class srcClass = this.getClass();
+	final Class dstClass = <if (/^<constructorName:.*>\(\)$/ := "<op>") {><"<constructorName>_nextClass()"><}>;
+	
+	<dec(jdtToVal(compactNode(ts), "src"))> = this;
+	<dec(jdtToVal(compactNode(ts), "dst"))> = <toString(cast(jdtToType(compactNode(ts)), exprFromString("unsafe.allocateInstance(dstClass)")))>;				
+	
+	final long srcNodeMapOffset = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
+			.getDeclaredField(\"nodeMapOffset\")));
+	
+	final long dstNodeMapOffset = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
+			.getDeclaredField(\"nodeMapOffset\")));
+	
+	final long srcDataMapOffset = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
+			.getDeclaredField(\"dataMapOffset\")));
+	
+	final long dstDataMapOffset = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
+			.getDeclaredField(\"dataMapOffset\")));
+			
+	final long[] srcArrayOffsets = (long[]) unsafe.getObject(srcClass, unsafe.staticFieldOffset(srcClass
+			.getDeclaredField(\"arrayOffsets\")));
+	
+	final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, unsafe.staticFieldOffset(dstClass
+			.getDeclaredField(\"arrayOffsets\")));
+	";
+
+
+str generate_copyAnd_copyAndUpdateBitmap(TrieSpecifics ts, Artifact artifact, PredefOp op, str bitmapName, Expression(Expression oldBitmapValueExpr) valueUpdater, Expression valueDefault) =
+	"
+	// copy and update bitmaps
+	if (<use(dstOffset)> != sun.misc.Unsafe.INVALID_FIELD_OFFSET) {
+		if (<use(srcOffset)> != sun.misc.Unsafe.INVALID_FIELD_OFFSET) {
+			<dec(bitmap)> = <eval(valueUpdater(oldBitmapValueExpr))>; 
+			unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, <use(dstOffset)>, <use(bitmap)>);
+		} else {
+			<dec(bitmap)> = <eval(valueDefault)>;
+			unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, <use(dstOffset)>, <use(bitmap)>);
+		}
+	}
+	"
+when bitmap := val(chunkSizeToPrimitive(ts.bitPartitionSize), "new<capitalize(bitmapName)>") &&
+		srcOffset := val(primitive("long"), "src<capitalize(bitmapName)>Offset") &&
+		dstOffset := val(primitive("long"), "dst<capitalize(bitmapName)>Offset") &&
+		oldBitmapValueExpr := exprFromString("unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, <use(srcOffset)>)");
+
+
 data PredefOp = copyAndInsertValue(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertValue())
 	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertValue", args = [ts.mutator, ts.bitposField, *nodeTupleArgs(ts)]);
 
-
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndInsertValue()) 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndInsertValue()) 
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndInsertValue()) =
-	"
-//	final int SIZEOF_BITMAP = <toInt(pow(2, ts.bitPartitionSize) / 8)>;
-//	final int SIZEOF_REFERENCE = 4; // compressed oops
-	
-	try {
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndInsertValue()) =
+	"try {
 		final int valIdx = dataIndex(bitpos);
 		
-		final Class srcClass = this.getClass();
-		final Class dstClass = copyAndInsertValue_nextClass();
-		
-		<CompactNode(ts.ds)> src = this;
-		<CompactNode(ts.ds)> dst = (<CompactNode(ts.ds)>) unsafe.allocateInstance(dstClass);				
-
-//		final long srcFeatureFlags = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
-//				.getDeclaredField(\"featureFlags\")));
-//		
-//		final long dstFeatureFlags = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
-//				.getDeclaredField(\"featureFlags\")));
-//
-//		long srcOffset = 12L;
-//		long dstOffset = 12L;
-//										
-//		// copy and update bitmaps
-//		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
-//			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
-//				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstOffset, unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, srcOffset));
-//				srcOffset += SIZEOF_BITMAP;
-//				dstOffset += SIZEOF_BITMAP;
-//			} else {
-//				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstOffset, <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>);
-//				dstOffset += SIZEOF_BITMAP;
-//			}
-//		} else {
-//			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
-//				srcOffset += SIZEOF_BITMAP;
-//			} else {
-//				// NOTHING
-//			}
-//		}
-//		
-//		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
-//			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
-//				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstOffset, <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), exprFromString("unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, srcOffset) | bitpos")))>);
-//				srcOffset += SIZEOF_BITMAP;
-//				dstOffset += SIZEOF_BITMAP;
-//			} else {
-//				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstOffset, bitpos);
-//				dstOffset += SIZEOF_BITMAP;
-//			}
-//		} else {
-//			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
-//				srcOffset += SIZEOF_BITMAP;
-//			} else {
-//				// NOTHING
-//			}
-//		}
-//		
-//		// copy \'src\' and insert 2 element(s) at position \'valIdx\'
-//		for (int i = 0; i \< valIdx; i++) {
-//			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-//			srcOffset += SIZEOF_REFERENCE;
-//			dstOffset += SIZEOF_REFERENCE;
-//			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-//			srcOffset += SIZEOF_REFERENCE;
-//			dstOffset += SIZEOF_REFERENCE;					
-//		}
-//
-//		unsafe.putObject(dst, dstOffset, key);
-//		dstOffset += SIZEOF_REFERENCE;
-//		unsafe.putObject(dst, dstOffset, val);
-//		dstOffset += SIZEOF_REFERENCE;
-//		
-//		for (int i = valIdx; i \< payloadArity(); i++) {
-//			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-//			srcOffset += SIZEOF_REFERENCE;
-//			dstOffset += SIZEOF_REFERENCE;
-//			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-//			srcOffset += SIZEOF_REFERENCE;
-//			dstOffset += SIZEOF_REFERENCE;					
-//		}
-//		
-//		// copy nodes range
-//		for (int i = nodeArity() - 1; i \>= 0; i--) {
-//			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-//			srcOffset += SIZEOF_REFERENCE;
-//			dstOffset += SIZEOF_REFERENCE;
-//		}	
-//	
-		final long srcNodeMapOffset = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
-				.getDeclaredField(\"nodeMapOffset\")));
-		
-		final long dstNodeMapOffset = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
-				.getDeclaredField(\"nodeMapOffset\")));
-
-		final long srcDataMapOffset = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
-				.getDeclaredField(\"dataMapOffset\")));
-		
-		final long dstDataMapOffset = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
-				.getDeclaredField(\"dataMapOffset\")));
+		<generate_copyAnd_generalPrelude(ts, artifact, op)>
+						
+		<generate_copyAnd_copyAndUpdateBitmap(ts, artifact, op, "nodeMap", 
+			Expression(Expression oldBitmapValueExpr) {
+				return oldBitmapValueExpr; // idendity
+			},
+			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>					
+						
+		<generate_copyAnd_copyAndUpdateBitmap(ts, artifact, op, "dataMap", 
+			Expression(Expression oldBitmapValueExpr) {
+				return cast(chunkSizeToPrimitive(ts.bitPartitionSize),
+						bitwiseOr(oldBitmapValueExpr, useExpr(ts.bitposField)));
+			},
+			useExpr(ts.bitposField))>					
 				
-		// copy and update bitmaps
-		if (dstNodeMapOffset != sun.misc.Unsafe.INVALID_FIELD_OFFSET) {
-			if (srcNodeMapOffset != sun.misc.Unsafe.INVALID_FIELD_OFFSET) {
-				<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "newNodeMap"))> = unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, srcNodeMapOffset);
-				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstNodeMapOffset, newNodeMap);
-			} else {
-				<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "newNodeMap"))> = <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>;
-				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstNodeMapOffset, newNodeMap);
-			}
-		}
-				
-		// copy and update bitmaps
-		if (dstDataMapOffset != sun.misc.Unsafe.INVALID_FIELD_OFFSET) {
-			if (srcDataMapOffset != sun.misc.Unsafe.INVALID_FIELD_OFFSET) {
-				<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "newDataMap"))> = <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), exprFromString("unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, srcDataMapOffset) | bitpos")))>;
-				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstDataMapOffset, newDataMap);
-			} else {
-				<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "newDataMap"))> = bitpos;
-				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstDataMapOffset, newDataMap);
-			}
-		}		
-		
-		final long[] srcArrayOffsets = (long[]) unsafe.getObject(srcClass, unsafe.staticFieldOffset(srcClass
-				.getDeclaredField(\"arrayOffsets\")));
-		
-		final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, unsafe.staticFieldOffset(dstClass
-				.getDeclaredField(\"arrayOffsets\")));
-
 		// copy \'src\' and insert 2 element(s) at position \'valIdx\'
 		for (int i = 0; i \< valIdx; i++) {
 			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i    ]));
@@ -457,8 +393,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 		return dst;
 	} catch (InstantiationException | NoSuchFieldException e) {
 		throw new RuntimeException(e);
-	}		
-	";
+	}";
 
 
 data PredefOp = copyAndInsertValue_nextClass();
@@ -472,136 +407,27 @@ data PredefOp = copyAndRemoveValue(bool customComparator = false);
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveValue())
 	= method(\return(jdtToType(compactNode(ts))), "copyAndRemoveValue", args = [ts.mutator, ts.bitposField]);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndRemoveValue()) 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndRemoveValue()) 
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndRemoveValue()) =
-	"
-	final int SIZEOF_BITMAP = <toInt(pow(2, ts.bitPartitionSize) / 8)>;
-	final int SIZEOF_REFERENCE = 4; // compressed oops
-	
-	try {
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndRemoveValue()) =
+	"try {
 		final int valIdx = dataIndex(bitpos);
 		
-		final Class srcClass = this.getClass();
-		final Class dstClass = copyAndRemoveValue_nextClass();
-		
-		<CompactNode(ts.ds)> src = this;
-		<CompactNode(ts.ds)> dst = (<CompactNode(ts.ds)>) unsafe.allocateInstance(dstClass);				
-
-//		final long srcFeatureFlags = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
-//				.getDeclaredField(\"featureFlags\")));
-//		
-//		final long dstFeatureFlags = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
-//				.getDeclaredField(\"featureFlags\")));
-//		
-//		long srcOffset = 12L;
-//		long dstOffset = 12L;
-//										
-//		// copy and update bitmaps
-//		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
-//			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
-//				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstOffset, unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, srcOffset));
-//				srcOffset += SIZEOF_BITMAP;
-//				dstOffset += SIZEOF_BITMAP;
-//			} else {
-//				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstOffset, <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>);
-//				dstOffset += SIZEOF_BITMAP;
-//			}
-//		} else {
-//			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
-//				srcOffset += SIZEOF_BITMAP;
-//			} else {
-//				// NOTHING
-//			}
-//		}		
-//
-//		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
-//			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
-//				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstOffset, <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), exprFromString("unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, srcOffset) ^ bitpos")))>);
-//				srcOffset += SIZEOF_BITMAP;
-//				dstOffset += SIZEOF_BITMAP;
-//			} else {
-//				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstOffset, <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>);
-//				dstOffset += SIZEOF_BITMAP;
-//			}
-//		} else {
-//			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
-//				srcOffset += SIZEOF_BITMAP;
-//			} else {
-//				// NOTHING
-//			}
-//		}
-//			
-//		// copy \'src\' and remove 2 element(s) at position \'valIdx\'
-//		for (int i = 0; i \< valIdx; i++) {
-//			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-//			srcOffset += SIZEOF_REFERENCE;
-//			dstOffset += SIZEOF_REFERENCE;
-//			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-//			srcOffset += SIZEOF_REFERENCE;
-//			dstOffset += SIZEOF_REFERENCE;					
-//		}
-//		
-//		// adjust \'srcOffset\' to position of \'valIdx + 1\'
-//		srcOffset += SIZEOF_REFERENCE;
-//		srcOffset += SIZEOF_REFERENCE;
-//		
-//		for (int i = valIdx + 1; i \< payloadArity(); i++) {
-//			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-//			srcOffset += SIZEOF_REFERENCE;
-//			dstOffset += SIZEOF_REFERENCE;
-//			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-//			srcOffset += SIZEOF_REFERENCE;
-//			dstOffset += SIZEOF_REFERENCE;					
-//		}
-//		
-//		// copy nodes range
-//		for (int i = nodeArity() - 1; i \>= 0; i--) {
-//			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-//			srcOffset += SIZEOF_REFERENCE;
-//			dstOffset += SIZEOF_REFERENCE;
-//		}
+		<generate_copyAnd_generalPrelude(ts, artifact, op)>
+						
+		<generate_copyAnd_copyAndUpdateBitmap(ts, artifact, op, "nodeMap", 
+			Expression(Expression oldBitmapValueExpr) {
+				return oldBitmapValueExpr; // idendity
+			},
+			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>					
+						
+		<generate_copyAnd_copyAndUpdateBitmap(ts, artifact, op, "dataMap", 
+			Expression(Expression oldBitmapValueExpr) {
+				return cast(chunkSizeToPrimitive(ts.bitPartitionSize),
+						bitwiseXor(oldBitmapValueExpr, useExpr(ts.bitposField)));
+			},
+			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>					
 				
-		final long srcNodeMapOffset = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
-				.getDeclaredField(\"nodeMapOffset\")));
-		
-		final long dstNodeMapOffset = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
-				.getDeclaredField(\"nodeMapOffset\")));
-
-		final long srcDataMapOffset = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
-				.getDeclaredField(\"dataMapOffset\")));
-		
-		final long dstDataMapOffset = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
-				.getDeclaredField(\"dataMapOffset\")));
-				
-		// copy and update bitmaps
-		if (dstNodeMapOffset != sun.misc.Unsafe.INVALID_FIELD_OFFSET) {
-			if (srcNodeMapOffset != sun.misc.Unsafe.INVALID_FIELD_OFFSET) {
-				<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "newNodeMap"))> = unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, srcNodeMapOffset);
-				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstNodeMapOffset, newNodeMap);
-			} else {
-				<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "newNodeMap"))> = <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>;
-				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstNodeMapOffset, newNodeMap);
-			}
-		}
-				
-		// copy and update bitmaps
-		if (dstDataMapOffset != sun.misc.Unsafe.INVALID_FIELD_OFFSET) {
-			if (srcDataMapOffset != sun.misc.Unsafe.INVALID_FIELD_OFFSET) {
-				<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "newDataMap"))> = <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), exprFromString("unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, srcDataMapOffset) ^ bitpos")))>;
-				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstDataMapOffset, newDataMap);
-			} else {
-				<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "newDataMap"))> = <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>;
-				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstDataMapOffset, newDataMap);
-			}
-		}		
-		
-		final long[] srcArrayOffsets = (long[]) unsafe.getObject(srcClass, unsafe.staticFieldOffset(srcClass
-				.getDeclaredField(\"arrayOffsets\")));
-		
-		final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, unsafe.staticFieldOffset(dstClass
-				.getDeclaredField(\"arrayOffsets\")));
-
 		for (int i = 0; i \< valIdx; i++) {
 			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i    ]));
 			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i + 1], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i + 1]));
@@ -620,8 +446,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 		return dst;	
 	} catch (InstantiationException | NoSuchFieldException e) {
 		throw new RuntimeException(e);
-	}	
-	";
+	}";
 
 data PredefOp = copyAndRemoveValue_nextClass();
 
@@ -635,99 +460,44 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyA
 	= method(\return(jdtToType(compactNode(ts))), "copyAndSetValue", lazyArgs = list[Argument]() { return [ts.mutator, ts.bitposField, nodeTupleArg(ts, 1) ]; }, isActive = \map() := ts.ds);
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndSetValue()) 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndSetValue()) 
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndSetValue()) =
-	"
-	final int SIZEOF_BITMAP = <toInt(pow(2, ts.bitPartitionSize) / 8)>;
-	final int SIZEOF_REFERENCE = 4; // compressed oops
-	
-	try {
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndSetValue()) =
+	"try {
 		final int valIdx = dataIndex(bitpos);
-		
-		final Class srcClass = this.getClass();
-		final Class dstClass = copyAndInsertValue_nextClass();
-		
-		<CompactNode(ts.ds)> src = this;
-		<CompactNode(ts.ds)> dst = (<CompactNode(ts.ds)>) unsafe.allocateInstance(dstClass);				
 
-		final long srcFeatureFlags = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
-				.getDeclaredField(\"featureFlags\")));
-		
-		final long dstFeatureFlags = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
-				.getDeclaredField(\"featureFlags\")));
-		
-		long srcOffset = 12L;
-		long dstOffset = 12L;
-										
-		// copy and update bitmaps
-		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
-			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
-				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstOffset, unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, srcOffset));
-				srcOffset += SIZEOF_BITMAP;
-				dstOffset += SIZEOF_BITMAP;
-			} else {
-				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstOffset, <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>);
-				dstOffset += SIZEOF_BITMAP;
-			}
-		} else {
-			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_NODES) != 0) {
-				srcOffset += SIZEOF_BITMAP;
-			} else {
-				// NOTHING
-			}
-		}
-
-		if ((dstFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
-			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
-				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstOffset, unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, srcOffset));
-				srcOffset += SIZEOF_BITMAP;
-				dstOffset += SIZEOF_BITMAP;
-			} else {
-				unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, dstOffset, <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>);
-				dstOffset += SIZEOF_BITMAP;
-			}
-		} else {
-			if ((srcFeatureFlags & FeatureFlags.SUPPORTS_PAYLOAD) != 0) {
-				srcOffset += SIZEOF_BITMAP;
-			} else {
-				// NOTHING
-			}
-		}
-		
-		// copy \'src\' and insert 2 element(s) at position \'valIdx\'
+		<generate_copyAnd_generalPrelude(ts, artifact, op)>
+						
+		<generate_copyAnd_copyAndUpdateBitmap(ts, artifact, op, "nodeMap", 
+			Expression(Expression oldBitmapValueExpr) {
+				return oldBitmapValueExpr; // idendity
+			},
+			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>					
+						
+		<generate_copyAnd_copyAndUpdateBitmap(ts, artifact, op, "dataMap", 
+			Expression(Expression oldBitmapValueExpr) {
+				return oldBitmapValueExpr; // idendity
+			},
+			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>		
+				
 		for (int i = 0; i \< valIdx; i++) {
-			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-			srcOffset += SIZEOF_REFERENCE;
-			dstOffset += SIZEOF_REFERENCE;
-			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-			srcOffset += SIZEOF_REFERENCE;
-			dstOffset += SIZEOF_REFERENCE;					
+			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i    ]));
+			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i + 1], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i + 1]));
 		}
-		
-		unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-		srcOffset += SIZEOF_REFERENCE;
-		dstOffset += SIZEOF_REFERENCE;
-		unsafe.putObject(dst, dstOffset, val);
-		srcOffset += SIZEOF_REFERENCE;
-		dstOffset += SIZEOF_REFERENCE;
-		
-		for (int i = valIdx - 1; i \< payloadArity(); i++) {
-			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-			srcOffset += SIZEOF_REFERENCE;
-			dstOffset += SIZEOF_REFERENCE;
-			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-			srcOffset += SIZEOF_REFERENCE;
-			dstOffset += SIZEOF_REFERENCE;					
+
+		unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * valIdx    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * valIdx    ]));
+		unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * valIdx + 1], val);
+				
+		for (int i = valIdx + 1; i \< payloadArity(); i++) {
+			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i    ]));
+			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i + 1], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i + 1]));
 		}
-		
+
 		// copy nodes range
-		for (int i = nodeArity() - 1; i \>= 0; i--) {
-			unsafe.putObject(dst, dstOffset, unsafe.getObject(src, srcOffset));
-			srcOffset += SIZEOF_REFERENCE;
-			dstOffset += SIZEOF_REFERENCE;
+		for (int i = 0; i \< nodeArity(); i++) {
+			unsafe.putObject(dst, dstArrayOffsets[dst.slotArity() - 1 - i], unsafe.getObject(src, srcArrayOffsets[src.slotArity() - 1 - i]));
 		}
-		
+				
 		return dst;
 	} catch (InstantiationException | NoSuchFieldException e) {
 		throw new RuntimeException(e);
@@ -746,9 +516,9 @@ data PredefOp = copyAndSetNode(bool customComparator = false);
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetNode())
 	= method(\return(jdtToType(compactNode(ts))), "copyAndSetNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndSetNode()) 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndSetNode()) 
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndSetNode()) =
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndSetNode()) =
 	"
 	final int SIZEOF_BITMAP = <toInt(pow(2, ts.bitPartitionSize) / 8)>;
 	final int SIZEOF_REFERENCE = 4; // compressed oops
@@ -904,9 +674,9 @@ data PredefOp = copyAndInsertNode(bool customComparator = false);
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertNode())
 	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)], isActive = false);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndInsertNode()) 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndInsertNode()) 
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndInsertNode()) =
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndInsertNode()) =
 	"
 	";
 
@@ -922,9 +692,9 @@ data PredefOp = copyAndMigrateFromInlineToNode(bool customComparator = false);
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromInlineToNode())
 	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromInlineToNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndMigrateFromInlineToNode()) 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromInlineToNode()) 
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndMigrateFromInlineToNode()) =
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromInlineToNode()) =
 	"
 	final int SIZEOF_BITMAP = <toInt(pow(2, ts.bitPartitionSize) / 8)>;
 	final int SIZEOF_REFERENCE = 4; // compressed oops
@@ -1101,9 +871,9 @@ data PredefOp = copyAndMigrateFromNodeToInline(bool customComparator = false);
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromNodeToInline())
 	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromNodeToInline", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndMigrateFromNodeToInline()) 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromNodeToInline()) 
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndMigrateFromNodeToInline()) =
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromNodeToInline()) =
 	"
 	final int SIZEOF_BITMAP = <toInt(pow(2, ts.bitPartitionSize) / 8)>;
 	final int SIZEOF_REFERENCE = 4; // compressed oops
@@ -1220,9 +990,9 @@ data PredefOp = copyAndRemoveNode(bool customComparator = false);
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveNode())
 	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertNode", args = [ts.mutator, ts.bitposField], isActive = false);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndRemoveNode()) 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndRemoveNode()) 
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::copyAndRemoveNode()) =
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndRemoveNode()) =
 	"
 	";
 
@@ -2409,7 +2179,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getKeyValueEntry()) 
-	= "throw new UnsupportedOperationException(); // TODO: to implement"
+	= "return entryOf(getKey(index), getValue(index));"
 when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 
@@ -2450,6 +2220,7 @@ return
 		arrayOffsets[i] = unsafe.objectFieldOffset(<use(clazz)>.getDeclaredField(<use(fieldNames)>[i]));
 	}
 	
+	<if (false) {>
 	// I want a foldLeft in the Stream API ...
 	boolean isSorted = true;
 	// assumes INVALID_FIELD_OFFSET == -1;
@@ -2461,6 +2232,8 @@ return
 
 	System.out.println(Arrays.toString(arrayOffsets));
 	System.out.println();
+	<}>
+	
 	return arrayOffsets;
 } catch (NoSuchFieldException | SecurityException e) {
 	throw new RuntimeException(e);
@@ -2497,11 +2270,11 @@ return
 		.filter(f -\> f.getName().equals(bitmapName)).findFirst();
 			
 	if (<use(mapField)>.isPresent()) {
-		System.out.println(unsafe.objectFieldOffset(<use(mapField)>.get()));		
-		return unsafe.objectFieldOffset(<use(mapField)>.get());
+		<if (false) {>System.out.println(unsafe.objectFieldOffset(<use(mapField)>.get()));
+		<}>return unsafe.objectFieldOffset(<use(mapField)>.get());
 	} else {
-		System.out.println(sun.misc.Unsafe.INVALID_FIELD_OFFSET);
-		return sun.misc.Unsafe.INVALID_FIELD_OFFSET;
+		<if (false) {>System.out.println(sun.misc.Unsafe.INVALID_FIELD_OFFSET);
+		<}>return sun.misc.Unsafe.INVALID_FIELD_OFFSET;
 	}
 } catch (SecurityException e) {
 	throw new RuntimeException(e);
