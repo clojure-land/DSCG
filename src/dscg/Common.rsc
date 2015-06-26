@@ -351,7 +351,7 @@ data Method(list[Type] generics = [], str visibility = "", bool isActive = true)
 	= method(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
 	| function(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
 	| constructor(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
-	| property(Argument returnArg, str name, bool isStateful = false, bool isConstant = true);
+	| property(Argument returnArg, str name, bool isStateful = false, bool isConstant = true, bool hasGetter = true);
 
 data Property
 	= hashCodeProperty()
@@ -1013,10 +1013,10 @@ when m.isActive && m.isStateful && !m.isConstant
 	;
 
 str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
-	"<for(a <- annotations) {><toString(a)><}>
+	"<if (m.hasGetter) {><for(a <- annotations) {><toString(a)><}>
 	'<m.visibility> static final <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>() {
 	'	return <m.name>;
-	'}
+	'}<}>
 	'
 	'private static final <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> initialize<capitalize(m.name)>() {
 	'	<bodyStr>

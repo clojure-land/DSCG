@@ -41,7 +41,7 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nod
 data PredefOp = featureFlags();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::featureFlags())
-	= property(\return(primitive("long")), "featureFlags", isStateful = true, isConstant = true, 
+	= property(\return(primitive("long")), "featureFlags", isStateful = true, isConstant = true, hasGetter = false, 
 		isActive = false); // isOptionEnabled(ts.setup, useSunMiscUnsafe())
 
 // Default Value for Property
@@ -64,7 +64,7 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType
 data PredefOp = bitmapOffset(str bitmapName);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::bitmapOffset(str bitmapName))
-	= property(\return(primitive("long")), "<bitmapName>Offset", isStateful = true, isConstant = true, 
+	= property(\return(primitive("long")), "<bitmapName>Offset", isStateful = true, isConstant = true, hasGetter = false, 
 		isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
 
 // Default Value for Property
@@ -82,7 +82,7 @@ return
 data PredefOp = arrayOffsets();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::arrayOffsets())
-	= property(\return(primitive("long", isArray = true)), "arrayOffsets", isStateful = true, isConstant = true, 
+	= property(\return(primitive("long", isArray = true)), "arrayOffsets", isStateful = true, isConstant = true, hasGetter = false, 
 		isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
 
 // Default Value for Property
