@@ -153,18 +153,47 @@ data PredefOp = constructor();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
 	= constructor(\return(\type), jdt.typeName, args = [ ts.mutator ] + metadataArguments(ts) + contentArguments(n, m, ts), visibility = "private", argsFilter = ts.argsFilter)
-when jdt := specializedBitmapIndexedNode(ts, nodeType) 
-		&& \type := jdtToType(jdt);
-// isActive = !isOptionEnabled(ts.setup, useSunMiscUnsafe())
+when (!isOptionEnabled(ts.setup, useSunMiscUnsafe()) || (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && (<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe))) && 
+		jdt := specializedBitmapIndexedNode(ts, nodeType) && 
+		\type := jdtToType(jdt);	
 	
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor()) = true;
 
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
-	= compoundExpr([
-		super(exprFromString("<if (isOptionEnabled(ts.setup, useStagedMutability())) {>mutator<} else {>null<}>, <use(ts.bitmapField)>, <use(ts.valmapField)>")),
-		exprFromString(initFieldsWithIdendity(contentArguments(n, m, ts))) // TODO: automatically infer which def.args need to be initialized
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
+	= compoundStatement([
+		expressionStatement(super(exprFromString("<if (isOptionEnabled(ts.setup, useStagedMutability())) {>mutator<} else {>null<}>, <use(ts.bitmapField)>, <use(ts.valmapField)>"))),
+		uncheckedStringStatement(initFieldsWithIdendity(contentArguments(n, m, ts))) // TODO: automatically infer which def.args need to be initialized
 	])
-when def := getDef(ts, artifact, constructor());
+when (!isOptionEnabled(ts.setup, useSunMiscUnsafe()) || (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && (<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe))) &&  
+		def := getDef(ts, artifact, constructor());
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
+	= constructor(\return(\type), jdt.typeName, visibility = "private")
+when (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !(<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe)) && 
+		jdt := specializedBitmapIndexedNode(ts, nodeType) && 
+		\type := jdtToType(jdt);
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
+	= super(exprFromString("null, <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>, <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>"))
+when (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !(<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe)) &&  
+		def := getDef(ts, artifact, constructor());
+
+
+	//'	<specializedClassNameStr>(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
+	//'		super(mutator, <use(bitmapField)>, <use(valmapField)>);
+	//'		<intercalate("\n", mapper(contentArguments(n, m, ts), str(Argument a) { 
+	//			str dec = "this.<use(a)> = <use(a)>;";
+	//			
+	//			if (field(_, /.*pos.*/) := a || getter(_, /.*pos.*/) := a) {
+	//				return "\n<dec>";
+	//			} else {
+	//				return dec;
+	//			} 
+	//		}))>
+	//'		<if ((n + m) > 0) {>
+	//'		<}>assert nodeInvariant();
+	//'	}
+
 
 /*
 	// NOTE: filter list from constructor is used to restrict fields
@@ -219,7 +248,9 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, TrieSpec
 		<impl(ts, thisArtifact, arrayOffsets())>
 	
 	'	<intercalate("\n", mapper(contentArguments(n, m, ts), str(Argument a) { 
-			str dec = "private <dec(a)>;";
+			str dec = isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !(<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe) ? 
+				"private <dec(a)> = null;" : 
+				"private <dec(a)>;";
 			
 			if (field(_, /.*pos.*/) := a || getter(_, /.*pos.*/) := a) {
 				return "\n<dec>";
@@ -228,20 +259,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, TrieSpec
 			} 
 		}))>
 			
-	'	<specializedClassNameStr>(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
-	'		super(mutator, <use(bitmapField)>, <use(valmapField)>);
-	'		<intercalate("\n", mapper(contentArguments(n, m, ts), str(Argument a) { 
-				str dec = "this.<use(a)> = <use(a)>;";
-				
-				if (field(_, /.*pos.*/) := a || getter(_, /.*pos.*/) := a) {
-					return "\n<dec>";
-				} else {
-					return dec;
-				} 
-			}))>
-	'		<if ((n + m) > 0) {>
-	'		<}>assert nodeInvariant();
-	'	}
+		<impl(ts, thisArtifact, constructor())>
 
 	<if (false) {>	
 	<if (\map() := ts.ds) {>

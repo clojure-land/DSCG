@@ -111,9 +111,8 @@ str toString(Statement:expressionStatement(emptyExpression())) = "";
 str toString(Statement:expressionStatement(e)) = "<toString(e)>;";
 str toString(Statement:compoundStatement(statementList)) = "<for (stmt <- statementList) {><toString(stmt)><}>";
 
-default Statement exprToStmt(Expression e) = expressionStatement(e);
 Statement exprToStmt(compoundExpr(list[Expression] expressionList)) = compoundStatement(mapper(expressionList, exprToStmt));
-
+default Statement exprToStmt(Expression e) = expressionStatement(e);
 
 default str toString(Statement _) { throw "Ahhh"; }
 	
@@ -530,7 +529,9 @@ data TrieSpecifics
 		
 		Method BitmapIndexedNode_constructor = constructor(bitmapIndexedNodeClassReturn, "<bitmapIndexedNodeClassName>", args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ], visibility = "private", argsFilter = argsFilter),
 
-		Method nodeOf_BitmapIndexedNode = function(compactNodeClassReturn, "nodeOf", generics = genericTupleTypes, args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ], argsFilter = argsFilter, isActive = !isOptionEnabled(setup,useSpecialization()) || nBound < nMax)	
+		Method nodeOf_BitmapIndexedNode = function(compactNodeClassReturn, "nodeOf", generics = genericTupleTypes, args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ], argsFilter = argsFilter, isActive = !isOptionEnabled(setup,useSpecialization()) || nBound < nMax),
+		
+		list[tuple[int,int]] legacyNodeFactoryMethodSpecializationsUnderUnsafe = [ <0, 0>, <1, 0>, <0, 1>, <0, 2> ]		
 		)
 	;		
 	
@@ -1018,11 +1019,15 @@ str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = over
 	'	return <m.name>;
 	'}<}>
 	'
+	'<if (/^return <expression:.*>;$/ := bodyStr) {>
+	'private static final <typeToString(m.returnArg.\type)> <m.name> = <expression>;
+	'<} else {>
 	'private static final <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> initialize<capitalize(m.name)>() {
 	'	<bodyStr>
 	'}
 	'	
-	'private static final <typeToString(m.returnArg.\type)> <m.name> = initialize<capitalize(m.name)>();"
+	'private static final <typeToString(m.returnArg.\type)> <m.name> = initialize<capitalize(m.name)>();
+	'<}>"
 when m.isActive && m.isStateful && m.isConstant;
 	
 str implOrOverride(m:constructor(_,_), str bodyStr,  OverwriteType doOverride = override(), list[Annotation] annotations = []) = 

@@ -2111,7 +2111,7 @@ str generate_specializationFactoryMethods(TrieSpecifics ts) =
 when !isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup,useSpecialization()) && isOptionEnabled(ts.setup,useUntypedVariables());
 
 str generate_specializationFactoryMethods(TrieSpecifics ts) = 
-	"<for(<i, j> <- [ <1, 0>, <0, 1>, <0, 2> ]) {>
+	"<for(<i, j> <- ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe) {>
 	'	<implOrOverride(CompactNode_factoryMethod_bitmap(i, j, ts), generate_bodyOf_factoryMethod_bitmap(i, j, ts, CompactNode_factoryMethod_bitmap(i, j, ts)))>
 	'<}>"
 when isOptionEnabled(ts.setup, useSunMiscUnsafe());
