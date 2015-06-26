@@ -352,9 +352,10 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyA
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndInsertValue()) 
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndInsertValue()) =
 	"try {
-		final int valIdx = dataIndex(bitpos);
+		<dec(valIdx)> = dataIndex(bitpos);
 		
 		<generate_copyAnd_generalPrelude(ts, artifact, op)>
 						
@@ -370,30 +371,32 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 						bitwiseOr(oldBitmapValueExpr, useExpr(ts.bitposField)));
 			},
 			useExpr(ts.bitposField))>					
-				
+
 		// copy \'src\' and insert 2 element(s) at position \'valIdx\'
 		for (int i = 0; i \< valIdx; i++) {
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i    ]));
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i + 1], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i + 1]));
+			unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctKey(), useExpr(i)))>], unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctKey(), useExpr(i)))>]));
+			unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctVal(), useExpr(i)))>], unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctVal(), useExpr(i)))>]));
 		}
 		
-		unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * valIdx    ], key);
-		unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * valIdx + 1], val);		
+		unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctKey(), useExpr(valIdx)))>], key);
+		unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctVal(), useExpr(valIdx)))>], val);		
 
-		for (int i = valIdx; i \< payloadArity(); i++) {
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * (i + 1)    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i    ]));
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * (i + 1) + 1], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i + 1]));
+		for (int i = valIdx; i \< payloadArity(); i++) {			
+			unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctKey(), plus(useExpr(i), iconst(1))))>], unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctKey(), useExpr(i)))>]));
+			unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctVal(), plus(useExpr(i), iconst(1))))>], unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctVal(), useExpr(i)))>]));
 		}
 
 		// copy nodes range
 		for (int i = 0; i \< nodeArity(); i++) {
-			unsafe.putObject(dst, dstArrayOffsets[dst.slotArity() - 1 - i], unsafe.getObject(src, srcArrayOffsets[src.slotArity() - 1 - i]));
+			unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctNode(), useExpr(i)))>], unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctNode(), useExpr(i)))>]));			
 		}
 
 		return dst;
 	} catch (InstantiationException | NoSuchFieldException e) {
 		throw new RuntimeException(e);
-	}";
+	}"
+when valIdx := val(primitive("int"), "valIdx") && 
+		i := var(primitive("int"), "i");
 
 
 data PredefOp = copyAndInsertValue_nextClass();
@@ -2060,3 +2063,25 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 	}
 	
 	return physicalIndex;";
+	
+	
+data ContentType
+	= ctKey(bool isRare = false)
+	| ctVal(bool isRare = false)
+	| ctPayloadTuple(ContentType _1)
+	| ctPayloadTuple(ContentType _1, ContentType _2)
+	| ctNode()
+	| ctSlot();
+	
+Expression ctToConstant(ContentType ct) = constant(specific("ContentType"), prettyPrint(ct));
+str prettyPrint(ContentType ct) = "ContentType.<prettyPrintContentType(ct)>";
+
+str prettyPrintContentType(ct:ctKey()) = ct.isRare ? "RARE_KEY" : "KEY";
+str prettyPrintContentType(ct:ctVal()) = ct.isRare ? "RARE_VAL" : "VAL";
+str prettyPrintContentType(ct:ctNode()) = "NODE";
+str prettyPrintContentType(ct:ctSlot()) = "SLOT"; 
+
+Expression callLogicalToPhysical(TrieSpecifics ts, Artifact artifact, ContentType ct, Expression idxExpr)
+	= call(getDef(ts, artifact, logicalToPhysicalIndex()), argsOverride = (ts.contentType: ctToConstant(ct), ts.index: idxExpr));
+
+	
