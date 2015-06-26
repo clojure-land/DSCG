@@ -531,7 +531,9 @@ data TrieSpecifics
 
 		Method nodeOf_BitmapIndexedNode = function(compactNodeClassReturn, "nodeOf", generics = genericTupleTypes, args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ], argsFilter = argsFilter, isActive = !isOptionEnabled(setup,useSpecialization()) || nBound < nMax),
 		
-		list[tuple[int,int]] legacyNodeFactoryMethodSpecializationsUnderUnsafe = [ <0, 0>, <1, 0>, <0, 1>, <0, 2> ]		
+		list[tuple[int,int]] legacyNodeFactoryMethodSpecializationsUnderUnsafe = [ <0, 0>, <1, 0>, <0, 1>, <0, 2> ],
+		
+		Argument contentType = val(specific("ContentType"), "type")				
 		)
 	;		
 	

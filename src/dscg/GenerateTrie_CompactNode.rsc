@@ -770,6 +770,9 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	isRare2(),
 	isRareBitpos(),
 	
+	// TODO: ContentType()
+	logicalToPhysicalIndex(),
+	
 	sizeEmpty(),
 	sizeOne(),
 	sizeMoreThanOne(),
@@ -883,6 +886,17 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 		<impl(ts, trieNode(compactNode()), isRare1())>
 		<impl(ts, trieNode(compactNode()), isRare2())>
 		<impl(ts, trieNode(compactNode()), isRareBitpos())>		
+		
+		enum ContentType {
+			KEY,
+			VAL,
+			RARE_KEY,
+			RARE_VAL,
+			NODE,
+			SLOT
+		}
+		
+		<impl(ts, trieNode(compactNode()), logicalToPhysicalIndex())>
 		
 		<dec(field(primitive("byte"), "SIZE_EMPTY"), 		constant(primitive("byte"), "0b00"), isStatic = true)>;
 		<dec(field(primitive("byte"), "SIZE_ONE"), 			constant(primitive("byte"), "0b01"), isStatic = true)>;
@@ -1859,11 +1873,12 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getSlot()) = 
 	"try {
 	'	final long[] arrayOffsets = (long[]) unsafe.getObject(this.getClass(), unsafe.staticFieldOffset(this.getClass().getDeclaredField(\"arrayOffsets\")));
-	'	return (<typeToString(ts.keyType)>) unsafe.getObject(this, arrayOffsets[<use(ts.index)>]);
+	'	return (<typeToString(ts.keyType)>) unsafe.getObject(this, arrayOffsets[<toString(callLogicalToPhysical)>]);
 	'} catch (NoSuchFieldException | SecurityException e) {
 	'	throw new RuntimeException(e);
 	'}"
-when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+when isOptionEnabled(ts.setup, useSunMiscUnsafe())
+		&& callLogicalToPhysical := call(getDef(ts, artifact, logicalToPhysicalIndex()), argsOverride = (ts.contentType: exprFromString("ContentType.SLOT")));
 
 
 data PredefOp = getKey();
@@ -1874,11 +1889,12 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getKey()) = 
 	"try {
 	'	final long[] arrayOffsets = (long[]) unsafe.getObject(this.getClass(), unsafe.staticFieldOffset(this.getClass().getDeclaredField(\"arrayOffsets\")));
-	'	return (<typeToString(ts.keyType)>) unsafe.getObject(this, arrayOffsets[<use(tupleLengthConstant)> * <use(ts.index)>]);
+	'	return (<typeToString(ts.keyType)>) unsafe.getObject(this, arrayOffsets[<toString(callLogicalToPhysical)>]);
 	'} catch (NoSuchFieldException | SecurityException e) {
 	'	throw new RuntimeException(e);
 	'}"
-when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+when isOptionEnabled(ts.setup, useSunMiscUnsafe())
+		&& callLogicalToPhysical := call(getDef(ts, artifact, logicalToPhysicalIndex()), argsOverride = (ts.contentType: exprFromString("ContentType.KEY")));
 
 
 data PredefOp = getValue();
@@ -1889,11 +1905,12 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getValue()) = 
 	"try {
 	'	final long[] arrayOffsets = (long[]) unsafe.getObject(this.getClass(), unsafe.staticFieldOffset(this.getClass().getDeclaredField(\"arrayOffsets\")));
-	'	return (<typeToString(ts.valType)>) unsafe.getObject(this, arrayOffsets[<use(tupleLengthConstant)> * <use(ts.index)> + 1]);
+	'	return (<typeToString(ts.valType)>) unsafe.getObject(this, arrayOffsets[<toString(callLogicalToPhysical)>]);
 	'} catch (NoSuchFieldException | SecurityException e) {
 	'	throw new RuntimeException(e);
 	'}"
-when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+when isOptionEnabled(ts.setup, useSunMiscUnsafe())
+		&& callLogicalToPhysical := call(getDef(ts, artifact, logicalToPhysicalIndex()), argsOverride = (ts.contentType: exprFromString("ContentType.VAL")));
 
 
 data PredefOp = getKeyValueEntry();
@@ -1914,11 +1931,12 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getNode()) = 
 	"try {
 	'	final long[] arrayOffsets = (long[]) unsafe.getObject(this.getClass(), unsafe.staticFieldOffset(this.getClass().getDeclaredField(\"arrayOffsets\")));
-	'	return (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) unsafe.getObject(this, arrayOffsets[slotArity() - 1 - <use(ts.index)>]);
+	'	return (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) unsafe.getObject(this, arrayOffsets[<toString(callLogicalToPhysical)>]);
 	'} catch (NoSuchFieldException | SecurityException e) {
 	'	throw new RuntimeException(e);
 	'}"
-when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+when isOptionEnabled(ts.setup, useSunMiscUnsafe())
+		&& callLogicalToPhysical := call(getDef(ts, artifact, logicalToPhysicalIndex()), argsOverride = (ts.contentType: exprFromString("ContentType.NODE")));
 
 
 data PredefOp = arrayOffsetsFunction();
@@ -2003,3 +2021,42 @@ return
 	throw new RuntimeException(e);
 }";
 }
+
+
+data PredefOp = logicalToPhysicalIndex();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), logicalToPhysicalIndex())
+	= method(\return(primitive("int")), "logicalToPhysicalIndex", args = [ ts.contentType, ts.index ]);
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::logicalToPhysicalIndex())
+	= true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::logicalToPhysicalIndex()) = 
+	"final int physicalIndex;
+
+	switch (<use(ts.contentType)>) {
+	case KEY:
+		physicalIndex = TUPLE_LENGTH * index;
+		break;
+	case VAL:
+		physicalIndex = TUPLE_LENGTH * index + 1;
+		break;
+	case NODE:
+		physicalIndex = slotArity() - 1 - index;
+		break;
+	case RARE_KEY:
+		physicalIndex = TUPLE_LENGTH * index + TUPLE_LENGTH
+				* java.lang.Integer.bitCount(dataMap());
+		break;
+	case RARE_VAL:
+		physicalIndex = TUPLE_LENGTH * index + TUPLE_LENGTH
+				* java.lang.Integer.bitCount(dataMap()) + 1;
+		break;
+	case SLOT:
+		physicalIndex = index;
+		break;
+	default:
+		throw new IllegalStateException(\"Cases not exhausted?\");
+	}
+	
+	return physicalIndex;";
