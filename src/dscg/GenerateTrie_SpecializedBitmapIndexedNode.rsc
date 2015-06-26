@@ -535,7 +535,9 @@ when isOptionEnabled(ts.setup, useSandwichArrays());
 
 data PredefOp = nodeIterator();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeIterator()) = true;
+// TODO: evaluate if to remove specialized node iterators in general
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeIterator())
+	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeIterator()) 
 	= "throw new UnsupportedOperationException(); // TODO: to implement" 
