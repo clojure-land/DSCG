@@ -372,24 +372,15 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 			},
 			useExpr(ts.bitposField))>					
 
-		// copy \'src\' and insert 2 element(s) at position \'valIdx\'
-		for (int i = 0; i \< valIdx; i++) {
-			unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctKey(), useExpr(i)))>], unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctKey(), useExpr(i)))>]));
-			unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctVal(), useExpr(i)))>], unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctVal(), useExpr(i)))>]));
-		}
-		
-		unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctKey(), useExpr(valIdx)))>], key);
-		unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctVal(), useExpr(valIdx)))>], val);		
+		// copy payload range
+		<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity)>
 
-		for (int i = valIdx; i \< payloadArity(); i++) {			
-			unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctKey(), plus(useExpr(i), iconst(1))))>], unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctKey(), useExpr(i)))>]));
-			unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctVal(), plus(useExpr(i), iconst(1))))>], unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctVal(), useExpr(i)))>]));
-		}
+		<copyPayloadRange(ts, artifact, useExpr(valIdx), plus(useExpr(valIdx), iconst(1)), indexIdentity, indexIdentity, argsOverride = (ctKey(): useExpr(key(ts.keyType)), ctVal(): useExpr(val(ts.valType))))>
 
-		// copy nodes range
-		for (int i = 0; i \< nodeArity(); i++) {
-			unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctNode(), useExpr(i)))>], unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctNode(), useExpr(i)))>]));			
-		}
+		<copyPayloadRange(ts, artifact, useExpr(valIdx), call(getDef(ts, artifact, payloadArity())), indexIdentity, indexAdd1)>
+
+		// copy node range
+		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
 
 		return dst;
 	} catch (InstantiationException | NoSuchFieldException e) {
@@ -397,6 +388,27 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 	}"
 when valIdx := val(primitive("int"), "valIdx") && 
 		i := var(primitive("int"), "i");
+
+// TODO: unify copyPayloadRange and copyNodeRange
+str copyPayloadRange(TrieSpecifics ts, Artifact artifact, Expression from, Expression to, Expression(Expression) srcIndexShift, Expression(Expression) dstIndexShift, map[ContentType, Expression] argsOverride = ()) = 
+	"<if (fromPlusOne != to) {>for (int i = <toString(from)>; i \< <toString(to)>; i++) {<}>
+		unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctKey(), dstIndexShift(i)))>], <if (argsOverride[ctKey()]?) {><toString(argsOverride[ctKey()])><} else {>unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctKey(), srcIndexShift(i)))>])<}>);
+		unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctVal(), dstIndexShift(i)))>], <if (argsOverride[ctVal()]?) {><toString(argsOverride[ctVal()])><} else {>unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctVal(), srcIndexShift(i)))>])<}>);
+	<if (fromPlusOne != to) {>}<}>"
+when fromPlusOne := plus(from, iconst(1)) &&
+		i := (fromPlusOne == to ? from : useExpr(var(primitive("int"), "i")));
+		
+// TODO: unify copyPayloadRange and copyNodeRange
+str copyNodeRange(TrieSpecifics ts, Artifact artifact, Expression from, Expression to, Expression(Expression) srcIndexShift, Expression(Expression) dstIndexShift, map[ContentType, Expression] argsOverride = ()) = 
+	"<if (fromPlusOne != to) {>for (int i = <toString(from)>; i \< <toString(to)>; i++) {<}>
+		unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctNode(), dstIndexShift(i)))>], <if (argsOverride[ctNode()]?) {><toString(argsOverride[ctNode()])><} else {>unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctNode(), srcIndexShift(i)))>])<}>);
+	<if (fromPlusOne != to) {>}<}>"
+when fromPlusOne := plus(from, iconst(1)) &&
+		i := (fromPlusOne == to ? from : useExpr(var(primitive("int"), "i")));
+		
+private Expression(Expression) indexIdentity = Expression(Expression e) { return e; };
+private Expression(Expression) indexAdd1 = Expression(Expression e) { return plus(e, iconst(1)); };
+private Expression(Expression) indexSubtract1 = Expression(Expression e) { return minus(e, iconst(1)); };
 
 
 data PredefOp = copyAndInsertValue_nextClass();
@@ -431,25 +443,18 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>					
 				
-		for (int i = 0; i \< valIdx; i++) {
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i    ]));
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i + 1], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i + 1]));
-		}
+		// copy payload range				
+		<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity)>
+		<copyPayloadRange(ts, artifact, useExpr(valIdx), call(getDef(ts, artifact, payloadArity())), indexAdd1, indexIdentity)>
 		
-		for (int i = valIdx; i \< payloadArity(); i++) {
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * (i + 1)    ]));
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i + 1], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * (i + 1) + 1]));
-		}
-
-		// copy nodes range
-		for (int i = 0; i \< nodeArity(); i++) {
-			unsafe.putObject(dst, dstArrayOffsets[dst.slotArity() - 1 - i], unsafe.getObject(src, srcArrayOffsets[src.slotArity() - 1 - i]));
-		}
+		// copy node range				
+		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
 		
 		return dst;	
 	} catch (InstantiationException | NoSuchFieldException e) {
 		throw new RuntimeException(e);
-	}";
+	}"
+when valIdx := val(primitive("int"), "valIdx");
 
 data PredefOp = copyAndRemoveValue_nextClass();
 
@@ -467,7 +472,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndSetValue()) =
 	"try {
-		final int valIdx = dataIndex(bitpos);
+		<dec(valIdx)> = dataIndex(bitpos);
 
 		<generate_copyAnd_generalPrelude(ts, artifact, op)>
 						
@@ -483,29 +488,21 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>		
 				
-		for (int i = 0; i \< valIdx; i++) {
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i    ]));
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i + 1], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i + 1]));
-		}
+		// copy payload range				
+		<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity)>								
 
-		unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * valIdx    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * valIdx    ]));
-		unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * valIdx + 1], val);
+		<copyPayloadRange(ts, artifact, useExpr(valIdx), plus(useExpr(valIdx), iconst(1)), indexIdentity, indexIdentity, argsOverride = (ctVal(): useExpr(val(ts.valType))))>
 				
-		for (int i = valIdx + 1; i \< payloadArity(); i++) {
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i    ]));
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i + 1], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i + 1]));
-		}
+		<copyPayloadRange(ts, artifact, plus(useExpr(valIdx), iconst(1)), call(getDef(ts, artifact, payloadArity())), indexIdentity, indexIdentity)>
 
-		// copy nodes range
-		for (int i = 0; i \< nodeArity(); i++) {
-			unsafe.putObject(dst, dstArrayOffsets[dst.slotArity() - 1 - i], unsafe.getObject(src, srcArrayOffsets[src.slotArity() - 1 - i]));
-		}
-				
+		// copy node range
+		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
+
 		return dst;
 	} catch (InstantiationException | NoSuchFieldException e) {
 		throw new RuntimeException(e);
-	}		
-	";
+	}"
+when valIdx := val(primitive("int"), "valIdx");
 
 
 data PredefOp = copyAndSetValue_nextClass();
@@ -523,7 +520,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndSetNode()) =
 	"try {
-		final int idx = nodeIndex(bitpos);
+		<dec(idx)> = nodeIndex(bitpos);
 		
 		<generate_copyAnd_generalPrelude(ts, artifact, op)>
 						
@@ -538,28 +535,22 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 				return oldBitmapValueExpr; // idendity
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>
-
-		// copy paylaod range
-		for (int i = 0; i \< payloadArity(); i++) {
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i    ]));
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i + 1], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i + 1]));
-		}
+			
+		// copy payload range									
+		<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity())), indexIdentity, indexIdentity)>
 
 		// copy node range
-		for (int i = 0; i \< idx; i++) {
-			unsafe.putObject(dst, dstArrayOffsets[dst.slotArity() - 1 - i], unsafe.getObject(src, srcArrayOffsets[src.slotArity() - 1 - i]));
-		}
+		<copyNodeRange(ts, artifact, iconst(0), useExpr(idx), indexIdentity, indexIdentity)>
 		
-		unsafe.putObject(dst, dstArrayOffsets[dst.slotArity() - 1 - idx], node);
+		<copyNodeRange(ts, artifact, useExpr(idx), plus(useExpr(idx), iconst(1)), indexIdentity, indexIdentity, argsOverride = (ctNode(): useExpr(\node(ts.ds, ts.tupleTypes))))>	
 
-		for (int i = idx + 1; i \< nodeArity(); i++) {
-			unsafe.putObject(dst, dstArrayOffsets[dst.slotArity() - 1 - i], unsafe.getObject(src, srcArrayOffsets[src.slotArity() - 1 - i]));
-		}
+		<copyNodeRange(ts, artifact, plus(useExpr(idx), iconst(1)), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
 								
 		return dst;
 	} catch (InstantiationException | NoSuchFieldException e) {
 		throw new RuntimeException(e);
-	}";
+	}"
+when idx := val(primitive("int"), "idx");
 
 
 data PredefOp = copyAndSetNode_nextClass();
@@ -595,8 +586,8 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromInlineToNode()) =
 	"try {
-		final int idxOld = dataIndex(bitpos);
-		final int idxNew = nodeIndex(bitpos);
+		<dec(idxOld)> = dataIndex(bitpos);
+		<dec(idxNew)> = nodeIndex(bitpos);
 		
 		<generate_copyAnd_generalPrelude(ts, artifact, op)>
 						
@@ -614,32 +605,30 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>
 
-		for (int i = 0; i \< idxOld; i++) {
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i    ]));
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i + 1], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i + 1]));
-		}
+		// copy payload range
+		<copyPayloadRange(ts, artifact, iconst(0), useExpr(idxOld), indexIdentity, indexIdentity)>
 		
-		for (int i = idxOld + 1; i \< payloadArity(); i++) {
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * (i - 1)    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i    ]));
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * (i - 1) + 1], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i + 1]));
-		}
+		<copyPayloadRange(ts, artifact, plus(useExpr(idxOld), iconst(1)), call(getDef(ts, artifact, payloadArity())), indexIdentity, indexSubtract1)>
 
-		// copy nodes range
-		for (int i = 0; i \< idxNew; i++) {
-			unsafe.putObject(dst, dstArrayOffsets[dst.slotArity() - 1 - i], unsafe.getObject(src, srcArrayOffsets[src.slotArity() - 1 - i]));
-		}
+		// copy node range
+		<copyNodeRange(ts, artifact, iconst(0), useExpr(idxNew), indexIdentity, indexIdentity)>		
 		
-		unsafe.putObject(dst, dstArrayOffsets[dst.slotArity() - 1 - idxNew], node);
+		<copyNodeRange(ts, artifact, 
+			useExpr(idxNew), 
+			plus(useExpr(idxNew), iconst(1)), 
+			indexIdentity, 
+			indexIdentity, 
+			argsOverride = (
+				ctNode(): useExpr(\node(ts.ds, ts.tupleTypes))))>
+		
+		<copyNodeRange(ts, artifact, useExpr(idxNew), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexAdd1)>
 
-		for (int i = idxNew; i \< nodeArity(); i++) {
-			unsafe.putObject(dst, dstArrayOffsets[dst.slotArity() - 1 - (i + 1)], unsafe.getObject(src, srcArrayOffsets[src.slotArity() - 1 - i]));
-		}
-						
 		return dst;
 	} catch (InstantiationException | NoSuchFieldException e) {
 		throw new RuntimeException(e);
-	}	
-	";
+	}"
+when idxOld := val(primitive("int"), "idxOld") &&
+		idxNew := val(primitive("int"), "idxNew");
 
 
 data PredefOp = copyAndMigrateFromInlineToNode_nextClass();
@@ -657,8 +646,8 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromNodeToInline()) =
 	"try {
-		final int idxOld = nodeIndex(bitpos);
-		final int idxNew = dataIndex(bitpos);	
+		<dec(idxOld)> = nodeIndex(bitpos);
+		<dec(idxNew)> = dataIndex(bitpos);	
 	
 		<generate_copyAnd_generalPrelude(ts, artifact, op)>
 						
@@ -676,33 +665,30 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 			},
 			useExpr(ts.bitposField))>									
 		
-		// copy \'src\' and insert 2 element(s) at position \'idxNew\'
-		for (int i = 0; i \< idxNew; i++) {
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i    ]));
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * i + 1], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i + 1]));
-		}
-		
-		unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * idxNew    ], node.getKey(0));
-		unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * idxNew + 1], node.getValue(0));		
-
-		for (int i = idxNew; i \< payloadArity(); i++) {
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * (i + 1)    ], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i    ]));
-			unsafe.putObject(dst, dstArrayOffsets[<tupleLength(ts.ds)> * (i + 1) + 1], unsafe.getObject(src, srcArrayOffsets[<tupleLength(ts.ds)> * i + 1]));
-		}		
-		
-		// copy nodes range
-		for (int i = 0; i \< idxOld; i++) {
-			unsafe.putObject(dst, dstArrayOffsets[dst.slotArity() - 1 - i], unsafe.getObject(src, srcArrayOffsets[src.slotArity() - 1 - i]));
-		}
-		
-		for (int i = idxOld + 1; i \< nodeArity(); i++) {
-			unsafe.putObject(dst, dstArrayOffsets[dst.slotArity() - 1 - (i - 1)], unsafe.getObject(src, srcArrayOffsets[src.slotArity() - 1 - i]));
-		}
-		
+		// copy payload range
+		<copyPayloadRange(ts, artifact, iconst(0), useExpr(idxNew), indexIdentity, indexIdentity)>
+			
+		<copyPayloadRange(ts, artifact, 
+			useExpr(idxNew), 
+			plus(useExpr(idxNew), iconst(1)), 
+			indexIdentity, 
+			indexIdentity, 
+			argsOverride = (
+				ctKey(): exprFromString("node.getKey(0)"), 
+				ctVal(): exprFromString("node.getValue(0)")))>			
+				
+		<copyPayloadRange(ts, artifact, useExpr(idxNew), call(getDef(ts, artifact, payloadArity())), indexIdentity, indexAdd1)>		
+				
+		// copy node range
+		<copyNodeRange(ts, artifact, iconst(0), useExpr(idxOld), indexIdentity, indexIdentity)>
+		<copyNodeRange(ts, artifact, plus(useExpr(idxOld), iconst(1)), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexSubtract1)>
+				
 		return dst;
 	} catch (InstantiationException | NoSuchFieldException e) {
 		throw new RuntimeException(e);
-	}";
+	}"
+when idxOld := val(primitive("int"), "idxOld") &&
+		idxNew := val(primitive("int"), "idxNew");
 
 
 data PredefOp = copyAndMigrateFromNodeToInline_nextClass();
@@ -2044,9 +2030,6 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 	case VAL:
 		physicalIndex = TUPLE_LENGTH * index + 1;
 		break;
-	case NODE:
-		physicalIndex = slotArity() - 1 - index;
-		break;
 	case RARE_KEY:
 		physicalIndex = TUPLE_LENGTH * index + TUPLE_LENGTH
 				* java.lang.Integer.bitCount(dataMap());
@@ -2054,6 +2037,9 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 	case RARE_VAL:
 		physicalIndex = TUPLE_LENGTH * index + TUPLE_LENGTH
 				* java.lang.Integer.bitCount(dataMap()) + 1;
+		break;
+	case NODE:
+		physicalIndex = slotArity() - 1 - index;
 		break;
 	case SLOT:
 		physicalIndex = index;
