@@ -116,7 +116,7 @@ when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(
 data PredefOp = contentArgument_PayloadTuple(int rowId, int columnId);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_PayloadTuple(int rowId, int columnId))
-	= property(arg, arg.name, isStateful = true, isConstant = false)
+	= property(arg, arg.name, isStateful = true, isConstant = false, hasGetter = false)
 when arg := appendToName(nodeTupleArg(ts, columnId), "<rowId>");
 
 // Default Value for Property
@@ -128,7 +128,7 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType
 data PredefOp = contentArgument_Slot(int rowId);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Slot(int rowId))
-	= property(arg, arg.name, isStateful = true, isConstant = false)
+	= property(arg, arg.name, isStateful = true, isConstant = false, hasGetter = false)
 when arg := slot(rowId);
 
 // Default Value for Property
@@ -140,7 +140,7 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType
 data PredefOp = contentArgument_Node(int rowId);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Node(int rowId))
-	= property(arg, arg.name, isStateful = true, isConstant = false)
+	= property(arg, arg.name, isStateful = true, isConstant = false, hasGetter = false)
 when arg := \node(ts.ds, ts.tupleTypes, rowId);
 
 // Default Value for Property

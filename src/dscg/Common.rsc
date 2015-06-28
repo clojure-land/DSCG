@@ -1006,10 +1006,10 @@ when m.isActive && !m.isStateful && m.isConstant
 	;
 
 str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
-	"<for(a <- annotations) {><toString(a)><}>
+	"<if (m.hasGetter) {><for(a <- annotations) {><toString(a)><}>
 	'<m.visibility> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>() {
 	'	return <m.name>;
-	'}
+	'}<}>
 	'
 	'private final <typeToString(m.returnArg.\type)> <m.name>;"
 when m.isActive && m.isStateful && !m.isConstant
