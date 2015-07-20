@@ -68,9 +68,9 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 	arity(),
 	size(),
 	
-	equals(),
-	hashCode(),
-	toString()
+	PredefOp::equals(),
+	PredefOp::hashCode(),
+	PredefOp::toString()
 ];
 
 

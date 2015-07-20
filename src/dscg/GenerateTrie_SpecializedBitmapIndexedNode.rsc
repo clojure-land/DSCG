@@ -328,7 +328,7 @@ data PredefOp = hasSlots();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hasSlots()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hasSlots())
-	= result(bconst(slotCount(ts, nodeType) != 0)); 	
+	= result(boolean(slotCount(ts, nodeType) != 0)); 	
 	
 	
 data PredefOp = slotArity();

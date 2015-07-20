@@ -106,6 +106,8 @@ data Statement
 	| compoundStatement(list[Statement] statementList) 
 	;
 
+str toString(str s) = s;
+
 str toString(Statement:uncheckedStringStatement(statementStr)) = statementStr;
 str toString(Statement:expressionStatement(emptyExpression())) = "";
 str toString(Statement:expressionStatement(e)) = "<toString(e)>;";
@@ -167,7 +169,8 @@ Expression assign(Argument lhs, Expression rhs:plus(useExpr(lhs), Expression tai
 data Expression = constant(Type \type, str constantString);
 Expression lconst(int i) = constant(primitive("long"), "<i>L");
 Expression iconst(int i) = constant(primitive("int"), "<i>");
-Expression bconst(bool b) = constant(primitive("boolean"), "<b>");
+Expression bconst(int i) = cast(primitive("byte"), iconst(i));
+Expression boolean(bool b) = constant(primitive("boolean"), "<b>");
 
 data Expression = binaryLiteral(int i);
 Expression binaryLiteral(str s) = binaryLiteral(parseInt(s, 2));
@@ -300,8 +303,9 @@ str toString(Expression c:call(m:method(_,_))) =
 when m.isActive;
 
 str toString(Expression c:call(m:property(_,_))) = 
-	"<printNonEmptyCommentWithNewline(c.commentText)><m.name>()"
-when m.isActive;
+	"<printNonEmptyCommentWithNewline(c.commentText)><m.name><if (!accessProperty) {>()<}>"
+when m.isActive
+		&& accessProperty := (m.isStateful && !m.hasGetter);
 
 //str toString(Expression c:call(TrieSpecifics ts, Argument arg, PredefOp op), Method m = getDef(ts, op)) = 
 //	"<printNonEmptyCommentWithNewline(c.commentText)><use(arg)>.<m.name>(<eval(substitute(m.lazyArgs() - m.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
@@ -418,7 +422,8 @@ data PredefArgLabel
 	//| payloadValue() 
 	| collection()
 	| tupleWrapper()
-	| hashCode();
+	| hashCode()
+	| contentArguments();
 
 
 
@@ -1028,7 +1033,8 @@ str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = over
 	'	<bodyStr>
 	'}
 	'	
-	'private static final <typeToString(m.returnArg.\type)> <m.name> = initialize<capitalize(m.name)>();
+	'<if (m.hasGetter) {>private<} else {><m.visibility><}> 
+	'static final <typeToString(m.returnArg.\type)> <m.name> = initialize<capitalize(m.name)>();
 	'<}>"
 when m.isActive && m.isStateful && m.isConstant;
 	
@@ -1968,7 +1974,7 @@ Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:insertTuple
 when \map(multi = false) := ts.ds;
 
 Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:insertTuple(), onInsert(), list[Expression] payloadTupleExprList = []) 
-	= bconst(true)
+	= boolean(true)
 when !(\map(multi = false) := ts.ds);
 
 Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:insertTuple(), onReplacedValue(), list[Expression] payloadTupleExprList = []) 
@@ -1985,7 +1991,7 @@ Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:insertTuple
 when \map(multi = false) := ts.ds;
 
 Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:insertTuple(), onInsertAlreadyPresent(), list[Expression] payloadTupleExprList = []) 
-	= bconst(false)
+	= boolean(false)
 when !(\map(multi = false) := ts.ds);
 
 
@@ -2302,7 +2308,7 @@ Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple
 when \map(multi = false) := ts.ds;
 
 Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple(), onRemove(), list[Expression] payloadTupleExprList = []) 
-	= bconst(true)
+	= boolean(true)
 when !(\map(multi = false) := ts.ds);
 
 Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple(), onRemoveNotFound(), list[Expression] payloadTupleExprList = []) 
@@ -2310,7 +2316,7 @@ Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple
 when \map(multi = false) := ts.ds;
 
 Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple(), onRemoveNotFound(), list[Expression] payloadTupleExprList = []) 
-	= bconst(false)
+	= boolean(false)
 when !(\map(multi = false) := ts.ds);
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple()) = true;
@@ -2325,8 +2331,8 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNo
 		if (<eq(key(ts.keyType, "keys[idx]"), key(ts.keyType))>) {
 			<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = vals[idx]; details.updated(currentVal);<}><if (\set() := ts.ds) {>details.modified();<}>
 			
-			if (this.arity() == 1) {			
-				return nodeOf(mutator);
+			if (this.arity() == 1) {						
+				return <toString(call(getDef(ts, trieNode(compactNode()), emptyTrieNodeConstant())))>;
 			} else if (this.arity() == 2) {
 				/*
 				 * Create root node with singleton element. This node
@@ -2335,7 +2341,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNo
 				 */
 				<dec(key(ts.keyType, "theOtherKey"))> = (idx == 0) ? keys[1] : keys[0];
 				<if (\map() := ts.ds) {><dec(val(ts.valType, "theOtherVal"))> = (idx == 0) ? vals[1] : vals[0];<}>
-				return <CompactNode(ts.ds)>.<GenericsStr(ts.tupleTypes)> nodeOf(mutator).updated(mutator,
+				return <toString(call(getDef(ts, trieNode(compactNode()), emptyTrieNodeConstant())))>.updated(mutator,
 								theOtherKey<if (\map() := ts.ds) {>, theOtherVal<}>, keyHash, 0, details<if (!(eq == equalityDefaultForArguments)) {>, cmp<}>);
 			} else {
 				<arraycopyAndRemoveTuple(field(asArray(ts.keyType), "this.keys"), field(asArray(ts.keyType), "keysNew"), 1, field(primitive("int"), "idx"))>
@@ -3369,9 +3375,11 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 
 default str impl(TrieSpecifics ts, Artifact artifact, PredefOp op) = "";
 
-str impl(TrieSpecifics ts, Artifact artifact, PredefOp op, Method __def = getDef(ts, artifact, op)) 
+str impl(TrieSpecifics ts, Artifact artifact, PredefOp op) 
 	= implOrOverride(__def, generate_bodyOf(ts, artifact, op), doOverride = \new())
-when __def.isActive && exists_bodyOf(ts, artifact, op);
+when exists_bodyOf(ts, artifact, op)
+		&& __def := getDef(ts, artifact, op)
+		&& __def.isActive;
 
 //str impl(TrieSpecifics ts, Artifact artifact, PredefOp op, Method __def = getDef(ts, artifact, op)) 
 //	= implOrOverride(__def, generate_bodyOf(ts, artifact, op), doOverride = \new())

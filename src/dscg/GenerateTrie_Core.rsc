@@ -22,7 +22,6 @@ str generateCoreClassString(ts, rel[Option,bool] setup, str innerClassesString) 
 	//TrieSpecifics ts = setArtifact(tsSuper, core(immutable()));
 	
 	str emptyCollectionConstantName = "EMPTY_<toUpperCase(toString(ts.ds))>";
-	str emptyTrieNodeConstantName   = "EMPTY_NODE";
 	
 	Argument rootNode = jdtToVal(abstractNode(ts), "rootNode");
 	
@@ -268,10 +267,10 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	<implOrOverride(getDef(ts, core(immutable()), toGenericArray()), 
 		generate_bodyOf_jul_Collection_toGenericArray(ts))>
 
-	<implOrOverride(getDef(ts, core(immutable()), equals()), 
+	<implOrOverride(getDef(ts, core(immutable()), PredefOp::equals()), 
 		generate_bodyOf_CoreCommon_equals(ts, ts.coreClassName))>
 
-	<implOrOverride(getDef(ts, core(immutable()), hashCode()), 
+	<implOrOverride(getDef(ts, core(immutable()), PredefOp::hashCode()), 
 		"return hashCode;")>
 
 	@Override

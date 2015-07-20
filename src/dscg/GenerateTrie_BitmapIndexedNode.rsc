@@ -128,7 +128,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), slotArity()), 
 			"return nodes.length;")>
 
-		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), hashCode()), 
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), PredefOp::hashCode()), 
 			"final int prime = 31;
 			int result = 0;
 			result = prime * result + (<primitiveHashCode(___valmapMethod(ts.bitPartitionSize))>);
@@ -136,7 +136,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 			result = prime * result + Arrays.hashCode(nodes);
 			return result;")>
 		
-		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), equals()), 
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), PredefOp::equals()), 
 			"if (null == other) {
 				return false;
 			}
