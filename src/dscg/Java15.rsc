@@ -512,13 +512,13 @@ syntax ResultType =
   ;
 
 // msteindorfer
-syntax Expr 
-	= keywordExpression: "kw" ":" Id keyword "=" "(" Expr expression ")"
-	;
+//syntax Expr 
+//	= keywordExpression: "kw" ":" Id keyword "=" Expr expression
+//	;
 	
 // msteindorfer
 syntax Expr = 
-	expressionList: "(" {Expr ","}* expressions ")";	
+	expressionList: "(" {Expr ","}+ expressions ")";	
 
 syntax Expr =
   FieldAccess \ FieldAccessKeywords 
@@ -533,7 +533,7 @@ syntax Expr =
   ;
 
 syntax Expr = 
-  right 
+  > right 
     ( right postIncr: Expr "++" 
     | right postDecr: Expr "--" 
     )
@@ -548,6 +548,7 @@ syntax Expr =
       | left remain: Expr "%" Expr 
       | left mul: Expr "*" Expr 
       )
+  > keywordExpression: "kw" ":" Id keyword "=" Expr expression
   > left 
       ( left minus: Expr "-" !>> [\-] Expr 
       | left plus: Expr "+" !>> [+] Expr 
