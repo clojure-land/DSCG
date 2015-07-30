@@ -62,7 +62,7 @@ syntax InterfaceDecHead =
   ;
 
 syntax LocalVarDec =
-  @prefer localVarDec: (Anno | VarMod)* Type {VarDec ","}+ 
+  @prefer localVarDec: (Anno | VarMod)* annotationsAndModifiers Type type {VarDec ","}+ 
   ;
 
 syntax TypeParams =
@@ -220,9 +220,10 @@ lexical EscEscChar =
   "\\\\" 
   ;
 
+// msteindorfer: how to support arrays?
 syntax FormalParam =
-   param: (Anno | VarMod)* Type VarDecId 
-  |  varArityParam: (Anno | VarMod)* Type "..." VarDecId 
+   param: (Anno | VarMod)* Type type VarDecId name 
+  |  varArityParam: (Anno | VarMod)* Type type "..." VarDecId name 
   ;
 
 syntax StaticInit =
@@ -266,8 +267,8 @@ syntax NumType =
   ;
 
 syntax MethodDecHead =
-   methodDecHead: (Anno | MethodMod)* TypeParams? ResultType Id "(" {FormalParam ","}* ")" Throws? 
-  |  deprMethodDecHead: (MethodMod | Anno)* TypeParams? ResultType Id "(" {FormalParam ","}* ")" Dim+ Throws? 
+   methodDecHead: (Anno | MethodMod)* TypeParams? ResultType Id methodName "(" {FormalParam ","}* parameterList ")" Throws? 
+  |  deprMethodDecHead: (MethodMod | Anno)* TypeParams? ResultType Id methodName "(" {FormalParam ","}* parameterList ")" Dim+ Throws? 
   ;
 
 syntax Anno =
@@ -510,10 +511,18 @@ syntax ResultType =
   | Type 
   ;
 
+// msteindorfer
+syntax Expr = 
+	keywordExpression: "kw" ":" Id keyword ":" "(" Expr expression ")" ;
+	
+// msteindorfer
+syntax Expr = 
+	expressionList: "(" {Expr ","}* expressions ")";	
+
 syntax Expr =
   FieldAccess \ FieldAccessKeywords 
   |  newInstance: "new"  TypeArgs? ClassOrInterfaceType "(" {Expr ","}* ")" ClassBody? 
-  |  invoke: MethodSpec "(" {Expr ","}* ")" 
+  |  invoke: MethodSpec "(" {Expr ","}* arguments ")" 
   | bracket "(" Expr ")" 
   |  lit: Literal 
   |  qThis: TypeName "." "this"  
