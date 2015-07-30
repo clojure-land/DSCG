@@ -512,8 +512,9 @@ syntax ResultType =
   ;
 
 // msteindorfer
-syntax Expr = 
-	keywordExpression: "kw" ":" Id keyword ":" "(" Expr expression ")" ;
+syntax Expr 
+	= keywordExpression: "kw" ":" Id keyword "=" "(" Expr expression ")"
+	;
 	
 // msteindorfer
 syntax Expr = 
@@ -531,7 +532,7 @@ syntax Expr =
   | ArrayAccess \ ArrayAccessKeywords 
   ;
 
-syntax Expr =
+syntax Expr = 
   right 
     ( right postIncr: Expr "++" 
     | right postDecr: Expr "--" 
@@ -585,9 +586,9 @@ syntax Expr =
       | right assign: LHS "=" Expr 
       | right assignDiv: LHS "/=" Expr 
       | right assignURightShift: LHS "\>\>\>=" Expr 
-      | right assignMinus: LHS "-=" Expr 
+      | right assignMinus: LHS "-=" Expr   
       )
-  ;
+  ;  
 
 syntax Expr =
    castPrim: "(" PrimType ")" Expr 

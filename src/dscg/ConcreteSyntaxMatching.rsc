@@ -52,9 +52,10 @@ void idump(value val) {
  
 test bool testSubsituteNamedArguments() {
 	MethodDecHead methodDecHead = (MethodDecHead) `void main(int arg0, int arg1, int arg2)`;
-	Expr methodCall = (Expr) `main(kw:arg1:(arg0 + 5))`; 
+	Expr methodCall = (Expr) `main(kw:arg1 = (arg0 + 5))`;
 
 	Expr methodCallAfterSubstitution = substituteNamedArguments(methodDecHead, methodCall);
+	// println(methodCallAfterSubstitution);
 	
 	return (Expr)`main(arg0, arg0 + 5, arg2)` := methodCallAfterSubstitution;
 }
@@ -68,6 +69,7 @@ Expr substituteNamedArguments(MethodDecHead methodDecHead, Expr methodCall) {
 	map[str, Expr] idendityMap = ( "<x.name>" : [Expr] "<x.name>" | x <- toList(methodDecHead.parameterList) );
 		
 	map[str, Expr] overridesMap = ( "<arg.\keyword>" : arg.expression | arg <- toList(methodCall.arguments), arg is keywordExpression );
+	// println(toList(methodCall.arguments));
 
 	map[str, Expr] substitutionMap = idendityMap + overridesMap;
 
