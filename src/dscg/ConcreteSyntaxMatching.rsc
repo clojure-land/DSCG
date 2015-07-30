@@ -85,10 +85,10 @@ list[Expr] flattenExpressionLists(Expr e)
 	= flattenExpressionLists(toList(e))
 when e is expressionList;
 	
-list[Expr] flattenExpressionLists(list[&T <: value] nestedArguments)
+list[Expr] flattenExpressionLists(list[value] nestedArguments)
 	= [ *flattenExpressionLists(arg) | arg <- nestedArguments ];
 
-default list[Expr] flattenExpressionLists(notMatched) {
+default list[Expr] flattenExpressionLists(value notMatched) {
 	throw "Unsupported value <notMatched>.";
 }
 
@@ -147,7 +147,7 @@ Expression desugar((Expression)`statemachine {<States ss>}`)
     body := states2ifs(ss, entryCode(ss)); 
 */
 
-Argument patternToAst(LocalVarDec cs) = var(unknown(), "unknown");
+Argument patternToAst(LocalVarDec cs) = Argument::var(unknown(), "unknown");
 
 void main() {
 	patternToAst((LocalVarDec)`int dummy`);
