@@ -52,13 +52,54 @@ void idump(value val) {
  
 test bool testSubsituteNamedArguments() {
 	MethodDecHead methodDecHead = (MethodDecHead) `void main(int arg0, int arg1, int arg2)`;
-	Expr methodCall = (Expr) `main(kw:arg1 = (arg0 + 5))`;
+	Expr methodCall = (Expr) `main(kw:arg1 = arg0 + 5)`;
 
 	Expr methodCallAfterSubstitution = substituteNamedArguments(methodDecHead, methodCall);
 	// println(methodCallAfterSubstitution);
 	
 	return (Expr)`main(arg0, arg0 + 5, arg2)` := methodCallAfterSubstitution;
 }
+
+test bool testSubsituteAndSpliceNamedArguments() {
+	MethodDecHead methodDecHead = (MethodDecHead) `void main(int arg0, int arg1, int arg2)`;
+	Expr methodCall = (Expr) `main(kw:arg1 = (arg0 + 5, arg0 + 7))`;
+
+	Expr methodCallAfterSubstitution = substituteNamedArguments(methodDecHead, methodCall);
+	// println(methodCallAfterSubstitution);
+	
+	return (Expr)`main(arg0, arg0 + 5, arg0 + 7, arg2)` := methodCallAfterSubstitution;
+}
+
+test bool testFlattenExpressionLists() {
+	list[Expr] result = flattenExpressionLists([ [Expr] "(arg0 + 5, arg0 + 7)", [Expr] "arg1 + 3"]);
+	
+	return [ [Expr] "arg0 + 5", [Expr] "arg0 + 7", [Expr] "arg1 + 3"]:= result;
+}
+
+
+list[Expr] flattenExpressionLists(Expr e) 
+	= [e]
+when !(e is expressionList);
+
+list[Expr] flattenExpressionLists(Expr e) 
+	= flattenExpressionLists(toList(e))
+when e is expressionList;
+	
+list[Expr] flattenExpressionLists(list[&T <: value] nestedArguments)
+	= [ *flattenExpressionLists(arg) | arg <- nestedArguments ];
+
+default list[Expr] flattenExpressionLists(notMatched) {
+	throw "Unsupported value <notMatched>.";
+}
+
+
+list[Expr] toList(Expr e) 
+	= [ item | item <- e.expressions ]
+when e is expressionList; 
+
+default list[Expr] toList(Expr e) 
+	= [ e ];
+
 
 Expr substituteNamedArguments(MethodDecHead methodDecHead, Expr methodCall) {
 	if (!(methodCall is invoke)) 
@@ -75,7 +116,9 @@ Expr substituteNamedArguments(MethodDecHead methodDecHead, Expr methodCall) {
 
 	list[Expr] orderedArguments = [ substitutionMap["<x.name>"] | x <- toList(methodDecHead.parameterList) ];
 	
-	return methodCall.arguments = ([Expr] "_(<intercalate(", ", orderedArguments)>)").arguments;
+	// println(flattenExpressionLists(orderedArguments));
+	
+	return methodCall.arguments = ([Expr] "_(<intercalate(", ", flattenExpressionLists(orderedArguments))>)").arguments;
 }
  
 /*

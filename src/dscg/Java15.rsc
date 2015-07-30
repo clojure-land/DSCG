@@ -512,11 +512,6 @@ syntax ResultType =
   ;
 
 // msteindorfer
-//syntax Expr 
-//	= keywordExpression: "kw" ":" Id keyword "=" Expr expression
-//	;
-	
-// msteindorfer
 syntax Expr = 
 	expressionList: "(" {Expr ","}+ expressions ")";	
 
@@ -524,7 +519,7 @@ syntax Expr =
   FieldAccess \ FieldAccessKeywords 
   |  newInstance: "new"  TypeArgs? ClassOrInterfaceType "(" {Expr ","}* ")" ClassBody? 
   |  invoke: MethodSpec "(" {Expr ","}* arguments ")" 
-  | bracket "(" Expr ")" 
+  | bracket "(" Expr expression ")" 
   |  lit: Literal 
   |  qThis: TypeName "." "this"  
   | ArrayCreationExpr 
@@ -548,7 +543,6 @@ syntax Expr =
       | left remain: Expr "%" Expr 
       | left mul: Expr "*" Expr 
       )
-  > keywordExpression: "kw" ":" Id keyword "=" Expr expression
   > left 
       ( left minus: Expr "-" !>> [\-] Expr 
       | left plus: Expr "+" !>> [+] Expr 
@@ -589,6 +583,7 @@ syntax Expr =
       | right assignURightShift: LHS "\>\>\>=" Expr 
       | right assignMinus: LHS "-=" Expr   
       )
+  > keywordExpression: "kw" ":" Id keyword "=" Expr expression
   ;  
 
 syntax Expr =
