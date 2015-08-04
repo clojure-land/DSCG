@@ -105,6 +105,9 @@ data PredefOp = rawMap1();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::rawMap1())
 	= method(ts.valmapField, "rawMap1", isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding())); // TODO: fix reference in return
 
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap1())
+	= property(ts.valmapField, "rawMap1");
+
 
 data PredefOp = rawMap2();
 
@@ -873,6 +876,9 @@ list[PredefOp] declaredMethodsByCompactNode = [
 
 lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:compactNode(BitmapSpecialization _)) 
 	= [ <nodeType,nodeMap()>, <nodeType,dataMap()> ];
+	
+lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:compactHeterogeneousNode(BitmapSpecialization _)) 
+	= [ <nodeType,nodeMap()>, <nodeType,dataMap()> ];	
 
 str emptyTrieNodeConstantName = "EMPTY_NODE";
 str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy = true) {

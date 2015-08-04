@@ -397,6 +397,12 @@ data TrieNodeType
 	| specializedBitmapIndexedNode(int n, int m) // bool supportsNodes = (n != 0), bool supportsValues = (m != 0))
 	| leafNode();
 
+TrieNodeType compactNode(bool isHeterogeneous:false) = compactNode();
+TrieNodeType compactNode(bool isHeterogeneous:true) = compactHeterogeneousNode();
+
+TrieNodeType compactNode(bool isHeterogeneous:false, BitmapSpecialization bitmapSpecialization) = compactNode(bitmapSpecialization);
+TrieNodeType compactNode(bool isHeterogeneous:true, BitmapSpecialization bitmapSpecialization) = compactHeterogeneousNode(bitmapSpecialization);
+
 data BitmapSpecialization 
 	= deferBitmapSpecialization()
 	| specializeByBitmap(bool supportsNodes, bool supportsValues);
@@ -1016,8 +1022,16 @@ str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = over
 	'	return <m.name>;
 	'}<}>
 	'
-	'private final <typeToString(m.returnArg.\type)> <m.name>;"
-when m.isActive && m.isStateful && !m.isConstant
+	'<if (doInitialize) {>
+	'	<if (/^return <expression:.*>;$/ := bodyStr) {>
+	'		private final <typeToString(m.returnArg.\type)> <m.name> = <expression>;
+	'	<} else {>
+	'		private final <typeToString(m.returnArg.\type)> <m.name> = ???;	
+	'	<}>
+	'<} else {>
+	'	private final <typeToString(m.returnArg.\type)> <m.name>;
+	'<}>"
+when m.isActive && m.isStateful && !m.isConstant && doInitialize := bodyStr != ""
 	;
 
 str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
@@ -3240,7 +3254,7 @@ default lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNode
 	}
 	
 	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
-		refines += { <specializedBitmapIndexedNode(n, m), compactNode()> | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound };
+		refines += { <specializedBitmapIndexedNode(n, m), compactHeterogeneousNode()> | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound };
 		//refines += { <specializedBitmapIndexedNode(mn, 0), compactNode()> | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound };
 	}
 	

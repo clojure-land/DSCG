@@ -83,6 +83,12 @@ void doGenerateBleedingEdge() {
 	//doGenerate(hashTrieConfig(\set(), 5, [object(), object()], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "BleedingEdge");
 }
 
+void doGenerateHeterogeneous() {
+	
+	doGenerate(hashTrieConfig(\map(), 5, [object(), object()], heterogeneousSpecializationConfig(4)), overideClassNamePostfixWith = "BleedingEdge");
+
+}
+
 void doGenerateMapAsSetOfTuples() {	
 	doGenerate(hashTrieConfig(\map(), 5, [ object(), object() ], withoutSpecialization()), overideClassNamePostfixWith = "MapAsSetOfTuples");
 }
@@ -171,16 +177,16 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 		<useSupplierIterator(),false>,
 		<toStringOnTrieNodes(),false>,
 		<useStructuralEquality(),true>,
-		<methodsWithComparator(),false>,
+		<methodsWithComparator(),true>,
 		<useSandwichArrays(),true>,
-		<useStagedMutability(),false>,
+		<useStagedMutability(),true>,
 		<usePrefixInsteadOfPostfixEncoding(),false>,	
 		<usePathCompression(),false>,
 		<useIncrementalHashCodes(),true>,
 		<separateTrieAndLeafNodes(),false>,
 		<compareValueAtMapPut(),false>,
-		<useHeterogeneousEncoding(),false>,
-		<useSunMiscUnsafe(),false>
+		<useHeterogeneousEncoding(),true>,
+		<useSunMiscUnsafe(),true>
 	}; // { compactionViaFieldToMethod() };
 
 	return trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup, unknownArtifact());

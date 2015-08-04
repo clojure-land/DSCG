@@ -20,9 +20,14 @@ default str generateSpecializedBitmapIndexedNodeClassString(TrieSpecifics ts, Tr
 	= generateJdtString(ts, jdt, nodeType)
 when jdt := specializedBitmapIndexedNode(ts, nodeType, modifierList = [ "private", "static" ]);
 
-JavaDataType specializedBitmapIndexedNode(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m), list[str] modifierList = [])
-	= javaClass("<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = compactNode(ts, compactNode(specializeByBitmap(true, true))), modifierList = modifierList);
+JavaDataType specializedBitmapIndexedNode(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m), list[str] modifierList = []) {
 
+	JavaDataType extendsNode = isOptionEnabled(ts.setup, useHeterogeneousEncoding()) ? 
+						JavaDataType::compactHeterogeneousNode(ts, compactHeterogeneousNode(specializeByBitmap(true, true))) :
+						JavaDataType::compactNode(ts, compactNode(specializeByBitmap(true, true)));
+
+	return javaClass("<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = extendsNode, modifierList = modifierList);
+}
 
 lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(int n, int m)) { 
 	list[PredefOp] declaredMethods = [
@@ -30,12 +35,37 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nod
 		bitmapOffset("nodeMap"),
 		bitmapOffset("dataMap"),
 		arrayOffsets(),
-		constructor(),
 		*createContentArgumentList(ts, nodeType)
 	];
 
 	return  [ <nodeType,method> | method <- declaredMethods]; 
 }
+
+
+data PredefOp = rawMap1();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap1())
+	= property(ts.valmapField, "rawMap1", isStateful = true, isConstant = false, hasGetter = true, isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
+
+// Default Value for Property
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap1())
+	= isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap1())
+	= result(iconst(0));
+
+
+data PredefOp = rawMap2();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap2())
+	= property(ts.valmapField, "rawMap2", isStateful = true, isConstant = false, hasGetter = true, isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
+
+// Default Value for Property
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap2())
+	= isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap2())
+	= result(iconst(0));
 
 
 data PredefOp = featureFlags();
@@ -102,13 +132,15 @@ return
 
 // TODO: obsolete 'contentArguments'
 list[PredefOp] createContentArgumentList(ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m)) 
-	= [ contentArgument_PayloadTuple(rowId, columnId) | rowId <- [1..m+1], columnId <- [0..size(nodeTupleArgs(ts))] ]
+	= [ rawMap1(), rawMap2() ]
+	+ [ contentArgument_PayloadTuple(rowId, columnId) | rowId <- [1..m+1], columnId <- [0..size(nodeTupleArgs(ts))] ]
 	+ [ contentArgument_Slot(rowId) | rowId <- [0..n]]
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding());
 
 // TODO: obsolete 'contentArguments'
 list[PredefOp] createContentArgumentList(ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m)) 
-	= [ contentArgument_PayloadTuple(rowId, columnId) | rowId <- [1..m+1], columnId <- [0..size(nodeTupleArgs(ts))] ]
+	= [ constructor() ]
+	+ [ contentArgument_PayloadTuple(rowId, columnId) | rowId <- [1..m+1], columnId <- [0..size(nodeTupleArgs(ts))] ]
 	+ [ contentArgument_Node(rowId) | rowId <- [1..n+1]]
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
 
@@ -153,7 +185,8 @@ data PredefOp = constructor();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
 	= constructor(\return(\type), jdt.typeName, args = [ ts.mutator ] + metadataArguments(ts) + contentArguments(n, m, ts), visibility = "private", argsFilter = ts.argsFilter)
-when (!isOptionEnabled(ts.setup, useSunMiscUnsafe()) || (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && (<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe))) && 
+when // (!isOptionEnabled(ts.setup, useSunMiscUnsafe()) || (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && (<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe))) && 
+		!isOptionEnabled(ts.setup, useSunMiscUnsafe()) && 
 		jdt := specializedBitmapIndexedNode(ts, nodeType) && 
 		\type := jdtToType(jdt);	
 	
@@ -164,20 +197,24 @@ Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:
 		expressionStatement(super(exprFromString("<if (isOptionEnabled(ts.setup, useStagedMutability())) {>mutator<} else {>null<}>, <use(ts.bitmapField)>, <use(ts.valmapField)>"))),
 		uncheckedStringStatement(initFieldsWithIdendity(contentArguments(n, m, ts))) // TODO: automatically infer which def.args need to be initialized
 	])
-when (!isOptionEnabled(ts.setup, useSunMiscUnsafe()) || (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && (<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe))) &&  
+when // (!isOptionEnabled(ts.setup, useSunMiscUnsafe()) || (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && (<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe))) &&  
+		!isOptionEnabled(ts.setup, useSunMiscUnsafe()) &&
 		def := getDef(ts, artifact, constructor());
 
+/*
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
 	= constructor(\return(\type), jdt.typeName, visibility = "private")
-when (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !(<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe)) && 
+when // (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !(<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe)) &&
+		isOptionEnabled(ts.setup, useSunMiscUnsafe()) &&  
 		jdt := specializedBitmapIndexedNode(ts, nodeType) && 
 		\type := jdtToType(jdt);
 
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
 	= super(exprFromString("null, <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>, <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>"))
-when (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !(<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe)) &&  
+when // (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !(<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe)) &&  
+		isOptionEnabled(ts.setup, useSunMiscUnsafe()) &&
 		def := getDef(ts, artifact, constructor());
-
+*/
 
 	//'	<specializedClassNameStr>(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
 	//'		super(mutator, <use(bitmapField)>, <use(valmapField)>);
@@ -229,7 +266,9 @@ when (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !(<n, m> in ts.legacyNode
 str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, TrieSpecifics ts, str classNamePostfix, int mn = tupleLength(ts.ds)*m+n) {
 	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts);
 
-	extendsClassName = "<if (isOptionEnabled(ts.setup,useUntypedVariables())) {><className(ts, compactNode(specializeByBitmap(true, true)))><} else {><className(ts, compactNode(specializeByBitmap(n != 0, m != 0)))><}>";
+	bool isHeterogeneous = isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+
+	extendsClassName = "<if (isOptionEnabled(ts.setup,useUntypedVariables())) {><className(ts, compactNode(isHeterogeneous, specializeByBitmap(true, true)))><} else {><className(ts, compactNode(isHeterogeneous, specializeByBitmap(n != 0, m != 0)))><}>";
 
 	specializedClassNameStr = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
 
@@ -238,6 +277,11 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, TrieSpec
 	Artifact thisArtifact = trieNode(specializedBitmapIndexedNode(n, m));
 
 	println("LOG: Generating <nodeType>");
+
+/*
+	protected static abstract class <className(ts, compactNode(specializeByBitmap(false, false)))><GenericsStr(ts.tupleTypes)> extends 
+		<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
+*/
 
 	return
 	"private static final class <specializedClassNameStr><GenericsStr(ts.tupleTypes)> extends <extendsClassName><GenericsStr(ts.tupleTypes)> {
@@ -448,7 +492,8 @@ default str generate_bodyOf_getValue(int m) =
 
 data PredefOp = getRareKey();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getRareKey()) = true;
+// DEACTIVATED
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getRareKey()) = false;
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getRareKey())
 	= generate_bodyOf_getRareKey(ts, n);
@@ -467,7 +512,8 @@ default str generate_bodyOf_getRareKey(TrieSpecifics ts, int n) =
 
 data PredefOp = getRareValue();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getRareValue()) = true;
+// DEACTIVATED
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getRareValue()) = false;
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getRareValue())
 	= generate_bodyOf_getRareValue(ts, n);
