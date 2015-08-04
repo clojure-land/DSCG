@@ -3347,12 +3347,26 @@ rel[TrieNodeType from, TrieNodeType to] staticRefines() = {
 
 rel[OpBinding from, OpBinding to] operationRefinement;
 
+list[&T] unique(list[&T] ordered) {
+	set[&T] unordered = toSet(ordered);
+	
+	list[&T] orderedUnique = [];
+	
+	for (&T item <- ordered, item in unordered) {
+		orderedUnique += item;
+		unordered -= item;
+	}
+	
+	return orderedUnique;
+}
+
 str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType) {
 	list[str] nestedContent = [];
 
 	bool jdtIsAbstract = "abstract" in jdt.modifierList;
 
-	for (op <- ts.model.declares[nodeType] + ts.model.implements[nodeType]) {
+	// ts.model.declares[nodeType]
+	for (op <- unique(declares(ts, nodeType)<1> + toList(ts.model.implements[nodeType]))) {
 		if (getDef(ts, trieNode(nodeType), op).isActive) {
 			str item = "";		
 			str documentation = getDocumentation(ts, trieNode(nodeType), op);
