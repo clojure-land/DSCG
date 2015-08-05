@@ -186,7 +186,8 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 		<separateTrieAndLeafNodes(),false>,
 		<compareValueAtMapPut(),false>,
 		<useHeterogeneousEncoding(),true>,
-		<useSunMiscUnsafe(),true>
+		<useSunMiscUnsafe(),true>,
+		<unsafeCodeAsData(),true>
 	}; // { compactionViaFieldToMethod() };
 
 	return trieSpecifics(ds, bitPartitionSize, specializeTo, keyType, valType, classNamePostfix, setup, unknownArtifact());

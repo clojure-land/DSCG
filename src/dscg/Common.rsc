@@ -458,6 +458,7 @@ data Option // TODO: finish!
 	| compareValueAtMapPut()
 	| useHeterogeneousEncoding()
 	| useSunMiscUnsafe()
+	| unsafeCodeAsData()
 	| toStringOnTrieNodes()
 	;
 

@@ -515,7 +515,7 @@ private Expression(Expression) indexSubtract1 = Expression(Expression e) { retur
 data PredefOp = copyAndInsertValue_nextClass();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertValue_nextClass())
-	= method(\return(specific("java.lang.Class")), "copyAndInsertValue_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+	= method(\return(specific("java.lang.Class")), "copyAndInsertValue_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !isOptionEnabled(ts.setup, unsafeCodeAsData()));
 
 
 data PredefOp = copyAndRemoveValue(bool customComparator = false);
@@ -560,7 +560,7 @@ when valIdx := val(primitive("int"), "valIdx");
 data PredefOp = copyAndRemoveValue_nextClass();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveValue_nextClass())
-	= method(\return(specific("java.lang.Class")), "copyAndRemoveValue_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+	= method(\return(specific("java.lang.Class")), "copyAndRemoveValue_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !isOptionEnabled(ts.setup, unsafeCodeAsData()));
 
 
 data PredefOp = copyAndSetValue(bool customComparator = false);
@@ -609,7 +609,7 @@ when valIdx := val(primitive("int"), "valIdx");
 data PredefOp = copyAndSetValue_nextClass();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetValue_nextClass())
-	= method(\return(specific("java.lang.Class")), "copyAndSetValue_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+	= method(\return(specific("java.lang.Class")), "copyAndSetValue_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !isOptionEnabled(ts.setup, unsafeCodeAsData()));
 
 
 data PredefOp = copyAndSetNode(bool customComparator = false);
@@ -657,7 +657,7 @@ when idx := val(primitive("int"), "idx");
 data PredefOp = copyAndSetNode_nextClass();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetNode_nextClass())
-	= method(\return(specific("java.lang.Class")), "copyAndSetNode_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+	= method(\return(specific("java.lang.Class")), "copyAndSetNode_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !isOptionEnabled(ts.setup, unsafeCodeAsData()));
 
 
 data PredefOp = copyAndInsertNode(bool customComparator = false);
@@ -735,7 +735,7 @@ when idxOld := val(primitive("int"), "idxOld") &&
 data PredefOp = copyAndMigrateFromInlineToNode_nextClass();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromInlineToNode_nextClass())
-	= method(\return(specific("java.lang.Class")), "copyAndMigrateFromInlineToNode_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+	= method(\return(specific("java.lang.Class")), "copyAndMigrateFromInlineToNode_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !isOptionEnabled(ts.setup, unsafeCodeAsData()));
 
 
 data PredefOp = copyAndMigrateFromNodeToInline(bool customComparator = false);
@@ -795,7 +795,7 @@ when idxOld := val(primitive("int"), "idxOld") &&
 data PredefOp = copyAndMigrateFromNodeToInline_nextClass();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass())
-	= method(\return(specific("java.lang.Class")), "copyAndMigrateFromNodeToInline_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+	= method(\return(specific("java.lang.Class")), "copyAndMigrateFromNodeToInline_nextClass", isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !isOptionEnabled(ts.setup, unsafeCodeAsData()));
 
 		
 data PredefOp = copyAndRemoveNode(bool customComparator = false);
