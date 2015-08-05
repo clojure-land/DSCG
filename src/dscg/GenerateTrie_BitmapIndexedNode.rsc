@@ -159,17 +159,17 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 			return true;")>
 
 		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), sizePredicate()), 
-			"<if (isOptionEnabled(ts.setup,useSpecialization())) {>return SIZE_MORE_THAN_ONE;<} else {>if (this.nodeArity() == 0) {
+			"<if (isOptionEnabled(ts.setup,useSpecialization())) {>return sizeMoreThanOne();<} else {>if (this.nodeArity() == 0) {
 			'	switch (this.payloadArity()) {
 			'	case 0:
-			'		return SIZE_EMPTY;
+			'		return sizeEmpty();
 			'	case 1:
-			'		return SIZE_ONE;
+			'		return sizeOne();
 			'	default:
-			'		return SIZE_MORE_THAN_ONE;
+			'		return sizeMoreThanOne();
 			'	}
 			'} else {
-			'	return SIZE_MORE_THAN_ONE;
+			'	return sizeMoreThanOne();
 			'}<}>")>
 
 		</* TODO: support bitmapIndexedNode() here */"">

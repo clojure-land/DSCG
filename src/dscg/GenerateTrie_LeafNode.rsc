@@ -266,7 +266,7 @@ str generateLeafNodeClassString(TrieSpecifics ts) {
 //
 //		@Override
 //		byte sizePredicate() {
-//			return SIZE_MORE_THAN_ONE;
+//			return sizeMoreThanOne();
 //		}
 //
 //		<implOrOverride(getDef(ts, trieNode(abstractNode()), getKey()),

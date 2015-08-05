@@ -354,7 +354,8 @@ data Method(list[Type] generics = [], str visibility = "", bool isActive = true)
 	= method(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
 	| function(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
 	| constructor(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
-	| property(Argument returnArg, str name, bool isStateful = false, bool isConstant = true, bool hasGetter = true);
+	| property(Argument returnArg, str name, bool isStateful = false, bool isConstant = true, bool hasGetter = true)
+	| enum(Argument returnArg, str name, list[&T] options = []);
 
 data Property
 	= hashCodeProperty()
@@ -961,10 +962,12 @@ str toString(ds:\set()) = "Set";
 str toString(ds:\vector()) = "Vector";
 default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 
+str dec(Method m:enum(_,_)) = "enum <m.name> { <intercalate(", ", mapper(m.options, prettyPrintContentType))> }";
 str dec(Method m:property(_,_), bool asAbstract = false) = "<m.visibility> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>();" when m.isActive;
 str dec(Method m, bool asAbstract = false) = "<if (asAbstract) {>abstract <}> <m.visibility> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>);" when m.isActive;
 str dec(Method m, bool asAbstract = false) = "" when !m.isActive;
 default str dec(Method m, bool asAbstract = false) { throw "You forgot <m>!"; }
+
 
 data OverwriteType 
 	= new()
@@ -1010,10 +1013,10 @@ when m.isActive
 	
 str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
 	"<for(a <- annotations) {><toString(a)><}>
-	'<m.visibility> static final <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>() {
+	'<m.visibility> <if (m.isConstant) {>static final<}> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>() {
 	'	<bodyStr>
 	'}"
-when m.isActive && !m.isStateful && m.isConstant
+when m.isActive && !m.isStateful
 	;
 
 str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
@@ -3242,7 +3245,7 @@ M3 getM3() {
 default lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType) = []; 
  
 // TODO: get ride of global dependencies
-@memo Model buildLanguageAgnosticModel(TrieSpecifics ts) {
+Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 	rel[TrieNodeType from, TrieNodeType to] refines = staticRefines();
 	
 	if (isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useUntypedVariables())) {

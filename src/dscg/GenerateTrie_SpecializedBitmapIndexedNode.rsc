@@ -16,6 +16,8 @@ import dscg::Common;
 import dscg::ArrayUtils;
 import util::Math;
 
+str className(TrieSpecifics ts, TrieNodeType nodetype:specializedBitmapIndexedNode(n, m)) = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
+
 default str generateSpecializedBitmapIndexedNodeClassString(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m)) 
 	= generateJdtString(ts, jdt, nodeType)
 when jdt := specializedBitmapIndexedNode(ts, nodeType, modifierList = [ "private", "static" ]);
@@ -42,30 +44,30 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nod
 }
 
 
-data PredefOp = rawMap1();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap1())
-	= property(ts.valmapField, "rawMap1", isStateful = true, isConstant = false, hasGetter = true, isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
-
-// Default Value for Property
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap1())
-	= isOptionEnabled(ts.setup, useHeterogeneousEncoding());
-
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap1())
-	= result(iconst(0));
-
-
-data PredefOp = rawMap2();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap2())
-	= property(ts.valmapField, "rawMap2", isStateful = true, isConstant = false, hasGetter = true, isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
-
-// Default Value for Property
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap2())
-	= isOptionEnabled(ts.setup, useHeterogeneousEncoding());
-
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap2())
-	= result(iconst(0));
+//data PredefOp = rawMap1();
+//
+//Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap1())
+//	= property(ts.valmapField, "rawMap1", isStateful = true, isConstant = false, hasGetter = true, isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
+//
+//// Default Value for Property
+//bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap1())
+//	= isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+//
+//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap1())
+//	= result(iconst(0));
+//
+//
+//data PredefOp = rawMap2();
+//
+//Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap2())
+//	= property(ts.valmapField, "rawMap2", isStateful = true, isConstant = false, hasGetter = true, isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
+//
+//// Default Value for Property
+//bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap2())
+//	= isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+//
+//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::rawMap2())
+//	= result(iconst(0));
 
 
 data PredefOp = featureFlags();
@@ -132,7 +134,7 @@ return
 
 // TODO: obsolete 'contentArguments'
 list[PredefOp] createContentArgumentList(ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m)) 
-	= [ rawMap1(), rawMap2() ]
+	= [] // [ rawMap1(), rawMap2() ]
 	+ [ contentArgument_PayloadTuple(rowId, columnId) | rowId <- [1..m+1], columnId <- [0..size(nodeTupleArgs(ts))] ]
 	+ [ contentArgument_Slot(rowId) | rowId <- [0..n]]
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding());
@@ -685,11 +687,11 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:special
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::sizePredicate()) = 
 	"if (this.nodeArity() == 0 && this.payloadArity() == 0) {
-	'	return SIZE_EMPTY;
+	'	return sizeEmpty();
 	'} else if (this.nodeArity() == 0 && this.payloadArity() == 1) {
-	'	return SIZE_ONE;
+	'	return sizeOne();
 	'} else {
-	'	return SIZE_MORE_THAN_ONE;
+	'	return sizeMoreThanOne();
 	'}"
 when isOptionEnabled(ts.setup, useUntypedVariables());
 
@@ -1318,11 +1320,11 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 
 
 bool exists_bodyOf_sizePredicate(0, 0, TrieSpecifics ts)  = true;
-str generate_bodyOf_sizePredicate(0, 0, TrieSpecifics ts) = "SIZE_EMPTY";
+str generate_bodyOf_sizePredicate(0, 0, TrieSpecifics ts) = "sizeEmpty()";
 bool exists_bodyOf_sizePredicate(0, 1, TrieSpecifics ts)  = true;
-str generate_bodyOf_sizePredicate(0, 1, TrieSpecifics ts) = "SIZE_ONE";	
+str generate_bodyOf_sizePredicate(0, 1, TrieSpecifics ts) = "sizeOne()";	
 default bool exists_bodyOf_sizePredicate(int n, int m, TrieSpecifics ts)  = true;
-default str generate_bodyOf_sizePredicate(int n, int m, TrieSpecifics ts) = "SIZE_MORE_THAN_ONE";
+default str generate_bodyOf_sizePredicate(int n, int m, TrieSpecifics ts) = "sizeMoreThanOne()";
 
 
 str generate_equalityComparisons(int n, int m, TrieSpecifics ts, str(Argument, Argument) eq, int mn = tupleLength(ts.ds)*m+n) =
@@ -1565,16 +1567,16 @@ default str generate_bodyOf_removed(int n, int m, DataStructure ds, rel[Option,b
 				final <CompactNode(ds)><GenericsStr(ts.tupleTypes)> updatedNode = <nestedResult>.getNode();
 
 				switch (updatedNode.sizePredicate()) {
-				<if (n == 1 && m == 0) {>case SIZE_EMPTY:
-				case SIZE_ONE:
+				<if (n == 1 && m == 0) {>case sizeEmpty():
+				case sizeOne():
 					// escalate (singleton or empty) result
 					result = <nestedResult>;
-					break;< } else {> case SIZE_ONE:
+					break;< } else {> case sizeOne():
 					// inline sub-node value
 					<if (isOptionEnabled(ts.setup, useStructuralEquality())) {>result = <ts.ResultStr>.modified(removeNode<i>AndInlineValue(mutator, <use(payloadTriple("mask", "updatedNode.getKey(0)", "updatedNode.getValue(0)"))>));<} else {>result = <ts.ResultStr>.modified(<nodeOf(n-1, m+1, use(payloadTriple("mask", "updatedNode.getKey(0)", "updatedNode.getValue(0)") + generateMembers(n, m) - subnodePair(i)))>);<}>
 					break;<}>
 					
-				case SIZE_MORE_THAN_ONE:
+				case sizeMoreThanOne():
 					// update <nodeName><i>
 					result = <ts.ResultStr>.modified(<nodeOf(n, m, use(replace(generateMembers(n, m), subnodePair(i), [field("mask"), field("updatedNode")])))>);
 					break;

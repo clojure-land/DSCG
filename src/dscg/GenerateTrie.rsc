@@ -225,7 +225,7 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 		+ [ generateResultClassString(ts, ts.setup) ]
 		+ [ generateAbstractAnyNodeClassString(ts, ts.setup)]
 		+ [ generateAbstractNodeClassString(ts, isLegacy = isLegacy)]
-		+ [ generateCompactNodeClassString(ts, isLegacy = isLegacy)]
+		+ [ generateCompactNodeClassString(ts, isLegacy)]
 		+ [ generateFeatureFlagsClassString(ts, isLegacy = true)];
 
 	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
