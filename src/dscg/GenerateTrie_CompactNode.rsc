@@ -402,49 +402,85 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 str generate_copyAnd_generalPrelude(TrieSpecifics ts, Artifact artifact, PredefOp op) =
 	"
 	final Class srcClass = this.getClass();
-	final Class dstClass = <if (/^<constructorName:.*>\(\)$/ := "<op>") {><"<constructorName>_nextClass()"><}>;
+	final Class dstClass = <generate_copyAnd_dstClass(ts, artifact, op)>;
 	
 	<dec(jdtToVal(compactNode(ts), "src"))> = this;
 	<dec(jdtToVal(compactNode(ts), "dst"))> = <toString(cast(jdtToType(compactNode(ts)), exprFromString("unsafe.allocateInstance(dstClass)")))>;				
+				
+	final long[] srcArrayOffsets = (long[]) unsafe.getObject(srcClass, globalArrayOffsetsOffset);
 	
-	final long srcNodeMapOffset = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
-			.getDeclaredField(\"nodeMapOffset\")));
-	
-	final long dstNodeMapOffset = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
-			.getDeclaredField(\"nodeMapOffset\")));
-	
-	final long srcDataMapOffset = unsafe.getLong(srcClass, unsafe.staticFieldOffset(srcClass
-			.getDeclaredField(\"dataMapOffset\")));
-	
-	final long dstDataMapOffset = unsafe.getLong(dstClass, unsafe.staticFieldOffset(dstClass
-			.getDeclaredField(\"dataMapOffset\")));
-			
-	final long[] srcArrayOffsets = (long[]) unsafe.getObject(srcClass, unsafe.staticFieldOffset(srcClass
-			.getDeclaredField(\"arrayOffsets\")));
-	
-	final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, unsafe.staticFieldOffset(dstClass
-			.getDeclaredField(\"arrayOffsets\")));
+	final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, globalArrayOffsetsOffset);
 	";
 
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op)
+	= "<if (/^<constructorName:.*>\(\)$/ := "<op>") {><"<constructorName>_nextClass()"><}>"
+when isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !isOptionEnabled(ts.setup, unsafeCodeAsData()); 
+
+str generate_copyAnd_dstClass_string(str mNext, str nNext) = "specializationsByContentAndNodes[<mNext>][<nNext>]";
+
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndInsertValue(), str m = "payloadArity()", str n = "nodeArity()")
+	= generate_copyAnd_dstClass_string("<m> + 1", n)
+when isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, unsafeCodeAsData());
+
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndRemoveValue(), str m = "payloadArity()", str n = "nodeArity()")
+	= generate_copyAnd_dstClass_string("<m> - 1", n)
+when isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, unsafeCodeAsData());
+
+// TODO: introduce default
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndSetValue(), str m = "payloadArity()", str n = "nodeArity()")
+	= generate_copyAnd_dstClass_string(m, n)
+when isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, unsafeCodeAsData());
+
+// TODO: introduce default
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndSetNode(), str m = "payloadArity()", str n = "nodeArity()")
+	= generate_copyAnd_dstClass_string(m, n)
+when isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, unsafeCodeAsData());
+
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromInlineToNode(), str m = "payloadArity()", str n = "nodeArity()")
+	= generate_copyAnd_dstClass_string("<m> - 1", "<n> + 1")
+when isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, unsafeCodeAsData());
+
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromNodeToInline(), str m = "payloadArity()", str n = "nodeArity()")
+	= generate_copyAnd_dstClass_string("<m> + 1", "<n> - 1")
+when isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, unsafeCodeAsData());
+
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op, str m = "m", str n = "n")
+	= generate_copyAnd_dstClass_string("???", "???")
+when isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, unsafeCodeAsData());
+
+//str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndInsertValue(), str m = "m", str n = "n")
+//	= "<constructorName>_nextClass_array[<mNext>][<nNext>]"
+//when isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, unsafeCodeAsData());
+
+
+//str generate_copyAnd_copyAndUpdateBitmap(TrieSpecifics ts, Artifact artifact, PredefOp op, str bitmapName, Expression(Expression oldBitmapValueExpr) valueUpdater, Expression valueDefault) =
+//	"
+//	// copy and update bitmaps
+//	if (<use(dstOffset)> != sun.misc.Unsafe.INVALID_FIELD_OFFSET) {
+//		if (<use(srcOffset)> != sun.misc.Unsafe.INVALID_FIELD_OFFSET) {
+//			<dec(bitmap)> = <eval(valueUpdater(oldBitmapValueExpr))>; 
+//			unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, <use(dstOffset)>, <use(bitmap)>);
+//		} else {
+//			<dec(bitmap)> = <eval(valueDefault)>;
+//			unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, <use(dstOffset)>, <use(bitmap)>);
+//		}
+//	}
+//	"
+//when bitmap := val(chunkSizeToPrimitive(ts.bitPartitionSize), "new<capitalize(bitmapName)>") &&
+//		srcOffset := val(primitive("long"), "src<capitalize(bitmapName)>Offset") &&
+//		dstOffset := val(primitive("long"), "dst<capitalize(bitmapName)>Offset") &&
+//		oldBitmapValueExpr := exprFromString("unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, <use(srcOffset)>)");
 
 str generate_copyAnd_copyAndUpdateBitmap(TrieSpecifics ts, Artifact artifact, PredefOp op, str bitmapName, Expression(Expression oldBitmapValueExpr) valueUpdater, Expression valueDefault) =
 	"
 	// copy and update bitmaps
-	if (<use(dstOffset)> != sun.misc.Unsafe.INVALID_FIELD_OFFSET) {
-		if (<use(srcOffset)> != sun.misc.Unsafe.INVALID_FIELD_OFFSET) {
-			<dec(bitmap)> = <eval(valueUpdater(oldBitmapValueExpr))>; 
-			unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, <use(dstOffset)>, <use(bitmap)>);
-		} else {
-			<dec(bitmap)> = <eval(valueDefault)>;
-			unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, <use(dstOffset)>, <use(bitmap)>);
-		}
-	}
+	<dec(bitmap)> = <eval(valueUpdater(oldBitmapValueExpr))>; 
+	unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, <use(offset)>, <use(bitmap)>);
 	"
 when bitmap := val(chunkSizeToPrimitive(ts.bitPartitionSize), "new<capitalize(bitmapName)>") &&
-		srcOffset := val(primitive("long"), "src<capitalize(bitmapName)>Offset") &&
-		dstOffset := val(primitive("long"), "dst<capitalize(bitmapName)>Offset") &&
-		oldBitmapValueExpr := exprFromString("unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, <use(srcOffset)>)");
-
+		offset := val(primitive("long"), "global<capitalize(bitmapName)>Offset") &&
+		oldBitmapValueExpr := exprFromString("unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, <use(offset)>)");
+		
 
 data PredefOp = copyAndInsertValue(bool customComparator = false);
 
@@ -484,7 +520,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
 
 		return dst;
-	} catch (InstantiationException | NoSuchFieldException e) {
+	} catch (InstantiationException e) {
 		throw new RuntimeException(e);
 	}"
 when valIdx := val(primitive("int"), "valIdx") && 
@@ -552,7 +588,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
 		
 		return dst;	
-	} catch (InstantiationException | NoSuchFieldException e) {
+	} catch (InstantiationException e) {
 		throw new RuntimeException(e);
 	}"
 when valIdx := val(primitive("int"), "valIdx");
@@ -600,7 +636,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
 
 		return dst;
-	} catch (InstantiationException | NoSuchFieldException e) {
+	} catch (InstantiationException e) {
 		throw new RuntimeException(e);
 	}"
 when valIdx := val(primitive("int"), "valIdx");
@@ -648,7 +684,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 		<copyNodeRange(ts, artifact, plus(useExpr(idx), iconst(1)), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
 								
 		return dst;
-	} catch (InstantiationException | NoSuchFieldException e) {
+	} catch (InstantiationException e) {
 		throw new RuntimeException(e);
 	}"
 when idx := val(primitive("int"), "idx");
@@ -725,7 +761,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 		<copyNodeRange(ts, artifact, useExpr(idxNew), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexAdd1)>
 
 		return dst;
-	} catch (InstantiationException | NoSuchFieldException e) {
+	} catch (InstantiationException e) {
 		throw new RuntimeException(e);
 	}"
 when idxOld := val(primitive("int"), "idxOld") &&
@@ -785,7 +821,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 		<copyNodeRange(ts, artifact, plus(useExpr(idxOld), iconst(1)), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexSubtract1)>
 				
 		return dst;
-	} catch (InstantiationException | NoSuchFieldException e) {
+	} catch (InstantiationException e) {
 		throw new RuntimeException(e);
 	}"
 when idxOld := val(primitive("int"), "idxOld") &&
@@ -833,9 +869,9 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nod
 
 list[PredefOp] declaredMethodsByCompactNode = [
 
-	nodeMapOffsetOffset(),
-	dataMapOffsetOffset(),
-	arrayOffsetsOffset(),
+	globalNodeMapOffset(),
+	globalDataMapOffset(),
+	globalArrayOffsetsOffset(),
 	arrayBase(),
 	addressSize(),	
 
@@ -2098,33 +2134,33 @@ str generate_bodyOf_reflectFieldOffset(str classNameString, str fieldNameString)
 	'}";
 
 	
-data PredefOp = nodeMapOffsetOffset();
+data PredefOp = globalNodeMapOffset();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeMapOffsetOffset())
-	= property(\return(primitive("long")), "nodeMapOffsetOffset", isStateful = true, isConstant = true, hasGetter = false);
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalNodeMapOffset())
+	= property(\return(primitive("long")), "globalNodeMapOffset", isStateful = true, isConstant = true, hasGetter = false);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeMapOffsetOffset()) = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeMapOffsetOffset())
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalNodeMapOffset()) = true;
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalNodeMapOffset())
 	= generate_bodyOf_reflectFieldOffset(className(ts, specializedBitmapIndexedNode(2, 0)), "nodeMapOffset");
 
 
-data PredefOp = dataMapOffsetOffset();
+data PredefOp = globalDataMapOffset();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::dataMapOffsetOffset())
-	= property(\return(primitive("long")), "dataMapOffsetOffset", isStateful = true, isConstant = true, hasGetter = false);
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalDataMapOffset())
+	= property(\return(primitive("long")), "globalDataMapOffset", isStateful = true, isConstant = true, hasGetter = false);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::dataMapOffsetOffset()) = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::dataMapOffsetOffset())
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalDataMapOffset()) = true;
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalDataMapOffset())
 	= generate_bodyOf_reflectFieldOffset(className(ts, specializedBitmapIndexedNode(2, 0)), "dataMapOffset");
 
 
-data PredefOp = arrayOffsetsOffset();
+data PredefOp = globalArrayOffsetsOffset();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::arrayOffsetsOffset())	
-	= property(\return(primitive("long")), "arrayOffsetsOffset", isStateful = true, isConstant = true, hasGetter = false);
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalArrayOffsetsOffset())	
+	= property(\return(primitive("long")), "globalArrayOffsetsOffset", isStateful = true, isConstant = true, hasGetter = false);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::arrayOffsetsOffset()) = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::arrayOffsetsOffset())
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalArrayOffsetsOffset()) = true;
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalArrayOffsetsOffset())
 	= generate_bodyOf_reflectFieldOffset(className(ts, specializedBitmapIndexedNode(2, 0)), "arrayOffsets");
 
 
@@ -2138,7 +2174,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	"final Class\<<classNameString>\> dstClass = <classNameString>.class;
 	'
 	'try {		
-		final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, arrayOffsetsOffset);
+		final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, globalArrayOffsetsOffset);
 	
 		// assuems that both are of type Object and next to each other in memory
 		return dstArrayOffsets[0];			
@@ -2158,7 +2194,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	"final Class\<<classNameString>\> dstClass = <classNameString>.class;
 	'
 	'try {		
-		final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, arrayOffsetsOffset);
+		final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, globalArrayOffsetsOffset);
 	
 		// assuems that both are of type Object and next to each other in memory
 		return dstArrayOffsets[1] - dstArrayOffsets[0];			
