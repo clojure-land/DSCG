@@ -89,6 +89,10 @@ data Argument
 	| qualifiedArgument(Argument obj, Argument arg)
 	;
 	
+Argument predefOpToArgument(TrieSpecifics ts, Artifact artifact, PredefOp op) 
+	= val(def.returnArg.\type, def.name)
+when def := getDef(ts, artifact, op); 	
+	
 Argument ival(str name) = val(primitive("int"), name);	
 	
 Argument asVar(Argument arg) = var(arg.\type, arg.name);
@@ -354,7 +358,7 @@ data Method(list[Type] generics = [], str visibility = "", bool isActive = true)
 	= method(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
 	| function(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
 	| constructor(Argument returnArg, str name, list[Argument] args = [], list[Argument]() lazyArgs = list[Argument]() { return args;}, list[Argument] argsFilter = [])
-	| property(Argument returnArg, str name, bool isStateful = false, bool isConstant = true, bool hasGetter = true)
+	| property(Argument returnArg, str name, bool isStateful = false, bool isConstant = true, bool hasGetter = true, bool initializeAtConstruction = false)
 	| enum(Argument returnArg, str name, list[&T] options = []);
 
 data Property
@@ -462,6 +466,10 @@ data Option // TODO: finish!
 	| toStringOnTrieNodes()
 	;
 
+
+
+bool supportsConversionBetweenGenericAndSpecialized(TrieSpecifics ts) = isOptionEnabled(ts.setup, useSpecialization()) && ts.nBound < ts.nMax;
+
 data TrieSpecifics 
 	= undefinedTrieSpecifics()
 	| ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound, Type keyType = generic("K"), Type valType = generic("V"), str classNamePostfix = "", rel[Option,bool] setup = {}, Model model = model(), 
@@ -544,7 +552,7 @@ data TrieSpecifics
 
 		Method nodeOf_BitmapIndexedNode = function(compactNodeClassReturn, "nodeOf", generics = genericTupleTypes, args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ], argsFilter = argsFilter, isActive = !isOptionEnabled(setup,useSpecialization()) || nBound < nMax),
 		
-		list[tuple[int,int]] legacyNodeFactoryMethodSpecializationsUnderUnsafe = [ <0, 0>, <1, 0>, <0, 1>, <0, 2> ],
+		list[tuple[int,int]] legacyNodeFactoryMethodSpecializationsUnderUnsafe = [ <1, 0>, <0, 1>, <0, 2> ],
 		
 		Argument contentType = val(specific("ContentType"), "type")				
 		)
@@ -661,6 +669,12 @@ Argument \inode(DataStructure ds, list[Type] tupleTypes)			= \inode(ds, tupleTyp
 Argument \inode(DataStructure ds, list[Type] tupleTypes, int i) 	= \inode(ds, tupleTypes, "<nodeName><i>");
 Argument \inode(DataStructure ds, list[Type] tupleTypes, str name)	= field(specific("<AbstractNode(ds)>", typeArguments = [ arg.\type | arg <- __payloadTuple(ds, tupleTypes), generic(_) := arg.\type ]), name);
 default Argument \inode(DataStructure ds, list[Type] _) { throw "Ahhh"; }
+
+str lowLevelBitmapName(TrieSpecifics ts, int i:0) = "rawMap<i + 1>" when isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+default str lowLevelBitmapName(TrieSpecifics ts, int i:0) = "nodeMap";
+
+str lowLevelBitmapName(TrieSpecifics ts, int i:1) = "rawMap<i + 1>" when isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+default str lowLevelBitmapName(TrieSpecifics ts, int i:1) = "dataMap"; 
 
 public Argument bitmapField = field("nodeMap");
 public Argument valmapField = field("dataMap");
@@ -964,6 +978,7 @@ str toString(ds:\vector()) = "Vector";
 default str toString(DataStructure ds) { throw "You forgot <ds>!"; }
 
 str dec(Method m:enum(_,_)) = "enum <m.name> { <intercalate(", ", mapper(m.options, prettyPrintContentType))> }";
+str dec(Method m:property(_,_), bool asAbstract = false) = "<if (asAbstract) {>abstract <}> <m.visibility> final <typeToString(m.returnArg.\type)> <m.name>;" when m.isActive && m.isStateful && !m.isConstant && m.initializeAtConstruction;
 str dec(Method m:property(_,_), bool asAbstract = false) = "<if (asAbstract) {>abstract <}> <m.visibility> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>();" when m.isActive;
 str dec(Method m, bool asAbstract = false) = "<if (asAbstract) {>abstract <}> <m.visibility> <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> <m.name>(<dec(m.lazyArgs() - m.argsFilter)>);" when m.isActive;
 str dec(Method m, bool asAbstract = false) = "" when !m.isActive;
@@ -1035,7 +1050,7 @@ str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = over
 	'<} else {>
 	'	private final <typeToString(m.returnArg.\type)> <m.name>;
 	'<}>"
-when m.isActive && m.isStateful && !m.isConstant && doInitialize := bodyStr != ""
+when m.isActive && m.isStateful && !m.isConstant && hasBody := bodyStr != "" && doInitialize := !m.initializeAtConstruction && hasBody
 	;
 
 str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = override(), list[Annotation] annotations = []) = 
@@ -1045,9 +1060,9 @@ str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = over
 	'}<}>
 	'
 	'<if (/^return <expression:.*>;$/ := bodyStr) {>
-	'private static final <typeToString(m.returnArg.\type)> <m.name> = <expression>;
+	'<if (m.hasGetter) {>private<} else {><m.visibility><}> static final <typeToString(m.returnArg.\type)> <m.name> = <expression>;
 	'<} else {>
-	'private static final <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> initialize<capitalize(m.name)>() {
+	'<if (m.hasGetter) {>private<} else {><m.visibility><}> static final <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> initialize<capitalize(m.name)>() {
 	'	<bodyStr>
 	'}
 	'	

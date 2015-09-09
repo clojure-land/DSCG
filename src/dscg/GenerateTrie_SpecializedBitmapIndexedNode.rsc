@@ -34,10 +34,11 @@ JavaDataType specializedBitmapIndexedNode(TrieSpecifics ts, TrieNodeType nodeTyp
 lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(int n, int m)) { 
 	list[PredefOp] declaredMethods = [
 		featureFlags(),
-		bitmapOffset("nodeMap"),
-		bitmapOffset("dataMap"),
+		bitmapOffset(lowLevelBitmapName(ts, 0)), // previously: offset for nodeMap
+		bitmapOffset(lowLevelBitmapName(ts, 1)), // previously: offset for dataMap
 		arrayOffsets(),
-		*createContentArgumentList(ts, nodeType)
+		*createContentArgumentList(ts, nodeType),
+		constructor()
 	];
 
 	return  [ <nodeType,method> | method <- declaredMethods]; 
@@ -150,37 +151,37 @@ when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(
 data PredefOp = contentArgument_PayloadTuple(int rowId, int columnId);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_PayloadTuple(int rowId, int columnId))
-	= property(arg, arg.name, isStateful = true, isConstant = false, hasGetter = false)
+	= property(arg, arg.name, visibility = "private", isStateful = true, isConstant = false, hasGetter = false, initializeAtConstruction = true)
 when arg := appendToName(nodeTupleArg(ts, columnId), "<rowId>");
 
-// Default Value for Property
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_PayloadTuple(int rowId, int columnId)) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_PayloadTuple(int rowId, int columnId))
-	= result(NULL());
+//// Default Value for Property
+//bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_PayloadTuple(int rowId, int columnId)) = true;
+//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_PayloadTuple(int rowId, int columnId))
+//	= result(NULL());
 
 
 data PredefOp = contentArgument_Slot(int rowId);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Slot(int rowId))
-	= property(arg, arg.name, isStateful = true, isConstant = false, hasGetter = false)
+	= property(arg, arg.name, visibility = "private", isStateful = true, isConstant = false, hasGetter = false, initializeAtConstruction = true)
 when arg := slot(rowId);
 
-// Default Value for Property
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Slot(int rowId)) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Slot(int rowId))
-	= result(NULL());
+//// Default Value for Property
+//bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Slot(int rowId)) = true;
+//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Slot(int rowId))
+//	= result(NULL());
 
 
 data PredefOp = contentArgument_Node(int rowId);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Node(int rowId))
-	= property(arg, arg.name, isStateful = true, isConstant = false, hasGetter = false)
+	= property(arg, arg.name, visibility = "private", isStateful = true, isConstant = false, hasGetter = false, initializeAtConstruction = true)
 when arg := \node(ts.ds, ts.tupleTypes, rowId);
 
-// Default Value for Property
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Node(int rowId)) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Node(int rowId))
-	= result(NULL());
+//// Default Value for Property
+//bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Node(int rowId)) = true;
+//Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::contentArgument_Node(int rowId))
+//	= result(NULL());
 
 
 data PredefOp = constructor();
@@ -188,7 +189,7 @@ data PredefOp = constructor();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
 	= constructor(\return(\type), jdt.typeName, args = [ ts.mutator ] + metadataArguments(ts) + contentArguments(n, m, ts), visibility = "private", argsFilter = ts.argsFilter)
 when // (!isOptionEnabled(ts.setup, useSunMiscUnsafe()) || (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && (<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe))) && 
-		!isOptionEnabled(ts.setup, useSunMiscUnsafe()) && 
+		// !isOptionEnabled(ts.setup, useSunMiscUnsafe()) && 
 		jdt := specializedBitmapIndexedNode(ts, nodeType) && 
 		\type := jdtToType(jdt);	
 	
@@ -200,7 +201,7 @@ Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:
 		uncheckedStringStatement(initFieldsWithIdendity(contentArguments(n, m, ts))) // TODO: automatically infer which def.args need to be initialized
 	])
 when // (!isOptionEnabled(ts.setup, useSunMiscUnsafe()) || (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && (<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe))) &&  
-		!isOptionEnabled(ts.setup, useSunMiscUnsafe()) &&
+		// !isOptionEnabled(ts.setup, useSunMiscUnsafe()) &&
 		def := getDef(ts, artifact, constructor());
 
 /*
@@ -1284,9 +1285,9 @@ data PredefOp = equals();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::equals()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::equals())
-	= "throw new UnsupportedOperationException(); // TODO: to implement"
-when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
+//str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::equals())
+//	= "throw new UnsupportedOperationException(); // TODO: to implement"
+//when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::equals()) = 	
 	"		if (null == other) {
@@ -1327,38 +1328,62 @@ default bool exists_bodyOf_sizePredicate(int n, int m, TrieSpecifics ts)  = true
 default str generate_bodyOf_sizePredicate(int n, int m, TrieSpecifics ts) = "sizeMoreThanOne()";
 
 
-str generate_equalityComparisons(int n, int m, TrieSpecifics ts, str(Argument, Argument) eq, int mn = tupleLength(ts.ds)*m+n) =
-	"if (<use(bitmapMethod)> != that.<use(bitmapMethod)>) {
-	'	return false;
-	'}
-	'if (<use(valmapMethod)> != that.<use(valmapMethod)>) {
-	'	return false;
-	'}
-	'
-	'<for (i <- [0..mn]) {>
-	'if (!(<eq(key(ts.keyType, "<slotName><i>"), key(ts.keyType, "that.<slotName><i>"))>)) {
-	'	return false;
-	'}<}>"
-when isOptionEnabled(ts.setup,useUntypedVariables());
-	 
+str generate_equalityComparisons(int n, int m, TrieSpecifics ts, str(Argument, Argument) eq, int mn = tupleLength(ts.ds)*m+n) {
+	TrieNodeType nodeType = specializedBitmapIndexedNode(n, m);
+	Artifact artifact = trieNode(nodeType);
+	
+	list[PredefOp] contentOps = createContentArgumentList(ts, nodeType);		
+	list[Argument] contentArgs = [ predefOpToArgument(ts, artifact, op) | op <- contentOps ];   
+	
+	return 
+		"if (<use(bitmapMethod)> != that.<use(bitmapMethod)>) {
+		'	return false;
+		'}
+		'if (<use(valmapMethod)> != that.<use(valmapMethod)>) {
+		'	return false;
+		'}
+		'
+		'<for (arg <- contentArgs) {>
+		'if (!(<eq(arg, qualifyArgument(arg, "that"))>)) {
+		'	return false;
+		'}<}>";
+}
 
-str generate_equalityComparisons(int n, int m, TrieSpecifics ts, str(Argument, Argument) eq) =
-	"if (<use(bitmapMethod)> != that.<use(bitmapMethod)>) {
-	'	return false;
-	'}
-	'if (<use(valmapMethod)> != that.<use(valmapMethod)>) {
-	'	return false;
-	'}
-	'<for (i <- [1..m+1]) {>
-	'if (!(<eq(key(ts.keyType, "<keyName><i>"), key(ts.keyType, "that.<keyName><i>"))>)) {
-	'	return false;
-	'}<if (\map() := ts.ds) {>if (!(<eq(val(ts.valType, "<valName><i>"), val(ts.valType, "that.<valName><i>"))>)) {
-	'	return false;
-	'}<}><}><for (i <- [1..n+1]) {>
-	'if (!(<eq(\node(ts.ds, ts.tupleTypes, "<nodeName><i>"), \node(ts.ds, ts.tupleTypes, "that.<nodeName><i>"))>)) {
-	'	return false;
-	'}<}>"
-	;	 
+// TODO: merge with Common.Argument.qualifiedArgument
+default Argument qualifyArgument(Argument arg, str prefix) = arg[name = "<prefix>.<arg.name>"];
+
+//str generate_equalityComparisons(int n, int m, TrieSpecifics ts, str(Argument, Argument) eq, int mn = tupleLength(ts.ds)*m+n) =
+//	"if (<use(bitmapMethod)> != that.<use(bitmapMethod)>) {
+//	'	return false;
+//	'}
+//	'if (<use(valmapMethod)> != that.<use(valmapMethod)>) {
+//	'	return false;
+//	'}
+//	'
+//	'<for (i <- [0..mn]) {>
+//	'if (!(<eq(key(ts.keyType, "<slotName><i>"), key(ts.keyType, "that.<slotName><i>"))>)) {
+//	'	return false;
+//	'}<}>"
+//when isOptionEnabled(ts.setup,useUntypedVariables());
+//	 
+//
+//str generate_equalityComparisons(int n, int m, TrieSpecifics ts, str(Argument, Argument) eq) =
+//	"if (<use(bitmapMethod)> != that.<use(bitmapMethod)>) {
+//	'	return false;
+//	'}
+//	'if (<use(valmapMethod)> != that.<use(valmapMethod)>) {
+//	'	return false;
+//	'}
+//	'<for (i <- [1..m+1]) {>
+//	'if (!(<eq(key(ts.keyType, "<keyName><i>"), key(ts.keyType, "that.<keyName><i>"))>)) {
+//	'	return false;
+//	'}<if (\map() := ts.ds) {>if (!(<eq(val(ts.valType, "<valName><i>"), val(ts.valType, "that.<valName><i>"))>)) {
+//	'	return false;
+//	'}<}><}><for (i <- [1..n+1]) {>
+//	'if (!(<eq(\node(ts.ds, ts.tupleTypes, "<nodeName><i>"), \node(ts.ds, ts.tupleTypes, "that.<nodeName><i>"))>)) {
+//	'	return false;
+//	'}<}>"
+//	;	 
 
 
 str generate_bodyOf_inlineValue(int n, int m, TrieSpecifics ts) =

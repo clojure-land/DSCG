@@ -62,13 +62,31 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	= "throw new UnsupportedOperationException(); // TODO: to implement";	
 
 
+data PredefOp = constructor();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode(BitmapSpecialization bs)), PredefOp::constructor())
+	= constructor(\return(\type), jdt.typeName, args = [ ts.mutator ] + fieldList, visibility = "private", argsFilter = ts.argsFilter) // metadataArguments(ts)
+when jdt := compactNode(ts, nodeType) && 
+		\type := jdtToType(jdt) &&
+		fieldList := [ predefOpToArgument(ts, artifact, op) | op <- declares(ts, nodeType)<1>, op != constructor(), opDef := getDef(ts, artifact, op), opDef is property, opDef.isStateful && opDef.initializeAtConstruction ];
+	
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode(BitmapSpecialization bs)), PredefOp::constructor()) = true;
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode(BitmapSpecialization bs)), PredefOp::constructor())
+	= compoundStatement([
+		uncheckedStringStatement(initFieldsWithIdendity(fieldList)) // TODO: automatically infer which def.args need to be initialized
+	])
+when def := getDef(ts, artifact, constructor()) &&
+		fieldList := [ predefOpToArgument(ts, artifact, op) | op <- declares(ts, nodeType)<1>, op != constructor(), opDef := getDef(ts, artifact, op), opDef is property, opDef.isStateful && opDef.initializeAtConstruction ];
+
+
 data PredefOp = nodeMap();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeMap())
 	= method(ts.bitmapField, ts.bitmapField.name);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::nodeMap())
-	= property(ts.bitmapField, ts.bitmapField.name, isStateful = true, isConstant = false, hasGetter = true)
+	= property(ts.bitmapField, ts.bitmapField.name, isStateful = true, isConstant = false, hasGetter = true, initializeAtConstruction = true)
 when bs.supportsNodes;
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::nodeMap())
@@ -87,7 +105,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 	= method(ts.valmapField, ts.valmapField.name);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::dataMap())
-	= property(ts.valmapField, ts.valmapField.name, isStateful = true, isConstant = false, hasGetter = true)
+	= property(ts.valmapField, ts.valmapField.name, isStateful = true, isConstant = false, hasGetter = true, initializeAtConstruction = true)
 when bs.supportsValues;
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::dataMap())
@@ -245,12 +263,19 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 	= property(\return(jdtToType(compactNode(ts))), "EMPTY_NODE", generics = ts.genericTupleTypes, visibility = "protected", isStateful = true, isConstant = true, hasGetter = false);
 	
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::emptyTrieNodeConstant()) = true;
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::emptyTrieNodeConstant())
+	= result(exprFromString("new <toString(ts.ds)>0To0Node<ts.classNamePostfix><InferredGenerics(ts.ds, ts.tupleTypes)>(null, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0)"))
+when isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useSunMiscUnsafe());
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::emptyTrieNodeConstant())
+	= result(exprFromString("new <toString(ts.ds)>0To0Node<ts.classNamePostfix><InferredGenerics(ts.ds, ts.tupleTypes)>()"))
+when isOptionEnabled(ts.setup, useSpecialization()) && isOptionEnabled(ts.setup, useSunMiscUnsafe());
+
+// TODO: #simplifyWithConcreteSyntax
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::emptyTrieNodeConstant())
 	= result(exprFromString(
-				"<if (isOptionEnabled(ts.setup,useSpecialization())) {>
-					new <toString(ts.ds)>0To0Node<ts.classNamePostfix><InferredGenerics(ts.ds, ts.tupleTypes)>(null, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0)
-				<} else {>
-			 		<toString(call(ts.BitmapIndexedNode_constructor, 
+				"<toString(call(ts.BitmapIndexedNode_constructor, 
 						argsOverride = (ts.mutator: NULL(),								
 									ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.bitmapField.\type, "0")), 
 									ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.valmapField.\type, "0")),
@@ -258,7 +283,7 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactN
 									ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "0")),
 									ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "0"))),
 						inferredGenericsStr = "<InferredGenerics(ts.ds, ts.tupleTypes)>"))>
-				<}>"));
+				"));
 
 
 data PredefOp = getNode();
@@ -403,6 +428,10 @@ str generate_copyAnd_generalPrelude(TrieSpecifics ts, Artifact artifact, PredefO
 	"
 	final Class srcClass = this.getClass();
 	final Class dstClass = <generate_copyAnd_dstClass(ts, artifact, op)>;
+	
+	if (dstClass == null) {
+		throw new RuntimeException(String.format(\"[%s] No new specialization [payloadArity=%d, nodeArity=%d].\", srcClass.getName(), payloadArity(), nodeArity()));
+	}
 	
 	<dec(jdtToVal(compactNode(ts), "src"))> = this;
 	<dec(jdtToVal(compactNode(ts), "dst"))> = <toString(cast(jdtToType(compactNode(ts)), exprFromString("unsafe.allocateInstance(dstClass)")))>;				
@@ -582,7 +611,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 				
 		// copy payload range				
 		<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity)>
-		<copyPayloadRange(ts, artifact, useExpr(valIdx), call(getDef(ts, artifact, payloadArity())), indexAdd1, indexIdentity)>
+		<copyPayloadRange(ts, artifact, plus(useExpr(valIdx), iconst(1)), call(getDef(ts, artifact, payloadArity())), indexAdd1, indexIdentity)>
 		
 		// copy node range				
 		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
@@ -851,16 +880,17 @@ data PredefOp = copyAndRemoveNode_nextClass();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveNode_nextClass())
 	= method(\return(specific("java.lang.Class")), "copyAndRemoveNode_nextClass", isActive = false);
 
-		
+
+// TODO: specialize removed(..) to remove this method from this interface		
 data PredefOp = removeInplaceValueAndConvertToSpecializedNode(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode())
-	= method(\return(jdtToType(compactNode(ts))), "removeInplaceValueAndConvertToSpecializedNode", args = [ts.mutator, ts.bitposField], isActive = isOptionEnabled(ts.setup, useSpecialization()));
+	= method(\return(jdtToType(compactNode(ts))), "removeInplaceValueAndConvertToSpecializedNode", args = [ts.mutator, ts.bitposField], isActive = supportsConversionBetweenGenericAndSpecialized(ts));
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, removeInplaceValueAndConvertToSpecializedNode()) = true;
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, removeInplaceValueAndConvertToSpecializedNode()) 
-	= UNSUPPORTED_OPERATION_EXCEPTION
-when trieNode(_) := artifact;
+	= UNSUPPORTED_OPERATION_EXCEPTION;
 
 
 lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:compactNode()) 
@@ -869,19 +899,19 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nod
 
 list[PredefOp] declaredMethodsByCompactNode = [
 
+	specializationsByContentAndNodes(),
+
 	globalNodeMapOffset(),
 	globalDataMapOffset(),
 	globalArrayOffsetsOffset(),
 	arrayBase(),
 	addressSize(),	
 
-	specializationsByContentAndNodes(),
-
 	// TODO: this is implementation specific ...
 	// TODO: nodeOf() factory methods; also option to enable disable the use of factory methods.
 	nodeFactory_Empty(),
 	nodeFactory_Singleton(),
-	nodeFactory_Array(),	
+	nodeFactory_Array(),
 
 	hashCodeLength(), // TODO: implement as static final field
 	bitPartitionSize(), // TODO: implement as static final field
@@ -979,10 +1009,10 @@ list[PredefOp] declaredMethodsByCompactNode = [
 ];
 
 lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:compactNode(BitmapSpecialization _)) 
-	= [ <nodeType,nodeMap()>, <nodeType,dataMap()> ];
+	= [ <nodeType,constructor()>, <nodeType,nodeMap()>, <nodeType,dataMap()> ];
 	
 lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:compactHeterogeneousNode(BitmapSpecialization _)) 
-	= [ <nodeType,nodeMap()>, <nodeType,dataMap()> ];	
+	= [ <nodeType,constructor()>, <nodeType,nodeMap()>, <nodeType,dataMap()> ];	
 
 str emptyTrieNodeConstantName = "EMPTY_NODE";
 str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy:true) {
@@ -1225,9 +1255,9 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy:true) {
 bool exists_bodyOf_mergeTwoValues(TrieSpecifics ts, Position pos:positionField()) = true; 
 str generate_bodyOf_mergeTwoValues(TrieSpecifics ts, Position pos:positionField()) =
 	"if (mask0 \< mask1) {
-	'	return nodeOf(null, (byte) mask0, <use(__payloadTuple(ts.ds, ts.tupleTypes, 0))>, (byte) mask1, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>);
+	'	return nodeOf<0>x<2>(null, (byte) mask0, <use(__payloadTuple(ts.ds, ts.tupleTypes, 0))>, (byte) mask1, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>);
 	'} else {
-	'	return nodeOf(null, (byte) mask1, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, (byte) mask0, <use(__payloadTuple(ts.ds, ts.tupleTypes, 0))>);
+	'	return nodeOf<0>x<2>(null, (byte) mask1, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, (byte) mask0, <use(__payloadTuple(ts.ds, ts.tupleTypes, 0))>);
 	'}"
 when isOptionEnabled(ts.setup, useSpecialization());
 
@@ -1236,9 +1266,9 @@ str generate_bodyOf_mergeTwoValues(TrieSpecifics ts, Position pos:positionBitmap
 	"<dec(ts.valmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask0))))> | <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask1))))>);
 	' 
 	'if (mask0 \< mask1) {
-	'	return nodeOf(null, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, <use(valmapField)>, <use(appendToName(nodeTupleArgs(ts), "0") + appendToName(nodeTupleArgs(ts), "1"))>);
+	'	return nodeOf<0>x<2>(null, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, <use(valmapField)>, <use(appendToName(nodeTupleArgs(ts), "0") + appendToName(nodeTupleArgs(ts), "1"))>);
 	'} else {
-	'	return nodeOf(null, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, <use(valmapField)>, <use(appendToName(nodeTupleArgs(ts), "1") + appendToName(nodeTupleArgs(ts), "0"))>);
+	'	return nodeOf<0>x<2>(null, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, <use(valmapField)>, <use(appendToName(nodeTupleArgs(ts), "1") + appendToName(nodeTupleArgs(ts), "0"))>);
 	'}"
 when isOptionEnabled(ts.setup, useSpecialization());
 
@@ -1270,13 +1300,13 @@ when !isOptionEnabled(ts.setup, useSpecialization());
 
 bool exists_bodyOf_mergeOnNextLevel(TrieSpecifics ts, Position pos:positionField()) = true; 
 str generate_bodyOf_mergeOnNextLevel(TrieSpecifics ts, Position pos:positionField()) =
-	"return nodeOf(null, (byte) mask0, node);"
+	"return nodeOf<1>x<0>(null, (byte) mask0, node);"
 when isOptionEnabled(ts.setup, useSpecialization());
 
 bool exists_bodyOf_mergeOnNextLevel(TrieSpecifics ts, Position pos:positionBitmap()) = true; 
 str generate_bodyOf_mergeOnNextLevel(TrieSpecifics ts, Position pos:positionBitmap()) =
 	"<dec(ts.bitmapField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask0))))>;
-	'return nodeOf(null, <use(bitmapField)>, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, node);"
+	'return nodeOf<1>x<0>(null, <use(bitmapField)>, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, node);"
 when isOptionEnabled(ts.setup, useSpecialization());		
 	
 bool exists_bodyOf_mergeOnNextLevel(TrieSpecifics ts, Position _) = true; 
@@ -1297,7 +1327,7 @@ default str generate_bodyOf_mergeOnNextLevel(TrieSpecifics _, Option _, Position
 bool exists_bodyOf_mergeNodeAndValue(TrieSpecifics ts, Position pos:positionField()) = true; 
 str generate_bodyOf_mergeNodeAndValue(TrieSpecifics ts, Position pos:positionField()) =
 	"// store values before node
-	'return nodeOf(null, (byte) mask1, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, (byte) mask0, node0);"
+	'return nodeOf<1>x<1>(null, (byte) mask1, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, (byte) mask0, node0);"
 when isOptionEnabled(ts.setup, useSpecialization());
 
 bool exists_bodyOf_mergeNodeAndValue(TrieSpecifics ts, Position pos:positionBitmap()) = true; 
@@ -1306,7 +1336,7 @@ str generate_bodyOf_mergeNodeAndValue(TrieSpecifics ts, Position pos:positionBit
 	'<dec(ts.valmapField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask1))))>;
 	'
 	'// store values before node
-	'return nodeOf(null, <use(bitmapField)>, <use(valmapField)>, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, node0);"
+	'return nodeOf<1>x<1>(null, <use(bitmapField)>, <use(valmapField)>, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, node0);"
 when isOptionEnabled(ts.setup, useSpecialization());		
 	
 bool exists_bodyOf_mergeNodeAndValue(TrieSpecifics ts, Position _) = true; 
@@ -1474,7 +1504,7 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(TrieSpecifics 
 default str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq) =
 	"<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex); details.updated(currentVal);<} else {>details.modified();<}>
 	
-	<removed_value_block1(ts)> else <if (isOptionEnabled(ts.setup,useSpecialization())) {><removed_value_block2(ts)> else<}> {					
+	<removed_value_block1(ts)> else <if (supportsConversionBetweenGenericAndSpecialized(ts)) {><removed_value_block2(ts)> else<}> {					
 		return copyAndRemoveValue(mutator, bitpos);
 	}";
 	
@@ -1500,7 +1530,7 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;
 	'	
 	'	if (<use(appendToName(nodeTupleArg(ts, 1), "New"))>.size() == 0) { // earlier: arity() == 0
-	'		<removed_value_block1(ts)> else <if (isOptionEnabled(ts.setup,useSpecialization())) {><removed_value_block2(ts)> else<}> {					
+	'		<removed_value_block1(ts)> else <if (supportsConversionBetweenGenericAndSpecialized(ts)) {><removed_value_block2(ts)> else<}> {					
 	'			return copyAndRemoveValue(mutator, bitpos);
 	'		}
 	'	} else {
@@ -1580,7 +1610,9 @@ default str removed_value_block1(TrieSpecifics ts) =
 	'					: <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.shift: constant(primitive("int"), "0"))))))>;
 	'
 	'	<toString(result(call(getDef(ts, trieNode(compactNode()), nodeFactory_Specialization(0, 1)),
-				argsOverride = (ts.bitmapField: iconst(0), ts.valmapField: exprFromString("newDataMap")),
+				argsOverride = (
+					ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)), 
+					ts.valmapField: exprFromString("newDataMap")),
 				labeledArgsOverride = (contentArguments(): exprFromString("getKey(1 - dataIndex)<if (\map() := ts.ds) {>, getValue(1 - dataIndex)<}>")))))>;
 	'}";
 
@@ -1594,6 +1626,12 @@ default int oneShiftedLeftBy(int count) { throw "Not supported!"; }
 
 
 
+
+
+list[PredefOp] createNodeFactorySpecializationList(TrieSpecifics ts, TrieNodeType nodeType:compactNode()) 
+	= [ nodeFactory_Specialization(i, j) | <i, j> <- ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe ]
+when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+
 /*
  * Factory methods are generated until <= ts.nBound + tupleLength(ts.ds) 
  * because untyped specializations (especially for heterogeneous representations) 
@@ -1602,16 +1640,26 @@ default int oneShiftedLeftBy(int count) { throw "Not supported!"; }
 list[PredefOp] createNodeFactorySpecializationList(TrieSpecifics ts, TrieNodeType nodeType:compactNode()) 
 	= [ nodeFactory_Specialization(i, j) | j <- [0..ts.nMax+1], i <- [0..ts.nMax+1], ((i + j) <= ts.nMax && (i + j) <= ts.nBound + tupleLength(ts.ds))]; 
 
+//str generate_specializationFactoryMethods(TrieSpecifics ts) = 
+//	"<for(<i, j> <- ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe) {>
+//	'	<implOrOverride(CompactNode_factoryMethod_bitmap(i, j, ts), generate_bodyOf_factoryMethod_bitmap(i, j, ts, CompactNode_factoryMethod_bitmap(i, j, ts)))>
+//	'<}>"
+//when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+
+
+
+
+
 data PredefOp = nodeFactory_Specialization(int n, int m);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Specialization(int n, int m))
 	= function(ts.compactNodeClassReturn, "nodeOf<n>x<m>", generics = ts.genericTupleTypes, args = [ ts.mutator ] + metadataArguments(ts) + labeledArgumentList(contentArguments(), contentArguments(n, m, ts)), argsFilter = ts.argsFilter,
-				isActive = !isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+				isActive = true); // !isOptionEnabled(ts.setup, useSunMiscUnsafe())
 // isActive = isOptionEnabled(ts.setup, useSpecialization())
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Specialization(int n, int m)) = true;
 
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Specialization(int n, int m)) =
+value generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Specialization(int n, int m)) =
 	generate_bodyOf_factoryMethod_bitmap(n, m, ts, CompactNode_factoryMethod_bitmap(n, m, ts))
 ; // when isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup,useUntypedVariables());
 
@@ -1639,6 +1687,7 @@ str generate_specializationFactoryMethods(TrieSpecifics ts) =
 when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 default str generate_specializationFactoryMethods(TrieSpecifics ts) = "";
+
 
 
 
@@ -1672,6 +1721,41 @@ Expression generate_bodyOf_factoryMethod_bitmap(int n:0, int m:0, TrieSpecifics 
 //	;
 //}
 
+
+Statement generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration) { 
+	if (!isOptionEnabled(ts.setup, useSunMiscUnsafe())) {
+		fail CompactNode_factoryMethod_bitmap;
+	}
+	
+	str className = className(ts, specializedBitmapIndexedNode(n, m));
+
+	str resultStr =
+		"try {	
+		'	final Class\<<className>\> dstClass = <className>.class;
+		'
+		'	final <className> dst = (<className>) (unsafe.allocateInstance(dstClass));
+		'	
+		'	unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, globalNodeMapOffset, nodeMap);
+		'	unsafe.put<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(dst, globalDataMapOffset, dataMap);
+		'
+		'	// works in presence of padding
+		'	long offset = arrayBase;
+		'	<for (arg <- contentArguments(n, m, ts)) {>unsafe.<unsafePutMethodNameFromType(arg.\type)>(dst, offset, <use(arg)>); offset += addressSize;<}>
+		'
+		'	return dst;
+		'} catch (InstantiationException | SecurityException e) {
+		'	throw new RuntimeException(e);
+		'}";
+
+	return uncheckedStringStatement(resultStr);	
+}
+
+str unsafeGetMethodNameFromType(Type \type) = unsafePrefixedMethodNameFromType("get", concretePrimitiveOrObject(\type));
+str unsafePutMethodNameFromType(Type \type) = unsafePrefixedMethodNameFromType("put", concretePrimitiveOrObject(\type));
+str unsafePrefixedMethodNameFromType(str prefix, Type \type) = "<prefix><capitalize(typeToString(\type))>"; 
+
+@memo Type concretePrimitiveOrObject(Type \type:primitive(_)) = \type;
+default Type concretePrimitiveOrObject(Type _) = object();
 
 Expression generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration) 
 	= exprFromString("return new <specializedClassNameStr><InferredGenerics(ts.ds, ts.tupleTypes)>(<use(decleration.args)>);")
@@ -2141,8 +2225,8 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalNodeMapOffset()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalNodeMapOffset())
-	= generate_bodyOf_reflectFieldOffset(className(ts, specializedBitmapIndexedNode(2, 0)), "nodeMapOffset");
-
+	// = generate_bodyOf_reflectFieldOffset(className(ts, specializedBitmapIndexedNode(2, 0)), "nodeMapOffset");
+	= "return <className(ts, specializedBitmapIndexedNode(2, 0))>.<lowLevelBitmapName(ts, 0)>Offset;";
 
 data PredefOp = globalDataMapOffset();
 
@@ -2151,7 +2235,8 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalDataMapOffset()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalDataMapOffset())
-	= generate_bodyOf_reflectFieldOffset(className(ts, specializedBitmapIndexedNode(2, 0)), "dataMapOffset");
+	// = generate_bodyOf_reflectFieldOffset(className(ts, specializedBitmapIndexedNode(2, 0)), "dataMapOffset");
+	= "return <className(ts, specializedBitmapIndexedNode(2, 0))>.<lowLevelBitmapName(ts, 1)>Offset;";
 
 
 data PredefOp = globalArrayOffsetsOffset();
@@ -2162,6 +2247,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalArrayOffsetsOffset()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalArrayOffsetsOffset())
 	= generate_bodyOf_reflectFieldOffset(className(ts, specializedBitmapIndexedNode(2, 0)), "arrayOffsets");
+
 
 
 data PredefOp = arrayBase();
@@ -2204,19 +2290,19 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 when classNameString := className(ts, specializedBitmapIndexedNode(2, 0));
 
 
-str generate_bodyOf_reflectNextClassArray(str mNext, str nNext) =
-	"Class[][] next = new Class[33][33];
+str generate_bodyOf_reflectNextClassArray(TrieSpecifics ts, str mNext, str nNext) =
+	"Class[][] next = new Class[<ts.nMax + 1>][<ts.nMax + 1>];
 	'
 	'try {
-	'	for (int m = 0; m \<= 32; m++) {
-	'		for (int n = 0; n \<= 32; n++) {
+	'	for (int m = 0; m \<= <ts.nMax>; m++) {
+	'		for (int n = 0; n \<= <ts.nMax>; n++) {
 	'			int mNext = <mNext>;
 	'			int nNext = <nNext>;
 	'			
-	'			if (mNext \< 0 || mNext \> 32 || nNext \< 0 || nNext \> 32) {
+	'			if (mNext \< 0 || mNext \> <ts.nMax> || nNext \< 0 || nNext \> <ts.nMax> || nNext + mNext \> 8) {
 	'				next[m][n] = null;
 	'			} else {
-	'				next[m][n] = Class.forName(String.format(\"Map%dTo%dNode_BleedingEdge\", mNext, nNext));
+	'				next[m][n] = Class.forName(String.format(\"<targetBasePackage>.<ts.coreClassName>$Map%dTo%dNode_BleedingEdge\", mNext, nNext));
 	'			}
 	'		}
 	'	}
@@ -2234,6 +2320,6 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::specializationsByContentAndNodes()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::specializationsByContentAndNodes())
-	= generate_bodyOf_reflectNextClassArray("m", "n");
+	= generate_bodyOf_reflectNextClassArray(ts, "m", "n");
 
 	

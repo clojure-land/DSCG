@@ -85,7 +85,7 @@ void doGenerateBleedingEdge() {
 
 void doGenerateHeterogeneous() {
 	
-	doGenerate(hashTrieConfig(\map(), 5, [object(), object()], heterogeneousSpecializationConfig(4)), overideClassNamePostfixWith = "BleedingEdge");
+	doGenerate(hashTrieConfig(\map(), 3, [object(), object()], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "BleedingEdge");
 
 }
 
@@ -144,7 +144,8 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 	}
 
 	if (heterogeneousSpecializationConfig(__specializeTo) := specializationConfig) {
-		flagHeterogeneousSpecialization = true;
+		flagSpecialization = true;
+		//flagHeterogeneousSpecialization = true;
 		specializeTo = __specializeTo;
 		flagUntypedVariables = false; // heterogeneous config implies untyped, hower the option are distinct for easier pattern matching.
 	}
