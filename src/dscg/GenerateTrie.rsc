@@ -85,7 +85,7 @@ void doGenerateBleedingEdge() {
 
 void doGenerateHeterogeneous() {
 	
-	doGenerate(hashTrieConfig(\map(), 3, [object(), object()], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "BleedingEdge");
+	doGenerate(hashTrieConfig(\map(), 3, [object(), object()], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "Heterogeneous_BleedingEdge");
 
 }
 
