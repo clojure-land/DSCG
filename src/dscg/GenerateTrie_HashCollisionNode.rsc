@@ -262,6 +262,17 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 			
 		<implOrOverride(getDef(ts, trieNode(compactNode()), dataMap()),
 			UNSUPPORTED_OPERATION_EXCEPTION)>
+			
+		<if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {>			
+			<implOrOverride(getDef(ts, trieNode(compactNode()), rareMap()), 
+				UNSUPPORTED_OPERATION_EXCEPTION)>
+				
+			<implOrOverride(getDef(ts, trieNode(compactNode()), rawMap1()),
+				UNSUPPORTED_OPERATION_EXCEPTION)>
+				
+			<implOrOverride(getDef(ts, trieNode(compactNode()), rawMap2()),
+				UNSUPPORTED_OPERATION_EXCEPTION)>				
+		<}>			
 					
 		<impl(ts, trieNode(hashCollisionNode()), isTrieStructureValid())>					
 						

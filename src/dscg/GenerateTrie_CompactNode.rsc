@@ -266,11 +266,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), 
 
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::emptyTrieNodeConstant())
 	= result(exprFromString("new <toString(ts.ds)>0To0Node<ts.classNamePostfix><InferredGenerics(ts.ds, ts.tupleTypes)>(null, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0)"))
-when isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useSunMiscUnsafe());
-
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::emptyTrieNodeConstant())
-	= result(exprFromString("new <toString(ts.ds)>0To0Node<ts.classNamePostfix><InferredGenerics(ts.ds, ts.tupleTypes)>()"))
-when isOptionEnabled(ts.setup, useSpecialization()) && isOptionEnabled(ts.setup, useSunMiscUnsafe());
+when isOptionEnabled(ts.setup, useSpecialization());
 
 // TODO: #simplifyWithConcreteSyntax
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::emptyTrieNodeConstant())
