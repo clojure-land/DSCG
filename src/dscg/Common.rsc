@@ -1060,14 +1060,14 @@ str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = over
 	'}<}>
 	'
 	'<if (/^return <expression:.*>;$/ := bodyStr) {>
-	'<if (m.hasGetter) {>private<} else {><m.visibility><}> static final <typeToString(m.returnArg.\type)> <m.name> = <expression>;
+	'<if (m.hasGetter) {>private<} else {><m.visibility><}> static final <stripGenerics(typeToString(m.returnArg.\type))> <m.name> = <expression>;
 	'<} else {>
 	'<if (m.hasGetter) {>private<} else {><m.visibility><}> static final <GenericsStr(m.generics)> <typeToString(m.returnArg.\type)> initialize<capitalize(m.name)>() {
 	'	<bodyStr>
 	'}
 	'	
 	'<if (m.hasGetter) {>private<} else {><m.visibility><}> 
-	'static final <typeToString(m.returnArg.\type)> <m.name> = initialize<capitalize(m.name)>();
+	'static final <stripGenerics(typeToString(m.returnArg.\type))> <m.name> = initialize<capitalize(m.name)>();
 	'<}>"
 when m.isActive && m.isStateful && m.isConstant;
 	
@@ -1136,6 +1136,9 @@ str GenericsStr(list[Type] tupleTypes:/generic(_)) =
 when genericTypes := [ t| t <- tupleTypes, t is generic];
 
 default str GenericsStr(list[Type] tupleType) = "";
+
+str stripGenerics(str s) = split("\<", s)[0];
+
 
 //str Generics(DataStructure ds:\map(), list[Type] tupleTypes:[Type keyType, Type valType, *_]) = "" when !isGeneric(keyType) && !isGeneric(valType);
 //str Generics(DataStructure ds:\map(), list[Type] tupleTypes:[Type keyType, Type valType, *_]) = "\<<typeToString(primitiveToClass(keyType))>, <typeToString(primitiveToClass(valType))>\>" when isGeneric(keyType) && isGeneric(valType);
