@@ -554,8 +554,8 @@ when valIdx := val(primitive("int"), "valIdx") &&
 // TODO: unify copyPayloadRange and copyNodeRange
 str copyPayloadRange(TrieSpecifics ts, Artifact artifact, Expression from, Expression to, Expression(Expression) srcIndexShift, Expression(Expression) dstIndexShift, map[ContentType, Expression] argsOverride = ()) = 
 	"<if (fromPlusOne != to) {>for (int i = <toString(from)>; i \< <toString(to)>; i++) {<}>
-		unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctKey(), dstIndexShift(i)))>], <if (argsOverride[ctKey()]?) {><toString(argsOverride[ctKey()])><} else {>unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctKey(), srcIndexShift(i)))>])<}>);
-		unsafe.putObject(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctVal(), dstIndexShift(i)))>], <if (argsOverride[ctVal()]?) {><toString(argsOverride[ctVal()])><} else {>unsafe.getObject(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctVal(), srcIndexShift(i)))>])<}>);
+		unsafe.<unsafePutMethodNameFromType(ts.keyType)>(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctKey(), dstIndexShift(i)))>], <if (argsOverride[ctKey()]?) {><toString(argsOverride[ctKey()])><} else {>unsafe.<unsafeGetMethodNameFromType(ts.keyType)>(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctKey(), srcIndexShift(i)))>])<}>);
+		unsafe.<unsafePutMethodNameFromType(ts.valType)>(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctVal(), dstIndexShift(i)))>], <if (argsOverride[ctVal()]?) {><toString(argsOverride[ctVal()])><} else {>unsafe.<unsafeGetMethodNameFromType(ts.valType)>(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctVal(), srcIndexShift(i)))>])<}>);
 	<if (fromPlusOne != to) {>}<}>"
 when fromPlusOne := plus(from, iconst(1)) &&
 		i := (fromPlusOne == to ? from : useExpr(var(primitive("int"), "i")));
@@ -1750,7 +1750,7 @@ str unsafeGetMethodNameFromType(Type \type) = unsafePrefixedMethodNameFromType("
 str unsafePutMethodNameFromType(Type \type) = unsafePrefixedMethodNameFromType("put", concretePrimitiveOrObject(\type));
 str unsafePrefixedMethodNameFromType(str prefix, Type \type) = "<prefix><capitalize(typeToString(\type))>"; 
 
-@memo Type concretePrimitiveOrObject(Type \type:primitive(_)) = \type;
+@memo Type concretePrimitiveOrObject(Type \type:___primitive(str _)) = \type;
 default Type concretePrimitiveOrObject(Type _) = object();
 
 Expression generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration) 
@@ -1966,13 +1966,13 @@ str generate_bodyOf_mergeNodeAndKeyValPair(TrieSpecifics ts) =
 when isOptionEnabled(ts.setup, usePathCompression());
 
 
-str generate_bodyOf_getXXX(TrieSpecifics ts, Artifact artifact, str returnTypeString, str contentTypeString) {
+str generate_bodyOf_getXXX(TrieSpecifics ts, Artifact artifact, str returnTypeString, str contentTypeString, str unsafeGetMethodNameFromType) {
 	Expression callLogicalToPhysical = call(getDef(ts, artifact, logicalToPhysicalIndex()), argsOverride = (ts.contentType: exprFromString(contentTypeString)));
 
 	return
 		"try {
 		'	final long[] arrayOffsets = (long[]) unsafe.getObject(this.getClass(), unsafe.staticFieldOffset(this.getClass().getDeclaredField(\"arrayOffsets\")));
-		'	return (<returnTypeString>) unsafe.getObject(this, arrayOffsets[<toString(callLogicalToPhysical)>]);
+		'	return (<returnTypeString>) unsafe.<unsafeGetMethodNameFromType>(this, arrayOffsets[<toString(callLogicalToPhysical)>]);
 		'} catch (NoSuchFieldException | SecurityException e) {
 		'	throw new RuntimeException(e);
 		'}";	 
@@ -1985,7 +1985,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getSlot()) 
-	= generate_bodyOf_getXXX(ts, artifact, typeToString(ts.keyType), "ContentType.SLOT") 
+	= generate_bodyOf_getXXX(ts, artifact, typeToString(object()), "ContentType.SLOT", unsafeGetMethodNameFromType(object())) 
 when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 
@@ -1995,7 +1995,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getKey()) 
-	= generate_bodyOf_getXXX(ts, artifact, typeToString(ts.keyType), "ContentType.KEY")
+	= generate_bodyOf_getXXX(ts, artifact, typeToString(ts.keyType), "ContentType.KEY", unsafeGetMethodNameFromType(ts.keyType))
 when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 
@@ -2005,7 +2005,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getValue())
-	= generate_bodyOf_getXXX(ts, artifact, typeToString(ts.valType), "ContentType.VAL")
+	= generate_bodyOf_getXXX(ts, artifact, typeToString(ts.valType), "ContentType.VAL", unsafeGetMethodNameFromType(ts.valType))
 when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 
@@ -2015,7 +2015,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getRareKey()) 
-	= generate_bodyOf_getXXX(ts, artifact, typeToString(ts.keyType), "ContentType.RARE_KEY")
+	= generate_bodyOf_getXXX(ts, artifact, typeToString(ts.keyType), "ContentType.RARE_KEY", unsafeGetMethodNameFromType(ts.keyType)) // TODO: RARE
 when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 
@@ -2025,7 +2025,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getRareValue())
-	= generate_bodyOf_getXXX(ts, artifact, typeToString(ts.valType), "ContentType.RARE_VAL")
+	= generate_bodyOf_getXXX(ts, artifact, typeToString(ts.valType), "ContentType.RARE_VAL", unsafeGetMethodNameFromType(ts.valType)) // TODO: RARE
 when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 
