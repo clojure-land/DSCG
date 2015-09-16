@@ -34,9 +34,19 @@ JavaDataType specializedBitmapIndexedNode(TrieSpecifics ts, TrieNodeType nodeTyp
 lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(int n, int m)) { 
 	list[PredefOp] declaredMethods = [
 		featureFlags(),
-		bitmapOffset(lowLevelBitmapName(ts, 0)), // previously: offset for nodeMap
-		bitmapOffset(lowLevelBitmapName(ts, 1)), // previously: offset for dataMap
+
 		arrayOffsets(),
+
+		nodeArityStatic(),
+		payloadArityStatic(),
+		slotArityStatic(),
+
+		//fieldOffset(lowLevelBitmapName(ts, 0)), // previously: offset for nodeMap
+		//fieldOffset(lowLevelBitmapName(ts, 1)), // previously: offset for dataMap
+		//fieldOffset("nodeArity"),
+		//fieldOffset("payloadArity"),
+		//fieldOffset("slotArity"),
+
 		*createContentArgumentList(ts, nodeType),
 		constructor()
 	];
@@ -94,21 +104,21 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType
 	= result(exprFromString("FeatureFlags.SUPPORTS_NODES | FeatureFlags.SUPPORTS_PAYLOAD"));
 
 
-data PredefOp = bitmapOffset(str bitmapName);
+data PredefOp = fieldOffset(str fieldName);
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::bitmapOffset(str bitmapName))
-	= property(\return(primitive("long")), "<bitmapName>Offset", isStateful = true, isConstant = true, hasGetter = false, 
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::fieldOffset(str fieldName))
+	= property(\return(primitive("long")), "<fieldName>Offset", isStateful = true, isConstant = true, hasGetter = false, 
 		isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
 
 // Default Value for Property
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::bitmapOffset(str bitmapName)) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::fieldOffset(str fieldName)) = true;
 
 // TODO: does not work for untyped yet.
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::bitmapOffset(str bitmapName)) {
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::fieldOffset(str fieldName)) {
 	str thisClassStr = "<specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(n, m)).typeName>.class";
-	Argument mapField = val(specific("java.util.Optional\<Field\>"), "<bitmapName>Field");
+	Argument mapField = val(specific("java.util.Optional\<Field\>"), "<fieldName>Field");
 return 
-"return bitmapOffset(<thisClassStr>, \"<bitmapName>\");";
+	"return fieldOffset(<thisClassStr>, \"<fieldName>\");";
 }
 
 
@@ -131,6 +141,45 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 return 
 "return arrayOffsets(<thisClassStr>, new String[] { <intercalate(", ", mapper(contentArguments(n, m, ts), str(Argument arg) { return "\"<arg.name>\""; }))> });";
 }
+
+
+data PredefOp = payloadArityStatic();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), payloadArityStatic())
+	= property(\return(primitive("int")), "payloadArity", isStateful = true, isConstant = true, hasGetter = false, 
+		isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::payloadArityStatic()) = true;
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::payloadArityStatic())
+	= result(iconst(m))
+when !isOptionEnabled(ts.setup, useUntypedVariables());	
+
+
+data PredefOp = nodeArityStatic();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), nodeArityStatic())
+	= property(\return(primitive("int")), "nodeArity", isStateful = true, isConstant = true, hasGetter = false, 
+		isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeArityStatic()) = true;
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeArityStatic())
+	= result(iconst(n))
+when !isOptionEnabled(ts.setup, useUntypedVariables());	
+
+
+data PredefOp = slotArityStatic();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), slotArityStatic())
+	= property(\return(primitive("int")), "slotArity", isStateful = true, isConstant = true, hasGetter = false, 
+		isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::slotArityStatic()) = true;
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::slotArityStatic(), int mn = tupleLength(ts.ds)*m+n)
+	= result(iconst(mn))
+when !isOptionEnabled(ts.setup, useUntypedVariables());	
 
 
 // TODO: obsolete 'contentArguments'
@@ -373,14 +422,14 @@ int slotCount(TrieSpecifics ts, specializedBitmapIndexedNode(int n, int m)) = tu
 
 data PredefOp = hasSlots();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hasSlots()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hasSlots()) = !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hasSlots())
 	= result(boolean(slotCount(ts, nodeType) != 0)); 	
 	
 	
 data PredefOp = slotArity();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::slotArity()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::slotArity()) = !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::slotArity())
 	= result(iconst(slotCount(ts, nodeType)));
 
@@ -630,7 +679,7 @@ when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(
 
 data PredefOp = hasNodes();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hasNodes()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hasNodes()) = !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hasNodes())
 	= "return <use(tupleLengthConstant)> * payloadArity() != <mn>;"
@@ -644,7 +693,7 @@ when !isOptionEnabled(ts.setup, useUntypedVariables());
 	
 data PredefOp = nodeArity();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeArity()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeArity()) = !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeArity())
 	= "return <mn> - <use(tupleLengthConstant)> * payloadArity();"
@@ -658,7 +707,7 @@ when !isOptionEnabled(ts.setup, useUntypedVariables());
 
 data PredefOp = hasPayload();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hasPayload()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hasPayload()) = !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hasPayload())
 	= "return payloadArity() != 0;"
@@ -671,7 +720,7 @@ when !isOptionEnabled(ts.setup, useUntypedVariables());
 	
 data PredefOp = payloadArity();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::payloadArity()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::payloadArity()) = !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::payloadArity())
 	= "return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(___valmapMethod(ts.bitPartitionSize))>);"
@@ -684,7 +733,7 @@ when !isOptionEnabled(ts.setup, useUntypedVariables());
 
 data PredefOp = sizePredicate();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::sizePredicate()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::sizePredicate()) = !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::sizePredicate()) = 
 	"if (this.nodeArity() == 0 && this.payloadArity() == 0) {
@@ -1256,7 +1305,7 @@ when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(
 
 data PredefOp = hashCode();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hashCode()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hashCode()) = !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hashCode()) =
 	"<if ((n + m) > 0) {>final int prime = 31; int result = 1; result = prime * result + (<primitiveHashCode(___bitmapMethod(ts.bitPartitionSize))>); result = prime * result + (<primitiveHashCode(___valmapMethod(ts.bitPartitionSize))>);<} else {>int result = 1;<}>	
@@ -1279,7 +1328,7 @@ when !isOptionEnabled(ts.setup, useUntypedVariables());
 
 data PredefOp = equals();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::equals()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::equals()) = !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 //str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::equals())
 //	= "throw new UnsupportedOperationException(); // TODO: to implement"
