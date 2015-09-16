@@ -1258,10 +1258,6 @@ data PredefOp = hashCode();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hashCode()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hashCode())
-	= "throw new UnsupportedOperationException(); // TODO: to implement"
-when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
-
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::hashCode()) =
 	"<if ((n + m) > 0) {>final int prime = 31; int result = 1; result = prime * result + (<primitiveHashCode(___bitmapMethod(ts.bitPartitionSize))>); result = prime * result + (<primitiveHashCode(___valmapMethod(ts.bitPartitionSize))>);<} else {>int result = 1;<}>	
 	'<for (i <- [0..mn]) {>result = prime * result + <hashCode(slot(i))>;<}>	
@@ -1274,11 +1270,11 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 	'
 	'<for (i <- [1..m+1]) {>		
 	'result = prime * result + <hashCode(key(ts.keyType, i))>; <if (\map() := ts.ds) {>result = prime * result + <hashCode(val(ts.valType, i))>;<}> <}>
-	'<for (i <- [1..n+1]) {>
-	'result = prime * result + <hashCode(\node(ts.ds, ts.tupleTypes, i))>;<}>
+	'<for (i <- [0..n]) {>
+	'result = prime * result + <if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {><hashCode(slot(i))><} else {><hashCode(\node(ts.ds, ts.tupleTypes, i))><}>;<}>
 	'		
 	'return result;"
-when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
+when !isOptionEnabled(ts.setup, useUntypedVariables());
 
 
 data PredefOp = equals();
