@@ -2381,7 +2381,7 @@ str generate_bodyOf_reflectNextClassArray(TrieSpecifics ts, str mNext, str nNext
 	'			int mNext = <mNext>;
 	'			int nNext = <nNext>;
 	'			
-	'			if (mNext \< 0 || mNext \> <ts.nMax> || nNext \< 0 || nNext \> <ts.nMax> || nNext + mNext \> 8) {
+	'			if (mNext \< 0 || mNext \> <ts.nMax> || nNext \< 0 || nNext \> <ts.nMax> || nNext + mNext \> <ts.nMax>) {
 	'				next[m][n] = null;
 	'			} else {
 	'				next[m][n] = Class.forName(String.format(\"<targetBasePackage>.<ts.coreClassName>$Map%dTo%dNode<ts.classNamePostfix>\", mNext, nNext));
