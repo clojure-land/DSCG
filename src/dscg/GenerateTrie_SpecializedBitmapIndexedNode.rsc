@@ -40,6 +40,8 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nod
 		nodeArityStatic(),
 		payloadArityStatic(),
 		slotArityStatic(),
+		
+		arrayOffsetLastStatic(),
 
 		//fieldOffset(lowLevelBitmapName(ts, 0)), // previously: offset for nodeMap
 		//fieldOffset(lowLevelBitmapName(ts, 1)), // previously: offset for dataMap
@@ -179,6 +181,19 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:special
 
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::slotArityStatic(), int mn = tupleLength(ts.ds)*m+n)
 	= result(iconst(mn))
+when !isOptionEnabled(ts.setup, useUntypedVariables());	
+
+
+data PredefOp = arrayOffsetLastStatic();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), arrayOffsetLastStatic())
+	= property(\return(primitive("long")), "arrayOffsetLast", isStateful = true, isConstant = true, hasGetter = false, 
+		isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::arrayOffsetLastStatic()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::arrayOffsetLastStatic(), int mn = tupleLength(ts.ds)*m+n)
+	= "return arrayBase + <mn - 1> * addressSize;" // TODO: support non-reference types
 when !isOptionEnabled(ts.setup, useUntypedVariables());	
 
 

@@ -677,7 +677,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 				
 		// copy payload range				
 		<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity)>
-		<copyPayloadRange(ts, artifact, plus(useExpr(valIdx), iconst(1)), call(getDef(ts, artifact, payloadArity())), indexAdd1, indexIdentity)>
+		<copyPayloadRange(ts, artifact, plus(useExpr(valIdx), iconst(1)), call(getDef(ts, artifact, payloadArity())), indexSubtract1, indexIdentity)>
 		
 		// copy node range				
 		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
@@ -973,6 +973,9 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	globalFieldOffset("nodeArity"),
 	globalFieldOffset("payloadArity"),
 	globalFieldOffset("slotArity"),
+	
+	globalFieldOffset("arrayOffsetLast"),
+	
 	arrayBase(),
 	addressSize(),	
 
