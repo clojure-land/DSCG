@@ -51,7 +51,6 @@ import java.util.AbstractSet;
 import java.util.AbstractCollection;
 import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -74,8 +73,10 @@ import java.util.stream.StreamSupport;
 @SuppressWarnings(\"rawtypes\")
 public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
 
+	<impl(ts, core(immutable()), emptyTrieNodeConstant())>
+
 	<toString(UNCHECKED_ANNOTATION())>
-	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(Compact<toString(ts.ds)>Node.<toString(call(getDef(ts, trieNode(compactNode()), emptyTrieNodeConstant())))>, 0, 0);
+	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(<toString(call(getDef(ts, core(immutable()), emptyTrieNodeConstant())))>, 0, 0);
 
 	private static final boolean DEBUG = false;
 
@@ -465,3 +466,28 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 		
 }";
 }
+
+
+data PredefOp = emptyTrieNodeConstant();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp::emptyTrieNodeConstant())
+	= property(\return(jdtToType(abstractNode(ts))), "EMPTY_NODE", generics = ts.genericTupleTypes, visibility = "protected", isStateful = true, isConstant = true, hasGetter = false);
+	
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp::emptyTrieNodeConstant()) = true;
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp::emptyTrieNodeConstant())
+	= result(exprFromString("new <toString(ts.ds)>0To0Node<ts.classNamePostfix><InferredGenerics(ts.ds, ts.tupleTypes)>(null, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0)"))
+when isOptionEnabled(ts.setup, useSpecialization());
+
+// TODO: #simplifyWithConcreteSyntax
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp::emptyTrieNodeConstant())
+	= result(exprFromString(
+				"<toString(call(ts.BitmapIndexedNode_constructor, 
+						argsOverride = (ts.mutator: NULL(),								
+									ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.bitmapField.\type, "0")), 
+									ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.valmapField.\type, "0")),
+									ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { }"),
+									ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "0")),
+									ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "0"))),
+						inferredGenericsStr = "<InferredGenerics(ts.ds, ts.tupleTypes)>"))>
+				"));

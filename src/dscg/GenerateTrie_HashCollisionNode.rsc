@@ -43,7 +43,7 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 	}
 
 	return  
-	"private static final class <hashCollisionNode(ts).typeName><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
+	"private static final class <hashCollisionNode(ts).typeName><GenericsStr(ts.tupleTypes)> extends <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
 		private <dec(arrays[0])>;		
 		<if (\map() := ts.ds) {>private <dec(arrays[1])>;<}>
 		private final int hash;
@@ -71,21 +71,9 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 		}
 
 		@Override
-		Iterator\<<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>\> nodeIterator() {
+		Iterator\<<AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)>\> nodeIterator() {
 			return Collections.emptyIterator();
 		}
-
-		@Override
-		<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> copyAndMigrateFromInlineToNode(AtomicReference\<Thread\> mutator,
-						<dec(ts.bitposField)>, <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> copyAndMigrateFromNodeToInline(AtomicReference\<Thread\> mutator,
-						<dec(ts.bitposField)>, <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node) {
-			throw new UnsupportedOperationException();
-		}		
 		<}>
 
 	<impl(ts, trieNode(hashCollisionNode()), containsKey())>
@@ -139,7 +127,7 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 		<impl(ts, trieNode(hashCollisionNode()), getKeyValueEntry())>
 
 		@Override
-		public <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> getNode(int index) {
+		public <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> getNode(int index) {
 			throw new IllegalStateException(\"Is leaf node.\");
 		}
 		
@@ -215,66 +203,14 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 			return true;
 		}
 		<}>
-
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetValue()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndRemoveValue()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetNode()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-		
-		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-		
-		<implOrOverride(getDef(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>	
-			
-		<if (isOptionEnabled(ts.setup, useSunMiscUnsafe())) {>			
-			<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetValue_nextClass()), 
-				UNSUPPORTED_OPERATION_EXCEPTION)>
-			
-			<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndInsertValue_nextClass()), 
-				UNSUPPORTED_OPERATION_EXCEPTION)>
-			
-			<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndRemoveValue_nextClass()), 
-				UNSUPPORTED_OPERATION_EXCEPTION)>
-			
-			<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetNode_nextClass()), 
-				UNSUPPORTED_OPERATION_EXCEPTION)>
-			
-			<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode_nextClass()), 
-				UNSUPPORTED_OPERATION_EXCEPTION)>
-			
-			<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass()), 
-				UNSUPPORTED_OPERATION_EXCEPTION)>
-		<}>
-			
-		<implOrOverride(getDef(ts, trieNode(compactNode()), nodeMap()), 
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-			
-		<implOrOverride(getDef(ts, trieNode(compactNode()), dataMap()),
-			UNSUPPORTED_OPERATION_EXCEPTION)>
-			
-		<if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {>			
-			<implOrOverride(getDef(ts, trieNode(compactNode()), rareMap()), 
-				UNSUPPORTED_OPERATION_EXCEPTION)>
-				
-			<implOrOverride(getDef(ts, trieNode(compactNode()), rawMap1()),
-				UNSUPPORTED_OPERATION_EXCEPTION)>
-				
-			<implOrOverride(getDef(ts, trieNode(compactNode()), rawMap2()),
-				UNSUPPORTED_OPERATION_EXCEPTION)>				
-		<}>			
 					
-		<impl(ts, trieNode(hashCollisionNode()), isTrieStructureValid())>					
+		<impl(ts, trieNode(hashCollisionNode()), isTrieStructureValid())>
+		
+		<implOrOverride(getDef(ts, trieNode(compactNode()), getRareKey()), 
+			UNSUPPORTED_OPERATION_EXCEPTION)>
+			
+		<implOrOverride(getDef(ts, trieNode(compactNode()), getRareValue()),
+			UNSUPPORTED_OPERATION_EXCEPTION)>
 						
 	}"
 	;

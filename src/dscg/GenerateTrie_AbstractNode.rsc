@@ -68,6 +68,13 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 	arity(),
 	size(),
 	
+	sizeEmpty(),
+	sizeOne(),
+	sizeMoreThanOne(),
+
+	sizePredicate(),
+	
+	
 	PredefOp::equals(),
 	PredefOp::hashCode(),
 	PredefOp::toString()
@@ -381,6 +388,63 @@ str generateAbstractNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 			}
 
 			return size;", doOverride = new())>
+			
+		<impl(ts, trieNode(abstractNode()), sizePredicate())>
+		<impl(ts, trieNode(abstractNode()), sizeEmpty())>
+		<impl(ts, trieNode(abstractNode()), sizeOne())>
+		<impl(ts, trieNode(abstractNode()), sizeMoreThanOne())>			
 	}";
 }
+	
+	
+data PredefOp = sizePredicate();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), sizePredicate())
+	= method(\return(primitive("byte")), "sizePredicate");
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), sizePredicate()) = isOptionEnabled(ts.setup, useSunMiscUnsafe());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), sizePredicate()) = 
+	"if (this.nodeArity() == 0) {
+	'	switch (this.payloadArity()) {
+	'	case 0:
+	'		return sizeEmpty();
+	'	case 1:
+	'		return sizeOne();
+	'	default:
+	'		return sizeMoreThanOne();
+	'	}
+	'} else {
+	'	return sizeMoreThanOne();
+	'}";
+
+
+data PredefOp = sizeEmpty();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::sizeEmpty())
+	= function(\return(primitive("byte")), "sizeEmpty");
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::sizeEmpty()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::sizeEmpty())
+	= result(binaryLiteral("00"));
+
+
+data PredefOp = sizeOne();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::sizeOne())
+	= function(\return(primitive("byte")), "sizeOne");
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::sizeOne()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::sizeOne())
+	= result(binaryLiteral("01"));
+
+
+data PredefOp = sizeMoreThanOne();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::sizeMoreThanOne())
+	= function(\return(primitive("byte")), "sizeMoreThanOne");
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::sizeMoreThanOne()) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::sizeMoreThanOne())
+	= result(binaryLiteral("10"));
 	

@@ -200,58 +200,6 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactN
 	= result(binaryLiteralOfOnes(ts.bitPartitionSize));
 
 
-data PredefOp = sizePredicate();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), sizePredicate())
-	= method(\return(primitive("byte")), "sizePredicate");
-
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), sizePredicate()) = isOptionEnabled(ts.setup, useSunMiscUnsafe());
-
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), sizePredicate()) = 
-	"if (this.nodeArity() == 0) {
-	'	switch (this.payloadArity()) {
-	'	case 0:
-	'		return sizeEmpty();
-	'	case 1:
-	'		return sizeOne();
-	'	default:
-	'		return sizeMoreThanOne();
-	'	}
-	'} else {
-	'	return sizeMoreThanOne();
-	'}";
-
-
-data PredefOp = sizeEmpty();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeEmpty())
-	= function(\return(primitive("byte")), "sizeEmpty");
-
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeEmpty()) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeEmpty())
-	= result(binaryLiteral("00"));
-
-
-data PredefOp = sizeOne();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeOne())
-	= function(\return(primitive("byte")), "sizeOne");
-
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeOne()) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeOne())
-	= result(binaryLiteral("01"));
-
-
-data PredefOp = sizeMoreThanOne();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeMoreThanOne())
-	= function(\return(primitive("byte")), "sizeMoreThanOne");
-
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeMoreThanOne()) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::sizeMoreThanOne())
-	= result(binaryLiteral("10"));
-
-
 data PredefOp = nodeInvariant();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeInvariant())
@@ -274,41 +222,10 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 	= method(\return(primitive("boolean")), "nodeInvariant");
 
 
-data PredefOp = emptyTrieNodeConstant();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::emptyTrieNodeConstant())
-	= property(\return(jdtToType(compactNode(ts))), "EMPTY_NODE", generics = ts.genericTupleTypes, visibility = "protected", isStateful = true, isConstant = true, hasGetter = false);
-	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::emptyTrieNodeConstant()) = true;
-
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::emptyTrieNodeConstant())
-	= result(exprFromString("new <toString(ts.ds)>0To0Node<ts.classNamePostfix><InferredGenerics(ts.ds, ts.tupleTypes)>(null, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0)"))
-when isOptionEnabled(ts.setup, useSpecialization());
-
-// TODO: #simplifyWithConcreteSyntax
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::emptyTrieNodeConstant())
-	= result(exprFromString(
-				"<toString(call(ts.BitmapIndexedNode_constructor, 
-						argsOverride = (ts.mutator: NULL(),								
-									ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.bitmapField.\type, "0")), 
-									ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.valmapField.\type, "0")),
-									ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { }"),
-									ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "0")),
-									ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "0"))),
-						inferredGenericsStr = "<InferredGenerics(ts.ds, ts.tupleTypes)>"))>
-				"));
-
-
-data PredefOp = getNode();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), getNode())
-	= method(\return(jdtToType(compactNode(ts))), "getNode", args = [ts.index]);
-
-
 data PredefOp = nodeAt();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), nodeAt())
-	= method(\return(jdtToType(compactNode(ts))), "nodeAt", args = [ts.bitposField]);
+	= method(\return(jdtToType(abstractNode(ts))), "nodeAt", args = [ts.bitposField]);
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeAt()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeAt()) =
@@ -677,7 +594,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 				
 		// copy payload range				
 		<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity)>
-		<copyPayloadRange(ts, artifact, plus(useExpr(valIdx), iconst(1)), call(getDef(ts, artifact, payloadArity())), indexSubtract1, indexIdentity)>
+		<copyPayloadRange(ts, artifact, plus(useExpr(valIdx), iconst(1)), call(getDef(ts, artifact, payloadArity())), indexIdentity, indexSubtract1)>
 		
 		// copy node range				
 		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
@@ -746,7 +663,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyA
 data PredefOp = copyAndSetNode(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetNode())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndSetNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+	= method(\return(jdtToType(compactNode(ts))), "copyAndSetNode", args = [ts.mutator, ts.bitposField, \inode(ts.ds, ts.tupleTypes)]);
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndSetNode()) 
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
@@ -774,7 +691,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 		// copy node range
 		<copyNodeRange(ts, artifact, iconst(0), useExpr(idx), indexIdentity, indexIdentity)>
 		
-		<copyNodeRange(ts, artifact, useExpr(idx), plus(useExpr(idx), iconst(1)), indexIdentity, indexIdentity, argsOverride = (ctNode(): useExpr(\node(ts.ds, ts.tupleTypes))))>	
+		<copyNodeRange(ts, artifact, useExpr(idx), plus(useExpr(idx), iconst(1)), indexIdentity, indexIdentity, argsOverride = (ctNode(): useExpr(\inode(ts.ds, ts.tupleTypes))))>	
 
 		<copyNodeRange(ts, artifact, plus(useExpr(idx), iconst(1)), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
 								
@@ -794,7 +711,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyA
 data PredefOp = copyAndInsertNode(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertNode())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)], isActive = false);
+	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertNode", args = [ts.mutator, ts.bitposField, \inode(ts.ds, ts.tupleTypes)], isActive = false);
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndInsertNode()) 
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
@@ -812,7 +729,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyA
 data PredefOp = copyAndMigrateFromInlineToNode(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromInlineToNode())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromInlineToNode", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromInlineToNode", args = [ts.mutator, ts.bitposField, \inode(ts.ds, ts.tupleTypes)]);
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromInlineToNode()) 
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
@@ -851,7 +768,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 			indexIdentity, 
 			indexIdentity, 
 			argsOverride = (
-				ctNode(): useExpr(\node(ts.ds, ts.tupleTypes))))>
+				ctNode(): useExpr(\inode(ts.ds, ts.tupleTypes))))>
 		
 		<copyNodeRange(ts, artifact, useExpr(idxNew), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexAdd1)>
 
@@ -872,7 +789,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyA
 data PredefOp = copyAndMigrateFromNodeToInline(bool customComparator = false);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromNodeToInline())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromNodeToInline", args = [ts.mutator, ts.bitposField, \node(ts.ds, ts.tupleTypes)]);
+	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromNodeToInline", args = [ts.mutator, ts.bitposField, \inode(ts.ds, ts.tupleTypes)]);
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromNodeToInline()) 
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
@@ -1007,15 +924,7 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	isRareBitpos(),
 	
 	contentTypeEnum(),
-	logicalToPhysicalIndex(),
-	
-	sizeEmpty(),
-	sizeOne(),
-	sizeMoreThanOne(),
-
-	sizePredicate(),
-	
-	getNode(), // redeclaration (more specific return type)	
+	logicalToPhysicalIndex(),	
 	
 	nodeInvariant(),
 	isTrieStructureValid(),
@@ -1051,8 +960,6 @@ list[PredefOp] declaredMethodsByCompactNode = [
 
 	mergeTwoKeyValPairs(),
 	mergeNodeAndKeyValPair(),
-
-	emptyTrieNodeConstant(), // TODO: this is implementation specific
 
 	index2(),
 	index3(),
@@ -1134,11 +1041,6 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy:true) {
 		
 		<impl(ts, trieNode(compactNode()), logicalToPhysicalIndex())>
 		
-		<dec(getDef(ts, trieNode(compactNode()), sizePredicate()), asAbstract = true)>
-		<impl(ts, trieNode(compactNode()), sizeEmpty())>
-		<impl(ts, trieNode(compactNode()), sizeOne())>
-		<impl(ts, trieNode(compactNode()), sizeMoreThanOne())>		
-
 		<impl(ts, trieNode(compactNode()), nodeInvariant())>
 
 		<impl(ts, trieNode(compactNode()), copyAndInsertNode())>
@@ -1175,9 +1077,6 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy:true) {
 			<impl(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline())>
 			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass()), asAbstract = true)>		
 		< } else {>
-			@Override
-			<dec(getDef(ts, trieNode(compactNode()), getNode()), asAbstract = true)>
-		
 			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode()), asAbstract = true)>
 			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode_nextClass()), asAbstract = true)>
 			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode()), asAbstract = true)>
@@ -1201,8 +1100,6 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy:true) {
 
 		<impl(ts, trieNode(compactNode()), mergeTwoKeyValPairs())>
 		<impl(ts, trieNode(compactNode()), mergeNodeAndKeyValPair())>
-
-		<impl(ts, trieNode(compactNode()), emptyTrieNodeConstant())>
 	
 	<implOrOverride(ts.nodeOf_BitmapIndexedNode,
 		"return <toString(call(ts.BitmapIndexedNode_constructor, inferredGenericsStr = InferredGenerics(ts.ds, ts.tupleTypes)))>;")>
@@ -1390,7 +1287,7 @@ str generate_bodyOf_mergeOnNextLevel(TrieSpecifics ts, Position _) =
 		argsOverride = (ts.mutator: NULL(),								
 						ts.bitmapField: useExpr(ts.bitmapField),
 						ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.valmapField.\type, "0")),						
-						ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(\node(ts.ds, ts.tupleTypes))> }"),
+						ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(\inode(ts.ds, ts.tupleTypes))> }"),
 						ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "0")),
 						ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "1")))))>;"
 when !isOptionEnabled(ts.setup, useSpecialization());	
@@ -1421,7 +1318,7 @@ str generate_bodyOf_mergeNodeAndValue(TrieSpecifics ts, Position _) =
 	'// store values before node
 	'return <toString(call(ts.nodeOf_BitmapIndexedNode, 
 		argsOverride = (ts.mutator: NULL(),								
-						ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, <use(\node(ts.ds, ts.tupleTypes, 0))> }"),
+						ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, <use(\inode(ts.ds, ts.tupleTypes, 0))> }"),
 								ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "1")),
 								ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "1")))))>;"
 when !isOptionEnabled(ts.setup, useSpecialization());			
@@ -1490,7 +1387,7 @@ when \map(multi = true) := ts.ds;
 
 
 default str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq) = 
-	"<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex);<}> final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, <if (\map() := ts.ds) {> currentVal,<}><toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType, "currentKey")))))>, key, <if (\map() := ts.ds) {> val,<}> keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
+	"<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex);<}> final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, <if (\map() := ts.ds) {> currentVal,<}><toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType, "currentKey")))))>, key, <if (\map() := ts.ds) {> val,<}> keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
 	'
 	'details.modified();
 	'return copyAndMigrateFromInlineToNode(mutator, bitpos, subNodeNew);";	
@@ -1507,7 +1404,7 @@ str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq, TrieSp
 	' <dec(collTupleArg(ts, 1))> = <tsSet.coreSpecializedClassName>.setOf(<use(val(ts.valType))>);
 	'
 	'<dec(replaceName(nodeTupleArg(ts, 1), "currentValNode"))> = getValue(dataIndex);
-	'final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentValNode, <toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType, "currentKey")))))>, key, <use(collTupleArg(ts, 1))>, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
+	'final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentValNode, <toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType, "currentKey")))))>, key, <use(collTupleArg(ts, 1))>, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
 	'
 	'details.modified();
 	'return copyAndMigrateFromInlineToNode(mutator, bitpos, subNodeNew);" 
@@ -1542,8 +1439,8 @@ when \map(multi = true) := ts.ds;
 default bool exists_bodyOf_SpecializedBitmapPositionNode_updated(TrieSpecifics ts, str(Argument, Argument) eq)  = true;
 default str generate_bodyOf_SpecializedBitmapPositionNode_updated(TrieSpecifics ts, str(Argument, Argument) eq) {
 	
-	Argument subNode 	= \node(ts.ds, ts.tupleTypes, "subNode");
-	Argument subNodeNew = \node(ts.ds, ts.tupleTypes, "subNodeNew");
+	Argument subNode 	= \inode(ts.ds, ts.tupleTypes, "subNode");
+	Argument subNodeNew = \inode(ts.ds, ts.tupleTypes, "subNodeNew");
 
 	return  
 	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
@@ -1620,8 +1517,8 @@ default bool exists_bodyOf_SpecializedBitmapPositionNode_removed(TrieSpecifics t
 default str generate_bodyOf_SpecializedBitmapPositionNode_removed(TrieSpecifics ts, PredefOp op,
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) {
 		
-	Argument subNode 	= \node(ts.ds, ts.tupleTypes, "subNode");
-	Argument subNodeNew = \node(ts.ds, ts.tupleTypes, "subNodeNew");
+	Argument subNode 	= \inode(ts.ds, ts.tupleTypes, "subNode");
+	Argument subNodeNew = \inode(ts.ds, ts.tupleTypes, "subNodeNew");
 
 	return
 	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
@@ -1772,8 +1669,8 @@ Method CompactNode_factoryMethod_bitmap(int n, int m, TrieSpecifics ts) {
 	return function(ts.compactNodeClassReturn, "nodeOf", generics = ts.tupleTypes, args = constructorArgs, argsFilter = ts.argsFilter);	
 }
 
-Expression generate_bodyOf_factoryMethod_bitmap(int n:0, int m:0, TrieSpecifics ts, Method decleration) = 
-	result(call(getDef(ts, trieNode(compactNode()), emptyTrieNodeConstant())));
+//Expression generate_bodyOf_factoryMethod_bitmap(int n:0, int m:0, TrieSpecifics ts, Method decleration) = 
+//	result(call(getDef(ts, trieNode(compactNode()), emptyTrieNodeConstant())));
 
 
 //bool exists_valNodeOf_factoryMethod_bitmap(n:1, m:0, TrieSpecifics ts: = true;
@@ -1932,7 +1829,6 @@ default str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts) =
 	"assert !(<equalityDefaultForArguments(key(ts.keyType, "key0"), key(ts.keyType, "key1"))>);
 	
 	if (<use(ts.shift)> \>= <toString(call(getDef(ts, trieNode(compactNode()), hashCodeLength())))>) {
-		// throw new IllegalStateException(\"Hash collision not yet fixed.\");
 		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<typeToString(nodeTupleType(ts, 0))>[]) new <if (isPrimitive(nodeTupleArg(ts, 0))) {><typeToString(nodeTupleType(ts, 0))><} else {>Object<}>[] { <use(appendToName([ "0", "1" ], nodeTupleArg(ts, 0)))> }
 						<if (\map() := ts.ds) {>, (<typeToString(nodeTupleType(ts, 1))>[]) new <if (isPrimitive(nodeTupleArg(ts, 1))) {><typeToString(nodeTupleType(ts, 1))><} else {>Object<}>[] { <use(appendToName([ "0", "1" ], nodeTupleArg(ts, 1)))> }<}>);
 	}
@@ -1944,7 +1840,7 @@ default str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts) =
 		// both nodes fit on same level
 		<generate_bodyOf_mergeTwoValues(ts, positionBitmap())>
 	} else {
-		final <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> node = <toString(call(getDef(ts, trieNode(compactNode()), mergeTwoKeyValPairs()), argsOverride = (ts.shift: plus(useExpr(ts.shift), call(getDef(ts, trieNode(compactNode()), bitPartitionSize()))))))>;
+		final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> node = <toString(call(getDef(ts, trieNode(compactNode()), mergeTwoKeyValPairs()), argsOverride = (ts.shift: plus(useExpr(ts.shift), call(getDef(ts, trieNode(compactNode()), bitPartitionSize()))))))>;
 		// values fit on next level
 
 		<generate_bodyOf_mergeOnNextLevel(ts, positionBitmap())>
@@ -2125,7 +2021,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getNode()) = 
 	"try {
 	'	final long[] arrayOffsets = (long[]) unsafe.getObject(this.getClass(), globalArrayOffsetsOffset);
-	'	return (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) unsafe.getObject(this, arrayOffsets[<toString(callLogicalToPhysical)>]);
+	'	return (<AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)>) unsafe.getObject(this, arrayOffsets[<toString(callLogicalToPhysical)>]);
 	'} catch (SecurityException e) {
 	'	throw new RuntimeException(e);
 	'}"
