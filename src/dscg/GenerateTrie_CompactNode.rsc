@@ -882,6 +882,9 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nod
 
 list[PredefOp] declaredMethodsByCompactNode = [
 
+	arrayBase(),
+	addressSize(),	
+
 	specializationsByContentAndNodes(),
 
 	globalNodeMapOffset(),
@@ -893,9 +896,6 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	
 	globalFieldOffset("arrayOffsetLast"),
 	
-	arrayBase(),
-	addressSize(),	
-
 	// TODO: this is implementation specific ...
 	// TODO: nodeOf() factory methods; also option to enable disable the use of factory methods.
 	nodeFactory_Empty(),
@@ -922,6 +922,9 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	isRare1(),
 	isRare2(),
 	isRareBitpos(),
+	
+	getKeyFunction(),
+	getNodeFunction(),
 	
 	contentTypeEnum(),
 	logicalToPhysicalIndex(),	
@@ -1973,6 +1976,25 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 
+data PredefOp = getKeyFunction();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), getKeyFunction())
+	= function(\return(ts.keyType), "getKey", generics = ts.tupleTypes, args = [classArgumentWithUpperBoundCompactNode(ts, "clazz"), jdtToVal(compactNode(ts), "instance"), ts.index], isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getKeyFunction())
+	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getKeyFunction()) = 
+	"// TODO: remove try / catch and throw SecurityException instead
+	'try {
+	'	long keyOffset = arrayBase + (TUPLE_LENGTH * addressSize) * index;
+	'	return (<typeToString(ts.keyType)>) unsafe.getObject(instance, keyOffset);
+	'} catch (SecurityException e) {
+	'	throw new RuntimeException(e);
+	'}"
+when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+
+
 data PredefOp = getValue();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getValue())
@@ -2027,6 +2049,30 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 	'}"
 when isOptionEnabled(ts.setup, useSunMiscUnsafe())
 		&& callLogicalToPhysical := call(getDef(ts, artifact, logicalToPhysicalIndex()), argsOverride = (ts.contentType: exprFromString("ContentType.NODE")));
+
+
+// TODO: move somewhere else
+Argument classArgumentWithUpperBoundCompactNode(TrieSpecifics ts, str name) = val(specific("Class", typeArguments = [ upperBoundGeneric(specific("<compactNode(ts).typeName>")) ]), name);
+
+data PredefOp = getNodeFunction();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), getNodeFunction())
+	= function(\return(jdtToType(abstractNode(ts))), "getNode", generics = ts.tupleTypes, args = [classArgumentWithUpperBoundCompactNode(ts, "clazz"), jdtToVal(compactNode(ts), "instance"), ts.index], isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getNodeFunction())
+	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getNodeFunction()) = 
+	"// TODO: remove try / catch and throw SecurityException instead
+	'try {
+	'	final long arrayOffsetLast = unsafe.getLong(clazz, globalArrayOffsetLastOffset);			
+	'	final long nodeOffset = arrayOffsetLast - addressSize * index;
+	'
+	'	return (<AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)>) unsafe.getObject(instance, nodeOffset);
+	'} catch (SecurityException e) {
+	'	throw new RuntimeException(e);
+	'}"
+when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 
 data PredefOp = arrayOffsetsFunction();
@@ -2238,17 +2284,12 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::arrayBase()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::arrayBase()) =
-	"final Class\<<classNameString>\> dstClass = <classNameString>.class;
-	'
-	'try {		
-		final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, globalArrayOffsetsOffset);
-	
-		// assuems that both are of type Object and next to each other in memory
-		return dstArrayOffsets[0];			
+	"try {		
+	'	// assuems that both are of type Object and next to each other in memory
+	'	return DataLayoutHelper.arrayOffsets[0];
 	'} catch (SecurityException e) {
 	'	throw new RuntimeException(e);
-	'}"
-when classNameString := className(ts, specializedBitmapIndexedNode(2, 0));
+	'}";
 
 	
 data PredefOp = addressSize();
@@ -2258,17 +2299,12 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::addressSize()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::addressSize()) = 
-	"final Class\<<classNameString>\> dstClass = <classNameString>.class;
-	'
-	'try {		
-		final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, globalArrayOffsetsOffset);
-	
-		// assuems that both are of type Object and next to each other in memory
-		return dstArrayOffsets[1] - dstArrayOffsets[0];			
+	"try {		
+	'	// assuems that both are of type Object and next to each other in memory
+	'	return DataLayoutHelper.arrayOffsets[1] - DataLayoutHelper.arrayOffsets[0];
 	'} catch (SecurityException e) {
 	'	throw new RuntimeException(e);
-	'}"
-when classNameString := className(ts, specializedBitmapIndexedNode(2, 0));
+	'}";
 
 
 str generate_bodyOf_reflectNextClassArray(TrieSpecifics ts, str mNext, str nNext) =
@@ -2399,4 +2435,73 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::hasSlots()) = 
 	"return slotArity() != 0;";
+	
+	
+data PredefOp = containsKey();	
+	
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:containsKey(), str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:containsKey(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:containsKey(),
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
+	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
+	'<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;
+	'
+	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = <use(valmapMethod)>;
+	'if ((dataMap & bitpos) != 0) {
+	'	final int index = index(dataMap, mask, bitpos);
+	'	return <eq(key(ts.keyType, "getKey(index)"), key(ts.keyType))>;
+	'}
+	'
+	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = <use(bitmapMethod)>;
+	'if ((nodeMap & bitpos) != 0) {
+	'	final int index = index(nodeMap, mask, bitpos);
+	'	return <toString(call(exprFromString("getNode(index)"), getDef(ts, artifact, containsKey(customComparator = op.customComparator)), 
+			argsOverride = (ts.shift: plus(useExpr(ts.shift), call(getDef(ts, trieNode(compactNode()), bitPartitionSize()))))))>;	
+	'}
+	'
+	'return false;"
+when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:containsKey(),
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
+	"<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> instance = this;
+	Class\<? extends <CompactNode(ts.ds)>\> clazz = instance.getClass();
+
+	for (int shift0 = shift; true; shift0 += <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>) {
+		<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.shift: exprFromString("shift0"))))>;
+		<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;				
+		
+		<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = unsafe.<unsafeGetMethodNameFromType(chunkSizeToPrimitive(ts.bitPartitionSize))>(instance, globalNodeMapOffset);
+		if (nodeMap != 0 && (nodeMap == -1 || (nodeMap & bitpos) != 0)) {
+			final int index = index(nodeMap, mask, bitpos);
+			final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> nestedInstance = getNode(clazz, instance, index);
+
+			try {
+				instance = (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) nestedInstance;
+				clazz = instance.getClass();
+			} catch (ClassCastException unused) {
+				return ((<hashCollisionNode(ts).typeName><GenericsStr(ts.tupleTypes)>) nestedInstance).containsKey(key, keyHash, 0);
+			}					
+		} else {
+			<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = unsafe.<unsafeGetMethodNameFromType(chunkSizeToPrimitive(ts.bitPartitionSize))>(instance, globalDataMapOffset);
+			if (dataMap != 0 && (dataMap == -1 || (dataMap & bitpos) != 0)) {
+				final int index = index(dataMap, mask, bitpos);
+				return <eq(key(ts.keyType, "getKey(clazz, instance, index)"), key(ts.keyType))>;
+			} else {
+				return false;
+			}
+		}
+	}"
+when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	

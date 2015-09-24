@@ -464,6 +464,21 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	
 	<innerClassesString>
 		
+	private abstract static class DataLayoutHelper<GenericsStr(ts.tupleTypes)> <extendsStr(compactHeterogeneousNode(ts, compactHeterogeneousNode(specializeByBitmap(true, true))))> {
+
+		private static final long[] arrayOffsets = arrayOffsets(DataLayoutHelper.class,
+						new String[] { \"slot0\", \"slot1\" });
+
+		public final Object slot0 = null;
+
+		public final Object slot1 = null;
+
+		private DataLayoutHelper() {
+			super(null, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0);
+		}
+
+	}
+		
 }";
 }
 

@@ -1745,29 +1745,6 @@ when keyHashExpr := call(
 					);
 
 // previously used arguments (int n, int m)
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:containsKey(), 
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:containsKey(),
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
-	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
-	'<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;
-	'
-	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = <use(valmapMethod)>;
-	'if ((dataMap & bitpos) != 0) {
-	'	final int index = index(dataMap, mask, bitpos);
-	'	return <eq(key(ts.keyType, "getKey(index)"), key(ts.keyType))>;
-	'}
-	'
-	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = <use(bitmapMethod)>;
-	'if ((nodeMap & bitpos) != 0) {
-	'	final int index = index(nodeMap, mask, bitpos);
-	'	return <toString(call(exprFromString("getNode(index)"), getDef(ts, artifact, containsKey(customComparator = op.customComparator)), 
-			argsOverride = (ts.shift: plus(useExpr(ts.shift), call(getDef(ts, trieNode(compactNode()), bitPartitionSize()))))))>;	
-	'}
-	'
-	'return false;";
-
-// previously used arguments (int n, int m)
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:containsKey(), 
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:containsKey(),
