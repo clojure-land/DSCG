@@ -24,7 +24,7 @@ when jdt := specializedBitmapIndexedNode(ts, nodeType, modifierList = [ "private
 
 JavaDataType specializedBitmapIndexedNode(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m), list[str] modifierList = []) {
 
-	JavaDataType extendsNode = isOptionEnabled(ts.setup, useHeterogeneousEncoding()) ? 
+	JavaDataType extendsNode = false && isOptionEnabled(ts.setup, useHeterogeneousEncoding()) ? 
 						JavaDataType::compactHeterogeneousNode(ts, compactHeterogeneousNode(specializeByBitmap(true, true))) :
 						JavaDataType::compactNode(ts, compactNode(specializeByBitmap(true, true)));
 

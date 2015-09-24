@@ -230,9 +230,9 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 		+ [ generateCompactNodeClassString(ts, isLegacy)]
 		+ [ generateFeatureFlagsClassString(ts, isLegacy = true)];
 
-	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
-		innerClassStrings = innerClassStrings + [ generateCompactHeterogeneousNodeClassString(ts, isLegacy = isLegacy)];
-	}
+	//if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
+	//	innerClassStrings = innerClassStrings + [ generateCompactHeterogeneousNodeClassString(ts, isLegacy = isLegacy)];
+	//}
 
 	if (isOptionEnabled(ts.setup, separateTrieAndLeafNodes())) {
 		innerClassStrings = innerClassStrings + [ generateLeafNodeClassString(ts)];
