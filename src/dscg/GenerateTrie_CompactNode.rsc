@@ -1493,6 +1493,8 @@ str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecific
 when \map(multi = true) := ts.ds;
 
 
+str isBitSetInBitmap(str bitmap, str bitpos)
+	= "<bitmap> != 0 && (<bitmap> == -1 || (<bitmap> & <bitpos>) != 0)";
 
 default bool exists_bodyOf_SpecializedBitmapPositionNode_updated(TrieSpecifics ts, str(Argument, Argument) eq)  = true;
 default str generate_bodyOf_SpecializedBitmapPositionNode_updated(TrieSpecifics ts, str(Argument, Argument) eq) {
@@ -1504,8 +1506,10 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(TrieSpecifics 
 	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
 	'<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;
 	'
-	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
-	'	<dec(field(primitive("int"), "dataIndex"))> = dataIndex(bitpos);
+	'// check for inplace value
+	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = <use(valmapMethod)>;
+	'if (<isBitSetInBitmap("dataMap", "bitpos")>) {
+	'	<dec(field(primitive("int"), "dataIndex"))> = index(dataMap, mask, bitpos);
 	'	<dec(key(ts.keyType, "currentKey"))> = getKey(dataIndex);
 	'
 	'	if (<eq(key(ts.keyType, "currentKey"), key(ts.keyType))>) {
@@ -1513,8 +1517,13 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(TrieSpecifics 
 	'	} else {
 	'		<updatedOn_KeysDifferent(ts, eq)>					
 	'	}
-	'} else if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
-	'	<dec(subNode)> = nodeAt(bitpos);
+	'}
+	'
+	'// check for node (not value)
+	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = <use(bitmapMethod)>;
+	'if (<isBitSetInBitmap("nodeMap", "bitpos")>) {
+	'	<dec(field(primitive("int"), "nodeIndex"))> = index(nodeMap, mask, bitpos);
+	'	<dec(subNode)> = getNode(nodeIndex);
 	'	<dec(subNodeNew)> = <use(subNode)>.updated(mutator, <use(ts.payloadTuple)>, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>, <use(ts.details)><if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
 	'
 	'	if (<use(ts.details)>.isModified()) {
@@ -1522,10 +1531,10 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(TrieSpecifics 
 	'	} else {
 	'		return this;
 	'	}
-	'} else {
-	'	// no value
-	'	<updatedOn_NoTuple(ts, eq)>
-	'}"
+	'}
+	'
+	'// no value
+	'<updatedOn_NoTuple(ts, eq)>"
 	;
 }
 	
@@ -2504,13 +2513,13 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	'<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;
 	'
 	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = <use(valmapMethod)>;
-	'if ((dataMap & bitpos) != 0) {
+	'if (<isBitSetInBitmap("dataMap", "bitpos")>) {
 	'	final int index = index(dataMap, mask, bitpos);
 	'	return <eq(key(ts.keyType, "getKey(index)"), key(ts.keyType))>;
 	'}
 	'
 	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = <use(bitmapMethod)>;
-	'if ((nodeMap & bitpos) != 0) {
+	'if (<isBitSetInBitmap("nodeMap", "bitpos")>) {
 	'	final int index = index(nodeMap, mask, bitpos);
 	'	return <toString(call(exprFromString("getNode(index)"), getDef(ts, artifact, containsKey(customComparator = op.customComparator)), 
 			argsOverride = (ts.shift: plus(useExpr(ts.shift), call(getDef(ts, trieNode(compactNode()), bitPartitionSize()))))))>;	
@@ -2528,8 +2537,9 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 		<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.shift: exprFromString("shift0"))))>;
 		<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;				
 		
-		<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = unsafe.<unsafeGetMethodNameFromType(chunkSizeToPrimitive(ts.bitPartitionSize))>(instance, globalNodeMapOffset);
-		if (nodeMap != 0 && (nodeMap == -1 || (nodeMap & bitpos) != 0)) {
+		<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = instance.<use(bitmapMethod)>;
+		// <dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = unsafe.<unsafeGetMethodNameFromType(chunkSizeToPrimitive(ts.bitPartitionSize))>(instance, globalNodeMapOffset);
+		if (<isBitSetInBitmap("nodeMap", "bitpos")>) {
 			final int index = index(nodeMap, mask, bitpos);
 			final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> nestedInstance = getNode(clazz, instance, index);
 
@@ -2540,8 +2550,9 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 				return ((<hashCollisionNode(ts).typeName><GenericsStr(ts.tupleTypes)>) nestedInstance).containsKey(key, keyHash, 0);
 			}					
 		} else {
-			<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = unsafe.<unsafeGetMethodNameFromType(chunkSizeToPrimitive(ts.bitPartitionSize))>(instance, globalDataMapOffset);
-			if (dataMap != 0 && (dataMap == -1 || (dataMap & bitpos) != 0)) {
+			<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = instance.<use(valmapMethod)>;
+			// <dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = unsafe.<unsafeGetMethodNameFromType(chunkSizeToPrimitive(ts.bitPartitionSize))>(instance, globalDataMapOffset);
+			if (<isBitSetInBitmap("dataMap", "bitpos")>) {
 				final int index = index(dataMap, mask, bitpos);
 				return <eq(key(ts.keyType, "getKey(clazz, instance, index)"), key(ts.keyType))>;
 			} else {
