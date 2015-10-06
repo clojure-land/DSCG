@@ -233,8 +233,8 @@ str generateLeafNodeClassString(TrieSpecifics ts) {
 //	<impl(ts, trieNode(leafNode()), get())>
 //	<impl(ts, trieNode(leafNode()), get(customComparator = true))>
 //
-//	<impl(ts, trieNode(leafNode()), insertTuple())>
-//	<impl(ts, trieNode(leafNode()), insertTuple(customComparator = true))>
+//	<impl(ts, trieNode(leafNode()), insertTuple(isRare:_, customComperator:_))>
+//	<impl(ts, trieNode(leafNode()), insertTuple(isRare:_, customComparator:true))>
 //
 //	<impl(ts, trieNode(leafNode()), removeTuple())>
 //	<impl(ts, trieNode(leafNode()), removeTuple(customComparator = true))>
@@ -328,7 +328,7 @@ str generateLeafNodeClassString(TrieSpecifics ts) {
 //			 */
 //			outerLoop: for (int i = 0; i \< that.payloadArity(); i++) {
 //				<if (\map() := ts.ds) {><if (isPrimitive(ts.keyType)) {><dec(field(ts.keyType, "otherKey"))><} else {><dec(field(object(), "otherKey"))><}> = that.getKey(i);
-//				<if (isPrimitive(ts.valType)) {><dec(field(ts.valType, "otherVal"))><} else {><dec(field(object(), "otherVal"))><}> = that.getValue(i);
+//				<if (isPrimitive(ts.valType)) {><dec(field(ts.valType, "otherVal"))><} else {><dec(field(object(), "otherVal"))><}> = that.getVal(i);
 //
 //				for (int j = 0; j \< keys.length; j++) {
 //					<dec(key(ts.keyType))> = keys[j];

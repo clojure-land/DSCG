@@ -63,8 +63,8 @@ str generate_bodyOf_ImmutableInterface(TrieSpecifics ts) =
 	<dec(getDef(ts, core(immutable()), containsEntry()))>
 	<dec(getDef(ts, core(immutable()), containsEntry(customComparator = true)))>
 
-	<dec(getDef(ts, core(immutable()), insertTuple()))>
-	<dec(getDef(ts, core(immutable()), insertTuple(customComparator = true)))>
+	<dec(getDef(ts, core(immutable()), insertTuple(false, false)))>
+	<dec(getDef(ts, core(immutable()), insertTuple(false, true)))>
 	
 	<dec(getDef(ts, core(immutable()), insertCollection()))>
 	<dec(getDef(ts, core(immutable()), insertCollection(customComparator = true)))>
@@ -114,8 +114,8 @@ str generate_bodyOf_TransientInterface(TrieSpecifics ts) =
 	<dec(getDef(ts, core(transient()), containsEntry()))>
 	<dec(getDef(ts, core(transient()), containsEntry(customComparator = true)))>	
 	
-	<dec(getDef(ts, core(transient()), insertTuple()))>
-	<dec(getDef(ts, core(transient()), insertTuple(customComparator = true)))>
+	<dec(getDef(ts, core(transient()), insertTuple(false, false)))>
+	<dec(getDef(ts, core(transient()), insertTuple(false, true)))>
 	
 	<dec(getDef(ts, core(transient()), insertCollection()))>
 	<dec(getDef(ts, core(transient()), insertCollection(customComparator = true)))>

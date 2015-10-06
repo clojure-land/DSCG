@@ -82,8 +82,8 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 	<impl(ts, trieNode(hashCollisionNode()), get())>
 	<impl(ts, trieNode(hashCollisionNode()), get(customComparator = true))>
 
-	<impl(ts, trieNode(hashCollisionNode()), insertTuple())>
-	<impl(ts, trieNode(hashCollisionNode()), insertTuple(customComparator = true))>
+	<impl(ts, trieNode(hashCollisionNode()), insertTuple(false, false))>
+	<impl(ts, trieNode(hashCollisionNode()), insertTuple(false, true))>
 
 	<impl(ts, trieNode(hashCollisionNode()), removeTuple())>
 	<impl(ts, trieNode(hashCollisionNode()), removeTuple(customComparator = true))>
@@ -177,7 +177,7 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 			 */
 			outerLoop: for (int i = 0; i \< that.payloadArity(); i++) {
 				<if (\map() := ts.ds) {><if (isPrimitive(ts.keyType)) {><dec(field(ts.keyType, "otherKey"))><} else {><dec(field(object(), "otherKey"))><}> = that.getKey(i);
-				<if (isPrimitive(ts.valType)) {><dec(field(ts.valType, "otherVal"))><} else {><dec(field(object(), "otherVal"))><}> = that.getValue(i);
+				<if (isPrimitive(ts.valType)) {><dec(field(ts.valType, "otherVal"))><} else {><dec(field(object(), "otherVal"))><}> = that.getVal(i);
 
 				for (int j = 0; j \< keys.length; j++) {
 					<dec(key(ts.keyType))> = keys[j];

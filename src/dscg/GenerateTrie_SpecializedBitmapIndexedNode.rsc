@@ -1658,7 +1658,7 @@ default str generate_bodyOf_removed(int n, int m, DataStructure ds, rel[Option,b
 					result = <nestedResult>;
 					break;< } else {> case sizeOne():
 					// inline sub-node value
-					<if (isOptionEnabled(ts.setup, useStructuralEquality())) {>result = <ts.ResultStr>.modified(removeNode<i>AndInlineValue(mutator, <use(payloadTriple("mask", "updatedNode.getKey(0)", "updatedNode.getValue(0)"))>));<} else {>result = <ts.ResultStr>.modified(<nodeOf(n-1, m+1, use(payloadTriple("mask", "updatedNode.getKey(0)", "updatedNode.getValue(0)") + generateMembers(n, m) - subnodePair(i)))>);<}>
+					<if (isOptionEnabled(ts.setup, useStructuralEquality())) {>result = <ts.ResultStr>.modified(removeNode<i>AndInlineValue(mutator, <use(payloadTriple("mask", "updatedNode.getKey(0)", "updatedNode.getVal(0)"))>));<} else {>result = <ts.ResultStr>.modified(<nodeOf(n-1, m+1, use(payloadTriple("mask", "updatedNode.getKey(0)", "updatedNode.getValue(0)") + generateMembers(n, m) - subnodePair(i)))>);<}>
 					break;<}>
 					
 				case sizeMoreThanOne():
@@ -2316,7 +2316,7 @@ default str generate_bodyOf_GenericNode_removed(int n, int m, TrieSpecifics ts, 
 				final int valIndexNew = Integer.bitCount((valmap | bitpos) & (bitpos - 1));
 	
 				final Object[] editableNodes = copyAndMoveToFront<if (\map() := ts.ds) {>Pair<}>(this.nodes, bitIndex,
-								valIndexNew, subNodeNew.getKey(0)<if (\map() := ts.ds) {>, subNodeNew.getValue(0)<}>);
+								valIndexNew, subNodeNew.getKey(0)<if (\map() := ts.ds) {>, subNodeNew.getVal(0)<}>);
 	
 				final <CompactNode(ds)><GenericsStr(ts.tupleTypes)> thisNew = <CompactNode(ds)>.<GenericsStr(ts.tupleTypes)> nodeOf(mutator, bitmap,
 								valmap | bitpos, editableNodes, (byte) (payloadArity + 1));
@@ -2600,7 +2600,7 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, TrieSpecif
 
 	<if (\map() := ts.ds) {>
 	'	@Override
-	'	V getValue(int index) {
+	'	V getVal(int index) {
 	'		<generate_bodyOf_getValue(m)>
 	'	}
 	<}>

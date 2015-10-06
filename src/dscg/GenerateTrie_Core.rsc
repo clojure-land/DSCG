@@ -111,7 +111,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 			<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) keyValuePairs[i];
 			<dec(val(ts.valType))> = (<typeToString(ts.valType)>) keyValuePairs[i + 1];
 
-			<use(immutableResult)> = <toString(call(immutableResult, getDef(ts, core(immutable()), insertTuple())))>;
+			<use(immutableResult)> = <toString(call(immutableResult, getDef(ts, core(immutable()), insertTuple(false, false))))>;
 		}
 
 		return <use(immutableResult)>;
@@ -124,7 +124,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 		<dec(asVar(immutableResult))> = <ts.coreClassName>.<emptyCollectionConstantName>;
 
 		for (<dec(key(ts.keyType))> : keys) {
-			<use(immutableResult)> = <toString(call(immutableResult, getDef(ts, core(immutable()), insertTuple())))>;
+			<use(immutableResult)> = <toString(call(immutableResult, getDef(ts, core(immutable()), insertTuple(false, false))))>;
 		}
 
 		return result;
@@ -150,7 +150,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 			<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) keyValuePairs[i];
 			<dec(val(ts.valType))> = (<typeToString(ts.valType)>) keyValuePairs[i + 1];
 
-			<toString(call(transientResult, getDef(ts, core(transient()), insertTuple())))>;			
+			<toString(call(transientResult, getDef(ts, core(transient()), insertTuple(false, false))))>;			
 		}
 
 		return <use(transientResult)>;
@@ -163,7 +163,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 		final Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 
 		for (<dec(key(ts.keyType))> : keys) {
-			<toString(call(transientResult, getDef(ts, core(transient()), insertTuple())))>;
+			<toString(call(transientResult, getDef(ts, core(transient()), insertTuple(false, false))))>;
 		}
 
 		return result;
@@ -186,8 +186,8 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	<impl(ts, core(immutable()), get())>
 	<impl(ts, core(immutable()), get(customComparator = true))>
 
-	<impl(ts, core(immutable()), insertTuple())>
-	<impl(ts, core(immutable()), insertTuple(customComparator = true))>
+	<impl(ts, core(immutable()), insertTuple(false, false))>
+	<impl(ts, core(immutable()), insertTuple(false, true))>
 
 	<impl(ts, core(immutable()), insertCollection())>
 	<impl(ts, core(immutable()), insertCollection(customComparator = true))>
@@ -481,28 +481,3 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 		
 }";
 }
-
-
-data PredefOp = emptyTrieNodeConstant();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp::emptyTrieNodeConstant())
-	= property(\return(jdtToType(abstractNode(ts))), "EMPTY_NODE", generics = ts.genericTupleTypes, visibility = "protected", isStateful = true, isConstant = true, hasGetter = false);
-	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp::emptyTrieNodeConstant()) = true;
-
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp::emptyTrieNodeConstant())
-	= result(exprFromString("new <toString(ts.ds)>0To0Node<ts.classNamePostfix><InferredGenerics(ts.ds, ts.tupleTypes)>(null, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0)"))
-when isOptionEnabled(ts.setup, useSpecialization());
-
-// TODO: #simplifyWithConcreteSyntax
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp::emptyTrieNodeConstant())
-	= result(exprFromString(
-				"<toString(call(ts.BitmapIndexedNode_constructor, 
-						argsOverride = (ts.mutator: NULL(),								
-									ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.bitmapField.\type, "0")), 
-									ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), constant(ts.valmapField.\type, "0")),
-									ts.BitmapIndexedNode_contentArray: exprFromString("new Object[] { }"),
-									ts.BitmapIndexedNode_payloadArity: cast(ts.BitmapIndexedNode_payloadArity.\type, constant(ts.BitmapIndexedNode_payloadArity.\type, "0")),
-									ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "0"))),
-						inferredGenericsStr = "<InferredGenerics(ts.ds, ts.tupleTypes)>"))>
-				"));

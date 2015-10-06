@@ -879,7 +879,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 			indexIdentity, 
 			argsOverride = (
 				ctKey(): exprFromString("node.getKey(0)"), 
-				ctVal(): exprFromString("node.getValue(0)")))>			
+				ctVal(): exprFromString("node.getVal(0)")))>			
 				
 		<copyPayloadRange(ts, artifact, useExpr(idxNew), call(getDef(ts, artifact, payloadArity())), indexIdentity, indexAdd1)>		
 				
@@ -1033,10 +1033,10 @@ list[PredefOp] declaredMethodsByCompactNode = [
 //
 //	get(),
 //	get(customComparator = true),
-//
-//	insertTuple(),
-//	insertTuple(customComparator = true),
-//
+
+	//insertTuple(false, false),
+	//insertTuple(false, true),
+
 //	removeTuple(),
 //	removeTuple(customComparator = true),	
 		
@@ -1183,8 +1183,11 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy:true) {
 	<impl(ts, trieNode(compactNode()), get())>
 	<impl(ts, trieNode(compactNode()), get(customComparator = true))>
 	
-	<impl(ts, trieNode(compactNode()), insertTuple())>
-	<impl(ts, trieNode(compactNode()), insertTuple(customComparator = true))>
+	<impl(ts, trieNode(compactNode()), insertTuple(false, false))>
+	<impl(ts, trieNode(compactNode()), insertTuple(false, true))>
+
+	/* EXPERIMENTAL <impl(ts, trieNode(compactNode()), insertTuple(true, false))> */
+	/* EXPERIMENTAL <impl(ts, trieNode(compactNode()), insertTuple(true, true))> */
 
 	<impl(ts, trieNode(compactNode()), removeTuple())>
 	<impl(ts, trieNode(compactNode()), removeTuple(customComparator = true))>
@@ -1384,14 +1387,14 @@ when !isOptionEnabled(ts.setup, useSpecialization());
 default bool exists_bodyOf_mergeNodeAndValue(TrieSpecifics _, Option _, Position _)  = true;
 default str generate_bodyOf_mergeNodeAndValue(TrieSpecifics _, Option _, Position _) { throw "something went wrong"; }
 		
-str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq) = 
+str updatedOn_KeysEqual(TrieSpecifics ts, PredefOp op) = 
 	"return this;" 
 when \set() := ts.ds;	
 	
-str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq) = 
-	"<dec(val(ts.valType, "currentVal"))> = getValue(dataIndex);
+str updatedOn_KeysEqual(TrieSpecifics ts, PredefOp op) = 
+	"<dec(val(ts.valType, "currentVal"))> = getVal(dataIndex);
 	'
-	'if (<eq(val(ts.valType, "currentVal"), val(ts.valType))>) {
+	'if (<selectEq(op)(val(ts.valType, "currentVal"), val(ts.valType))>) {
 	'	return this;
 	'} else {
 	'	// update mapping
@@ -1400,8 +1403,8 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq) =
 	'}" 
 when \map(multi = false) := ts.ds && isOptionEnabled(ts.setup, compareValueAtMapPut());
 
-str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq) = 
-	"<dec(val(ts.valType, "currentVal"))> = getValue(dataIndex);
+str updatedOn_KeysEqual(TrieSpecifics ts, PredefOp op) = 
+	"<dec(val(ts.valType, "currentVal"))> = getVal(dataIndex);
 	'
 	'// update mapping
 	'details.updated(currentVal);
@@ -1410,8 +1413,8 @@ when \map(multi = false) := ts.ds && !isOptionEnabled(ts.setup, compareValueAtMa
 
 // TODO: lost knowledge about 'customComparator'
 // TODO: lost knowledge about 'artifact'
-str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
-	"<dec(nodeTupleArg(ts, 1))> = getValue(dataIndex);
+str updatedOn_KeysEqual(TrieSpecifics ts, PredefOp op, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+	"<dec(nodeTupleArg(ts, 1))> = getVal(dataIndex);
 	'
 	'final int valHash = <hashCode(val(ts.valType))>;
 	'// if(<toString(call(nodeTupleArg(ts, 1), getDef(tsSet, trieNode(abstractNode()), containsKey()), 
@@ -1423,14 +1426,14 @@ str updatedOn_KeysEqual(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecif
 	'	return this;
 	'} else {
 	'	// add new mapping
-	'	// <dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <toString(call(nodeTupleArg(ts, 1), getDef(tsSet, trieNode(abstractNode()), insertTuple()), 
+	'	// <dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <toString(call(nodeTupleArg(ts, 1), getDef(tsSet, trieNode(abstractNode()), insertTuple(false, false)), // insertTuple??? 
 					argsOverride = (ts.mutator: NULL(), 
 						ts.keyHash: call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ival("valHash")))), 
 						ts.shift: constant(ts.shift.\type, "0"),
 						ts.details: exprFromString("<tsSet.ResultStr>.unchanged()")), // TODO: remove tsSet dependency here
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))
 						))>;
-	'	<dec(appendToName(collTupleArg(ts, 1), "New"))> = <toString(call(collTupleArg(ts, 1), getDef(tsSet, core(immutable()), insertTuple()), 
+	'	<dec(appendToName(collTupleArg(ts, 1), "New"))> = <toString(call(collTupleArg(ts, 1), getDef(tsSet, core(immutable()), insertTuple(false, false)), // insertTuple??? 
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;
 	'
 	'	details.modified();
@@ -1444,15 +1447,15 @@ when \map(multi = true) := ts.ds;
 
 
 
-default str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq) = 
-	"<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex);<}> final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, <if (\map() := ts.ds) {> currentVal,<}><toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType, "currentKey")))))>, key, <if (\map() := ts.ds) {> val,<}> keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
+default str updatedOn_KeysDifferent(TrieSpecifics ts, PredefOp op) = 
+	"<if (\map() := ts.ds) {><dec(content(ts, ctVal(isRare = op.isRare), "currentVal"))> = <contentAccessor(ctVal(isRare = op.isRare), "dataIndex")>;<}> final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, <if (\map() := ts.ds) {> currentVal,<}><toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, content(ts, ctKey(isRare = op.isRare), "currentKey")))))>, key, <if (\map() := ts.ds) {> val,<}> keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
 	'
 	'details.modified();
 	'return copyAndMigrateFromInlineToNode(mutator, bitpos, subNodeNew);";	
 		
-str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+str updatedOn_KeysDifferent(TrieSpecifics ts, PredefOp op, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"final int valHash = <hashCode(val(ts.valType))>;
-	'// <dec(nodeTupleArg(ts, 1))> = <toString(call(exprFromString("CompactSetNode.EMPTY_NODE"), getDef(tsSet, trieNode(abstractNode()), insertTuple()), 
+	'// <dec(nodeTupleArg(ts, 1))> = <toString(call(exprFromString("CompactSetNode.EMPTY_NODE"), getDef(tsSet, trieNode(abstractNode()), insertTuple(false, false)), // insertTuple???  
 					argsOverride = (ts.mutator: NULL(), 
 						ts.keyHash: call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ival("valHash")))), 
 						ts.shift: constant(ts.shift.\type, "0"),
@@ -1461,13 +1464,12 @@ str updatedOn_KeysDifferent(TrieSpecifics ts, str(Argument, Argument) eq, TrieSp
 					))>;
 	' <dec(collTupleArg(ts, 1))> = <tsSet.coreSpecializedClassName>.setOf(<use(val(ts.valType))>);
 	'
-	'<dec(replaceName(nodeTupleArg(ts, 1), "currentValNode"))> = getValue(dataIndex);
-	'final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentValNode, <toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType, "currentKey")))))>, key, <use(collTupleArg(ts, 1))>, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
+	'<dec(replaceName(nodeTupleArg(ts, 1), "currentValNode"))> = getVal(dataIndex);
+	'final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, currentValNode, <toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, content(ts, ctKey(isRare = op.isRare), "currentKey")))))>, key, <use(collTupleArg(ts, 1))>, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
 	'
 	'details.modified();
 	'return copyAndMigrateFromInlineToNode(mutator, bitpos, subNodeNew);" 
 when \map(multi = true) := ts.ds;
-
 
 
 
@@ -1479,7 +1481,7 @@ default str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq) =
 		
 str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"final int valHash = <hashCode(val(ts.valType))>;
-	'// <dec(nodeTupleArg(ts, 1))> = <toString(call(exprFromString("CompactSetNode.EMPTY_NODE"), getDef(tsSet, trieNode(abstractNode()), insertTuple()), 
+	'// <dec(nodeTupleArg(ts, 1))> = <toString(call(exprFromString("CompactSetNode.EMPTY_NODE"), getDef(tsSet, trieNode(abstractNode()), insertTuple(false, false)), // insertTuple???  
 					argsOverride = (ts.mutator: NULL(), 
 						ts.keyHash: call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ival("valHash")))), 
 						ts.shift: constant(ts.shift.\type, "0"),
@@ -1493,11 +1495,20 @@ str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecific
 when \map(multi = true) := ts.ds;
 
 
-str isBitSetInBitmap(str bitmap, str bitpos)
-	= "<bitmap> != 0 && (<bitmap> == -1 || (<bitmap> & <bitpos>) != 0)";
+// TODO: move
+@memo str (Argument, Argument) selectEq(PredefOp op) = op has customComparator && op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments;
 
-default bool exists_bodyOf_SpecializedBitmapPositionNode_updated(TrieSpecifics ts, str(Argument, Argument) eq)  = true;
-default str generate_bodyOf_SpecializedBitmapPositionNode_updated(TrieSpecifics ts, str(Argument, Argument) eq) {
+data PredefOp = insertTuple(bool isRare, bool customComparator);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), op:insertTuple(isRare:_, customComparator:false))
+	= method(\return(jdtToType(abstractNode(ts))), "<insertTupleMethodName(ts.ds, artifact)>", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)), ts.keyHash, ts.shift, ts.details ]);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), op:insertTuple(isRare:_, customComparator:true))
+	= method(\return(jdtToType(abstractNode(ts))), "<insertTupleMethodName(ts.ds, artifact)>", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()));
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:insertTuple(isRare:_, customComparator:_)) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:insertTuple(isRare:_, customComparator:_)) {
 	
 	Argument subNode 	= \inode(ts.ds, ts.tupleTypes, "subNode");
 	Argument subNodeNew = \inode(ts.ds, ts.tupleTypes, "subNodeNew");
@@ -1507,24 +1518,24 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(TrieSpecifics 
 	'<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;
 	'
 	'// check for inplace value
-	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = <use(valmapMethod)>;
-	'if (<isBitSetInBitmap("dataMap", "bitpos")>) {
+	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = <bitmapAccessor(ctKey(isRare = op.isRare))>;
+	'if (<isBitInBitmap("dataMap", "bitpos")>) {
 	'	<dec(field(primitive("int"), "dataIndex"))> = index(dataMap, mask, bitpos);
-	'	<dec(key(ts.keyType, "currentKey"))> = getKey(dataIndex);
+	'	<dec(content(ts, ctKey(isRare = op.isRare), "currentKey"))> = <contentAccessor(ctKey(isRare = op.isRare), "dataIndex")>;
 	'
-	'	if (<eq(key(ts.keyType, "currentKey"), key(ts.keyType))>) {
-	'		<updatedOn_KeysEqual(ts, eq)>				
+	'	if (<selectEq(op)(content(ts, ctKey(isRare = op.isRare), "currentKey"), content(ts, ctKey(isRare = op.isRare)))>) {
+	'		<updatedOn_KeysEqual(ts, op)>				
 	'	} else {
-	'		<updatedOn_KeysDifferent(ts, eq)>					
+	'		<updatedOn_KeysDifferent(ts, op)>					
 	'	}
 	'}
 	'
 	'// check for node (not value)
 	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = <use(bitmapMethod)>;
-	'if (<isBitSetInBitmap("nodeMap", "bitpos")>) {
+	'if (<isBitInBitmap("nodeMap", "bitpos")>) {
 	'	<dec(field(primitive("int"), "nodeIndex"))> = index(nodeMap, mask, bitpos);
-	'	<dec(subNode)> = getNode(nodeIndex);
-	'	<dec(subNodeNew)> = <use(subNode)>.updated(mutator, <use(ts.payloadTuple)>, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>, <use(ts.details)><if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
+	'	<dec(subNode)> = <contentAccessor(ctNode(), "nodeIndex")>;
+	'	<dec(subNodeNew)> = <use(subNode)>.updated(mutator, <use(ts.payloadTuple)>, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>, <use(ts.details)><if (!(selectEq(op) == equalityDefaultForArguments)) {>, <cmpName><}>);
 	'
 	'	if (<use(ts.details)>.isModified()) {
 	'		return copyAndSetNode(mutator, bitpos, <use(subNodeNew)>);
@@ -1534,20 +1545,30 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_updated(TrieSpecifics 
 	'}
 	'
 	'// no value
-	'<updatedOn_NoTuple(ts, eq)>"
+	'<updatedOn_NoTuple(ts, selectEq(op))>"
 	;
 }
-	
+
+str isBitInBitmap(str bitmap, str bitpos)
+	= "<bitmap> != 0 && (<bitmap> == -1 || (<bitmap> & <bitpos>) != 0)";
+
+bool isPayloadType(ContentType ct) = ct is ctPayloadArg;
+
+str bitmapAccessor(ContentType ct) = "<bitmapName(ct)>()";
+str bitmapName(ContentType ct) = "dataMap" when isPayloadType(ct) && ct.isRare == false; 
+str bitmapName(ContentType ct) = "rareMap" when isPayloadType(ct) && ct.isRare == true;	
+
+str contentAccessor(ContentType ct, str index) = "<contentAccessorMethodName(ct)>(<index>)";
 
 default str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq) =
-	"<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = getValue(dataIndex); details.updated(currentVal);<} else {>details.modified();<}>
+	"<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = getVal(dataIndex); details.updated(currentVal);<} else {>details.modified();<}>
 	
 	<removed_value_block1(ts)> else <if (supportsConversionBetweenGenericAndSpecialized(ts)) {><removed_value_block2(ts)> else<}> {					
 		return copyAndRemoveValue(mutator, bitpos);
 	}";
 	
 str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
-	"<dec(nodeTupleArg(ts, 1))> = getValue(dataIndex); 
+	"<dec(nodeTupleArg(ts, 1))> = getVal(dataIndex); 
 	'
 	'final int valHash = <hashCode(val(ts.valType))>;
 	'// if(<toString(call(nodeTupleArg(ts, 1), getDef(tsSet, trieNode(abstractNode()), containsKey()), 
@@ -1651,7 +1672,7 @@ default str removed_value_block1(TrieSpecifics ts) =
 				argsOverride = (
 					ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)), 
 					ts.valmapField: exprFromString("newDataMap")),
-				labeledArgsOverride = (contentArguments(): exprFromString("getKey(1 - dataIndex)<if (\map() := ts.ds) {>, getValue(1 - dataIndex)<}>")))))>;
+				labeledArgsOverride = (contentArguments(): exprFromString("getKey(1 - dataIndex)<if (\map() := ts.ds) {>, getVal(1 - dataIndex)<}>")))))>;
 	'}";
 
 
@@ -1883,7 +1904,7 @@ default str generate_valNodeOf_factoryMethod_bitmap_untyped(int mn, TrieSpecific
 
 
 
-list[Argument] invoke_getAndHashCode_for_payloadTuple(DataStructure ds:\map(), list[Type] tupleTypes:[keyType, valType, *_], Argument idx) = [ key(keyType, "Objects.hashCode(getKey(<use(idx)>))"), val(valType, "Objects.hashCode(getValue(<use(idx)>))") ];
+list[Argument] invoke_getAndHashCode_for_payloadTuple(DataStructure ds:\map(), list[Type] tupleTypes:[keyType, valType, *_], Argument idx) = [ key(keyType, "Objects.hashCode(getKey(<use(idx)>))"), val(valType, "Objects.hashCode(getVal(<use(idx)>))") ];
 list[Argument] invoke_getAndHashCode_for_payloadTuple(DataStructure ds:\set(), list[Type] tupleTypes:[keyType, *_], Argument idx) = [ key(keyType, "Objects.hashCode(getKey(<use(idx)>))") ];
 
 
@@ -2095,7 +2116,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compact
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getKeyValueEntry()) 
-	= "return entryOf(getKey(index), getValue(index));"
+	= "return entryOf(getKey(index), getVal(index));"
 when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 
@@ -2265,23 +2286,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 	}
 	
 	return physicalIndex;";
-	
-	
-data ContentType
-	= ctKey(bool isRare = false)
-	| ctVal(bool isRare = false)
-	| ctPayloadTuple(ContentType _1)
-	| ctPayloadTuple(ContentType _1, ContentType _2)
-	| ctNode()
-	| ctSlot();
-	
-Expression ctToConstant(ContentType ct) = constant(specific("ContentType"), prettyPrint(ct));
-str prettyPrint(ContentType ct) = "ContentType.<prettyPrintContentType(ct)>";
 
-str prettyPrintContentType(ct:ctKey()) = ct.isRare ? "RARE_KEY" : "KEY";
-str prettyPrintContentType(ct:ctVal()) = ct.isRare ? "RARE_VAL" : "VAL";
-str prettyPrintContentType(ct:ctNode()) = "NODE";
-str prettyPrintContentType(ct:ctSlot()) = "SLOT"; 
 
 Expression callLogicalToPhysical(TrieSpecifics ts, Artifact artifact, ContentType ct, Expression idxExpr)
 	= call(getDef(ts, artifact, logicalToPhysicalIndex()), argsOverride = (ts.contentType: ctToConstant(ct), ts.index: idxExpr));
@@ -2513,13 +2518,13 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	'<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;
 	'
 	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = <use(valmapMethod)>;
-	'if (<isBitSetInBitmap("dataMap", "bitpos")>) {
+	'if (<isBitInBitmap("dataMap", "bitpos")>) {
 	'	final int index = index(dataMap, mask, bitpos);
 	'	return <eq(key(ts.keyType, "getKey(index)"), key(ts.keyType))>;
 	'}
 	'
 	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = <use(bitmapMethod)>;
-	'if (<isBitSetInBitmap("nodeMap", "bitpos")>) {
+	'if (<isBitInBitmap("nodeMap", "bitpos")>) {
 	'	final int index = index(nodeMap, mask, bitpos);
 	'	return <toString(call(exprFromString("getNode(index)"), getDef(ts, artifact, containsKey(customComparator = op.customComparator)), 
 			argsOverride = (ts.shift: plus(useExpr(ts.shift), call(getDef(ts, trieNode(compactNode()), bitPartitionSize()))))))>;	
@@ -2539,7 +2544,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 		
 		<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = instance.<use(bitmapMethod)>;
 		// <dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = unsafe.<unsafeGetMethodNameFromType(chunkSizeToPrimitive(ts.bitPartitionSize))>(instance, globalNodeMapOffset);
-		if (<isBitSetInBitmap("nodeMap", "bitpos")>) {
+		if (<isBitInBitmap("nodeMap", "bitpos")>) {
 			final int index = index(nodeMap, mask, bitpos);
 			final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> nestedInstance = getNode(clazz, instance, index);
 
@@ -2552,7 +2557,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 		} else {
 			<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = instance.<use(valmapMethod)>;
 			// <dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = unsafe.<unsafeGetMethodNameFromType(chunkSizeToPrimitive(ts.bitPartitionSize))>(instance, globalDataMapOffset);
-			if (<isBitSetInBitmap("dataMap", "bitpos")>) {
+			if (<isBitInBitmap("dataMap", "bitpos")>) {
 				final int index = index(dataMap, mask, bitpos);
 				return <eq(key(ts.keyType, "getKey(clazz, instance, index)"), key(ts.keyType))>;
 			} else {

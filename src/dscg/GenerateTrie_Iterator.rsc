@@ -144,7 +144,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 			if (!hasNext()) {
 				throw new NoSuchElementException();
 			} else {
-				return currentValueNode.getValue(currentValueCursor++);
+				return currentValueNode.getVal(currentValueCursor++);
 			}
 		}
 
@@ -201,7 +201,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 			} else {
 				if (super.hasNext()) {
 					currentKey = currentValueNode.getKey(currentValueCursor);
-					currentSetIterator = currentValueNode.getValue(currentValueCursor).iterator();
+					currentSetIterator = currentValueNode.getVal(currentValueCursor).iterator();
 					currentValueCursor++;
 					
 					return true;

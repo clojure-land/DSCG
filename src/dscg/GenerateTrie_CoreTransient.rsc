@@ -68,8 +68,8 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 		<impl(ts, core(transient()), get())>
 		<impl(ts, core(transient()), get(customComparator = true))>
 		
-		<impl(ts, core(transient()), insertTuple())>
-		<impl(ts, core(transient()), insertTuple(customComparator = true))>
+		<impl(ts, core(transient()), insertTuple(false, false))>
+		<impl(ts, core(transient()), insertTuple(false, true))>
 
 		<impl(ts, core(transient()), insertCollection())>
 		<impl(ts, core(transient()), insertCollection(customComparator = true))>

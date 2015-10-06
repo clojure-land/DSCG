@@ -283,7 +283,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 	'}";
 }
 	
-list[Argument] headPayloadTuple(DataStructure ds:\map(), list[Type] tupleTypes:[keyType, valType, *_], Argument \node) = [ key(keyType, "<use(\node)>.getKey(0)"), val(valType, "<use(\node)>.getValue(0)") ];
+list[Argument] headPayloadTuple(DataStructure ds:\map(), list[Type] tupleTypes:[keyType, valType, *_], Argument \node) = [ key(keyType, "<use(\node)>.getKey(0)"), val(valType, "<use(\node)>.getVal(0)") ];
 list[Argument] headPayloadTuple(DataStructure ds:\set(), list[Type] tupleTypes:[keyType, *_], Argument \node) = [ key(keyType, "<use(\node)>.getKey(0)") ];	
 
 default bool exists_removeInplaceValueAndConvertToSpecializedNode(TrieSpecifics ts)  = true;
@@ -301,7 +301,7 @@ default str generate_removeInplaceValueAndConvertToSpecializedNode(TrieSpecifics
 	'		<for (i <- [1..m+1]) {>case <i-1>: {
 				<for (<j,k> <- zip([1..m], [0..m] - [i-1])) {>
 				<use(key(ts.keyType, j))> = getKey(<k>);
-				<if(\map() := ts.ds){><use(val(ts.valType, j))> = getValue(<k>);<}><}>
+				<if(\map() := ts.ds){><use(val(ts.valType, j))> = getVal(<k>);<}><}>
 				break;
 	'		}<}>default:
 	'				throw new IllegalStateException(\"Index out of range.\");

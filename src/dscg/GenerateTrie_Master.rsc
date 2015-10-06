@@ -12,6 +12,7 @@
 module dscg::GenerateTrie_Master
 
 extend dscg::Common;
+extend dscg::Common_ContentType;
 
 extend dscg::GenerateImmutableMap;
 

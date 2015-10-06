@@ -32,8 +32,10 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 	get(),
 	get(customComparator = true),
 
-	insertTuple(),
-	insertTuple(customComparator = true),
+	insertTuple(false, false),
+	insertTuple(false, true),
+	/* EXPERIMENTAL */ insertTuple(true, false),
+	/* EXPERIMENTAL */ insertTuple(true, true),
 
 	removeTuple(),
 	removeTuple(customComparator = true),	
@@ -188,14 +190,14 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getR
 data PredefOp = getValue();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getValue())
-	= method(\return(__payloadTupleArgAtColl(ts.ds, ts.tupleTypes, 1).\type), "getValue", args = [ts.index], isActive = \map() := ts.ds);
+	= method(\return(__payloadTupleArgAtColl(ts.ds, ts.tupleTypes, 1).\type), "getVal", args = [ts.index], isActive = \map() := ts.ds);
 
 
 
 data PredefOp = getRareValue();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getRareValue())
-	= method(\return(object()), "getRareValue", args = [ts.index], 
+	= method(\return(object()), "getRareVal", args = [ts.index], 
 		isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && \map() := ts.ds); // TODO: fix return type
 
 
@@ -277,8 +279,10 @@ str generateAbstractNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 		<dec(getDef(ts, trieNode(abstractNode()), get()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(abstractNode()), get(customComparator = true)), asAbstract = true)>
 	
-		<dec(getDef(ts, trieNode(abstractNode()), insertTuple()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(abstractNode()), insertTuple(customComparator = true)), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), insertTuple(false, false)), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), insertTuple(false, true)), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), insertTuple(true, false)), asAbstract = true)>
+		<dec(getDef(ts, trieNode(abstractNode()), insertTuple(true, true)), asAbstract = true)>
 
 		<dec(getDef(ts, trieNode(abstractNode()), removeTuple()), asAbstract = true)>
 		<dec(getDef(ts, trieNode(abstractNode()), removeTuple(customComparator = true)), asAbstract = true)>
