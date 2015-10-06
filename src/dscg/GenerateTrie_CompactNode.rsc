@@ -2052,6 +2052,7 @@ when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 
 data PredefOp = getKey();
+// PredefOp getKey() = getContent(ctKey());
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getKey())
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());

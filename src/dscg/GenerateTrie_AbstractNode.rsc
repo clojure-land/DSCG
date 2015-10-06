@@ -22,7 +22,9 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nod
 
 list[PredefOp] declaredMethodsByAbstractNode = [
 
-	tupleLength(), // TODO: implement as static final field
+	theUnsafe(),
+
+	tupleLength(),
 
 	isAllowedToEdit(),
 
@@ -50,7 +52,8 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 	hasPayload(),
 	payloadArity(),
 	/***/
-	getKey(),
+	/* DEPRECATED */ getKey(),
+	/* EXPERIMENTAL */ // getContent(ctKey()),
 	getValue(),
 	getKeyValueEntry(),	
 	getTuple(),
@@ -78,16 +81,33 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 	
 	
 	PredefOp::equals(),
-	PredefOp::hashCode(),
+	// PredefOp::hashCode(),
 	PredefOp::toString()
 ];
+
+
+
+data PredefOp = theUnsafe();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::theUnsafe())
+	= property(\return(specific("sun.misc.Unsafe")), "unsafe", visibility = "protected", isStateful = true, isConstant = true, hasGetter = false, isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+	
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::theUnsafe()) = true;
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::theUnsafe()) = 
+	"try {
+		Field field = sun.misc.Unsafe.class.getDeclaredField(\"theUnsafe\");
+		field.setAccessible(true);
+		return (sun.misc.Unsafe) field.get(null);
+	} catch (Exception e) {
+		throw new RuntimeException(e);
+	}";
 
 
 
 data PredefOp = tupleLength();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::tupleLength())
-	= function(\return(primitive("int")), "tupleLength", visibility = "protected");
+	= property(\return(primitive("int")), "<camelCaseToUpperCaseWithUnderscores("tupleLength")>", visibility = "protected", isStateful = true, isConstant = true, hasGetter = false);
 	
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::tupleLength()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::tupleLength())
@@ -172,6 +192,13 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode())
 
 
 
+data PredefOp = getContent(ContentType ct);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getContent(ContentType ct))
+	= method(\return(ts.ct2type[ct]), "<contentAccessorMethodName(ct)>", args = [ts.index]);
+
+
+
 data PredefOp = getKey();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getKey())
@@ -252,153 +279,6 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode())
 		}
 	};";
 
-	
-str generateAbstractNodeClassString(TrieSpecifics ts, bool isLegacy = true) { 
-	return 
-	"protected static abstract class <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> implements <ts.abstractAnyNodeClassName><UnifiedGenericsExpanded(ts.ds, ts.tupleTypes)> {
-
-		<if (isOptionEnabled(ts.setup, useSunMiscUnsafe())) {>
-		protected static final sun.misc.Unsafe unsafe;
-		 
-		static {
-			try {
-				Field field = sun.misc.Unsafe.class.getDeclaredField(\"theUnsafe\");
-				field.setAccessible(true);
-				unsafe = (sun.misc.Unsafe) field.get(null);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		<}>
-		
-		static final int TUPLE_LENGTH = <tupleLength(ts.ds)>;
-
-		<dec(getDef(ts, trieNode(abstractNode()), containsKey()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(abstractNode()), containsKey(customComparator = true)), asAbstract = true)>
-	
-		<dec(getDef(ts, trieNode(abstractNode()), get()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(abstractNode()), get(customComparator = true)), asAbstract = true)>
-	
-		<dec(getDef(ts, trieNode(abstractNode()), insertTuple(false, false)), asAbstract = true)>
-		<dec(getDef(ts, trieNode(abstractNode()), insertTuple(false, true)), asAbstract = true)>
-		<dec(getDef(ts, trieNode(abstractNode()), insertTuple(true, false)), asAbstract = true)>
-		<dec(getDef(ts, trieNode(abstractNode()), insertTuple(true, true)), asAbstract = true)>
-
-		<dec(getDef(ts, trieNode(abstractNode()), removeTuple()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(abstractNode()), removeTuple(customComparator = true)), asAbstract = true)>
-	
-		static final boolean isAllowedToEdit(AtomicReference\<Thread\> x, AtomicReference\<Thread\> y) {
-			return x != null && y != null && (x == y || x.get() == y.get());
-		}
-											
-		<dec(getDef(ts, trieNode(abstractNode()), hasNodes()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(abstractNode()), nodeArity()), asAbstract = true)>
-		</***/"">
-		<dec(getDef(ts, trieNode(abstractNode()), getNode()), asAbstract = true)>		
-						
-		@Deprecated
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), nodeIterator()), 
-			"return new Iterator\<<AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)>\>() {
-
-				int nextIndex = 0;
-				final int nodeArity = <AbstractNode(ts.ds)>.this.nodeArity();
-
-				@Override
-				public void remove() {
-					throw new UnsupportedOperationException();
-				}
-
-				@Override
-				public <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> next() {
-					if (!hasNext())
-						throw new NoSuchElementException();
-					return <AbstractNode(ts.ds)>.this.getNode(nextIndex++);
-				}
-
-				@Override
-				public boolean hasNext() {
-					return nextIndex \< nodeArity;
-				}
-			};", doOverride = new())>
-	
-	
-		<dec(getDef(ts, trieNode(abstractNode()), hasPayload()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(abstractNode()), payloadArity()), asAbstract = true)>
-		</***/"">
-		<dec(getDef(ts, trieNode(abstractNode()), getKey()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(abstractNode()), getValue()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(abstractNode()), getKeyValueEntry()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(abstractNode()), getTuple()), asAbstract = true)>				
-
-		@Deprecated
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), payloadIterator()), 
-			"return new <if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}>() {
-
-				int nextIndex = 0;
-				final int payloadArity = <AbstractNode(ts.ds)>.this.payloadArity();
-
-				<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
-				@Override
-				public <typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
-					if (nextIndex == 0 || nextIndex \> <AbstractNode(ts.ds)>.this.payloadArity()) {
-						throw new NoSuchElementException();
-					}
-
-					return <AbstractNode(ts.ds)>.this.<dsAtFunction__range_getter_name(ts.ds)>(nextIndex - 1);
-				}<}>
-
-				@Override
-				public void remove() {
-					throw new UnsupportedOperationException();
-				}
-
-				@Override
-				public <typeToString(primitiveToClass(ts.keyType))> next() {
-					if (!hasNext())
-						throw new NoSuchElementException();
-					return <AbstractNode(ts.ds)>.this.getKey(nextIndex++);
-				}
-
-				@Override
-				public boolean hasNext() {
-					return nextIndex \< payloadArity;
-				}
-			};", doOverride = new())>
-		
-		<dec(getDef(ts, trieNode(abstractNode()), getRareKey()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(abstractNode()), getRareValue()), asAbstract = true)>	
-	
-		<dec(getDef(ts, trieNode(abstractNode()), hasSlots()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(abstractNode()), slotArity()), asAbstract = true)>	
-		</***/"">
-		<dec(getDef(ts, trieNode(abstractNode()), getSlot()), asAbstract = true)>	
-		
-		/**
-		 * The arity of this trie node (i.e. number of values and nodes stored
-		 * on this level).
-		 * 
-		 * @return sum of nodes and values stored within
-		 */
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), arity()), 
-			"return payloadArity() + nodeArity();", doOverride = new())>
-
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), size()), 
-			"final Iterator\<<typeToString(primitiveToClass(ts.keyType))>\> it = new <toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(this);
-
-			int size = 0;
-			while (it.hasNext()) {
-				size += 1;
-				it.next();
-			}
-
-			return size;", doOverride = new())>
-			
-		<impl(ts, trieNode(abstractNode()), sizePredicate())>
-		<impl(ts, trieNode(abstractNode()), sizeEmpty())>
-		<impl(ts, trieNode(abstractNode()), sizeOne())>
-		<impl(ts, trieNode(abstractNode()), sizeMoreThanOne())>			
-	}";
-}
 	
 	
 data PredefOp = sizePredicate();

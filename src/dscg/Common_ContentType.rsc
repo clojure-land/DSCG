@@ -26,13 +26,15 @@ list[str] splitByUpperCaseCharacters(str input) {
 	str current = "";
 	for (i <- chars(input), c := stringChars([i])) {
 		if (toUpperCase(c) != c) {
+			// append
 			current = "<current><c>";
 		} else {
 			// flush
 			if (current != "") {
 				strings += current;
 			}
-						
+	
+			// reset					
 			current = "<c>";
 		}
 	}

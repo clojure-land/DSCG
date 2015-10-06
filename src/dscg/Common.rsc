@@ -25,6 +25,8 @@ import analysis::graphs::Graph;
 
 import dscg::ArrayUtils; 
 
+extend dscg::Common_ContentType;
+
 /* PUBLIC CONSTANTS */
 public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");	 
 
@@ -3483,7 +3485,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType), PredefOp o
 			currentNodeType = super;
 		}
 		else {
-			print(ts.model.declares[currentNodeType]);
+			println(ts.model.declares[currentNodeType]);
 			throw "Method <op> is neither defined in <nodeType> or any of its base types.";
 		}
 	}
