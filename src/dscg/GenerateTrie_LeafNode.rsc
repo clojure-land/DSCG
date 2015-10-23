@@ -15,14 +15,14 @@ import dscg::Common;
 import dscg::ArrayUtils;
 
 
-data PredefOp = getKey();
+// data PredefOp = getKey();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKey()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKey())
 	= result(useExpr(key(ts.keyType)));
 
 
-data PredefOp = getValue();
+// data PredefOp = getValue();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getValue()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getValue())
@@ -355,7 +355,7 @@ str generateLeafNodeClassString(TrieSpecifics ts) {
 //		}
 //		<}>
 //
-//		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetValue()), 
+//		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetValue(bool isRare)), 
 //			UNSUPPORTED_OPERATION_EXCEPTION)>
 //
 //		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), 

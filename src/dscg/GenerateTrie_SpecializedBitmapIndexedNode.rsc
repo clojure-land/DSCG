@@ -405,7 +405,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, TrieSpec
 
 	<impl(ts, thisArtifact, sizePredicate())>
 
-	<impl(ts, thisArtifact, copyAndSetValue())>
+	<impl(ts, thisArtifact, copyAndSetValue(false))>
 	<impl(ts, thisArtifact, copyAndSetValue_nextClass())>
 	<impl(ts, thisArtifact, copyAndInsertValue())>
 	<impl(ts, thisArtifact, copyAndInsertValue_nextClass())>
@@ -499,16 +499,16 @@ default str generate_bodyOf_getSlot(TrieSpecifics ts, int mn) =
 	"throw new UnsupportedOperationException();";
 
 
-data PredefOp = getKey();
+// data PredefOp = getKey();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getKey())
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getContent(ctKey()))
 	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getKey())
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getContent(ctKey()))
 	= "return (<typeToString(ts.keyType)>) getSlot(<use(tupleLengthConstant)> * index);"
 when isOptionEnabled(ts.setup, useUntypedVariables());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getKey())
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getContent(ctKey()))
 	= generate_bodyOf_getKey(m)
 when !isOptionEnabled(ts.setup, useUntypedVariables());
 
@@ -528,7 +528,7 @@ default str generate_bodyOf_getKey(int m) =
 	;
 
 
-data PredefOp = getValue();
+// data PredefOp = getValue();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getValue())
 	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
@@ -557,7 +557,7 @@ default str generate_bodyOf_getValue(int m) =
 	;
 
 
-data PredefOp = getRareKey();
+// data PredefOp = getRareKey();
 
 // DEACTIVATED
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getRareKey()) = false;
@@ -615,16 +615,16 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
 
 
-data PredefOp = getNode();
+//data PredefOp = getNode();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getNode())
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), op:getContent(ctNode()))
 	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n:0, int m)), PredefOp::getNode())
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n:0, int m)), op:getContent(ctNode()))
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getNode()) =
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), op:getContent(ctNode())) =
 	"switch(index) {
 	'<for (i <- [0..n]) {>case <i>:
 	'	return (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) <slotName><n-1-i>;
@@ -633,12 +633,12 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 	'}"
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getNode()) =
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), op:getContent(ctNode())) =
 	"final int offset = <use(tupleLengthConstant)> * payloadArity();
 	'return (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) getSlot(offset + index);"
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getNode())
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), op:getContent(ctNode()))
 	= generate_bodyOf_getNode_typed_nonHeterogeneous(ts, n)
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
 
@@ -765,12 +765,12 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 when !isOptionEnabled(ts.setup, useUntypedVariables());
 
 
-data PredefOp = copyAndSetValue();
+data PredefOp = copyAndSetValue(bool isRare);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue())
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue(bool isRare))
 	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue()) =
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue(bool isRare)) =
 	"// TODO: support migration if partial
 	'if (isRare(<use(ts.bitposField)>)) {
 	'	<generate_bodyOf_copyAndSetValue_untyped_nonHeterogeneous(n, m, ts, Event::isRare(), mn = n)>
@@ -779,19 +779,19 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 	'}"
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue()) 
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue(bool isRare)) 
 	= generate_bodyOf_copyAndSetValue_untyped_nonHeterogeneous(n, m, ts, Event::isRegular())
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue()) 
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetValue(bool isRare)) 
 	= generate_bodyOf_copyAndSetValue_typed_nonHeterogeneous(n, m, ts, Event::isRegular())
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());	
 
 str generate_bodyOf_copyAndSetValue_untyped_nonHeterogeneous(int n, int m, TrieSpecifics ts, Event event, int mn = tupleLength(ts.ds)*m+n) = 	
-	"	<dec(field(primitive("int"), "idx"))> = <eval(updateProperty(ts, copyAndSetValue(), copyAndSetValue_index(), event))>;
+	"	<dec(field(primitive("int"), "idx"))> = <eval(updateProperty(ts, copyAndSetValue(false), copyAndSetValue_index(), event))>;
 	'	
-	'	<dec(ts.bitmapField)> = <eval(updateProperty(ts, copyAndSetValue(), copyAndSetValue_bitmap1(), event))>;
-	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndSetValue(), copyAndSetValue_bitmap2(), event))>;
+	'	<dec(ts.bitmapField)> = <eval(updateProperty(ts, copyAndSetValue(false), copyAndSetValue_bitmap1(), event))>;
+	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndSetValue(false), copyAndSetValue_bitmap2(), event))>;
 	'	
 	'	switch(idx) {
 	'		<for (i <- [0..mn/tupleLength(ts.ds)]) {>case <i>:
@@ -804,15 +804,15 @@ data Property = copyAndSetValue_index();
 data Property = copyAndSetValue_bitmap1();
 data Property = copyAndSetValue_bitmap2();
 
-Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(), Property p:copyAndSetValue_index(), Event e:isRare()) 
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(bool isRare), Property p:copyAndSetValue_index(), Event e:isRare()) 
 	= call(getDef(ts, trieNode(compactNode()), rareIndex()))
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
-Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(), Property p:copyAndSetValue_bitmap1(), Event e:isRare()) 
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(bool isRare), Property p:copyAndSetValue_bitmap1(), Event e:isRare()) 
 	= call(getDef(ts, trieNode(compactNode()), rawMap1()))
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
-Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(), Property p:copyAndSetValue_bitmap2(), Event e:isRare()) 
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(bool isRare), Property p:copyAndSetValue_bitmap2(), Event e:isRare()) 
 	= call(getDef(ts, trieNode(compactNode()), rawMap2()))
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 	
@@ -821,10 +821,10 @@ str generate_bodyOf_copyAndSetValue_typed_nonHeterogeneous(int n, int m:0, TrieS
 when !isOptionEnabled(ts.setup,useUntypedVariables());
 
 str generate_bodyOf_copyAndSetValue_typed_nonHeterogeneous(int n, int m, TrieSpecifics ts, Event event) = 	
-	"	<dec(field(primitive("int"), "idx"))> = <eval(updateProperty(ts, copyAndSetValue(), copyAndSetValue_index(), event))>;
+	"	<dec(field(primitive("int"), "idx"))> = <eval(updateProperty(ts, copyAndSetValue(false), copyAndSetValue_index(), event))>;
 	'	
-	'	<dec(ts.bitmapField)> = <eval(updateProperty(ts, copyAndSetValue(), copyAndSetValue_bitmap1(), event))>;
-	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndSetValue(), copyAndSetValue_bitmap2(), event))>;
+	'	<dec(ts.bitmapField)> = <eval(updateProperty(ts, copyAndSetValue(false), copyAndSetValue_bitmap1(), event))>;
+	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndSetValue(false), copyAndSetValue_bitmap2(), event))>;
 	'	
 	'	switch(idx) {
 	'		<for (i <- [1..m+1]) {>case <i-1>:
@@ -833,25 +833,25 @@ str generate_bodyOf_copyAndSetValue_typed_nonHeterogeneous(int n, int m, TrieSpe
 	'			throw new IllegalStateException(\"Index out of range.\");
 	'	}";
 
-Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(), Property p:copyAndSetValue_index(), Event e:isRegular()) 
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(bool isRare), Property p:copyAndSetValue_index(), Event e:isRegular()) 
 	= call(getDef(ts, trieNode(compactNode()), dataIndex()))
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
-Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(), Property p:copyAndSetValue_bitmap1(), Event e:isRegular()) 
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(bool isRare), Property p:copyAndSetValue_bitmap1(), Event e:isRegular()) 
 	= call(getDef(ts, trieNode(compactNode()), rawMap1()))
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
-Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(), Property p:copyAndSetValue_bitmap2(), Event e:isRegular()) 
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(bool isRare), Property p:copyAndSetValue_bitmap2(), Event e:isRegular()) 
 	= call(getDef(ts, trieNode(compactNode()), rawMap2()))
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
-Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(), Property p:copyAndSetValue_index(), Event e:isRegular()) 
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(bool isRare), Property p:copyAndSetValue_index(), Event e:isRegular()) 
 	= call(getDef(ts, trieNode(compactNode()), dataIndex()));
 
-Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(), Property p:copyAndSetValue_bitmap1(), Event e:isRegular()) 
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(bool isRare), Property p:copyAndSetValue_bitmap1(), Event e:isRegular()) 
 	= call(getDef(ts, trieNode(compactNode()), nodeMap()));
 
-Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(), Property p:copyAndSetValue_bitmap2(), Event e:isRegular()) 
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(bool isRare), Property p:copyAndSetValue_bitmap2(), Event e:isRegular()) 
 	= call(getDef(ts, trieNode(compactNode()), dataMap()));
 
 

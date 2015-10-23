@@ -45,24 +45,23 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 	hasNodes(),
 	nodeArity(),
 	/***/
-	getNode(),
+	getContent(ctNode()),
 	/***/
 	nodeIterator(),
 	
 	hasPayload(),
 	payloadArity(),
 	/***/
-	/* DEPRECATED */ getKey(),
-	/* EXPERIMENTAL */ // getContent(ctKey()),
-	getValue(),
+	getContent(ctPayloadArg(0)),
+	getContent(ctPayloadArg(1)),
 	getKeyValueEntry(),	
 	getTuple(),
 	/***/
 	payloadIterator(),
 	
-	getRareKey(),
-	getRareValue(),	
-	
+	getContent(ctPayloadArg(0, isRare = true)),
+	getContent(ctPayloadArg(1, isRare = true)),
+		
 	hasSlots(),
 	slotArity(),
 	/***/
@@ -152,13 +151,6 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstract
 
 	
 	
-data PredefOp = getNode();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getNode())
-	= method(\return(jdtToType(abstractNode(ts))), "getNode", args = [ts.index]);
-
-
-
 data PredefOp = nodeIterator();
 
 // TODO: @Deprecated
@@ -192,32 +184,32 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode())
 
 
 
-data PredefOp = getContent(ContentType ct);
+// data PredefOp = getContent(ContentType ct);
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getContent(ContentType ct))
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), op:getContent(ContentType ct))
 	= method(\return(ts.ct2type[ct]), "<contentAccessorMethodName(ct)>", args = [ts.index]);
 
 
 
-data PredefOp = getKey();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getKey())
-	= method(\return(ts.keyType), "getKey", args = [ts.index]);
-
-
-
-data PredefOp = getRareKey();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getRareKey())
-	= method(\return(object()), "getRareKey", args = [ts.index], 
-		isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding())); // TODO: fix return type
+// data PredefOp = getKey();
+//
+//Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getKey())
+//	= method(\return(ts.keyType), "getKey", args = [ts.index]);
 
 
 
-data PredefOp = getValue();
+//data PredefOp = getRareKey();
+//
+//Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getRareKey())
+//	= method(\return(object()), "getRareKey", args = [ts.index], 
+//		isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding())); // TODO: fix return type
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getValue())
-	= method(\return(__payloadTupleArgAtColl(ts.ds, ts.tupleTypes, 1).\type), "getVal", args = [ts.index], isActive = \map() := ts.ds);
+
+
+// data PredefOp = getValue();
+//
+//Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getValue())
+//	= method(\return(__payloadTupleArgAtColl(ts.ds, ts.tupleTypes, 1).\type), "getVal", args = [ts.index], isActive = \map() := ts.ds);
 
 
 

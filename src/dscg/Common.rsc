@@ -495,7 +495,7 @@ data TrieSpecifics
 	= undefinedTrieSpecifics()
 	| ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound, Type keyType = generic("K"), Type valType = generic("V"), str classNamePostfix = "", rel[Option,bool] setup = {}, Model model = model(), 
 					
-		map[ContentType, Type] ct2type = (ctKey(isRare = false): keyType, ctVal(isRare = false): valType, ctKey(isRare = true): object(), ctVal(isRare = true): object()),			
+		map[ContentType, Type] ct2type = (ctPayloadArg(0): keyType, ctPayloadArg(1): valType, ctPayloadArg(0, isRare = false): keyType, ctPayloadArg(1, isRare = false): valType, ctKey(isRare = true): object(), ctVal(isRare = true): object(), ctNode(): generic("<AbstractNode(ds)><GenericsStr(dataStructureToTupleTypeList(ds, [keyType, valType]))>")),
 					
 		Argument BIT_PARTITION_SIZE = field(primitive("int"), "BIT_PARTITION_SIZE"), 
 				
@@ -1439,7 +1439,7 @@ list[Type] collTupleTypes(TrieSpecifics ts) = [ arg.\type | arg <- collTupleArgs
 Argument nodeTupleArg(TrieSpecifics ts, int idx) = collTupleArg(ts, idx); // __payloadTupleAtNode(ts.ds, ts.tupleTypes)[idx];
 list[Argument] nodeTupleArgs(TrieSpecifics ts) = collTupleArgs(ts); // __payloadTupleAtNode(ts.ds, ts.tupleTypes);
 
-Argument payloadTupleArg(TrieSpecifics ts, int idx) = __payloadTuple(ts.ds, ts.tupleTypes)[idx];
+Argument payloadTupleArg(TrieSpecifics ts, int idx, bool isRare = false) = payloadTupleArgs(ts, isRare = isRare)[idx];
 //list[Argument] payloadTupleArgs(TrieSpecifics ts) = __payloadTuple(ts.ds, ts.tupleTypes);
 list[Argument] payloadTupleArgs(TrieSpecifics ts, bool isRare = false) = contentList(ts, ctPayloadTuple(isRare = isRare));
 
@@ -1698,7 +1698,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
 	'	<dec(ts.index)> = dataIndex(bitpos);
 	'	if (<eq(key(ts.keyType, "getKey(<use(ts.index)>)"), key(ts.keyType))>) {
-	'		<if (\set() := ts.ds) {>return Optional.of(getKey(<use(ts.index)>));<} else {><dec(result)> = <toString(call(getDef(ts, trieNode(abstractNode()), getValue())))>; 
+	'		<if (\set() := ts.ds) {>return Optional.of(getKey(<use(ts.index)>));<} else {><dec(result)> = <toString(call(getDef(ts, trieNode(abstractNode()), getContent(ctPayloadArg(1)))))>; 
 	'
 	'		return Optional.of(<use(result)>);<}>
 	'	}
@@ -3506,3 +3506,11 @@ default bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp op) = f
 //default Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp op) = emptyExpression();
 
 default Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp op) { throw "Unsupported operation <artifact>, <op>."; }
+
+
+
+
+
+/* REWRITES FOR REFACTORING */
+data PredefOp = getContent(ContentType ct);
+// PredefOp getKey() = getContent(ctKey());

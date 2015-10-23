@@ -118,10 +118,10 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 			return sizeMoreThanOne();
 		}
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), getKey()),
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), getContent(ctPayloadArg(0))),
 			"return keys[index];")>		
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), getValue()), 
+		<implOrOverride(getDef(ts, trieNode(abstractNode()), getContent(ctPayloadArg(1))), 
 			"return vals[index];")>		
 
 		<impl(ts, trieNode(hashCollisionNode()), getKeyValueEntry())>
@@ -206,10 +206,10 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 					
 		<impl(ts, trieNode(hashCollisionNode()), isTrieStructureValid())>
 		
-		<implOrOverride(getDef(ts, trieNode(compactNode()), getRareKey()), 
+		<implOrOverride(getDef(ts, trieNode(compactNode()), getContent(ctPayloadArg(0, isRare = true))), 
 			UNSUPPORTED_OPERATION_EXCEPTION)>
 			
-		<implOrOverride(getDef(ts, trieNode(compactNode()), getRareValue()),
+		<implOrOverride(getDef(ts, trieNode(compactNode()), getContent(ctPayloadArg(1, isRare = true))),
 			UNSUPPORTED_OPERATION_EXCEPTION)>
 						
 	}"

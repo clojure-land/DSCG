@@ -1,3 +1,4 @@
+
 /**
  * Copyright (c) 2014 CWI
  * All rights reserved. This program and the accompanying materials
@@ -30,14 +31,14 @@ when jdt := bitmapIndexedNode(ts, modifierList = [ "private", "static" ]);
 //	= result(iconst(32));
 
 
-data PredefOp = getKey();
+// data PredefOp = getKey();
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getKey()) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getKey())
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctKey())) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctKey()))
 	= result(exprFromString("(<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index]"));
 
 
-data PredefOp = getValue();
+// data PredefOp = getValue();
 	
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getValue()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getValue())
@@ -173,7 +174,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 			'}<}>")>
 
 		</* TODO: support bitmapIndexedNode() here */"">
-		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), copyAndSetValue()), 
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), copyAndSetValue(false)), 
 			str() { return "<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
 			
 			<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (isAllowedToEdit(this.mutator, mutator)) {
