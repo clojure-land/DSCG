@@ -354,8 +354,6 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, TrieSpec
 	"private static final class <specializedClassNameStr><GenericsStr(ts.tupleTypes)> extends <extendsClassName><GenericsStr(ts.tupleTypes)> {
 	
 		<impl(ts, thisArtifact, featureFlags())>
-		<impl(ts, thisArtifact, bitmapOffset("nodeMap"))>
-		<impl(ts, thisArtifact, bitmapOffset("dataMap"))>
 		<impl(ts, thisArtifact, arrayOffsets())>
 	
 	'	<intercalate("\n", mapper(contentArguments(n, m, ts), str(Argument a) { 
@@ -390,11 +388,11 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, TrieSpec
 	<impl(ts, thisArtifact, slotArity())>
 	<impl(ts, thisArtifact, getSlot())>
 
-	<impl(ts, thisArtifact, getKey())>
-	<impl(ts, thisArtifact, getValue())>
+	<impl(ts, thisArtifact, getContent(ctPayloadArg(0)))>
+	<impl(ts, thisArtifact, getContent(ctPayloadArg(1)))>
 	<impl(ts, thisArtifact, getKeyValueEntry())>
 
-	<impl(ts, thisArtifact, getNode())>
+	<impl(ts, thisArtifact, getContent(ctNode()))>
 	<impl(ts, thisArtifact, nodeIterator())>
 
 	<impl(ts, thisArtifact, hasNodes())>

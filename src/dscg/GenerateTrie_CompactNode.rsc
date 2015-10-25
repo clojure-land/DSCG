@@ -24,7 +24,7 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy:false) {
 	JavaDataType jdt = compactNode(ts, modifierList = [ "private", "abstract", "static" ]);
 	result += generateJdtString(ts, jdt, compactNode());
 	
-	for (bitmapCfg <- [ specializeByBitmap(n, v) | <n, v> <- booleanOptions * booleanOptions, !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) || (n && v)]) {
+	for (bitmapCfg <- [ specializeByBitmap(n, v) | <n, v> <- booleanOptions * booleanOptions ]) { // (n && v) || !isOptionEnabled(ts.setup, useHeterogeneousEncoding())
 		JavaDataType jdt = compactNode(ts, compactNode(bitmapCfg), modifierList = [ "private", "abstract", "static" ]);
 		result += generateJdtString(ts, jdt, compactNode(bitmapCfg));
 	}
@@ -86,7 +86,7 @@ data PredefOp = nodeMap();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeMap())
 	= method(ts.bitmapField, ts.bitmapField.name);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeMap()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeMap()) = isOptionEnabled(ts.setup, useHeterogeneousEncoding());
 
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeMap())
 	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), exprFromString("rawMap1() ^ rareMap()")), isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
@@ -110,7 +110,7 @@ data PredefOp = dataMap();
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::dataMap())
 	= method(ts.valmapField, ts.valmapField.name);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::dataMap()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::dataMap()) = isOptionEnabled(ts.setup, useHeterogeneousEncoding());
 
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::dataMap())
 	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), exprFromString("rawMap2() ^ rareMap()")), isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
@@ -387,17 +387,17 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactN
 data PredefOp = nodeFactory_Empty();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Empty())
-	= function(ts.compactNodeClassReturn, "nodeOf", generics = ts.genericTupleTypes, args = [ ts.mutator ], argsFilter = ts.argsFilter, isActive = !isOptionEnabled(ts.setup,useSpecialization()) || ts.nBound < ts.nMax);
+	= function(ts.abstractNodeClassReturn, "nodeOf", generics = ts.genericTupleTypes, args = [ ts.mutator ], argsFilter = ts.argsFilter, isActive = !isOptionEnabled(ts.setup,useSpecialization()) || ts.nBound < ts.nMax);
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Empty()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Empty()) 
-	= result(call(getDef(ts, trieNode(compactNode()), emptyTrieNodeConstant())));
+	= result(call(getDef(ts, core(unknownUpdateSemantic()), emptyTrieNodeConstant())));
 
 
 data PredefOp = nodeFactory_Singleton();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Singleton())
-	= function(ts.compactNodeClassReturn, "nodeOf", generics = ts.genericTupleTypes, args = [ ts.mutator, ts.bitmapField, ts.valmapField, *ts.payloadTuple ], argsFilter = ts.argsFilter, isActive = !isOptionEnabled(ts.setup,useSpecialization()));
+	= function(ts.abstractNodeClassReturn, "nodeOf", generics = ts.genericTupleTypes, args = [ ts.mutator, ts.bitmapField, ts.valmapField, *ts.payloadTuple ], argsFilter = ts.argsFilter, isActive = !isOptionEnabled(ts.setup,useSpecialization()));
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Singleton()) = true;
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Singleton()) =
@@ -942,9 +942,12 @@ list[PredefOp] declaredMethodsByCompactNode = [
 
 	specializationsByContentAndNodes(),
 
-	globalNodeMapOffset(),
-	globalDataMapOffset(),
-	globalArrayOffsetsOffset(),
+	globalFieldOffset("nodeMap"),
+	globalFieldOffset("dataMap"),
+	globalFieldOffset("arrayOffsets"),	
+	// globalNodeMapOffset(),
+	// globalDataMapOffset(),
+	// globalArrayOffsetsOffset(),
 	globalFieldOffset("nodeArity"),
 	globalFieldOffset("payloadArity"),
 	globalFieldOffset("slotArity"),
@@ -1713,7 +1716,7 @@ list[PredefOp] createNodeFactorySpecializationList(TrieSpecifics ts, TrieNodeTyp
 data PredefOp = nodeFactory_Specialization(int n, int m);
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeFactory_Specialization(int n, int m))
-	= function(ts.compactNodeClassReturn, "nodeOf<n>x<m>", generics = ts.genericTupleTypes, args = [ ts.mutator ] + metadataArguments(ts) + labeledArgumentList(contentArguments(), contentArguments(n, m, ts)), argsFilter = ts.argsFilter,
+	= function(ts.abstractNodeClassReturn, "nodeOf<n>x<m>", generics = ts.genericTupleTypes, args = [ ts.mutator ] + metadataArguments(ts) + labeledArgumentList(contentArguments(), contentArguments(n, m, ts)), argsFilter = ts.argsFilter,
 				isActive = true); // !isOptionEnabled(ts.setup, useSunMiscUnsafe())
 // isActive = isOptionEnabled(ts.setup, useSpecialization())
 
@@ -1755,7 +1758,7 @@ default str generate_specializationFactoryMethods(TrieSpecifics ts) = "";
 Method CompactNode_factoryMethod_bitmap(int n, int m, TrieSpecifics ts) {
 	constructorArgs = ts.mutator + metadataArguments(ts) + contentArguments(n, m, ts);
 
-	return function(ts.compactNodeClassReturn, "nodeOf", generics = ts.tupleTypes, args = constructorArgs, argsFilter = ts.argsFilter);	
+	return function(ts.abstractNodeClassReturn, "nodeOf", generics = ts.tupleTypes, args = constructorArgs, argsFilter = ts.argsFilter);	
 }
 
 //Expression generate_bodyOf_factoryMethod_bitmap(int n:0, int m:0, TrieSpecifics ts, Method decleration) = 
@@ -1784,7 +1787,7 @@ Method CompactNode_factoryMethod_bitmap(int n, int m, TrieSpecifics ts) {
 
 Statement generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration) { 
 	if (!isOptionEnabled(ts.setup, useSunMiscUnsafe())) {
-		fail CompactNode_factoryMethod_bitmap;
+		fail generate_bodyOf_factoryMethod_bitmap;
 	}
 	
 	str className = className(ts, specializedBitmapIndexedNode(n, m));
@@ -1816,6 +1819,9 @@ str unsafePrefixedMethodNameFromType(str prefix, Type \type) = "<prefix><capital
 
 @memo Type concretePrimitiveOrObject(Type \type:___primitive(str _)) = \type;
 default Type concretePrimitiveOrObject(Type _) = object();
+
+Expression generate_bodyOf_factoryMethod_bitmap(int n:0, int m:0, TrieSpecifics ts, Method decleration) 
+	= result(call(getDef(ts, core(unknownUpdateSemantic()), emptyTrieNodeConstant())));
 
 Expression generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, Method decleration) 
 	= exprFromString("return new <specializedClassNameStr><InferredGenerics(ts.ds, ts.tupleTypes)>(<use(decleration.args)>);")

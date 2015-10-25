@@ -204,14 +204,18 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 		}
 		<}>
 					
+		<implOrOverride(getDef(ts, trieNode(compactNode()), toString()), 
+			NOT_YET_IMPLEMENTED_EXCEPTION)>					
+					
 		<impl(ts, trieNode(hashCollisionNode()), isTrieStructureValid())>
 		
+		<if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {>
 		<implOrOverride(getDef(ts, trieNode(compactNode()), getContent(ctPayloadArg(0, isRare = true))), 
 			UNSUPPORTED_OPERATION_EXCEPTION)>
 			
 		<implOrOverride(getDef(ts, trieNode(compactNode()), getContent(ctPayloadArg(1, isRare = true))),
 			UNSUPPORTED_OPERATION_EXCEPTION)>
-						
+		<}>						
 	}"
 	;
 }

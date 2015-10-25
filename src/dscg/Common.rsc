@@ -28,18 +28,15 @@ import dscg::ArrayUtils;
 extend dscg::Common_ContentType;
 
 /* PUBLIC CONSTANTS */
-public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");	 
+public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");
+public Statement NOT_YET_IMPLEMENTED_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException(\"Not yet implemented.\");");	 
 
 public Expression NULL() = constant(specific("Void"), "null");
 public Argument this() = field(unknown(), "this");
 
-public str targetBasePackage = "org.eclipse.imp.pdb.facts.util";
-public str targetProject = "pdb.values";
-public str targetFolder = "src/<replaceAll(targetBasePackage, ".", "/")>";
-
-//public str targetBasePackage = "org.rascalmpl.foundation.collection";
-//public str targetProject = "trie-collections";
-//public str targetFolder = "src/main/java/<replaceAll(targetBasePackage, ".", "/")>";
+public str targetBasePackage = "io.usethesource.capsule";
+public str targetProject = "capsule";
+public str targetFolder = "src/main/java/<replaceAll(targetBasePackage, ".", "/")>";
 
 /* DATA SECTION */
 data ContentType
@@ -2195,12 +2192,14 @@ when \map() := ts.ds;
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertCollection(), 
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
+
+// TODO: how to do a batch insert in a heterogeneous case?
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertCollection(),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
 	"boolean modified = false;
 
 	for (<dec(key(ts.keyType))> : <uncapitalize(toString(ts.ds))>) {
-		modified |= <toString(call(this(), getDef(ts, artifact, insertTuple(op.isRare, op.customComparator))))>;
+		modified |= <toString(call(this(), getDef(ts, artifact, insertTuple(false, op.customComparator))))>;
 	}
 		
 	return modified;"
@@ -3040,17 +3039,17 @@ when x := field(ts.mutatorType, "x") && y := field(ts.mutatorType, "y");
 
 data PredefOp = emptyTrieNodeConstant();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp::emptyTrieNodeConstant())
+Method getDef(TrieSpecifics ts, Artifact artifact:core(_), PredefOp::emptyTrieNodeConstant())
 	= property(\return(jdtToType(abstractNode(ts))), "EMPTY_NODE", generics = ts.genericTupleTypes, visibility = "protected", isStateful = true, isConstant = true, hasGetter = false);
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp::emptyTrieNodeConstant()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), PredefOp::emptyTrieNodeConstant()) = true;
 
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp::emptyTrieNodeConstant())
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), PredefOp::emptyTrieNodeConstant())
 	= result(exprFromString("new <toString(ts.ds)>0To0Node<ts.classNamePostfix><InferredGenerics(ts.ds, ts.tupleTypes)>(null, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0)"))
 when isOptionEnabled(ts.setup, useSpecialization());
 
 // TODO: #simplifyWithConcreteSyntax
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp::emptyTrieNodeConstant())
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), PredefOp::emptyTrieNodeConstant())
 	= result(exprFromString(
 				"<toString(call(ts.BitmapIndexedNode_constructor, 
 						argsOverride = (ts.mutator: NULL(),								
@@ -3404,7 +3403,7 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 	bool jdtIsAbstract = "abstract" in jdt.modifierList;
 
 	// ts.model.declares[nodeType]
-	for (op <- unique(declares(ts, nodeType)<1> + toList(ts.model.implements[nodeType]))) {
+	for (op <- unique(declares(ts, nodeType)<1> + toList(ts.model.implements[nodeType])), isPredefOpActive(ts, op)) {
 		if (getDef(ts, trieNode(nodeType), op).isActive) {
 			str item = "";		
 			str documentation = getDocumentation(ts, trieNode(nodeType), op);
@@ -3444,6 +3443,7 @@ default str impl(TrieSpecifics ts, Artifact artifact, PredefOp op) = "";
 str impl(TrieSpecifics ts, Artifact artifact, PredefOp op) 
 	= implOrOverride(__def, generate_bodyOf(ts, artifact, op), doOverride = \new())
 when exists_bodyOf(ts, artifact, op)
+		&& isPredefOpActive(ts, op)
 		&& __def := getDef(ts, artifact, op)
 		&& __def.isActive;
 
@@ -3514,3 +3514,26 @@ default Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp
 /* REWRITES FOR REFACTORING */
 data PredefOp = getContent(ContentType ct);
 // PredefOp getKey() = getContent(ctKey());
+
+
+
+bool isPredefOpActive(TrieSpecifics ts, PredefOp op) = false when op has isRare && op.isRare && !isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+bool isPredefOpActive(TrieSpecifics ts, PredefOp op:getContent(ContentType ct)) = isOptionEnabled(ts.setup, useHeterogeneousEncoding()) when ct has isRare && ct.isRare;
+
+bool isPredefOpActive(TrieSpecifics ts, PredefOp op:getContent(ctPayloadArg(1))) = \map() := ts.ds;
+
+bool isPredefOpActive(TrieSpecifics ts, PredefOp op) = false when op is globalFieldOffset && !isOptionEnabled(ts.setup, useSunMiscUnsafe()); // && useHeterogeneousEncoding?
+
+bool isPredefOpActive(TrieSpecifics ts, PredefOp op:rawMap1()) = isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+bool isPredefOpActive(TrieSpecifics ts, PredefOp op:rawMap2()) = isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+
+bool isPredefOpActive(TrieSpecifics ts, PredefOp op:arrayBase()) = isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+bool isPredefOpActive(TrieSpecifics ts, PredefOp op:addressSize()) = isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+bool isPredefOpActive(TrieSpecifics ts, PredefOp op:specializationsByContentAndNodes()) = isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+
+bool isPredefOpActive(TrieSpecifics ts, PredefOp op:nodeFactory_Empty()) = false;
+bool isPredefOpActive(TrieSpecifics ts, PredefOp op:nodeFactory_Singleton()) = false;
+// bool isPredefOpActive(TrieSpecifics ts, PredefOp op:nodeFactory_Array()) = false;
+
+// default bool isPredefOpActive(TrieSpecifics ts, PredefOp op) { throw "<op>"; }
+default bool isPredefOpActive(TrieSpecifics ts, PredefOp op) = true;

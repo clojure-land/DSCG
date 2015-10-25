@@ -76,7 +76,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	<impl(ts, core(immutable()), emptyTrieNodeConstant())>
 
 	<toString(UNCHECKED_ANNOTATION())>
-	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(<toString(call(getDef(ts, core(immutable()), emptyTrieNodeConstant())))>, 0, 0);
+	private static final <ts.coreClassName> <emptyCollectionConstantName> = new <ts.coreClassName>(<toString(call(getDef(ts, core(unknownUpdateSemantic()), emptyTrieNodeConstant())))>, 0, 0);
 
 	private static final boolean DEBUG = false;
 
@@ -464,6 +464,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	
 	<innerClassesString>
 		
+	<if (isOptionEnabled(ts.setup, useSunMiscUnsafe())) {>
 	private abstract static class DataLayoutHelper<GenericsStr(ts.tupleTypes)> <extendsStr(compactNode(ts, compactNode(specializeByBitmap(true, true))))> {
 
 		private static final long[] arrayOffsets = arrayOffsets(DataLayoutHelper.class,
@@ -478,6 +479,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 		}
 
 	}
+	<}>
 		
 }";
 }

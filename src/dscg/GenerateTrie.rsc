@@ -188,8 +188,8 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 		<useIncrementalHashCodes(),true>,
 		<separateTrieAndLeafNodes(),false>,
 		<compareValueAtMapPut(),false>,
-		<useHeterogeneousEncoding(),true>,
-		<useSunMiscUnsafe(),true>,
+		<useHeterogeneousEncoding(),false>,
+		<useSunMiscUnsafe(),false>,
 		<unsafeCodeAsData(),true>
 	}; // { compactionViaFieldToMethod() };
 
@@ -265,12 +265,14 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 		
 	if (isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useUntypedVariables()) && !isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
 		innerClassStrings = innerClassStrings + 
+		// TODO: [ generateSpecializedBitmapIndexedNodeClassString(ts, specializedBitmapIndexedNode(n, m)) | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound ];
 		[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ts, ts.classNamePostfix) | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound ];
 	}
 
 	// TODO: fix correct creation of mn instead of m and n		
 	if (isOptionEnabled(ts.setup, useSpecialization()) && isOptionEnabled(ts.setup, useUntypedVariables()) && !isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
-		innerClassStrings = innerClassStrings + 
+		innerClassStrings = innerClassStrings +
+		// TODO: [ generateSpecializedBitmapIndexedNodeClassString(ts, specializedBitmapIndexedNode(n, m)) | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound ]; 
 		[ generateSpecializedNodeWithBitmapPositionsClassString(mn, 0, ts, ts.classNamePostfix) | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound ];
 	}
 	

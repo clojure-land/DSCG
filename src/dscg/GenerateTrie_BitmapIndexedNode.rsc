@@ -33,15 +33,15 @@ when jdt := bitmapIndexedNode(ts, modifierList = [ "private", "static" ]);
 
 // data PredefOp = getKey();
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctKey())) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctKey()))
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctPayloadArg(0))) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctPayloadArg(0)))
 	= result(exprFromString("(<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index]"));
 
 
 // data PredefOp = getValue();
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getValue()) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getValue())
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctPayloadArg(1))) = true;
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctPayloadArg(1)))
 	= result(exprFromString("(<typeToString((nodeTupleType(ts, 1)))>) nodes[<use(tupleLengthConstant)> * index + 1]"));
 
 
@@ -52,7 +52,7 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIn
 	= result(exprFromString("entryOf((<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<typeToString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1])"));
 
 
-
+// TODO: make this method obsolete by providing a model based alternative
 str generateBitmapIndexedNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 
 	//TrieSpecifics ts = setArtifact(tsSuper, trieNode(bitmapIndexedNode()));
@@ -85,11 +85,11 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 			
 			<if (isOptionEnabled(ts.setup,useSpecialization()) && ts.nBound < ts.nMax) {>assert arity() \> <ts.nBound>;<}>assert nodeInvariant();")>					
 	
-		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), getKey()),
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), getContent(ctPayloadArg(0))),
 			"return (<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index];"
 			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.keyType)) ])>
 
-		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), getValue()),
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), getContent(ctPayloadArg(1))),
 			"return (<typeToString((nodeTupleType(ts, 1)))>) nodes[<use(tupleLengthConstant)> * index + 1];"
 			annotations = [ UNCHECKED_ANNOTATION(isActive = !isPrimitive(ts.valType)) ])>	
 		
@@ -97,7 +97,7 @@ str generateBitmapIndexedNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 	
 		<impl(ts, trieNode(bitmapIndexedNode()), getTuple())>
 
-		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), getNode()), 
+		<implOrOverride(getDef(ts, trieNode(bitmapIndexedNode()), getContent(ctNode())), 
 			generate_bodyOf_getNode(ts),
 			annotations = [ UNCHECKED_ANNOTATION() ])>
 
