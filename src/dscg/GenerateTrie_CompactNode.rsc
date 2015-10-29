@@ -24,7 +24,7 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy:false) {
 	JavaDataType jdt = compactNode(ts, modifierList = [ "private", "abstract", "static" ]);
 	result += generateJdtString(ts, jdt, compactNode());
 	
-	for (bitmapCfg <- [ specializeByBitmap(n, v) | <n, v> <- booleanOptions * booleanOptions ]) { // (n && v) || !isOptionEnabled(ts.setup, useHeterogeneousEncoding())
+	for (bitmapCfg <- [ specializeByBitmap(n, v) | <n, v> <- booleanOptions * booleanOptions, isOptionEnabled(ts.setup, useSpecialization()) || n && v ]) { // (n && v) || !isOptionEnabled(ts.setup, useHeterogeneousEncoding())
 		JavaDataType jdt = compactNode(ts, compactNode(bitmapCfg), modifierList = [ "private", "abstract", "static" ]);
 		result += generateJdtString(ts, jdt, compactNode(bitmapCfg));
 	}
@@ -63,6 +63,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	= "throw new UnsupportedOperationException(); // TODO: to implement";	
 
 
+// TODO: factor logic used in this constructor implementation
 data PredefOp = constructor();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode(BitmapSpecialization bs)), PredefOp::constructor())
