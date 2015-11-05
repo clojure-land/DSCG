@@ -384,7 +384,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	}
 
 	/*
-	 * For analysis purposes only. Payload X Node
+	 * For analysis purposes only.
 	 */
 	protected int[][] arityCombinationsHistogram() {
 		final Iterator\<<AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)>\> it = nodeIterator();

@@ -29,7 +29,8 @@ extend dscg::Common_ContentType;
 
 /* PUBLIC CONSTANTS */
 public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");
-public Statement NOT_YET_IMPLEMENTED_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException(\"Not yet implemented.\");");	 
+public Statement NOT_YET_IMPLEMENTED_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException(\"Not yet implemented.\");");
+public Statement ILLEGAL_STATE_EXCEPTION(str message) = uncheckedStringStatement("throw new IllegalStateException(\"<message>\");");	 
 
 public Expression NULL() = constant(specific("Void"), "null");
 public Argument this() = field(unknown(), "this");
@@ -2661,7 +2662,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact, addAll())
 	= method(\return(primitive("boolean")), "addAll", args = [ field(generic("Collection<GenericsExpandedUpperBounded(ts.ds, ts.tupleTypes)>"), "c") ], visibility = "public", isActive = ts.ds == \set())
 when core(_) := artifact || ju_Set() := artifact;	
 
-bool exits_bodyOf(TrieSpecifics ts, Artifact artifact, addAll()) = true;
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, addAll()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, addAll()) 
 	= UNSUPPORTED_OPERATION_EXCEPTION
 when core(_) := artifact || ju_Set() := artifact;

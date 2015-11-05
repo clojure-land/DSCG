@@ -18,6 +18,21 @@ default str generateHashCollisionNodeClassString(TrieSpecifics ts)
 	= generateJdtString(ts, jdt, hashCollisionNode())
 when jdt := hashCollisionNode(ts, modifierList = [ "private", "static" ]);
 
+lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:hashCollisionNode()) 
+	= [ <nodeType,method> | method <- declaredMethodsByHashCollisionNode ];
+		
+list[PredefOp] declaredMethodsByHashCollisionNode = [
+
+	hashCollisionHashCode(),
+	hashCollisionContentArray(ctPayloadArg(0)),
+	hashCollisionContentArray(ctPayloadArg(1)),
+	
+	hashCollisionNodeConstructor()
+	
+];
+
+
+
 
 data PredefOp = sizePredicate();
 
@@ -33,7 +48,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNo
 	"return entryOf(keys[index], vals[index]);";
 
 
-str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
+str __generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true) {
 
 	//TrieSpecifics ts = setArtifact(tsSuper, trieNode(hashCollisionNode()));
 
@@ -88,22 +103,22 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 	<impl(ts, trieNode(hashCollisionNode()), removeTuple())>
 	<impl(ts, trieNode(hashCollisionNode()), removeTuple(customComparator = true))>
 
-		@Override
+		/* DONE */ @Override
 		boolean hasPayload() {
 			return true;
 		}
 
-		@Override
+		/* DONE */ @Override
 		int payloadArity() {
 			return keys.length;
 		}
 
-		@Override
+		/* DONE */ @Override
 		boolean hasNodes() {
 			return false;
 		}
 
-		@Override
+		/* DONE */ @Override
 		int nodeArity() {
 			return 0;
 		}
@@ -118,30 +133,30 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 			return sizeMoreThanOne();
 		}
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), getContent(ctPayloadArg(0))),
+		/* DONE */ <implOrOverride(getDef(ts, trieNode(abstractNode()), getContent(ctPayloadArg(0))),
 			"return keys[index];")>		
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), getContent(ctPayloadArg(1))), 
+		/* DONE */ <implOrOverride(getDef(ts, trieNode(abstractNode()), getContent(ctPayloadArg(1))), 
 			"return vals[index];")>		
 
-		<impl(ts, trieNode(hashCollisionNode()), getKeyValueEntry())>
+		/* DONE */ <impl(ts, trieNode(hashCollisionNode()), getKeyValueEntry())>
 
-		@Override
+		/* DONE */ @Override
 		public <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> getNode(int index) {
 			throw new IllegalStateException(\"Is leaf node.\");
 		}
 		
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), getSlot()),
+		/* DONE */ <implOrOverride(getDef(ts, trieNode(abstractNode()), getSlot()),
 			UNSUPPORTED_OPERATION_EXCEPTION)>
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), hasSlots()),
+		/* DONE */ <implOrOverride(getDef(ts, trieNode(abstractNode()), hasSlots()),
 			UNSUPPORTED_OPERATION_EXCEPTION)>
 
-		<implOrOverride(getDef(ts, trieNode(abstractNode()), slotArity()),
+		/* DONE */ <implOrOverride(getDef(ts, trieNode(abstractNode()), slotArity()),
 			UNSUPPORTED_OPERATION_EXCEPTION)>
 
 		<if (isOptionEnabled(ts.setup, useStructuralEquality())) {>
-		@Override
+		/* DONE */ @Override
 		public int hashCode() {
 			final int prime = 31;
 			int result = 0;
@@ -150,7 +165,7 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 			return result;
 		}
 
-		@Override
+		/* DONE */ @Override
 		public boolean equals(Object other) {
 			if (null == other) {
 				return false;
@@ -204,16 +219,16 @@ str generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = true)
 		}
 		<}>
 					
-		<implOrOverride(getDef(ts, trieNode(compactNode()), toString()), 
+		/* DONE */ <implOrOverride(getDef(ts, trieNode(compactNode()), toString()), 
 			NOT_YET_IMPLEMENTED_EXCEPTION)>					
 					
 		<impl(ts, trieNode(hashCollisionNode()), isTrieStructureValid())>
 		
 		<if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {>
-		<implOrOverride(getDef(ts, trieNode(compactNode()), getContent(ctPayloadArg(0, isRare = true))), 
+		/* DONE */ <implOrOverride(getDef(ts, trieNode(compactNode()), getContent(ctPayloadArg(0, isRare = true))), 
 			UNSUPPORTED_OPERATION_EXCEPTION)>
 			
-		<implOrOverride(getDef(ts, trieNode(compactNode()), getContent(ctPayloadArg(1, isRare = true))),
+		/* DONE */ <implOrOverride(getDef(ts, trieNode(compactNode()), getContent(ctPayloadArg(1, isRare = true))),
 			UNSUPPORTED_OPERATION_EXCEPTION)>
 		<}>						
 	}"
@@ -248,3 +263,172 @@ str generate_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPa
 		return ArrayKeyValueSupplierIterator.of(keysAndVals);
 	"
 	;	
+
+	
+data PredefOp = hashCollisionContentArray(ContentType ct);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::hashCollisionContentArray(ct:ctPayloadArg(0)))
+	= property(\return(asArray(ts.ct2type[ct])), "keys", isStateful = true, isConstant = false, hasGetter = false, initializeAtConstruction = true);
+	
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::hashCollisionContentArray(ct:ctPayloadArg(1)))
+	= property(\return(asArray(ts.ct2type[ct])), "vals", isStateful = true, isConstant = false, hasGetter = false, initializeAtConstruction = true, isActive = \map() := ts.ds);	
+	
+	
+data PredefOp = hashCollisionHashCode();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::hashCollisionHashCode())
+	= property(\return(primitive("int", isArray = false)), "hash", isStateful = true, isConstant = false, hasGetter = false, initializeAtConstruction = true);
+	
+	
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasPayload()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasPayload()) =
+	"return true;";
+
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), payloadArity()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), payloadArity()) =
+	"return keys.length;";
+	
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasNodes()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasNodes()) =
+	"return false;";
+
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), nodeArity()) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), nodeArity()) =
+	"return 0;";
+	
+	
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasSlots()) = true;
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasSlots()) =
+	UNSUPPORTED_OPERATION_EXCEPTION;
+
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), slotArity()) = true;
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), slotArity()) =
+	UNSUPPORTED_OPERATION_EXCEPTION;
+
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getSlot()) = true;
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getSlot()) =
+	UNSUPPORTED_OPERATION_EXCEPTION;
+	
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx, isRare = true))) = true;
+
+// TODO: isOptionEnabled(ts.setup, useHeterogeneousEncoding())
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx, isRare = true))) = 
+	UNSUPPORTED_OPERATION_EXCEPTION;
+
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx))) = true;
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx))) = 
+	"return <if (idx == 0) {>keys<} else {>vals<}>[index];";
+	
+	
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctNode())) = true;
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctNode())) = 
+	ILLEGAL_STATE_EXCEPTION("Is leaf node.");
+	
+	
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), toString()) = true;
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), toString()) = 
+	NOT_YET_IMPLEMENTED_EXCEPTION;
+
+		
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hashCode()) = true;
+
+// TODO: isOptionEnabled(ts.setup, useStructuralEquality())
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hashCode()) =
+	"final int prime = 31;
+	int result = 0;
+	result = prime * result + hash;
+	result = prime * result + Arrays.hashCode(keys);<if (\map() := ts.ds) {>result = prime * result + Arrays.hashCode(vals);<}>
+	return result;";
+	
+	
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), equals()) = true;
+
+// TODO: isOptionEnabled(ts.setup, useStructuralEquality())
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), equals()) =
+	"if (null == other) {
+		return false;
+	}
+	if (this == other) {
+		return true;
+	}
+	if (getClass() != other.getClass()) {
+		return false;
+	}
+
+	<hashCollisionNode(ts).typeName><QuestionMarkGenerics(ts.ds, ts.tupleTypes)> that = (<hashCollisionNode(ts).typeName><QuestionMarkGenerics(ts.ds, ts.tupleTypes)>) other;
+
+	if (hash != that.hash) {
+		return false;
+	}
+
+	if (arity() != that.arity()) {
+		return false;
+	}
+
+	/*
+	 * Linear scan for each key, because of arbitrary element order.
+	 */
+	outerLoop: for (int i = 0; i \< that.payloadArity(); i++) {
+		<if (\map() := ts.ds) {><if (isPrimitive(ts.keyType)) {><dec(field(ts.keyType, "otherKey"))><} else {><dec(field(object(), "otherKey"))><}> = that.getKey(i);
+		<if (isPrimitive(ts.valType)) {><dec(field(ts.valType, "otherVal"))><} else {><dec(field(object(), "otherVal"))><}> = that.getVal(i);
+
+		for (int j = 0; j \< keys.length; j++) {
+			<dec(key(ts.keyType))> = keys[j];
+			<dec(nodeTupleArg(ts, 1))> = vals[j];
+
+			if (<equalityDefaultForArguments(key(ts.keyType), key(ts.keyType, "otherKey"))> && <equalityDefaultForArguments(nodeTupleArg(ts, 1), val(ts.valType, "otherVal"))>) {
+				continue outerLoop;
+			}
+		}
+		return false;<} else {><if (isPrimitive(ts.keyType)) {><dec(field(ts.keyType, "otherKey"))><} else {><dec(field(object(), "otherKey"))><}> = that.getKey(i);
+
+		for (int j = 0; j \< keys.length; j++) {
+			<dec(key(ts.keyType))> = keys[j];
+
+			if (<equalityDefaultForArguments(key(ts.keyType), key(ts.keyType, "otherKey"))>) {
+				continue outerLoop;
+			}
+		}
+		return false;
+		<}>
+	}
+
+	return true;";		
+
+	
+// TODO: factor logic used in this constructor implementation
+data PredefOp = hashCollisionNodeConstructor();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:hashCollisionNode()), PredefOp::hashCollisionNodeConstructor())
+	= constructor(\return(\type), jdt.typeName, args = [ *fieldList ], visibility = "private", argsFilter = ts.argsFilter) // metadataArguments(ts)
+when jdt := hashCollisionNode(ts) && 
+		\type := jdtToType(jdt) &&
+		fieldList := [ predefOpToArgument(ts, artifact, op) | op <- declares(ts, nodeType)<1>, op != hashCollisionNodeConstructor(), opDef := getDef(ts, artifact, op), opDef is property, opDef.isActive && opDef.isStateful && opDef.initializeAtConstruction ];
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:hashCollisionNode()), PredefOp::hashCollisionNodeConstructor()) = true;
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:hashCollisionNode()), PredefOp::hashCollisionNodeConstructor())
+	= compoundStatement([
+		uncheckedStringStatement(initFieldsWithIdendity(fieldList)), // TODO: automatically infer which def.args need to be initialized
+		uncheckedStringStatement("assert payloadArity() \>= 2;")
+	])
+when def := getDef(ts, artifact, hashCollisionNodeConstructor()) &&
+		fieldList := [ predefOpToArgument(ts, artifact, op) | op <- declares(ts, nodeType)<1>, op != hashCollisionNodeConstructor(), opDef := getDef(ts, artifact, op), opDef is property, opDef.isActive && opDef.isStateful && opDef.initializeAtConstruction ];
+	
