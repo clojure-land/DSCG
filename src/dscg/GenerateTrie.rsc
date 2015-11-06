@@ -188,8 +188,8 @@ TrieSpecifics expandConfiguration(TrieConfig cfg:hashTrieConfig(DataStructure ds
 		<useIncrementalHashCodes(),true>,
 		<separateTrieAndLeafNodes(),false>,
 		<compareValueAtMapPut(),false>,
-		<useHeterogeneousEncoding(),false>,
-		<useSunMiscUnsafe(),false>,
+		<useHeterogeneousEncoding(),true>,
+		<useSunMiscUnsafe(),true>,
 		<unsafeCodeAsData(),true>
 	}; // { compactionViaFieldToMethod() };
 

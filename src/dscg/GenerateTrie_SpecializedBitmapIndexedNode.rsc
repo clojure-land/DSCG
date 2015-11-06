@@ -853,7 +853,7 @@ Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetValue(bool isR
 	= call(getDef(ts, trieNode(compactNode()), dataMap()));
 
 
-data PredefOp = copyAndInsertValue();
+// data PredefOp = copyAndInsertValue();
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndInsertValue()) 
 	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());

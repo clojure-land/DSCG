@@ -1434,8 +1434,8 @@ list[Type] collTupleTypes(TrieSpecifics ts) = [ arg.\type | arg <- collTupleArgs
 
 
 // NOTE: temporarily do forwarding
-Argument nodeTupleArg(TrieSpecifics ts, int idx) = collTupleArg(ts, idx); // __payloadTupleAtNode(ts.ds, ts.tupleTypes)[idx];
-list[Argument] nodeTupleArgs(TrieSpecifics ts) = collTupleArgs(ts); // __payloadTupleAtNode(ts.ds, ts.tupleTypes);
+Argument nodeTupleArg(TrieSpecifics ts, int idx, bool isRare = false) = nodeTupleArgs(ts, isRare = isRare)[idx]; // collTupleArg(ts, idx); // __payloadTupleAtNode(ts.ds, ts.tupleTypes)[idx];
+list[Argument] nodeTupleArgs(TrieSpecifics ts, bool isRare = false) = payloadTupleArgs(ts, isRare = isRare);  // = collTupleArgs(ts); // __payloadTupleAtNode(ts.ds, ts.tupleTypes);
 
 Argument payloadTupleArg(TrieSpecifics ts, int idx, bool isRare = false) = payloadTupleArgs(ts, isRare = isRare)[idx];
 //list[Argument] payloadTupleArgs(TrieSpecifics ts) = __payloadTuple(ts.ds, ts.tupleTypes);
@@ -2574,10 +2574,10 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), hasP
 
 
 
-data PredefOp = payloadArity();
+data PredefOp = payloadArity(bool isRare = false);
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), payloadArity())
-	= method(\return(primitive("int")), "payloadArity");
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), op:payloadArity())
+	= method(\return(primitive("int")), "<if (op.isRare) {>rarePayloadArity<} else {>payloadArity<}>");
 		
 
 

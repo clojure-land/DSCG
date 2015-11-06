@@ -50,7 +50,8 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 	nodeIterator(),
 	
 	hasPayload(),
-	payloadArity(),
+	payloadArity(isRare = false),
+	payloadArity(isRare = true),
 	/***/
 	getContent(ctPayloadArg(0)),
 	getContent(ctPayloadArg(1)),
