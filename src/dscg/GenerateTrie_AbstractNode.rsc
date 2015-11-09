@@ -69,6 +69,8 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 	getSlot(),
 	/***/
 	// slotIterator?
+	untypedSlotArity(),
+	
 	
 	arity(),
 	size(),
@@ -324,4 +326,13 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), Pred
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::sizeMoreThanOne()) = true;
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::sizeMoreThanOne())
 	= result(binaryLiteral("10"));
+	
+	
+data PredefOp = insertTuple(bool isRare, bool customComparator);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), op:insertTuple(isRare:_, customComparator:false))
+	= method(\return(jdtToType(abstractNode(ts))), "<insertTupleMethodName(ts.ds, artifact)>", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)), ts.keyHash, ts.shift, ts.details ]);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), op:insertTuple(isRare:_, customComparator:true))
+	= method(\return(jdtToType(abstractNode(ts))), "<insertTupleMethodName(ts.ds, artifact)>", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()));
 	

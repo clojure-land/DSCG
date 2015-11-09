@@ -573,7 +573,7 @@ data TrieSpecifics
 
 		Method nodeOf_BitmapIndexedNode = function(compactNodeClassReturn, "nodeOf", generics = genericTupleTypes, args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ], argsFilter = argsFilter, isActive = !isOptionEnabled(setup,useSpecialization()) || nBound < nMax),
 		
-		list[tuple[int,int]] legacyNodeFactoryMethodSpecializationsUnderUnsafe = [ <1, 0>, <0, 1>, <0, 2> ],
+		list[tuple[int,int]] legacyNodeFactoryMethodSpecializationsUnderUnsafe = [ <1, 0>, <0, 1>, <0, 2> ] + [ <4, 0>, <2, 1> ], /* last ones are necessary for heterogeneous encoding */
 		
 		Argument contentType = val(specific("ContentType"), "type")				
 		)
@@ -712,6 +712,7 @@ public Argument valmapMethod = getter("dataMap");
 
 Argument ___bitmapMethod(int bitPartitionSize) = getter(chunkSizeToPrimitive(bitPartitionSize), "nodeMap");
 Argument ___valmapMethod(int bitPartitionSize) = getter(chunkSizeToPrimitive(bitPartitionSize), "dataMap");
+Argument ___raremapMethod(int bitPartitionSize) = getter(chunkSizeToPrimitive(bitPartitionSize), "rareMap");
 Argument ___bitposMethod(int bitPartitionSize) = getter(chunkSizeToPrimitive(bitPartitionSize), "bitpos");
 
 public Argument thisMutator = field(specific("Void"), "null");
@@ -2595,6 +2596,13 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), slot
 
 
 
+data PredefOp = untypedSlotArity();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), untypedSlotArity())
+	= method(\return(primitive("int")), "untypedSlotArity"); // isOptionEnabled(setup,useUntypedVariables()
+
+
+
 data PredefOp = getSlot();
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getSlot())
@@ -2931,21 +2939,6 @@ Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp::isEmpt
 	= result(equals(useExpr(ts.sizeProperty), iconst(0)))
 when artifact := core(immutable()) || artifact := core(transient());	
 
-
-
-
-
-
-data PredefOp = mergeTwoKeyValPairs();
-
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs())
-	=  function(\return(jdtToType(abstractNode(ts))), "mergeTwoKeyValPairs", args = [ *appendToName(__payloadTupleAtNode(ts.ds, ts.tupleTypes), "0"), ts.keyHash0, *appendToName(__payloadTupleAtNode(ts.ds, ts.tupleTypes), "1"), ts.keyHash1, ts.shift ], generics = ts.genericTupleTypes);
-
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs()) 
-	= true;
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs())  = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), mergeTwoKeyValPairs()) 
-	= generate_bodyOf_mergeTwoKeyValPairs(ts);
 
 
 
@@ -3291,8 +3284,9 @@ Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 		refines += { <specializedBitmapIndexedNode(mn, 0), compactNode()> | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound };
 	}
 	
+	int heterogeneousBound = tupleLength(ts.ds) * ts.nBound;
 	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
-		refines += { <specializedBitmapIndexedNode(n, m), compactHeterogeneousNode()> | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound };
+		refines += { <specializedBitmapIndexedNode(n, m), compactHeterogeneousNode()> | m <- [0..ts.nMax+1], n <- [0..heterogeneousBound+1], (n + m) <= heterogeneousBound };
 		//refines += { <specializedBitmapIndexedNode(mn, 0), compactNode()> | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound };
 	}
 	

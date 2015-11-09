@@ -40,6 +40,7 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nod
 		nodeArityStatic(),
 		payloadArityStatic(),
 		slotArityStatic(),
+		untypedSlotArityStatic(),
 		
 		arrayOffsetLastStatic(),
 
@@ -180,6 +181,19 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedB
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::slotArityStatic()) = true;
 
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::slotArityStatic(), int mn = tupleLength(ts.ds)*m+n)
+	= result(iconst(mn))
+when !isOptionEnabled(ts.setup, useUntypedVariables());	
+
+
+data PredefOp = untypedSlotArityStatic();
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), untypedSlotArityStatic())
+	= property(\return(primitive("int")), "untypedSlotArity", isStateful = true, isConstant = true, hasGetter = false, 
+		isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::untypedSlotArityStatic()) = true;
+
+Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::untypedSlotArityStatic(), int mn = n)
 	= result(iconst(mn))
 when !isOptionEnabled(ts.setup, useUntypedVariables());	
 
@@ -409,7 +423,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, TrieSpec
 	<impl(ts, thisArtifact, copyAndInsertValue_nextClass())>
 	<impl(ts, thisArtifact, copyAndRemoveValue())>
 	<impl(ts, thisArtifact, copyAndRemoveValue_nextClass())>
-	<impl(ts, thisArtifact, copyAndSetNode())>
+	<impl(ts, thisArtifact, copyAndSetNode(false))>
 	<impl(ts, thisArtifact, copyAndSetNode_nextClass())>
 	<impl(ts, thisArtifact, copyAndInsertNode())>
 	<impl(ts, thisArtifact, copyAndInsertNode_nextClass())>
@@ -1008,12 +1022,12 @@ when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(
 default str generate_bodyOf_copyAndRemoveValue(int n, int m, TrieSpecifics ts) = "";
 
 
-data PredefOp = copyAndSetNode();
+// data PredefOp = copyAndSetNode();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetNode()) 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetNode(_)) 
 	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetNode()) 
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndSetNode(_)) 
 	= generate_bodyOf_copyAndSetNode(n, m, ts);
 
 str generate_bodyOf_copyAndSetNode(int n:0, int m, TrieSpecifics ts)
@@ -1021,10 +1035,10 @@ str generate_bodyOf_copyAndSetNode(int n:0, int m, TrieSpecifics ts)
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
 str generate_bodyOf_copyAndSetNode(int n, int m, TrieSpecifics ts, Event event = isNode()) =  
-	"	<dec(field(primitive("int"), "idx"))> = <eval(updateProperty(ts, copyAndSetNode(), copyAndSetNode_index(), event))>; 
+	"	<dec(field(primitive("int"), "idx"))> = <eval(updateProperty(ts, copyAndSetNode(false), copyAndSetNode_index(), event))>; 
 	'
-	'	<dec(ts.bitmapField)> = <eval(updateProperty(ts, copyAndSetNode(), copyAndSetNode_bitmap1(), event))>;
-	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndSetNode(), copyAndSetNode_bitmap2(), event))>;
+	'	<dec(ts.bitmapField)> = <eval(updateProperty(ts, copyAndSetNode(false), copyAndSetNode_bitmap1(), event))>;
+	'	<dec(ts.valmapField)> = <eval(updateProperty(ts, copyAndSetNode(false), copyAndSetNode_bitmap2(), event))>;
 	'	
 	'	switch(idx) {
 	'		<for (i <- [0..n]) {>case <i>:
@@ -1038,15 +1052,15 @@ data Property = copyAndSetNode_index();
 data Property = copyAndSetNode_bitmap1();
 data Property = copyAndSetNode_bitmap2();
 
-Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetNode(), Property p:copyAndSetNode_index(), isNode()) 
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetNode(_), Property p:copyAndSetNode_index(), isNode()) 
 	= call(getDef(ts, trieNode(compactNode()), nodeIndex()))
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
-Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetNode(), Property p:copyAndSetNode_bitmap1(), isNode()) 
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetNode(_), Property p:copyAndSetNode_bitmap1(), isNode()) 
 	= call(getDef(ts, trieNode(compactNode()), rawMap1()))
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
-Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetNode(), Property p:copyAndSetNode_bitmap2(), isNode()) 
+Expression updateProperty(TrieSpecifics ts, PredefOp op:copyAndSetNode(_), Property p:copyAndSetNode_bitmap2(), isNode()) 
 	= call(getDef(ts, trieNode(compactNode()), rawMap2()))
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
@@ -1097,12 +1111,12 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 	= generate_bodyOf_copyAndRemoveNode(n, m, ts);
 
 
-data PredefOp = copyAndMigrateFromInlineToNode();
+// data PredefOp = copyAndMigrateFromInlineToNode();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) 
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode(_)) 
 	= true when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) =
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode(_)) =
 	"// TODO: support migration if partial
 	'if (isRare(<use(ts.bitposField)>)) {
 	'	<generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_heterogeneous(n, m, ts, Event::isRare(), mn = n)>
@@ -1111,11 +1125,11 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specia
 	'}"
 when !isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useSandwichArrays());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) 
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode(_)) 
 	= generate_bodyOf_copyAndMigrateFromInlineToNode_typed_nonHeterogeneous(n, m, ts)
 when !isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode()) 
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::copyAndMigrateFromInlineToNode(_)) 
 	= generate_bodyOf_copyAndMigrateFromInlineToNode_untyped_nonHeterogeneous(n, m, ts)
 when !isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && isOptionEnabled(ts.setup, useUntypedVariables());	
 	
