@@ -499,7 +499,7 @@ data TrieSpecifics
 			ctPayloadArg(0, isRare = false): keyType, 
 			ctPayloadArg(1, isRare = false): valType, 
 			ctKey(isRare = true): primitiveToClass(keyType), // object()
-			ctVal(isRare = true): primitiveToClass(valType)(), // object() 
+			ctVal(isRare = true): primitiveToClass(valType), // object() 
 			ctNode(): generic("<AbstractNode(ds)><GenericsStr(dataStructureToTupleTypeList(ds, [keyType, valType]))>")),
 					
 		Argument BIT_PARTITION_SIZE = field(primitive("int"), "BIT_PARTITION_SIZE"), 
