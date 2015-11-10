@@ -493,7 +493,14 @@ data TrieSpecifics
 	= undefinedTrieSpecifics()
 	| ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound, Type keyType = generic("K"), Type valType = generic("V"), str classNamePostfix = "", rel[Option,bool] setup = {}, Model model = model(), 
 					
-		map[ContentType, Type] ct2type = (ctPayloadArg(0): keyType, ctPayloadArg(1): valType, ctPayloadArg(0, isRare = false): keyType, ctPayloadArg(1, isRare = false): valType, ctKey(isRare = true): primitiveToClass(keyType), ctVal(isRare = true): primitiveToClass(valType), ctNode(): generic("<AbstractNode(ds)><GenericsStr(dataStructureToTupleTypeList(ds, [keyType, valType]))>")),
+		map[ContentType, Type] ct2type = (
+			ctPayloadArg(0): keyType, 
+			ctPayloadArg(1): valType, 
+			ctPayloadArg(0, isRare = false): keyType, 
+			ctPayloadArg(1, isRare = false): valType, 
+			ctKey(isRare = true): primitiveToClass(keyType), // object()
+			ctVal(isRare = true): primitiveToClass(valType)(), // object() 
+			ctNode(): generic("<AbstractNode(ds)><GenericsStr(dataStructureToTupleTypeList(ds, [keyType, valType]))>")),
 					
 		Argument BIT_PARTITION_SIZE = field(primitive("int"), "BIT_PARTITION_SIZE"), 
 				
