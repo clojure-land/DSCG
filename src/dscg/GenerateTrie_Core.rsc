@@ -174,8 +174,10 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	
 	<impl(ts, core(immutable()), transformHashCode())>
 
-	<impl(ts, core(immutable()), containsKey())>
-	<impl(ts, core(immutable()), containsKey(customComparator = true))>
+	<impl(ts, core(immutable()), containsKey(isRare = false, customComparator = false))>
+	<impl(ts, core(immutable()), containsKey(isRare = false, customComparator = true))>
+	<impl(ts, core(immutable()), containsKey(isRare = true, customComparator = false))>
+	<impl(ts, core(immutable()), containsKey(isRare = true, customComparator = true))>	
 
 	<impl(ts, core(immutable()), containsValue())>
 	<impl(ts, core(immutable()), containsValue(customComparator = true))>
@@ -188,6 +190,8 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 
 	<impl(ts, core(immutable()), insertTuple(false, false))>
 	<impl(ts, core(immutable()), insertTuple(false, true))>
+	<impl(ts, core(immutable()), insertTuple(true, false))>
+	<impl(ts, core(immutable()), insertTuple(true, true))>	
 
 	<impl(ts, core(immutable()), insertCollection())>
 	<impl(ts, core(immutable()), insertCollection(customComparator = true))>

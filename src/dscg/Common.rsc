@@ -493,7 +493,7 @@ data TrieSpecifics
 	= undefinedTrieSpecifics()
 	| ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound, Type keyType = generic("K"), Type valType = generic("V"), str classNamePostfix = "", rel[Option,bool] setup = {}, Model model = model(), 
 					
-		map[ContentType, Type] ct2type = (ctPayloadArg(0): keyType, ctPayloadArg(1): valType, ctPayloadArg(0, isRare = false): keyType, ctPayloadArg(1, isRare = false): valType, ctKey(isRare = true): object(), ctVal(isRare = true): object(), ctNode(): generic("<AbstractNode(ds)><GenericsStr(dataStructureToTupleTypeList(ds, [keyType, valType]))>")),
+		map[ContentType, Type] ct2type = (ctPayloadArg(0): keyType, ctPayloadArg(1): valType, ctPayloadArg(0, isRare = false): keyType, ctPayloadArg(1, isRare = false): valType, ctKey(isRare = true): primitiveToClass(keyType), ctVal(isRare = true): primitiveToClass(valType), ctNode(): generic("<AbstractNode(ds)><GenericsStr(dataStructureToTupleTypeList(ds, [keyType, valType]))>")),
 					
 		Argument BIT_PARTITION_SIZE = field(primitive("int"), "BIT_PARTITION_SIZE"), 
 				
@@ -1729,32 +1729,91 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNo
 
 
 
+data PredefOp = containsKey(bool isRare = false, bool customComparator = false);
 
-data PredefOp = containsKey(bool customComparator = false);
+@memo Method getDef(TrieSpecifics ts, Artifact artifact:core(_), op:containsKey()) {
+	
+	str methodName = "";
 
-Method getDef(TrieSpecifics ts, Artifact artifact:core(_), containsKey(customComparator = false))
-	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>", args = [ __labeledArgument(payloadTuple(), ts.stdObjectArg) ], visibility = "public", isActive = true);
-//when core(_) := artifact || unknownArtifact() := artifact;
+	switch (op.customComparator) {
+		case true: methodName = "<containsKeyMethodName(ts.ds)>Equivalent";
+		case _:    methodName = "<containsKeyMethodName(ts.ds)>";
+	}
 
-Method getDef(TrieSpecifics ts, Artifact artifact:core(_), containsKey(customComparator = true))
-	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>Equivalent", args = [ __labeledArgument(payloadTuple(), ts.stdObjectArg), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()));
-//when core(_) := artifact || unknownArtifact() := artifact;
+	/*******/
+	
+	list[Argument] argsBuilder = [];
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), containsKey(customComparator = false))
-	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>", args = [ key(ts.keyType), ts.keyHash, ts.shift ]);
+	if (op.isRare) { 
+		argsBuilder += __labeledArgument(payloadTuple(), ts.stdObjectArg);
+	} else {
+		argsBuilder += __labeledArgument(payloadTuple(), key(ts.keyType));
+	}
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), containsKey(customComparator = true))
-	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>", args = [ key(ts.keyType), ts.keyHash, ts.shift, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()));
+	if (op.customComparator) {
+		argsBuilder += ts.comparator;
+	}
+	
+	/*******/
+	
+	return method(\return(primitive("boolean")), methodName, args = argsBuilder, visibility = "public");
+}
 
 str containsKeyMethodName(DataStructure ds:\set()) = "contains";
-default str containsKeyMethodName(DataStructure _) = "containsKey"; 
+default str containsKeyMethodName(DataStructure _) = "containsKey";
+
+@memo Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), op:containsKey()) {
+	
+	str methodName = "";
+
+	switch (op.customComparator) {
+		case true: methodName = "<containsKeyMethodName(ts.ds)>Equivalent";
+		case _:    methodName = "<containsKeyMethodName(ts.ds)>";
+	}
+
+	/*******/
+	
+	list[Argument] argsBuilder = [ content(ts, ctPayloadArg(0, isRare = op.isRare)), ts.keyHash, ts.shift ];
+
+	if (op.customComparator) {
+		argsBuilder += ts.comparator;
+	}
+	
+	/*******/
+	
+	return method(\return(primitive("boolean")), methodName, args = argsBuilder);
+}
+
+//Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), containsKey(customComparator = false))
+//	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>", args = [ key(ts.keyType), ts.keyHash, ts.shift ]);
+//
+//Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), containsKey(customComparator = true))
+//	= method(\return(primitive("boolean")), "<containsKeyMethodName(ts.ds)>", args = [ key(ts.keyType), ts.keyHash, ts.shift, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()));
 
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsKey())  = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsKey()) = 
+
+//str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsKey(isRare = true)) = 
+//	"try {
+//		<toString(UNCHECKED_ANNOTATION())>
+//		<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
+//		return rootNode.<toString(call(getDef(ts, trieNode(abstractNode()), op), 
+//					argsOverride = (ts.keyHash: keyHashExpr, ts.shift: constant(ts.shift.\type, "0"))))>;
+//	} catch (ClassCastException unused) {
+//		return false;
+//	}"
+//when keyHashExpr := call(
+//						getDef(ts, artifact, transformHashCode()), 
+//						labeledArgsOverride = (
+//							PredefArgLabel::hashCode(): 
+//								hashCodeExpr(ts, key(ts.keyType))
+//						)
+//					);
+
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsKey(isRare = true)) = 
 	"try {
 		<toString(UNCHECKED_ANNOTATION())>
-		<dec(key(ts.keyType))> = (<typeToString(ts.keyType)>) o;
-		return rootNode.<toString(call(getDef(ts, trieNode(abstractNode()), containsKey(customComparator = op.customComparator)), 
+		<dec(content(ts, ctPayloadArg(0, isRare = true)))> = (<typeToString(ts.ct2type[ctPayloadArg(0, isRare = true)])>) o;
+		return rootNode.<toString(call(getDef(ts, trieNode(abstractNode()), op), 
 					argsOverride = (ts.keyHash: keyHashExpr, ts.shift: constant(ts.shift.\type, "0"))))>;
 	} catch (ClassCastException unused) {
 		return false;
@@ -1763,9 +1822,20 @@ when keyHashExpr := call(
 						getDef(ts, artifact, transformHashCode()), 
 						labeledArgsOverride = (
 							PredefArgLabel::hashCode(): 
-								hashCodeExpr(ts, key(ts.keyType))
+								hashCodeExpr(ts, content(ts, ctPayloadArg(0, isRare = true)))
 						)
 					);
+					
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsKey(isRare = false)) = 
+	"return rootNode.<toString(call(getDef(ts, trieNode(abstractNode()), op), 
+					argsOverride = (ts.keyHash: keyHashExpr, ts.shift: constant(ts.shift.\type, "0"))))>;"
+when keyHashExpr := call(
+						getDef(ts, artifact, transformHashCode()), 
+						labeledArgsOverride = (
+							PredefArgLabel::hashCode(): 
+								hashCodeExpr(ts, content(ts, ctPayloadArg(0, isRare = false)))
+						)
+					);					
 
 // previously used arguments (int n, int m)
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:containsKey(), 
@@ -1843,11 +1913,14 @@ when rootNode := jdtToVal(abstractNode(ts), "rootNode");
 
 data PredefOp = insertTuple(bool isRare, bool customComparator);
 
-Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), insertTuple(isRare:_, customComparator:false))
-	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, artifact)>", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true);
+//Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), insertTuple(isRare:_, customComparator:false))
+//	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, artifact)>", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true);
 
-Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), insertTuple(isRare:_, customComparator:true))
-	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, artifact)>Equivalent", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()));
+Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp op:insertTuple(isRare:_, customComparator:false))
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, artifact)>", args = [ labeledArgumentList(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)) ], visibility = "public", isActive = true);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp op:insertTuple(isRare:_, customComparator:true))
+	= method(\return(expandedExactBoundCollectionType(ts.ds, ts.tupleTypes, immutable())), "<insertTupleMethodName(ts.ds, artifact)>Equivalent", args = [ labeledArgumentList(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts.setup, methodsWithComparator()));
 
 Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), insertTuple(isRare:_, customComperator:false))
 	= method(\return(primitive("boolean")), "<insertTupleMethodName(ts.ds, artifact)>", args = [ labeledArgumentList(payloadTuple(), mapper(payloadTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true)
@@ -1881,7 +1954,7 @@ bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:ins
 
 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:insertTuple(isRare:_, customComparator:_),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) =
-	"<dec(ts.keyHash)> = key.hashCode();
+	"<dec(ts.keyHash)> = <hashCode(content(ts, ctPayloadArg(0, isRare = op.isRare)))>;
 	<dec(ts.details)> = <ts.ResultStr>.unchanged();
 
 	<dec(\inode(ts.ds, ts.tupleTypes, "newRootNode"))> = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), insertTuple(op.isRare, op.customComparator)), 
@@ -3511,6 +3584,8 @@ data PredefOp = getContent(ContentType ct);
 // PredefOp getKey() = getContent(ctKey());
 
 
+
+bool isPredefOpActive(TrieSpecifics ts, PredefOp op) = false when op has customComparator && op.customComparator && !isOptionEnabled(ts.setup, methodsWithComparator());
 
 bool isPredefOpActive(TrieSpecifics ts, PredefOp op) = false when op has isRare && op.isRare && !isOptionEnabled(ts.setup, useHeterogeneousEncoding());
 bool isPredefOpActive(TrieSpecifics ts, PredefOp op:getContent(ContentType ct)) = isOptionEnabled(ts.setup, useHeterogeneousEncoding()) when ct has isRare && ct.isRare;

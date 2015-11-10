@@ -28,8 +28,10 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 
 	isAllowedToEdit(),
 
-	containsKey(),
-	containsKey(customComparator = true),
+	containsKey(isRare = false, customComparator = false),
+	containsKey(isRare = false, customComparator = true),
+	containsKey(isRare = true, customComparator = false),
+	containsKey(isRare = true, customComparator = true),		
 
 	get(),
 	get(customComparator = true),

@@ -1079,7 +1079,9 @@ list[PredefOp] declaredMethodsByCompactNode = [
 	isRare2(),
 	isRareBitpos(),
 	
-	getKeyFunction(),
+	// OLD: getKeyFunction(),
+	getContentFunction(ctPayloadArg(0, isRare = false)),
+	getContentFunction(ctPayloadArg(0, isRare = true)),
 	getNodeFunction(),
 	
 	contentTypeEnum(),
@@ -2233,23 +2235,44 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 
-data PredefOp = getKeyFunction();
+//data PredefOp = getKeyFunction();
+//
+//Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), getKeyFunction())
+//	= function(\return(ts.keyType), "getKey", generics = ts.tupleTypes, args = [classArgumentWithUpperBoundCompactNode(ts, "clazz"), jdtToVal(compactNode(ts), "instance"), ts.index], isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+//
+//bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getKeyFunction())
+//	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+//
+//str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getKeyFunction()) = 
+//	"// TODO: remove try / catch and throw SecurityException instead
+//	'try {
+//	'	long keyOffset = arrayBase + (TUPLE_LENGTH * addressSize) * index;
+//	'	return (<typeToString(ts.keyType)>) unsafe.getObject(instance, keyOffset);
+//	'} catch (SecurityException e) {
+//	'	throw new RuntimeException(e);
+//	'}"
+//when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), getKeyFunction())
-	= function(\return(ts.keyType), "getKey", generics = ts.tupleTypes, args = [classArgumentWithUpperBoundCompactNode(ts, "clazz"), jdtToVal(compactNode(ts), "instance"), ts.index], isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getKeyFunction())
+data PredefOp = getContentFunction(ContentType ct);
+
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp op:getContentFunction(ct:ctPayloadArg(0)))
+	= function(\return(ts.ct2type[ct]), "<contentAccessorMethodName(ct)>", generics = ts.tupleTypes, args = [classArgumentWithUpperBoundCompactNode(ts, "clazz"), jdtToVal(compactNode(ts), "instance"), ts.index], isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+
+bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:getContentFunction(ct:ctPayloadArg(0)))
 	= true when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getKeyFunction()) = 
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:getContentFunction(ct:ctPayloadArg(0))) = 
 	"// TODO: remove try / catch and throw SecurityException instead
+	// TODO: generate global offset for begin of rare payload
 	'try {
-	'	long keyOffset = arrayBase + (TUPLE_LENGTH * addressSize) * index;
-	'	return (<typeToString(ts.keyType)>) unsafe.getObject(instance, keyOffset);
+	'	long keyOffset = arrayBase <if (ct.isRare) {>+ (TUPLE_LENGTH * 4 * instance.payloadArity()) <}>+ (TUPLE_LENGTH * addressSize) * index;
+	'	return (<typeToString(ts.ct2type[ct])>) unsafe.<unsafeGetMethodNameFromType(ts.ct2type[ct])>(instance, keyOffset);
 	'} catch (SecurityException e) {
 	'	throw new RuntimeException(e);
 	'}"
 when isOptionEnabled(ts.setup, useSunMiscUnsafe());
+
 
 
 // data PredefOp = getContent(ContentType ct);
@@ -2653,7 +2676,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compac
 	"return slotArity() != 0;";
 	
 	
-data PredefOp = containsKey();	
+// data PredefOp = containsKey();	
 	
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:containsKey(), str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
 
@@ -2680,7 +2703,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	'return false;"
 when !isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:containsKey(),
+str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:containsKey(isRare = bool isRareCase),
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
 	"<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> instance = this;
 	Class\<? extends <CompactNode(ts.ds)>\> clazz = instance.getClass();
@@ -2702,11 +2725,11 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 				return ((<hashCollisionNode(ts).typeName><GenericsStr(ts.tupleTypes)>) nestedInstance).containsKey(key, keyHash, 0);
 			}					
 		} else {
-			<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = instance.<use(valmapMethod)>;
-			// <dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "dataMap"))> = unsafe.<unsafeGetMethodNameFromType(chunkSizeToPrimitive(ts.bitPartitionSize))>(instance, globalDataMapOffset);
-			if (<isBitInBitmap("dataMap", "bitpos")>) {
-				final int index = index(dataMap, mask, bitpos);
-				return <eq(key(ts.keyType, "getKey(clazz, instance, index)"), key(ts.keyType))>;
+			<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), bitmapName(ctKey(isRare = isRareCase))))> = instance.<bitmapAccessor(ctKey(isRare = isRareCase))>;
+			// <dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), bitmapName(ctKey(isRare = isRareCase))))> = unsafe.<unsafeGetMethodNameFromType(chunkSizeToPrimitive(ts.bitPartitionSize))>(instance, globalDataMapOffset);
+			if (<isBitInBitmap(bitmapName(ctKey(isRare = isRareCase)), "bitpos")>) {
+				final int index = index(<bitmapName(ctKey(isRare = isRareCase))>, mask, bitpos);
+				return <eq(content(ts, ctKey(isRare = isRareCase), "get<if (isRareCase) {>Rare<}>Key(clazz, instance, index)"), content(ts, ctKey(isRare = isRareCase)))>;
 			} else {
 				return false;
 			}
@@ -2714,7 +2737,26 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()),
 	}"
 when isOptionEnabled(ts.setup, useSunMiscUnsafe());
 	
-	
+/* 
+		"
+		'// check for inplace <if (isRareCase) {>(rare) <}>value
+		'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), bitmapName(ctKey(isRare = isRareCase))))> = <bitmapAccessor(ctKey(isRare = isRareCase))>;
+		'if (<isBitInBitmap(bitmapName(ctKey(isRare = isRareCase)), "bitpos")>) {
+		'	<dec(field(primitive("int"), "<bitmapPrefix(ctPayloadTuple(isRare = isRareCase))>Index"))> = index(<bitmapName(ctKey(isRare = isRareCase))>, mask, bitpos);
+		'	<dec(content(ts, ctKey(isRare = isRareCase), "currentKey"))> = <contentAccessor(ctKey(isRare = isRareCase), "<bitmapPrefix(ctPayloadTuple(isRare = isRareCase))>Index")>;
+		'
+		'	<if (op.isRare == isRareCase) {>
+		'	if (<selectEq(op)(content(ts, ctKey(isRare = isRareCase), "currentKey"), content(ts, ctKey(isRare = isRareCase)))>) {
+		'		<updatedOn_KeysEqual(ts, artifact, op, isRareCase)>				
+		'	} else {
+		'		<updatedOn_KeysDifferent(ts, artifact, op, isRareCase)>					
+		'	}
+		'	<} else {>
+		'	<updatedOn_KeysDifferent(ts, artifact, op, isRareCase)>
+		'	<}>
+		'}
+		";
+*/	
 	
 	
 	
