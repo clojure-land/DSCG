@@ -490,13 +490,21 @@ when isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, 
 
 
 
-str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndRemoveValue(), str m = "payloadArity()", str n = "nodeArity()")
-	= generate_copyAnd_dstClass_string("<m> - 1", n)
-when isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, unsafeCodeAsData());
-
-// TODO: introduce default
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndSetValue(bool isRare), str m = "payloadArity()", str n = "nodeArity()")
 	= generate_copyAnd_dstClass_string(m, n)
+when isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, unsafeCodeAsData()) && !isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndSetValue(bool isRare), str m = "payloadArity()", str n = "untypedSlotArity()")
+	= generate_copyAnd_dstClass_string(m, n)
+when isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, unsafeCodeAsData()) && isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+
+
+
+
+
+
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndRemoveValue(), str m = "payloadArity()", str n = "nodeArity()")
+	= generate_copyAnd_dstClass_string("<m> - 1", n)
 when isOptionEnabled(ts.setup, useSunMiscUnsafe()) && isOptionEnabled(ts.setup, unsafeCodeAsData());
 
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromNodeToInline(), str m = "payloadArity()", str n = "nodeArity()")

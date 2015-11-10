@@ -89,6 +89,7 @@ void doGenerateHeterogeneous() {
 	
 	doGenerate(hashTrieConfig(\map(), 3, [primitive("int"), primitive("int")], heterogeneousSpecializationConfig(8)), overideClassNamePostfixWith = "Heterogeneous_BleedingEdge");
 
+	// doGenerate(hashTrieConfig(\map(), 5, [primitive("int"), primitive("int")], heterogeneousSpecializationConfig(32)), overideClassNamePostfixWith = "5Bits_Heterogeneous_BleedingEdge");
 }
 
 void doGenerateMapAsSetOfTuples() {	
