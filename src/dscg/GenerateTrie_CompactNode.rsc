@@ -90,7 +90,12 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeMap()) = isOptionEnabled(ts.setup, useHeterogeneousEncoding());
 
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::nodeMap())
-	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), exprFromString("rawMap1() ^ rareMap()")), isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
+	= result(maskAndNarrowBitmapCast(ts, exprFromString("rawMap1() ^ rareMap()")), isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
+
+Expression maskAndNarrowBitmapCast(TrieSpecifics ts, Expression sourceExpression) = maskAndNarrowPrimitiveCast(
+	sourceExpression,
+	integerOrLongPrimitiveType(ts.bitPartitionSize),
+	chunkSizeToPrimitive(ts.bitPartitionSize));
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::nodeMap())
 	= property(ts.bitmapField, ts.bitmapField.name, isStateful = true, isConstant = false, hasGetter = true, initializeAtConstruction = true, isActive = !isOptionEnabled(ts.setup, useHeterogeneousEncoding()))
@@ -114,7 +119,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::dataMap()) = isOptionEnabled(ts.setup, useHeterogeneousEncoding());
 
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::dataMap())
-	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), exprFromString("rawMap2() ^ rareMap()")), isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
+	= result(maskAndNarrowBitmapCast(ts, exprFromString("rawMap2() ^ rareMap()")), isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::dataMap())
 	= property(ts.valmapField, ts.valmapField.name, isStateful = true, isConstant = false, hasGetter = true, initializeAtConstruction = true, isActive = !isOptionEnabled(ts.setup, useHeterogeneousEncoding()))
@@ -193,8 +198,7 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), Prede
 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::rareMap()) = true;
 
 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::rareMap())
-	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), exprFromString("rawMap1() & rawMap2()")), isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
-
+	= result(maskAndNarrowBitmapCast(ts, exprFromString("rawMap1() & rawMap2()")), isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()));
 
 data PredefOp = nodeIndex();
 
@@ -1668,7 +1672,7 @@ when \map(multi = true) := ts.ds;
 
 
 // TODO: move
-@memo str (Argument, Argument) selectEq(PredefOp op) = op has customComparator && op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments;
+str (Argument, Argument) selectEq(PredefOp op) = op has customComparator && op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments;
 
 // data PredefOp = insertTuple(bool isRare, bool customComparator);
 
@@ -1996,7 +2000,7 @@ str unsafeGetMethodNameFromType(Type \type) = unsafePrefixedMethodNameFromType("
 str unsafePutMethodNameFromType(Type \type) = unsafePrefixedMethodNameFromType("put", concretePrimitiveOrObject(\type));
 str unsafePrefixedMethodNameFromType(str prefix, Type \type) = "<prefix><capitalize(typeToString(\type))>"; 
 
-@memo Type concretePrimitiveOrObject(Type \type:___primitive(str _)) = \type;
+Type concretePrimitiveOrObject(Type \type:___primitive(str _)) = \type;
 default Type concretePrimitiveOrObject(Type _) = object();
 
 Expression generate_bodyOf_factoryMethod_bitmap(int n:0, int m:0, TrieSpecifics ts, Method decleration) 

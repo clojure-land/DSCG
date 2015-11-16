@@ -165,6 +165,7 @@ str printNonEmptyCommentWithNewline(str commentText) {
 	
 data Expression(str commentText = "")
 	= cast(Type \type, Expression e)
+	| maskAndNarrowPrimitiveCast(Expression source, Type sourceType, Type targetType) // TODO: remove legacy 'useSafeUnsigned' 
 	| bitwiseOr (Expression x, Expression y)
 
 	| mul (Expression l, Expression r)
@@ -194,6 +195,8 @@ Expression lconst(int i) = constant(primitive("long"), "<i>L");
 Expression iconst(int i) = constant(primitive("int"), "<i>");
 Expression bconst(int i) = cast(primitive("byte"), iconst(i));
 Expression boolean(bool b) = constant(primitive("boolean"), "<b>");
+
+Expression hexiconst(str i) = constant(primitive("int"), "<i>");
 
 data Expression = binaryLiteral(int i);
 Expression binaryLiteral(str s) = binaryLiteral(parseInt(s, 2));
@@ -229,6 +232,9 @@ data Expression = bitwiseXor(Expression x, Expression y);
 Expression bitwiseXor([]) = emptyExpression();
 Expression bitwiseXor([Expression e]) = e;
 Expression bitwiseXor([Expression head, *Expression tail]) = ( head | bitwiseXor(it, e)  | e <- tail);
+
+data Expression = bitwiseAnd(Expression x, Expression y);
+
 
 //default Expression bitwiseXor(e) { throw "Ahhh <e>"; }
 
@@ -633,7 +639,7 @@ data Position // TODO: finish!
 	| positionBitmap()
 	;
 
-@memo bool isOptionEnabled(rel[Option,bool] setup, Option \o) { 
+bool isOptionEnabled(rel[Option,bool] setup, Option \o) { 
 	if ({_*, <\o, b>} := setup) {
 		return b;
 	} else {
@@ -644,10 +650,10 @@ data Position // TODO: finish!
 /*
  * Rewrite Rules
  */ 
-@memo Type primitive(str \type:"byte", bool isArray = false)  = ___primitive(\type, isArray=isArray);
-@memo Type primitive(str \type:"short", bool isArray = false) = ___primitive(\type, isArray=isArray);
-@memo Type primitive(str \type:"int", bool isArray = false)   = ___primitive(\type, isArray=isArray);
-@memo Type primitive(str \type:"long", bool isArray = false)  = ___primitive(\type, isArray=isArray);
+Type primitive(str \type:"byte", bool isArray = false)  = ___primitive(\type, isArray=isArray);
+Type primitive(str \type:"short", bool isArray = false) = ___primitive(\type, isArray=isArray);
+Type primitive(str \type:"int", bool isArray = false)   = ___primitive(\type, isArray=isArray);
+Type primitive(str \type:"long", bool isArray = false)  = ___primitive(\type, isArray=isArray);
 default Type primitive(str _, bool _) { throw "Ahhh"; }
 
 Type asArray(unknown(isArray = false)) = unknown(isArray = true);
@@ -724,12 +730,15 @@ Argument ___bitposMethod(int bitPartitionSize) = getter(chunkSizeToPrimitive(bit
 
 public Argument thisMutator = field(specific("Void"), "null");
 
-@memo Type chunkSizeToPrimitive(int _:1) = primitive("byte");
-@memo Type chunkSizeToPrimitive(int _:2) = primitive("byte");
-@memo Type chunkSizeToPrimitive(int _:3) = primitive("byte");
-@memo Type chunkSizeToPrimitive(int _:4) = primitive("short");
-@memo Type chunkSizeToPrimitive(int _:5) = primitive("int");
-@memo Type chunkSizeToPrimitive(int _:6) = primitive("long");
+Type chunkSizeToPrimitive(int _:1) = primitive("byte");
+Type chunkSizeToPrimitive(int _:2) = primitive("byte");
+Type chunkSizeToPrimitive(int _:3) = primitive("byte");
+Type chunkSizeToPrimitive(int _:4) = primitive("short");
+Type chunkSizeToPrimitive(int _:5) = primitive("int");
+Type chunkSizeToPrimitive(int _:6) = primitive("long");
+
+Type integerOrLongPrimitiveType(int _:6) = primitive("long");
+Type integerOrLongPrimitiveType(int _:n) = primitive("int") when n > 0 && n < 6;
 
 str chunkSizeToObject(int _:1) = "java.lang.Byte";
 str chunkSizeToObject(int _:2) = "java.lang.Byte";
@@ -747,6 +756,34 @@ str useSafeUnsigned(Argument a) = "(int)(<use(a)> & 0xFFFF)" when a has \type &&
 str useSafeUnsigned(Argument a) = "<use(a)>"                 when a has \type && a.\type == primitive("int");
 str useSafeUnsigned(Argument a) = "<use(a)>" when a has \type && a.\type == primitive("long");
 default str useSafeUnsigned(Argument a) { throw "ahhh"; }
+
+
+Expression sourceToTargetMask(Expression source, Type sourceType, Type targetType:primitive("byte")) 
+	= binaryAnd(source, iconst("0xFF"));
+	
+Expression sourceToTargetMask(Expression source, Type sourceType, Type targetType) 
+	= bitwiseAnd(source, hexiconst("0xFF"))
+when targetType == primitive("byte");	
+	
+Expression sourceToTargetMask(Expression source, Type sourceType, Type targetType) 
+	= bitwiseAnd(source, hexiconst("0xFFFF"))
+when targetType == primitive("short");
+
+default Expression sourceToTargetMask(Expression source, Type sourceType, Type targetType) 
+	= source;
+
+//default Expression sourceToTargetMask(Expression source, Type sourceType, Type targetType) {
+//	throw print("<source>\n<sourceType>\n<targetType>");
+//}
+
+str eval(Expression e) =
+	"(<typeToString(e.targetType)>) (<eval(sourceToTargetMask(e.source, e.sourceType, e.targetType))>)"
+when e is maskAndNarrowPrimitiveCast;
+
+str toString(Expression e) =
+	"(<typeToString(e.targetType)>) (<toString(sourceToTargetMask(e.source, e.sourceType, e.targetType))>)"
+when e is maskAndNarrowPrimitiveCast;
+
 
 str hashCode(Argument a) = primitiveHashCode(a) when isPrimitive(a.\type);
 default str hashCode(Argument a) = "<use(a)>.hashCode()";
@@ -857,6 +894,14 @@ when e is bitwiseOr;
 str eval(Expression e) = 
 	"<eval(e.x)> ^ <eval(e.y)>"
 when e is bitwiseXor;
+
+str eval(Expression e) = 
+	"<eval(e.x)> & <eval(e.y)>"
+when e is bitwiseAnd;
+
+str toString(Expression e) = 
+	"<toString(e.x)> & <toString(e.y)>"
+when e is bitwiseAnd;
 
 str eval(Expression e) = 
 	"(<typeToString(e.\type)>) (<eval(e.e)>)"
@@ -1156,8 +1201,8 @@ default list[Expression] substitute(list[Argument] args, map[Argument, Expressio
 default list[&T] liftToList(&T x) = [ x ];
 list[&T] liftToList(list[&T] xs) = xs;
 
-@memo str AbstractNode(DataStructure ds) = "Abstract<toString(ds)>Node";
-@memo str CompactNode(DataStructure ds) = "Compact<toString(ds)>Node";
+str AbstractNode(DataStructure ds) = "Abstract<toString(ds)>Node";
+str CompactNode(DataStructure ds) = "Compact<toString(ds)>Node";
 
 str GenericsStr(list[Type] tupleTypes:/generic(_)) = 
 	"\<<intercalate(", ", mapper(genericTypes, typeToString))>\>"
@@ -1738,7 +1783,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNo
 
 data PredefOp = containsKey(bool isRare = false, bool customComparator = false);
 
-@memo Method getDef(TrieSpecifics ts, Artifact artifact:core(_), op:containsKey()) {
+Method getDef(TrieSpecifics ts, Artifact artifact:core(_), op:containsKey()) {
 	
 	str methodName = "";
 
@@ -1769,7 +1814,7 @@ data PredefOp = containsKey(bool isRare = false, bool customComparator = false);
 str containsKeyMethodName(DataStructure ds:\set()) = "contains";
 default str containsKeyMethodName(DataStructure _) = "containsKey";
 
-@memo Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), op:containsKey()) {
+Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), op:containsKey()) {
 	
 	str methodName = "";
 
@@ -3378,6 +3423,7 @@ Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 	set[TrieNodeType] allTrieNodeTypes = carrier(refines);
 	rel[TrieNodeType from, PredefOp to] declares = toSet([ *declares(ts, current) | current <- allTrieNodeTypes ]);
 	
+	println("buildLanguageAgnosticModel#crawl [on]");
 	for (current <- allTrieNodeTypes) {		
 		// crawl all available implementations		
 		TrieNodeType top = abstractNode();
@@ -3392,6 +3438,7 @@ Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 		// calculate an order between declares / implements / overrides
 		// TODO
 	}	 
+	println("buildLanguageAgnosticModel#crawl [off]");
 	
 	// TODO: check for every defined method, at least one refinement/implementation
 
@@ -3415,8 +3462,8 @@ set[PredefOp] transitiveOps(
 
 /* redeclares signature? */ 
 bool isRedeclaration(Model m, TrieNodeType nodeType, PredefOp op) {
-	set[TrieNodeType] superTypes = (m.refines+)[nodeType];	
-	set[TrieNodeType] declarationSites = m.declares<1,0>[op];
+	set[TrieNodeType] superTypes = superTypes(m, nodeType);	
+	set[TrieNodeType] declarationSites = declarationSites(m, op);
 
 	return nodeType in declarationSites 
 			&& !isEmpty(superTypes & declarationSites);
@@ -3424,19 +3471,27 @@ bool isRedeclaration(Model m, TrieNodeType nodeType, PredefOp op) {
 
 /* implements of signature that is defined in this or supertype? */
 bool isRealization(Model m, TrieNodeType nodeType, PredefOp op) {
-	set[TrieNodeType] superTypes = (m.refines+)[nodeType];	
-	set[TrieNodeType] declarationSites = m.declares<1,0>[op];
+	set[TrieNodeType] superTypes = superTypes(m, nodeType);	
+	set[TrieNodeType] declarationSites = declarationSites(m, op);
 	
 	return (<nodeType, op> in m.implements)
 			&& !isEmpty(superTypes & declarationSites);
 }
+ 
+set[TrieNodeType] superTypes(Model m, TrieNodeType nodeType) = (m.refines+)[nodeType];
+set[TrieNodeType] declarationSites(Model m, PredefOp op) = m.declares<1,0>[op]; 
  
 data Model
 	= model(
 		rel[TrieNodeType from, TrieNodeType to] refines = {},
 		rel[TrieNodeType from, PredefOp to] declares = {},		
 		rel[TrieNodeType from, PredefOp to] implements = {},
-		rel[loc origin, loc comment] documentation = {}		
+		rel[loc origin, loc comment] documentation = {}
+		,		
+		map[TrieNodeType from, set[TrieNodeType] to] refinesMultimap = toMap(refines),
+		map[TrieNodeType from, set[PredefOp] to] declaresMultimap = toMap(declares),
+		map[TrieNodeType from, set[PredefOp] to] implementsMultimap = toMap(implements),
+		map[loc origin, set[loc] comment] docuentationMultimap = toMap(documentation)		
 	);
 
 rel[TrieNodeType from, TrieNodeType to] staticRefines() = {
@@ -3472,13 +3527,53 @@ list[&T] unique(list[&T] ordered) {
 	return orderedUnique;
 }
 
+//str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType) {
+//	list[str] nestedContent = [];
+//
+//	bool jdtIsAbstract = "abstract" in jdt.modifierList;
+//
+//	// ts.model.declares[nodeType]
+//	for (op <- unique(declares(ts, nodeType)<1> + toList(ts.model.implements[nodeType])), isPredefOpActive(ts, op)) {
+//		if (getDef(ts, trieNode(nodeType), op).isActive) {
+//			str item = "";		
+//			str documentation = getDocumentation(ts, trieNode(nodeType), op);
+//			
+//			if (documentation != "") {
+//				item += "/**<documentation>*/\n";
+//			}
+//			
+//			if (isRealization(ts.model, nodeType, op)) { // isRedeclaration(ts.model, nodeType, op) || 
+//				item += "@Override ";
+//			}
+//			
+//			Method def = getDef(ts, trieNode(nodeType), op);
+//			
+//			if (<nodeType,op> in ts.model.implements) { // && !(property(_,_) := def)
+//				item += impl(ts, trieNode(nodeType), op);
+//			} else {
+//				item += dec(def, asAbstract = jdtIsAbstract);
+//			}
+//			
+//			nestedContent += item;
+//		}
+//	}
+//
+//	return 
+//"<toString(jdt)> {
+//
+//	<for (item <- nestedContent) {>
+//		<item>
+//	<}>
+//}";
+//}
+
 str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType) {
 	list[str] nestedContent = [];
 
 	bool jdtIsAbstract = "abstract" in jdt.modifierList;
 
 	// ts.model.declares[nodeType]
-	for (op <- unique(declares(ts, nodeType)<1> + toList(ts.model.implements[nodeType])), isPredefOpActive(ts, op)) {
+	for (op <- unique(declares(ts, nodeType)<1> + toList(ts.model.implementsMultimap[nodeType])), isPredefOpActive(ts, op)) {
 		if (getDef(ts, trieNode(nodeType), op).isActive) {
 			str item = "";		
 			str documentation = getDocumentation(ts, trieNode(nodeType), op);
@@ -3493,7 +3588,7 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 			
 			Method def = getDef(ts, trieNode(nodeType), op);
 			
-			if (<nodeType,op> in ts.model.implements) { // && !(property(_,_) := def)
+			if (op in ts.model.implementsMultimap[nodeType]) { // && !(property(_,_) := def)
 				item += impl(ts, trieNode(nodeType), op);
 			} else {
 				item += dec(def, asAbstract = jdtIsAbstract);
@@ -3511,7 +3606,6 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 	<}>
 }";
 }
-
 
 default str impl(TrieSpecifics ts, Artifact artifact, PredefOp op) = "";
 
@@ -3548,19 +3642,46 @@ Expression decOrImpl(TrieSpecifics ts, Artifact artifact, PredefOp op) {
 }
 
 
+//@memo Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType), PredefOp op) {
+//	if (/<nodeType, op> := ts.model.declares) {
+//		fail getDef; // no search in type hierarchy necessary
+//	}	
+//		
+//	TrieNodeType currentNodeType = nodeType; 
+//	
+//	while (/op !:= ts.model.declares[currentNodeType]) {
+//		if ({TrieNodeType super, *_} := ts.model.refines[currentNodeType]) {
+//			currentNodeType = super;
+//		}
+//		else {
+//			println(ts.model.declares[currentNodeType]);
+//			throw "Method <op> is neither defined in <nodeType> or any of its base types.";
+//		}
+//	}
+//
+//	return getDef(ts, trieNode(currentNodeType), op);
+//}
+
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType), PredefOp op) {
-	if (/<nodeType, op> := ts.model.declares) {
+	if (nodeType in ts.model.declaresMultimap && op in ts.model.declaresMultimap[nodeType]) {
 		fail getDef; // no search in type hierarchy necessary
-	}	
+	} 
 		
 	TrieNodeType currentNodeType = nodeType; 
 	
-	while (/op !:= ts.model.declares[currentNodeType]) {
-		if ({TrieNodeType super, *_} := ts.model.refines[currentNodeType]) {
+	/*
+		map[TrieNodeType from, set[TrieNodeType] to] refinesMultimap = toMap(refines),
+		map[TrieNodeType from, set[PredefOp] to] declaresMultimap = toMap(declares),
+		map[TrieNodeType from, set[PredefOp] to] implementsMultimap = toMap(implements),
+		map[loc origin, set[loc] comment] documentationMultimap = toMap(documentation)
+	*/
+	
+	while (/op !:= ts.model.declaresMultimap[currentNodeType]) {
+		if ({TrieNodeType super, *_} := ts.model.refinesMultimap[currentNodeType]) {
 			currentNodeType = super;
 		}
 		else {
-			println(ts.model.declares[currentNodeType]);
+			println(ts.model.declaresMultimap[currentNodeType]);
 			throw "Method <op> is neither defined in <nodeType> or any of its base types.";
 		}
 	}
