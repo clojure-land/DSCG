@@ -81,6 +81,8 @@ data Type
 	//| primitiveLong()
 	| primitive(str \type, bool isArray = false)
 	| ___primitive(str \type, bool isArray = false)
+	
+	| typeSequence(list[Type] typeArguments)
 	;
 	
 default Type object(bool isArray = false) = specific("Object", isArray = isArray);	 	
@@ -838,6 +840,10 @@ Argument primitiveToClassArgument(field (\type, name))  = field (primitiveToClas
 Argument primitiveToClassArgument(getter(\type, name))  = getter(primitiveToClass(\type), name);
 /***/
 default Argument primitiveToClassArgument(Argument nonPrimitive) = nonPrimitive;
+
+bool isPrimitive(Type ts) 
+	= ( true | it && isPrimitive(t) | t <- ts.typeArguments ) 
+when ts is typeSequence;
 
 bool isPrimitive(Type \type) = true when ___primitive(_) := \type;
 default bool isPrimitive(Type _) = false;
@@ -3765,41 +3771,119 @@ data Direction
 // TODO: create 'either' type
 // TODO: create 'strategies' for merging slices (e.g., based on IDs)
 data Partition
-	= slice(str id, ContentType contentType, list[Type] itemTypeList, Direction direction = forward())
-	| strip(str id, Type itemType, list[Partition] sliceList); 
+	= slice(str id, ContentType contentType, Type itemType, Direction direction = forward())
+	| strip(str id, Type itemType, Direction direction, list[Partition] sliceList); 
 	
 /*
 	Example:
-		slice("payload", ctPayloadTuple(), [ primitive("int"), primitive("byte") ])
+		slice("payload", ctPayloadTuple(), [ primitive("int"), primitive("int") ])
 	
 	typedPayload | typedNodes
 	untypedPayload | untypedNodes
 	[...]	
-	typedPayload | typedRarePayload | typedNodes
+	typedPayload | typedRarePayload | typedNodes			pp(simplify(pscene_untypedPayload_untypedRarePayload_untypedNodes(), psStrip({ "payload", "node" })))
 	typedPayload | untypedRarePayload | untypedNodes
 	untypedPayload | untypedRarePayload | untypedNodes	
 */	
 
-data PartitionStrategy =
-	psStrip(set[str] idSet);
+//str pp(list[Partition] partitionList) = ( "" | it + pp(e) | e <- partitionList );
+//str pp(list[Partition] partitionList) = toString([ pp(e) | e <- partitionList ]); 
+str pp(list[Partition] partitionList) = intercalate(" ++ ", [ pp(e) | e <- partitionList ]);
+
+str pp(Partition::slice(str id, ContentType contentType, Type itemType)) 
+	= "slice(<id>)"; 
+
+str pp(Partition::strip(str _, Type itemType, Direction direction, list[Partition] sliceList)) 
+	= "strip(<id>)"
+when id := intercalate("+", [ e.id | e <- sliceList ]); 
 	
-list[Partition] pscene01() = [
-		slice("payload", ctPayloadTuple(), [ primitive("int"), primitive("byte") ]),
-		slice("node", ctNode(), [ specific("Node") ])
+data PartitionStrategy
+	= psStrip(set[str] idSet)
+	| psStripIfReferenceType();
+	// TODO: add boxing strategy
+	// TODO: add strategy to disect either types
+	
+		
+	
+list[Partition] pscene_typedPayload_typedNodes() = [
+		slice("payload", ctPayloadTuple(isRare = false), typeSequence([ primitive("int"), primitive("int") ])),
+		slice("node", ctNode(), specific("Node"), direction = backward())
 	];
+	
+list[Partition] pscene_typedPayload_typedRarePayload_typedNodes() = [
+		slice("payload", ctPayloadTuple(isRare = false), typeSequence([ primitive("int"), primitive("int") ])),
+		slice("rarePayload", ctPayloadTuple(isRare = true), typeSequence([ generic("K"), generic("V") ])),		
+		slice("node", ctNode(), specific("Node"), direction = backward())
+	];
+	
+		
 	
 // Partition mkStrip(Partition::slice p1, Partition p2)
 Partition mkStrip(Partition p1, Partition p2)
-	= strip(id, itemType, [ p1, p2 ], direction = direction)
+	= strip(id, itemType, direction, [ p1, p2 ])
 when p1 is slice && p2 is slice && 
 		id := "<p1.id>+<p2.id>" &&
-		itemType := specific("Object")
-		direction := forward();
+		itemType := mkStripType(p1.itemType, p2.itemType) &&
+		direction := mkStripDirection(p1.direction, p2.direction);
+			
+Partition mkStrip(
+			p1:Partition::strip(str _, Type _, Direction _, list[Partition] _), 
+			p2:Partition::slice(str _, ContentType _, Type _))
+	= strip(id, itemType, direction, [ *p1.sliceList, p2 ])
+when id := "<p1.id>+<p2.id>" &&
+		itemType := mkStripType(p1.itemType, p2.itemType) &&
+		direction := mkStripDirection(p1.direction, p2.direction);		
 	
+Partition mkStrip(Partition p1, Partition p2) = mkStrip(p2, p1) when p1 is slice && p2 is partition;
+
+default Partition mkStrip(Partition p1, Partition p2) { print(
+ 	"<pp(p1)>
+	'<pp(p2)>
+	'<p1>
+	'<p2>");
 	
-list[Partition] simplify(list[Partition] partitionList:[ front*, p1, p2, back* ], set[PartitionStrategy] strategySet) 
+	throw "Ahhh";
+}
+	
+/* calculates the joint Java type (without widening support for primitives) */ 
+Type mkStripType(Type t, t) = t;
+default Type mkStripType(Type _, Type _) = object();
+		
+Direction mkStripDirection(Direction::forward(), Direction::forward()) = Direction::forward();
+Direction mkStripDirection(Direction::forward(), Direction::backward()) = Direction::mixed();
+Direction mkStripDirection(Direction::backward(), Direction::forward()) = Direction::mixed(); 
+Direction mkStripDirection(Direction::backward(), Direction::backward()) = Direction::backward();
+
+
+
+list[Partition] simplify(list[Partition] partitionList) = simplify(partitionList, {}); 
+
+list[Partition] simplify(list[Partition] partitionList, PartitionStrategy strategy) = simplify(partitionList, { strategy }); 
+	
+list[Partition] simplify(list[Partition] partitionList, set[PartitionStrategy] strategySet) {
+	simplifiedPartitionList = partitionList;
+	
+	solve(simplifiedPartitionList) {
+		simplifiedPartitionList = simplifyOne(simplifiedPartitionList, strategySet);
+	}
+	
+	return simplifiedPartitionList;
+}
+
+
+	
+list[Partition] simplifyOne(list[Partition] partitionList:[ *front, p1, p2, *back ], set[PartitionStrategy] strategySet) 
 	= [ *front, mkStrip(p1, p2), *back ]
 when id1 := p1.id && id2 := p2.id && 
-		/strategy:psStrip(idSet:{ id1, id2, _* }) := strategySet;
+		/strategy:psStrip(idSet:{ id1, id2, *_ }) := strategySet;
 		
-list[Partition] simplify(list[Partition] partitionList, set[PartitionStrategy] strategySet) = [];
+list[Partition] simplifyOne(list[Partition] partitionList:[ *front, p1, p2, *back ], set[PartitionStrategy] strategySet) 
+	= [ *front, mkStrip(p1, p2), *back ]
+when isReference(p1.itemType) && isReference(p2.itemType) && 
+		/strategy:psStripIfReferenceType() := strategySet;
+		
+				
+bool isReference(Type t) = !isPrimitive(t);				
+				
+		
+default list[Partition] simplifyOne(list[Partition] partitionList, set[PartitionStrategy] strategySet) = partitionList;
