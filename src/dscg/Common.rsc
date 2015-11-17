@@ -3411,7 +3411,7 @@ Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 	
 	int heterogeneousBound = tupleLength(ts.ds) * ts.nBound;
 	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
-		refines += { <specializedBitmapIndexedNode(n, m), compactHeterogeneousNode()> | m <- [0..ts.nMax+1], n <- [0..heterogeneousBound+1], (n + m) <= heterogeneousBound };
+		refines += { <specializedBitmapIndexedNode(n, m), compactNode()> | m <- [0..ts.nMax+1], n <- [0..heterogeneousBound+1], (n + m) <= heterogeneousBound };
 		//refines += { <specializedBitmapIndexedNode(mn, 0), compactNode()> | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound };
 	}
 	
@@ -3441,6 +3441,12 @@ Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 	println("buildLanguageAgnosticModel#crawl [off]");
 	
 	// TODO: check for every defined method, at least one refinement/implementation
+
+	str statistics =
+		"size(refines) = <size(refines)> 
+		'size(declares) = <size(declares)>
+		'size(implements) = <size(implements)>";
+	print(statistics);
 
 	return model(refines = refines, declares = declares, implements = implements);
 }
@@ -3487,11 +3493,11 @@ data Model
 		rel[TrieNodeType from, PredefOp to] declares = {},		
 		rel[TrieNodeType from, PredefOp to] implements = {},
 		rel[loc origin, loc comment] documentation = {}
-		,		
-		map[TrieNodeType from, set[TrieNodeType] to] refinesMultimap = toMap(refines),
-		map[TrieNodeType from, set[PredefOp] to] declaresMultimap = toMap(declares),
-		map[TrieNodeType from, set[PredefOp] to] implementsMultimap = toMap(implements),
-		map[loc origin, set[loc] comment] docuentationMultimap = toMap(documentation)		
+		//,		
+		//map[TrieNodeType from, set[TrieNodeType] to] refinesMultimap = toMap(refines),
+		//map[TrieNodeType from, set[PredefOp] to] declaresMultimap = toMap(declares),
+		//map[TrieNodeType from, set[PredefOp] to] implementsMultimap = toMap(implements),
+		//map[loc origin, set[loc] comment] docuentationMultimap = toMap(documentation)		
 	);
 
 rel[TrieNodeType from, TrieNodeType to] staticRefines() = {
@@ -3527,53 +3533,13 @@ list[&T] unique(list[&T] ordered) {
 	return orderedUnique;
 }
 
-//str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType) {
-//	list[str] nestedContent = [];
-//
-//	bool jdtIsAbstract = "abstract" in jdt.modifierList;
-//
-//	// ts.model.declares[nodeType]
-//	for (op <- unique(declares(ts, nodeType)<1> + toList(ts.model.implements[nodeType])), isPredefOpActive(ts, op)) {
-//		if (getDef(ts, trieNode(nodeType), op).isActive) {
-//			str item = "";		
-//			str documentation = getDocumentation(ts, trieNode(nodeType), op);
-//			
-//			if (documentation != "") {
-//				item += "/**<documentation>*/\n";
-//			}
-//			
-//			if (isRealization(ts.model, nodeType, op)) { // isRedeclaration(ts.model, nodeType, op) || 
-//				item += "@Override ";
-//			}
-//			
-//			Method def = getDef(ts, trieNode(nodeType), op);
-//			
-//			if (<nodeType,op> in ts.model.implements) { // && !(property(_,_) := def)
-//				item += impl(ts, trieNode(nodeType), op);
-//			} else {
-//				item += dec(def, asAbstract = jdtIsAbstract);
-//			}
-//			
-//			nestedContent += item;
-//		}
-//	}
-//
-//	return 
-//"<toString(jdt)> {
-//
-//	<for (item <- nestedContent) {>
-//		<item>
-//	<}>
-//}";
-//}
-
 str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType) {
 	list[str] nestedContent = [];
 
 	bool jdtIsAbstract = "abstract" in jdt.modifierList;
 
 	// ts.model.declares[nodeType]
-	for (op <- unique(declares(ts, nodeType)<1> + toList(ts.model.implementsMultimap[nodeType])), isPredefOpActive(ts, op)) {
+	for (op <- unique(declares(ts, nodeType)<1> + toList(ts.model.implements[nodeType])), isPredefOpActive(ts, op)) {
 		if (getDef(ts, trieNode(nodeType), op).isActive) {
 			str item = "";		
 			str documentation = getDocumentation(ts, trieNode(nodeType), op);
@@ -3588,7 +3554,7 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 			
 			Method def = getDef(ts, trieNode(nodeType), op);
 			
-			if (op in ts.model.implementsMultimap[nodeType]) { // && !(property(_,_) := def)
+			if (<nodeType,op> in ts.model.implements) { // && !(property(_,_) := def)
 				item += impl(ts, trieNode(nodeType), op);
 			} else {
 				item += dec(def, asAbstract = jdtIsAbstract);
@@ -3606,6 +3572,46 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 	<}>
 }";
 }
+
+//str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType) {
+//	list[str] nestedContent = [];
+//
+//	bool jdtIsAbstract = "abstract" in jdt.modifierList;
+//
+//	// ts.model.declares[nodeType]
+//	for (op <- unique(declares(ts, nodeType)<1> + toList(ts.model.implementsMultimap[nodeType])), isPredefOpActive(ts, op)) {
+//		if (getDef(ts, trieNode(nodeType), op).isActive) {
+//			str item = "";		
+//			str documentation = getDocumentation(ts, trieNode(nodeType), op);
+//			
+//			if (documentation != "") {
+//				item += "/**<documentation>*/\n";
+//			}
+//			
+//			if (isRealization(ts.model, nodeType, op)) { // isRedeclaration(ts.model, nodeType, op) || 
+//				item += "@Override ";
+//			}
+//			
+//			Method def = getDef(ts, trieNode(nodeType), op);
+//			
+//			if (op in ts.model.implementsMultimap[nodeType]) { // && !(property(_,_) := def)
+//				item += impl(ts, trieNode(nodeType), op);
+//			} else {
+//				item += dec(def, asAbstract = jdtIsAbstract);
+//			}
+//			
+//			nestedContent += item;
+//		}
+//	}
+//
+//	return 
+//"<toString(jdt)> {
+//
+//	<for (item <- nestedContent) {>
+//		<item>
+//	<}>
+//}";
+//}
 
 default str impl(TrieSpecifics ts, Artifact artifact, PredefOp op) = "";
 
@@ -3642,52 +3648,52 @@ Expression decOrImpl(TrieSpecifics ts, Artifact artifact, PredefOp op) {
 }
 
 
-//@memo Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType), PredefOp op) {
-//	if (/<nodeType, op> := ts.model.declares) {
-//		fail getDef; // no search in type hierarchy necessary
-//	}	
-//		
-//	TrieNodeType currentNodeType = nodeType; 
-//	
-//	while (/op !:= ts.model.declares[currentNodeType]) {
-//		if ({TrieNodeType super, *_} := ts.model.refines[currentNodeType]) {
-//			currentNodeType = super;
-//		}
-//		else {
-//			println(ts.model.declares[currentNodeType]);
-//			throw "Method <op> is neither defined in <nodeType> or any of its base types.";
-//		}
-//	}
-//
-//	return getDef(ts, trieNode(currentNodeType), op);
-//}
-
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType), PredefOp op) {
-	if (nodeType in ts.model.declaresMultimap && op in ts.model.declaresMultimap[nodeType]) {
+	if (/<nodeType, op> := ts.model.declares) {
 		fail getDef; // no search in type hierarchy necessary
-	} 
+	}	
 		
 	TrieNodeType currentNodeType = nodeType; 
 	
-	/*
-		map[TrieNodeType from, set[TrieNodeType] to] refinesMultimap = toMap(refines),
-		map[TrieNodeType from, set[PredefOp] to] declaresMultimap = toMap(declares),
-		map[TrieNodeType from, set[PredefOp] to] implementsMultimap = toMap(implements),
-		map[loc origin, set[loc] comment] documentationMultimap = toMap(documentation)
-	*/
-	
-	while (/op !:= ts.model.declaresMultimap[currentNodeType]) {
-		if ({TrieNodeType super, *_} := ts.model.refinesMultimap[currentNodeType]) {
+	while (/op !:= ts.model.declares[currentNodeType]) {
+		if ({TrieNodeType super, *_} := ts.model.refines[currentNodeType]) {
 			currentNodeType = super;
 		}
 		else {
-			println(ts.model.declaresMultimap[currentNodeType]);
+			println(ts.model.declares[currentNodeType]);
 			throw "Method <op> is neither defined in <nodeType> or any of its base types.";
 		}
 	}
 
 	return getDef(ts, trieNode(currentNodeType), op);
 }
+
+//Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType), PredefOp op) {
+//	if (nodeType in ts.model.declaresMultimap && op in ts.model.declaresMultimap[nodeType]) {
+//		fail getDef; // no search in type hierarchy necessary
+//	} 
+//		
+//	TrieNodeType currentNodeType = nodeType; 
+//	
+//	/*
+//		map[TrieNodeType from, set[TrieNodeType] to] refinesMultimap = toMap(refines),
+//		map[TrieNodeType from, set[PredefOp] to] declaresMultimap = toMap(declares),
+//		map[TrieNodeType from, set[PredefOp] to] implementsMultimap = toMap(implements),
+//		map[loc origin, set[loc] comment] documentationMultimap = toMap(documentation)
+//	*/
+//	
+//	while (/op !:= ts.model.declaresMultimap[currentNodeType]) {
+//		if ({TrieNodeType super, *_} := ts.model.refinesMultimap[currentNodeType]) {
+//			currentNodeType = super;
+//		}
+//		else {
+//			println(ts.model.declaresMultimap[currentNodeType]);
+//			throw "Method <op> is neither defined in <nodeType> or any of its base types.";
+//		}
+//	}
+//
+//	return getDef(ts, trieNode(currentNodeType), op);
+//}
 
 default Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp op) { throw "Not found <op> in context <artifact> for <ts.ds>"; } // TODO noop
 //Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType), PredefOp op) = getDef(ts, nodeType, op);
@@ -3735,3 +3741,65 @@ bool isPredefOpActive(TrieSpecifics ts, PredefOp op:nodeFactory_Singleton()) = f
 
 // default bool isPredefOpActive(TrieSpecifics ts, PredefOp op) { throw "<op>"; }
 default bool isPredefOpActive(TrieSpecifics ts, PredefOp op) = true;
+
+
+
+
+
+
+int maxUntypedSlotArityCount(TrieSpecifics ts)
+	= tupleLength(ts.ds) * ts.nMax 
+when isOptionEnabled(ts.setup, useHeterogeneousEncoding()); 	
+	
+/*
+	specializedBitmapIndexedNode(mn, m)) | m <- [0..ts.nMax+1], mn <- [0..tupleLength(ts.ds) * (ts.nMax - m)  + 1], (m + mn/2) <= ts.nBound ]
+	
+	int heterogeneousBound = tupleLength(ts.ds) * ts.nBound;
+*/
+
+data Direction 
+	= forward()
+	| backward()
+	| mixed(); // offset, heap/stack
+
+// TODO: create 'either' type
+// TODO: create 'strategies' for merging slices (e.g., based on IDs)
+data Partition
+	= slice(str id, ContentType contentType, list[Type] itemTypeList, Direction direction = forward())
+	| strip(str id, Type itemType, list[Partition] sliceList); 
+	
+/*
+	Example:
+		slice("payload", ctPayloadTuple(), [ primitive("int"), primitive("byte") ])
+	
+	typedPayload | typedNodes
+	untypedPayload | untypedNodes
+	[...]	
+	typedPayload | typedRarePayload | typedNodes
+	typedPayload | untypedRarePayload | untypedNodes
+	untypedPayload | untypedRarePayload | untypedNodes	
+*/	
+
+data PartitionStrategy =
+	psStrip(set[str] idSet);
+	
+list[Partition] pscene01() = [
+		slice("payload", ctPayloadTuple(), [ primitive("int"), primitive("byte") ]),
+		slice("node", ctNode(), [ specific("Node") ])
+	];
+	
+// Partition mkStrip(Partition::slice p1, Partition p2)
+Partition mkStrip(Partition p1, Partition p2)
+	= strip(id, itemType, [ p1, p2 ], direction = direction)
+when p1 is slice && p2 is slice && 
+		id := "<p1.id>+<p2.id>" &&
+		itemType := specific("Object")
+		direction := forward();
+	
+	
+list[Partition] simplify(list[Partition] partitionList:[ front*, p1, p2, back* ], set[PartitionStrategy] strategySet) 
+	= [ *front, mkStrip(p1, p2), *back ]
+when id1 := p1.id && id2 := p2.id && 
+		/strategy:psStrip(idSet:{ id1, id2, _* }) := strategySet;
+		
+list[Partition] simplify(list[Partition] partitionList, set[PartitionStrategy] strategySet) = [];

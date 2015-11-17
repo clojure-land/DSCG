@@ -281,7 +281,7 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
 		innerClassStrings = innerClassStrings + 
 		// [ generateSpecializedBitmapIndexedNodeClassString(ts, specializedBitmapIndexedNode(n, m)) | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound ];
-		[ generateSpecializedBitmapIndexedNodeClassString(ts, specializedBitmapIndexedNode(mn, m)) | m <- [0..ts.nMax+1], mn <- [0..tupleLength(ts.ds) * (ts.nMax - m)  + 1], (m + mn/2) <= ts.nBound ];	
+		[ generateSpecializedBitmapIndexedNodeClassString(ts, specializedBitmapIndexedNode(mn, m)) | m <- [0..ts.nMax+1], mn <- [0..tupleLength(ts.ds) * (ts.nMax - m)  + 1], (m + ceil(mn/2.0)) <= ts.nBound ];	
 		//[ generateSpecializedNodeWithBitmapPositionsClassString(mn, 0, ts, ts.setup, ts.classNamePostfix) | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound ];
 	}	
 	
