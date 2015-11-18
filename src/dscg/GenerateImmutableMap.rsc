@@ -24,13 +24,13 @@ import dscg::Common;
 
 	
 
-bool exists_bodyOf_containsKeyOrVal(0, str(str, str) eq, prefix)  = true;
-str generate_bodyOf_containsKeyOrVal(0, str(str, str) eq, prefix) 
+@index=2 bool exists_bodyOf_containsKeyOrVal(0, str(str, str) eq, prefix)  = true;
+@index=2 str generate_bodyOf_containsKeyOrVal(0, str(str, str) eq, prefix) 
 	= "return false;"
 	;
 
-bool exists_bodyOf_containsKeyOrVal(int n, str(str, str) eq, prefix)  = true;
-str generate_bodyOf_containsKeyOrVal(int n, str(str, str) eq, prefix) 
+@index=2 bool exists_bodyOf_containsKeyOrVal(int n, str(str, str) eq, prefix)  = true;
+@index=2 str generate_bodyOf_containsKeyOrVal(int n, str(str, str) eq, prefix) 
 	= intercalate(" else ", ["if(<eq("<prefix>", "<prefix><i>")>) { return true; }" | i <- [1..n+1]])
 	+ " else { return false; }"
 	;
@@ -38,13 +38,13 @@ str generate_bodyOf_containsKeyOrVal(int n, str(str, str) eq, prefix)
 
 
 
-bool exists_bodyOf_get(0, str(str, str) eq)  = true;
-str generate_bodyOf_get(0, str(str, str) eq) 
+@index=2 bool exists_bodyOf_get(0, str(str, str) eq)  = true;
+@index=2 str generate_bodyOf_get(0, str(str, str) eq) 
 	= "return null;"
 	;
 		
-bool exists_bodyOf_get(int n, str(str, str) eq)  = true;
-str generate_bodyOf_get(int n, str(str, str) eq) 
+@index=2 bool exists_bodyOf_get(int n, str(str, str) eq)  = true;
+@index=2 str generate_bodyOf_get(int n, str(str, str) eq) 
 	= intercalate(" else ", ["if(<eq("<keyName>", "<keyName><i>")>) { return <valName><i>; }" | i <- [1..n+1]])
 	+ " else { return null; }"
 	;
@@ -52,13 +52,13 @@ str generate_bodyOf_get(int n, str(str, str) eq)
 
 
 
-bool exists_bodyOf_put(0, str(str, str) eq) = true;
-str generate_bodyOf_put(0, str(str, str) eq)
+@index=2 bool exists_bodyOf_put(0, str(str, str) eq) = true;
+@index=2 str generate_bodyOf_put(0, str(str, str) eq)
 	= "return mapOf(<keyName>, <valName>);"
 	;
 
-bool exists_bodyOf_put(int n, str(str, str) eq)	 = true;
-str generate_bodyOf_put(int n, str(str, str) eq)	
+@index=2 bool exists_bodyOf_put(int n, str(str, str) eq)	 = true;
+@index=2 str generate_bodyOf_put(int n, str(str, str) eq)	
 	= intercalate(" else ", ["if(<eq("<keyName>", "<keyName><i>")>) { return mapOf(<keyValArgsReplaced(n, i)>); }" | i <- [1..n+1]])
 	+ " else { return mapOf(<keyValArgsUnmodified(n)>, <keyName>, <valName>); }"
 	;
@@ -81,13 +81,13 @@ str keyValArgsRemoved(int n, int j)
 
 
 
-bool exists_bodyOf_remove(0, str(str, str) eq) = true;
-str generate_bodyOf_remove(0, str(str, str) eq)
+@index=2 bool exists_bodyOf_remove(0, str(str, str) eq) = true;
+@index=2 str generate_bodyOf_remove(0, str(str, str) eq)
 	= "return this;"
 	;
 
-bool exists_bodyOf_remove(int n, str(str, str) eq)  = true;
-str generate_bodyOf_remove(int n, str(str, str) eq) 
+@index=2 bool exists_bodyOf_remove(int n, str(str, str) eq)  = true;
+@index=2 str generate_bodyOf_remove(int n, str(str, str) eq) 
 	= intercalate(" else ", ["if(<eq("<keyName>", "<keyName><i>")>) { return mapOf(<keyValArgsRemoved(n, i)>); }" | i <- [1..n+1]])
 	+ " else { return this; }"
 	;
@@ -95,54 +95,54 @@ str generate_bodyOf_remove(int n, str(str, str) eq)
 
 
 
-bool exists_bodyOf_entrySet(0) = true;
-str generate_bodyOf_entrySet(0)
+@index=2 bool exists_bodyOf_entrySet(0) = true;
+@index=2 str generate_bodyOf_entrySet(0)
 	= "return Collections.emptySet();"
 	;
 
-bool exists_bodyOf_entrySet(1) = true;
-str generate_bodyOf_entrySet(1)
+@index=2 bool exists_bodyOf_entrySet(1) = true;
+@index=2 str generate_bodyOf_entrySet(1)
 	= "return Collections.singleton(entryOf(<keyName>1, <valName>1));"
 	;
 
-bool exists_bodyOf_entrySet(int n)  = true;
-str generate_bodyOf_entrySet(int n) 
+@index=2 bool exists_bodyOf_entrySet(int n)  = true;
+@index=2 str generate_bodyOf_entrySet(int n) 
 	= "return AbstractSpecialisedImmutableSet.\<Map.Entry\<K, V\>\> setOf(<for (i <- [1..n+1]) {>entryOf(<keyName><i>, <valName><i>)<if (i != n) {>, <}><}>);"
 	;
 
 
 
 
-bool exists_bodyOf_keySet(0) = true;
-str generate_bodyOf_keySet(0)
+@index=2 bool exists_bodyOf_keySet(0) = true;
+@index=2 str generate_bodyOf_keySet(0)
 	= "return Collections.emptySet();"
 	;
 	
-bool exists_bodyOf_keySet(1) = true;
-str generate_bodyOf_keySet(1)
+@index=2 bool exists_bodyOf_keySet(1) = true;
+@index=2 str generate_bodyOf_keySet(1)
 	= "return Collections.singleton(<keyName>1);"
 	;	
 
-bool exists_bodyOf_keySet(int n)  = true;
-str generate_bodyOf_keySet(int n) 
+@index=2 bool exists_bodyOf_keySet(int n)  = true;
+@index=2 str generate_bodyOf_keySet(int n) 
 	= "return AbstractSpecialisedImmutableSet.setOf(<for (i <- [1..n+1]) {><keyName><i><if (i != n) {>, <}><}>);"
 	;
 
 
 
 
-bool exists_bodyOf_values(0) = true;
-str generate_bodyOf_values(0)
+@index=2 bool exists_bodyOf_values(0) = true;
+@index=2 str generate_bodyOf_values(0)
 	= "return Collections.emptySet();"
 	;
 	
-bool exists_bodyOf_values(1) = true;
-str generate_bodyOf_values(1)
+@index=2 bool exists_bodyOf_values(1) = true;
+@index=2 str generate_bodyOf_values(1)
 	= "return Collections.singleton(<valName>1);"
 	;		
 
-bool exists_bodyOf_values(int n)  = true;
-str generate_bodyOf_values(int n) = 
+@index=2 bool exists_bodyOf_values(int n)  = true;
+@index=2 str generate_bodyOf_values(int n) = 
 	"// TODO: will fail if two values are equals; return listOf(...)
 	'return AbstractSpecialisedImmutableSet.setOf(<for (i <- [1..n+1]) {><valName><i><if (i != n) {>, <}><}>);"
 	;
@@ -150,16 +150,16 @@ str generate_bodyOf_values(int n) =
 
 
 
-bool exists_bodyOf_keyIterator(0) = true;
-str generate_bodyOf_keyIterator(0)
+@index=2 bool exists_bodyOf_keyIterator(0) = true;
+@index=2 str generate_bodyOf_keyIterator(0)
 	= "return EmptySupplierIterator.emptyIterator();"
 	;
 	
 // TODO: bool exists_bodyOf_keyIterator(1) = true;
 // str generate_bodyOf_keyIterator(1) = ???	
 
-bool exists_bodyOf_keyIterator(int n)  = true;
-str generate_bodyOf_keyIterator(int n) = 
+@index=2 bool exists_bodyOf_keyIterator(int n)  = true;
+@index=2 str generate_bodyOf_keyIterator(int n) = 
 	"		return new SupplierIterator\<K, V\>() {
 	'			int cursor = 1;
 	'			boolean hasGet;

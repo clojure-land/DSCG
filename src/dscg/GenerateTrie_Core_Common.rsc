@@ -58,8 +58,8 @@ when \map() := ts.ds;
 default bool exists_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass)  = true;
 default str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass) = "";
 
-bool exists_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass)  = true;
-str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass) =
+@index=2 bool exists_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass)  = true;
+@index=2 str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass) =
 	"Set\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\> keySet = null;
 	'
 	'if (keySet == null) {
@@ -98,8 +98,8 @@ when \map() := ts.ds
 default bool exists_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass)  = true;
 default str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) = "";
 
-bool exists_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass)  = true;
-str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) = 
+@index=2 bool exists_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass)  = true;
+@index=2 str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) = 
 	"Collection\<<typeToString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\> values = null;
 	'
 	'if (values == null) {
@@ -138,8 +138,8 @@ when \map() := ts.ds
 default bool exists_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass)  = true;
 default str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass) = "";	
 	
-bool exists_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass)  = true;
-str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass) = 
+@index=2 bool exists_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass)  = true;
+@index=2 str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass) = 
 	"Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet = null;
 	'
 	'if (entrySet == null) {
@@ -195,8 +195,8 @@ when \map() := ts.ds
 default bool exists_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts)  = true;
 default str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) = ""; // { throw "Ahhh"; } // we don't have lazy evaluation
 
-bool exists_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts)  = true;
-str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) =
+@index=2 bool exists_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts)  = true;
+@index=2 str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) =
 	"Object[] array = new Object[cachedSize];
 	'
 	'int idx = 0;
@@ -211,8 +211,8 @@ when ts.ds == \set()
 default bool exists_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts)  = true;
 default str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) = ""; // { throw "Ahhh"; } // we don't have lazy evaluation
 
-bool exists_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts)  = true;
-str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) =
+@index=2 bool exists_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts)  = true;
+@index=2 str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) =
 	"List<GenericsExpanded(ts.ds, ts.tupleTypes)> list = new ArrayList<GenericsExpanded(ts.ds, ts.tupleTypes)>(cachedSize);
 	'
 	'for (<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))> key : this) {
@@ -226,8 +226,8 @@ when ts.ds == \set()
 default bool exists_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass)  = true;
 default str generate_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass) = "";
 
-bool exists_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass)  = true;
-str generate_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass) = 
+@index=2 bool exists_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass)  = true;
+@index=2 str generate_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass) = 
 	"if (other == this) {
 		return true;
 	}

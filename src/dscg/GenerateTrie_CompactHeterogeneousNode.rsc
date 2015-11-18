@@ -67,15 +67,15 @@ list[PredefOp] declaredMethodsByCompactHeterogeneousNodeWithBitmapSpecialization
 
 data PredefOp = nodeMap();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::nodeMap())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::nodeMap())
 	= method(ts.bitmapField, ts.bitmapField.name);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::nodeMap()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::nodeMap()) = true;
 
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::nodeMap())
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::nodeMap())
 	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), exprFromString("rawMap1() ^ rareMap()")));
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::nodeMap())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::nodeMap())
 	= method(ts.bitmapField, ts.bitmapField.name, isActive = false);
 
 //Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::nodeMap())
@@ -94,15 +94,15 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousN
 
 data PredefOp = dataMap();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::dataMap())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::dataMap())
 	= method(ts.valmapField, ts.valmapField.name);
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::dataMap()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::dataMap()) = true;
 
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::dataMap())
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::dataMap())
 	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), exprFromString("rawMap2() ^ rareMap()")));
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::dataMap())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::dataMap())
 	= method(ts.bitmapField, ts.bitmapField.name, isActive = false);
 
 //Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::dataMap())
@@ -121,15 +121,15 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousN
 
 data PredefOp = rareMap();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::rareMap())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::rareMap())
 	= method(ts.valmapField, "rareMap");
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::rareMap()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::rareMap()) = true;
 
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::rareMap())
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::rareMap())
 	= result(cast(chunkSizeToPrimitive(ts.bitPartitionSize), exprFromString("rawMap1() & rawMap2()")));
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rareMap())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rareMap())
 	= method(ts.bitmapField, ts.bitmapField.name, isActive = false);
 
 //Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rareMap())
@@ -143,53 +143,53 @@ Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousN
 
 data PredefOp = rawMap1();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::rawMap1())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::rawMap1())
 	= method(ts.valmapField, "rawMap1", isActive = true);
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap1())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap1())
 	= property(ts.valmapField, "rawMap1", isStateful = true, isConstant = false, hasGetter = true, initializeAtConstruction = true)
 when bs.supportsValues || bs.supportsNodes;
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap1())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap1())
 	= property(ts.valmapField, "rawMap1", isStateful = false, isConstant = false, hasGetter = true, initializeAtConstruction = true)
 when !(bs.supportsValues || bs.supportsNodes);
 
 // Default Value for Property
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap1()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap1()) = true;
 
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap1())
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap1())
 	= result(iconst(0));
 
 
 data PredefOp = rawMap2();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::rawMap2())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode()), PredefOp::rawMap2())
 	= property(ts.valmapField, "rawMap2", isStateful = true, isConstant = false, hasGetter = true);
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap2())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap2())
 	= property(ts.valmapField, "rawMap2", isStateful = true, isConstant = false, hasGetter = true, initializeAtConstruction = true)
 when bs.supportsValues;
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap2())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap2())
 	= property(ts.valmapField, "rawMap2", isStateful = false, isConstant = false, hasGetter = true, initializeAtConstruction = true)
 when !bs.supportsValues;
 
 // Default Value for Property
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap2()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap2()) = true;
 
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap2())
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::rawMap2())
 	= result(iconst(0));
 
 	
 data PredefOp = constructor();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::constructor())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::constructor())
 	= constructor(\return(\type), jdt.typeName, args = [ ts.mutator ] + fieldList, visibility = "private", argsFilter = ts.argsFilter) // metadataArguments(ts)
 when jdt := compactHeterogeneousNode(ts, nodeType) && 
 		\type := jdtToType(jdt) &&
 		fieldList := [ predefOpToArgument(ts, artifact, op) | op <- declares(ts, nodeType)<1>, op != constructor(), opDef := getDef(ts, artifact, op), opDef is property, opDef.isStateful && opDef.initializeAtConstruction ];
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::constructor()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::constructor()) = true;
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::constructor())
 	= compoundStatement([

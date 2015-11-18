@@ -36,15 +36,15 @@ list[PredefOp] declaredMethodsByHashCollisionNode = [
 
 data PredefOp = sizePredicate();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::sizePredicate()) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::sizePredicate())
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::sizePredicate()) = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::sizePredicate())
 	= result(call(getDef(ts, trieNode(compactNode()), sizeMoreThanOne())));
 
 
 data PredefOp = getKeyValueEntry();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getKeyValueEntry())  = true;
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getKeyValueEntry()) = 
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getKeyValueEntry())  = true;
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getKeyValueEntry()) = 
 	"return entryOf(keys[index], vals[index]);";
 
 
@@ -235,8 +235,8 @@ str __generateHashCollisionNodeClassString(TrieSpecifics ts, bool isLegacy = tru
 	;
 }
 
-bool exists_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound))  = true;
-str generate_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound)) = 
+@index=2 bool exists_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound))  = true;
+@index=2 str generate_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound)) = 
 	"
 		// TODO: change representation of keys and values
 		assert keys.length == vals.length;
@@ -251,8 +251,8 @@ str generate_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPa
 	"
 	;
 	
-bool exists_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound))  = true;
-str generate_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound)) = 
+@index=2 bool exists_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound))  = true;
+@index=2 str generate_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound)) = 
 	"
 		final Object[] keysAndVals = new Object[2 * keys.length];
 		for (int i = 0; i \< keys.length; i++) {
@@ -267,90 +267,90 @@ str generate_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPa
 	
 data PredefOp = hashCollisionContentArray(ContentType ct);
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::hashCollisionContentArray(ct:ctPayloadArg(0)))
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::hashCollisionContentArray(ct:ctPayloadArg(0)))
 	= property(\return(asArray(ts.ct2type[ct])), "keys", isStateful = true, isConstant = false, hasGetter = false, initializeAtConstruction = true);
 	
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::hashCollisionContentArray(ct:ctPayloadArg(1)))
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::hashCollisionContentArray(ct:ctPayloadArg(1)))
 	= property(\return(asArray(ts.ct2type[ct])), "vals", isStateful = true, isConstant = false, hasGetter = false, initializeAtConstruction = true, isActive = \map() := ts.ds);	
 	
 	
 data PredefOp = hashCollisionHashCode();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::hashCollisionHashCode())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::hashCollisionHashCode())
 	= property(\return(primitive("int", isArray = false)), "hash", isStateful = true, isConstant = false, hasGetter = false, initializeAtConstruction = true);
 	
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasPayload()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasPayload()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasPayload()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasPayload()) =
 	"return true;";
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), payloadArity()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), payloadArity()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), payloadArity()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), payloadArity()) =
 	"return keys.length;";
 	
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasNodes()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasNodes()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasNodes()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasNodes()) =
 	"return false;";
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), nodeArity()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), nodeArity()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), nodeArity()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), nodeArity()) =
 	"return 0;";
 	
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasSlots()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasSlots()) = true;
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasSlots()) =
 	UNSUPPORTED_OPERATION_EXCEPTION;
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), slotArity()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), slotArity()) = true;
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), slotArity()) =
 	UNSUPPORTED_OPERATION_EXCEPTION;
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getSlot()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getSlot()) = true;
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getSlot()) =
 	UNSUPPORTED_OPERATION_EXCEPTION;
 	
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx, isRare = true))) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx, isRare = true))) = true;
 
 // TODO: isOptionEnabled(ts.setup, useHeterogeneousEncoding())
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx, isRare = true))) = 
 	UNSUPPORTED_OPERATION_EXCEPTION;
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx))) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx))) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx))) = 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx))) = 
 	"return <if (idx == 0) {>keys<} else {>vals<}>[index];";
 	
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctNode())) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctNode())) = true;
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctNode())) = 
 	ILLEGAL_STATE_EXCEPTION("Is leaf node.");
 	
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), toString()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), toString()) = true;
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), toString()) = 
 	NOT_YET_IMPLEMENTED_EXCEPTION;
 
 		
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hashCode()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hashCode()) = true;
 
 // TODO: isOptionEnabled(ts.setup, useStructuralEquality())
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hashCode()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hashCode()) =
 	"final int prime = 31;
 	int result = 0;
 	result = prime * result + hash;
@@ -358,10 +358,10 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNo
 	return result;";
 	
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), equals()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), equals()) = true;
 
 // TODO: isOptionEnabled(ts.setup, useStructuralEquality())
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), equals()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), equals()) =
 	"if (null == other) {
 		return false;
 	}
@@ -416,13 +416,13 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNo
 // TODO: factor logic used in this constructor implementation
 data PredefOp = hashCollisionNodeConstructor();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:hashCollisionNode()), PredefOp::hashCollisionNodeConstructor())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:hashCollisionNode()), PredefOp::hashCollisionNodeConstructor())
 	= constructor(\return(\type), jdt.typeName, args = [ *fieldList ], visibility = "private", argsFilter = ts.argsFilter) // metadataArguments(ts)
 when jdt := hashCollisionNode(ts) && 
 		\type := jdtToType(jdt) &&
 		fieldList := [ predefOpToArgument(ts, artifact, op) | op <- declares(ts, nodeType)<1>, op != hashCollisionNodeConstructor(), opDef := getDef(ts, artifact, op), opDef is property, opDef.isActive && opDef.isStateful && opDef.initializeAtConstruction ];
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:hashCollisionNode()), PredefOp::hashCollisionNodeConstructor()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:hashCollisionNode()), PredefOp::hashCollisionNodeConstructor()) = true;
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:hashCollisionNode()), PredefOp::hashCollisionNodeConstructor())
 	= compoundStatement([

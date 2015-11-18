@@ -119,34 +119,34 @@ default list[Argument] getFieldList(TrieSpecifics ts, PredefDataType dt) = []; /
 
 
 
-Method getDef(TrieSpecifics ts, PredefDataType dt, methodName:"hasNext") 
+@index=2 Method getDef(TrieSpecifics ts, PredefDataType dt, methodName:"hasNext") 
 	= method(\return(primitive("boolean")), methodName, visibility = "public")
 when /javaInterface("Iterator") := getJdt(ts, dt);
 
-Method getDef(TrieSpecifics ts, PredefDataType dt, methodName:"next") 
+@index=2 Method getDef(TrieSpecifics ts, PredefDataType dt, methodName:"next") 
 	= method(\return(typeArgument), methodName, visibility = "public")
 when /javaInterface("Iterator", typeArguments = [ typeArgument ]) := getJdt(ts, dt);
 
-Method getDef(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
+@index=2 Method getDef(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
 	= method(\return(notApplicable()), methodName, visibility = "public")
 when /javaInterface("Iterator") := getJdt(ts, dt);	
 
-Method getDef(TrieSpecifics ts, PredefDataType dt:keyIterator(core(transient())), methodName:"__constructor") 
+@index=2 Method getDef(TrieSpecifics ts, PredefDataType dt:keyIterator(core(transient())), methodName:"__constructor") 
 	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ collection ], generics = jdt.typeArguments, visibility = "public")	
 when jdt := getJdt(ts, dt)
 		&& /labeledArgumentList(collection(), [ Argument collection ]) := getFieldList(ts, dt);
 
-Method getDef(TrieSpecifics ts, PredefDataType dt:valueIterator(core(transient())), methodName:"__constructor") 
+@index=2 Method getDef(TrieSpecifics ts, PredefDataType dt:valueIterator(core(transient())), methodName:"__constructor") 
 	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ collection ], generics = jdt.typeArguments, visibility = "public")	
 when jdt := getJdt(ts, dt)
 		&& /labeledArgumentList(collection(), [ Argument collection ]) := getFieldList(ts, dt);
 	
-Method getDef(TrieSpecifics ts, PredefDataType dt:entryIterator(core(transient())), methodName:"__constructor") 
+@index=2 Method getDef(TrieSpecifics ts, PredefDataType dt:entryIterator(core(transient())), methodName:"__constructor") 
 	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ collection ], generics = jdt.typeArguments, visibility = "public")	
 when jdt := getJdt(ts, dt)
 		&& /labeledArgumentList(collection(), [ Argument collection ]) := getFieldList(ts, dt);
 
-Method getDef(TrieSpecifics ts, PredefDataType dt:tupleIterator(core(transient())), methodName:"__constructor") 
+@index=2 Method getDef(TrieSpecifics ts, PredefDataType dt:tupleIterator(core(transient())), methodName:"__constructor") 
 	= constructor(\return(jdtToType(jdt)), jdt.typeName, args = [ collection, __labeledArgument(tupleWrapper(), tupleOfFunction) ], generics = jdt.typeArguments, visibility = "public")	
 when jdt := getJdt(ts, dt)
 		&& /labeledArgumentList(collection(), [ Argument collection ]) := getFieldList(ts, dt)
@@ -187,8 +187,8 @@ when __def.isActive;
 default bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, str methodName) = false;
 default str generate_bodyOf(TrieSpecifics ts, PredefDataType dt, str methodName) = "";
 
-bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"__constructor")  = true;
-Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"__constructor") = 
+@index=2 bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"__constructor")  = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"__constructor") = 
 	compoundExpr([
 		super(exprFromString("<use(collection)>.rootNode")),
 		assign(qualifiedArgument(this(), collection), useExpr(collection))
@@ -196,8 +196,8 @@ Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"__co
 when !(tupleIterator(core(transient())) := dt)
 		&& /labeledArgumentList(collection(), [ Argument collection ]) := getFieldList(ts, dt);
 
-bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"__constructor")  = true;
-Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"__constructor") = 
+@index=2 bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"__constructor")  = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"__constructor") = 
 	compoundExpr([
 		super(compoundExpr([
 			exprFromString("<use(collection)>.rootNode"),
@@ -209,14 +209,14 @@ when (tupleIterator(core(transient())) := dt)
 	 	&& /labeledArgumentList(collection(), [ Argument collection ]) := getFieldList(ts, dt)
 		&& tupleOfFunction := jdtToVal(juf_BiFunction(payloadTupleTypes(ts) + generic("T")), "tupleOf");
 
-bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next")  = true;
-Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next") = 
+@index=2 bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next")  = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next") = 
 	result(assign(key, exprFromString("super.next()")))	
 when (keyIterator(core(transient())) := dt)
  		&& /labeledArgumentList(payloadTuple(), [ Argument key ]) := getFieldList(ts, dt);
 
-bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove")  = true;
-Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
+@index=2 bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove")  = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
 	= call(collection, getDef(ts, core(transient()), removeTuple(customComparator = false)), 
 			commentText = "TODO: test removal at iteration rigorously",
 			labeledArgsOverride = (payloadTuple(): useExprList(payloadTupleArgs)))
@@ -226,14 +226,14 @@ when (keyIterator(core(transient())) := dt && !(\map(multi = true) := ts.ds))
 
 
 
-bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next")  = true;
-Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next") = 
+@index=2 bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next")  = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next") = 
 	result(exprFromString("super.next()"))	
 when (valueIterator(core(transient())) := dt
 		|| entryIterator(core(transient())) := dt);
 
-bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove")  = true;
-Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
+@index=2 bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove")  = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
 	= exprFromString("throw new UnsupportedOperationException()")
 when ((keyIterator(core(transient())) := dt && (\map(multi = true) := ts.ds))
 		||valueIterator(core(transient())) := dt
@@ -241,13 +241,13 @@ when ((keyIterator(core(transient())) := dt && (\map(multi = true) := ts.ds))
 		
 		
 
-bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next")  = true;
-Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next") = 
+@index=2 bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next")  = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"next") = 
 	result(exprFromString("super.next()"))	
 when (tupleIterator(core(transient())) := dt);
 
-bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove")  = true;
-Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
+@index=2 bool exists_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove")  = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, PredefDataType dt, methodName:"remove") 
 	= call(collection, getDef(ts, core(transient()), removeTuple(customComparator = false)), 
 			commentText = "TODO: test removal at iteration rigorously",
 			labeledArgsOverride = (payloadTuple(): compoundExpr(unboxPayloadFromTuple(dt))))

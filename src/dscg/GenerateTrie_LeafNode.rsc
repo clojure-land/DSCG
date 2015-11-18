@@ -17,22 +17,22 @@ import dscg::ArrayUtils;
 
 // data PredefOp = getKey();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKey()) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKey())
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKey()) = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKey())
 	= result(useExpr(key(ts.keyType)));
 
 
 // data PredefOp = getValue();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getValue()) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getValue())
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getValue()) = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getValue())
 	= result(useExpr(key(ts.valType)));
 
 
 data PredefOp = getKeyValueEntry();
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKeyValueEntry()) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKeyValueEntry())
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKeyValueEntry()) = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(leafNode()), getKeyValueEntry())
 	= result(useExpr(this()));	
 
 

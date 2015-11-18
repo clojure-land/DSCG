@@ -47,34 +47,34 @@ list[PredefOp] declaredMethodsByBitmapIndexedNode = [
 
 // data PredefOp = getKey();
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctPayloadArg(0))) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctPayloadArg(0)))
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctPayloadArg(0))) = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctPayloadArg(0)))
 	= result(exprFromString("(<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index]"));
 
 
 // data PredefOp = getValue();
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctPayloadArg(1))) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctPayloadArg(1)))
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctPayloadArg(1))) = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::getContent(ctPayloadArg(1)))
 	= result(exprFromString("(<typeToString((nodeTupleType(ts, 1)))>) nodes[<use(tupleLengthConstant)> * index + 1]"));
 
 
 data PredefOp = getKeyValueEntry();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getKeyValueEntry()) = true;
-Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getKeyValueEntry()) 
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getKeyValueEntry()) = true;
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getKeyValueEntry()) 
 	= result(exprFromString("entryOf((<typeToString(ts.keyType)>) nodes[<use(tupleLengthConstant)> * index], (<typeToString(ts.valType)>) nodes[<use(tupleLengthConstant)> * index + 1])"));
 	
 
 // data PredefOp = getContent(ctNode());
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getContent(ctNode())) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getContent(ctNode())) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getContent(ctNode())) 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getContent(ctNode())) 
 	= "return (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) nodes[nodes.length - 1 - index];"
 when isOptionEnabled(ts.setup, useSandwichArrays());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getContent(ctNode())) = 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getContent(ctNode())) = 
 	"final int offset = <use(tupleLengthConstant)> * payloadArity;
 	'return (<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)>) nodes[offset + index];"
 when !isOptionEnabled(ts.setup, useSandwichArrays());	
@@ -82,22 +82,22 @@ when !isOptionEnabled(ts.setup, useSandwichArrays());
 
 // data PredefOp = payloadIterator();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), payloadIterator()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), payloadIterator()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), payloadIterator()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), payloadIterator()) =
 	"return (Iterator) ArrayKeyValue<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>Supplier<}>Iterator.of(nodes, 0, <use(tupleLengthConstant)> * payloadArity());"
 when \map() := ts.ds;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), payloadIterator()) = 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), payloadIterator()) = 
 	"return (Iterator) Array<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>Supplier<}>Iterator.of(nodes, 0, payloadArity());"
 when ts.ds == \set();
 
 
 // data PredefOp = nodeIterator();
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), nodeIterator()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), nodeIterator()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), nodeIterator()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), nodeIterator()) =
 	"final int offset = <use(tupleLengthConstant)> * <use(ts.BitmapIndexedNode_payloadArity)>;
 	'final int length = <use(ts.BitmapIndexedNode_nodeArity)>;
 	'
@@ -110,7 +110,7 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNo
 	'return (Iterator) ArrayIterator.of(nodes, offset, length);"
 when !isOptionEnabled(ts.setup, useSandwichArrays());		
 	
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), nodeIterator()) = 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), nodeIterator()) = 
 	"final int length = nodeArity();
 	'final int offset = nodes.length - length;
 	'
@@ -124,71 +124,71 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNo
 when isOptionEnabled(ts.setup, useSandwichArrays());	
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasPayload()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasPayload()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasPayload()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasPayload()) =
 	"return dataMap() != 0;" 
 when isOptionEnabled(ts.setup, useSandwichArrays());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasPayload()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasPayload()) =
 	"return <use(ts.BitmapIndexedNode_payloadArity)> != 0;"
 when !isOptionEnabled(ts.setup, useSandwichArrays());
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), payloadArity()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), payloadArity()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), payloadArity()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), payloadArity()) =
 	"return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.valmapMethod)>);" 
 when isOptionEnabled(ts.setup, useSandwichArrays());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), payloadArity()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), payloadArity()) =
 	"return <use(ts.BitmapIndexedNode_payloadArity)>;"
 when !isOptionEnabled(ts.setup, useSandwichArrays());
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasNodes()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasNodes()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasNodes()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasNodes()) =
 	"return nodeMap() != 0;" 
 when isOptionEnabled(ts.setup, useSandwichArrays());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasNodes()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasNodes()) =
 	"return <use(ts.BitmapIndexedNode_nodeArity)> != 0;"
 when !isOptionEnabled(ts.setup, useSandwichArrays());
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), nodeArity()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), nodeArity()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), nodeArity()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), nodeArity()) =
 	"return <integerOrLongObject(ts.bitPartitionSize)>.bitCount(<useSafeUnsigned(ts.bitmapMethod)>);" 
 when isOptionEnabled(ts.setup, useSandwichArrays());
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), nodeArity()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), nodeArity()) =
 	"return <use(ts.BitmapIndexedNode_nodeArity)>;"
 when !isOptionEnabled(ts.setup, useSandwichArrays());
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasSlots()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasSlots()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasSlots()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hasSlots()) =
 	"return nodes.length != 0;";
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), slotArity()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), slotArity()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), slotArity()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), slotArity()) =
 	"return nodes.length;";
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getSlot()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getSlot()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getSlot()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), getSlot()) =
 	"return nodes[<use(ts.index)>];";
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hashCode()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hashCode()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hashCode()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), hashCode()) =
 	"final int prime = 31;
 	int result = 0;
 	result = prime * result + (<primitiveHashCode(___valmapMethod(ts.bitPartitionSize))>);
@@ -197,9 +197,9 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNo
 	return result;";
 	
 	
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), equals()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), equals()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), equals()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), equals()) =
 	"if (null == other) {
 		return false;
 	}
@@ -222,9 +222,9 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNo
 	return true;";	
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), sizePredicate()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), sizePredicate()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), sizePredicate()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), sizePredicate()) =
 	"<if (isOptionEnabled(ts.setup,useSpecialization())) {>return sizeMoreThanOne();<} else {>if (this.nodeArity() == 0) {
 	'	switch (this.payloadArity()) {
 	'	case 0:
@@ -239,9 +239,9 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNo
 	'}<}>";
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndSetValue(false)) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndSetValue(false)) = true;
 /* TODO: support bitmapIndexedNode() here */
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndSetValue(false)) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndSetValue(false)) =
 	"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos) + 1;
 	
 	<if (isOptionEnabled(ts.setup, useStagedMutability())) {>if (isAllowedToEdit(this.mutator, mutator)) {
@@ -258,9 +258,9 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNo
 	<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>";
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndSetNode()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndSetNode()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndSetNode()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndSetNode()) =
 	"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
 	<dec(field(primitive("int"), "idx"))> = this.nodes.length - 1 - nodeIndex(bitpos);
 	<} else {>
@@ -281,9 +281,9 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNo
 	<if (isOptionEnabled(ts.setup, useStagedMutability())) {>}<}>";
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndInsertValue()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndInsertValue()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndInsertValue()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndInsertValue()) =
 	"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 	
 	<dec(field(asArray(object()), "src"))> = this.nodes;
@@ -296,9 +296,9 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNo
 									ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;";
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndRemoveValue()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndRemoveValue()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndRemoveValue()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndRemoveValue()) =
 	"<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 	
 	<dec(field(asArray(object()), "src"))> = this.nodes;
@@ -311,9 +311,9 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNo
 									ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;";
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndMigrateFromInlineToNode()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndMigrateFromInlineToNode()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndMigrateFromInlineToNode()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndMigrateFromInlineToNode()) =
 	"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
 	<dec(field(primitive("int"), "idxOld"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
 	<dec(field(primitive("int"), "idxNew"))> = this.nodes.length - <use(tupleLengthConstant)> - nodeIndex(bitpos);
@@ -333,9 +333,9 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNo
 									ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseXor(useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;";
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndMigrateFromNodeToInline()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndMigrateFromNodeToInline()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndMigrateFromNodeToInline()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), copyAndMigrateFromNodeToInline()) =
 	"<if (isOptionEnabled(ts.setup, useSandwichArrays())) {>
 	<dec(field(primitive("int"), "idxOld"))> = this.nodes.length - 1 - nodeIndex(bitpos);
 	<dec(field(primitive("int"), "idxNew"))> = <use(tupleLengthConstant)> * dataIndex(bitpos);
@@ -355,9 +355,9 @@ str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNo
 									ts.valmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), bitwiseOr (useExpr(ts.valmapMethod), useExpr(ts.bitposField))))))>;";
 
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), removeInplaceValueAndConvertToSpecializedNode()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), removeInplaceValueAndConvertToSpecializedNode()) = true;
 
-str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), removeInplaceValueAndConvertToSpecializedNode()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), removeInplaceValueAndConvertToSpecializedNode()) =
 	generate_removeInplaceValueAndConvertToSpecializedNode(ts);
 	
 
@@ -630,26 +630,26 @@ default str generate_removeInplaceValueAndConvertToSpecializedNode(TrieSpecifics
 
 data PredefOp = batchUpdateLock();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::batchUpdateLock())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::batchUpdateLock())
 	= property(\return(ts.mutatorType), "mutator", isStateful = true, isConstant = false, hasGetter = false, initializeAtConstruction = true);
 
 
 data PredefOp = contentArray();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::contentArray())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(bitmapIndexedNode()), PredefOp::contentArray())
 	= property(\return(object(isArray = true)), "nodes", isStateful = true, isConstant = false, hasGetter = false, initializeAtConstruction = true);
 
 
 // TODO: factor logic used in this constructor implementation
 data PredefOp = bitmapIndexedNodeConstructor();
 
-Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:bitmapIndexedNode()), PredefOp::bitmapIndexedNodeConstructor())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:bitmapIndexedNode()), PredefOp::bitmapIndexedNodeConstructor())
 	= constructor(\return(\type), jdt.typeName, args = [ ts.mutator, ts.bitmapField, ts.valmapField ] + ([ *fieldList] - ts.mutator), visibility = "private", argsFilter = ts.argsFilter) // metadataArguments(ts)
 when jdt := bitmapIndexedNode(ts) && 
 		\type := jdtToType(jdt) &&
 		fieldList := [ predefOpToArgument(ts, artifact, op) | op <- declares(ts, nodeType)<1>, op != bitmapIndexedNodeConstructor(), opDef := getDef(ts, artifact, op), opDef is property, opDef.isActive && opDef.isStateful && opDef.initializeAtConstruction ];
 
-bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:bitmapIndexedNode()), PredefOp::bitmapIndexedNodeConstructor()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:bitmapIndexedNode()), PredefOp::bitmapIndexedNodeConstructor()) = true;
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:bitmapIndexedNode()), PredefOp::bitmapIndexedNodeConstructor())
 	= compoundStatement([
