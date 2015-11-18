@@ -3465,9 +3465,9 @@ set[PredefOp] transitiveOps(
 		TrieNodeType current) {		
 	set[PredefOp] operationsPerType;
 	
-	list[TrieNodeType] typeHierarchy = reverse(shortestPathPair(refines, current, top));
+	set[TrieNodeType] typeHierarchy = {*shortestPathPair(refines, current, top)};
 	
-	set[PredefOp] transitiveOps = { *ops | \type <- typeHierarchy, ops <- declares[\type] };
+	set[PredefOp] transitiveOps = declares[typeHierarchy]; // { *ops | \type <- typeHierarchy, ops <- declares[\type] };
 	
 	return transitiveOps;
 } 
