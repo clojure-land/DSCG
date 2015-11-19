@@ -18,17 +18,17 @@ import dscg::Common;
 
 str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy:false) {  
 	str result = "";
-	
-	booleanOptions = { true, false };
 
-	JavaDataType jdt = compactNode(ts, modifierList = [ "private", "abstract", "static" ]);
-	result += generateJdtString(ts, jdt, compactNode());
-	
-	for (bitmapCfg <- [ specializeByBitmap(n, v) | <n, v> <- booleanOptions * booleanOptions, isOptionEnabled(ts.setup, useSpecialization()) || n && v ]) { // (n && v) || !isOptionEnabled(ts.setup, useHeterogeneousEncoding())
-		JavaDataType jdt = compactNode(ts, compactNode(bitmapCfg), modifierList = [ "private", "abstract", "static" ]);
-		result += generateJdtString(ts, jdt, compactNode(bitmapCfg));
+	for(nt <- carrier(ts.model.refines), nt is compactNode) {
+		if (nt has bitmapSpecialization) {
+			JavaDataType jdt = compactNode(ts, nt, modifierList = [ "private", "abstract", "static" ]);
+			result += generateJdtString(ts, jdt, nt);
+		} else {	
+			JavaDataType jdt = compactNode(ts, modifierList = [ "private", "abstract", "static" ]);
+			result += generateJdtString(ts, jdt, nt);
+		}
 	}
-	
+		
 	return result;
 }
 
