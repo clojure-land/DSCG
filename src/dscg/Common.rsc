@@ -3428,6 +3428,8 @@ Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 
 	set[TrieNodeType] allTrieNodeTypes = carrier(refines);
 	rel[TrieNodeType from, PredefOp to] declares = toSet([ *declares(ts, current) | current <- allTrieNodeTypes ]);
+
+	rel[TrieNodeType from, PredefOp to] declaresInTypeOrBaseType = refines+ o declares;
 	
 	println("buildLanguageAgnosticModel#crawl [on]");
 	for (current <- allTrieNodeTypes) {		
@@ -3457,10 +3459,12 @@ Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 	return model(
 		refines = refines, 
 		declares = declares, 
+		declaresInTypeOrBaseType = declaresInTypeOrBaseType,
 		implements = implements
 		
 		, refinesMultimap = toMap(refines)
 		, declaresMultimap = toMap(declares)
+		, declaresInTypeOrBaseTypeMultimap = toMap(declaresInTypeOrBaseType)
 		, implementsMultimap = toMap(implements)
 		//, docuentationMultimap = toMap(documentation)		
 	);
@@ -3481,43 +3485,19 @@ set[PredefOp] transitiveOps(
 	return transitiveOps;
 } 
 
-/* redeclares signature? */ 
-bool isRedeclaration(Model m, TrieNodeType nodeType, PredefOp op) {
-	set[TrieNodeType] superTypes = superTypes(m, nodeType);	
-	set[TrieNodeType] declarationSites = declarationSites(m, op);
-
-	return nodeType in declarationSites 
-			&& !isEmpty(superTypes & declarationSites);
-}
+///* redeclares signature? */ 
+//bool isRedeclaration(Model m, TrieNodeType nodeType, PredefOp op) = ???;
 
 /* implements of signature that is defined in this or supertype? */
-bool isRealization(Model m, TrieNodeType nodeType, PredefOp op) {
-	// TODO: check if can skip the second predicate in the return clause 
-	
-	//set[TrieNodeType] superTypes = superTypes(m, nodeType);	
-	//set[TrieNodeType] declarationSites = declarationSites(m, op);
-	
-	//return (<nodeType, op> in m.implements)
-	//		&& !isEmpty(superTypes & declarationSites);
-			
-	return (op in m.implementsMultimap[nodeType])
-			; // && !isEmpty(superTypes & declarationSites);			
-}
- 
-set[TrieNodeType] superTypes(Model m, TrieNodeType nodeType) = memoizedTransitiveClosure(m.refines)[nodeType]; 
-//set[TrieNodeType] superTypes(Model m, TrieNodeType nodeType) = (m.refines+)[nodeType];
-
-set[TrieNodeType] declarationSites(Model m, PredefOp op) = memoizedSwapBinaryRelationColumns(m.declares)[op];
-//set[TrieNodeType] declarationSites(Model m, PredefOp op) = m.declares<1,0>[op]; 
- 
-@memo rel[&U, &V] memoizedTransitiveClosure(rel[&U, &V] relation) = relation+; 
-@memo rel[&V, &U] memoizedSwapBinaryRelationColumns(rel[&U, &V] relation) = relation<1,0>; 
-
+bool isRealization(Model m, TrieNodeType nodeType, PredefOp op)
+	= op in m.implementsMultimap[nodeType] &&
+			m.declaresInTypeOrBaseTypeMultimap[nodeType]? && op in m.declaresInTypeOrBaseTypeMultimap[nodeType];
  
 data Model
 	= model(
 		rel[TrieNodeType from, TrieNodeType to] refines = {},
 		rel[TrieNodeType from, PredefOp to] declares = {},		
+		rel[TrieNodeType from, PredefOp to] declaresInTypeOrBaseType = {},
 		rel[TrieNodeType from, PredefOp to] implements = {},
 		rel[loc origin, loc comment] documentation = {}
 		
@@ -3528,6 +3508,7 @@ data Model
 		
 		, map[TrieNodeType from, set[TrieNodeType] to] refinesMultimap = ()
 		, map[TrieNodeType from, set[PredefOp] to] declaresMultimap = ()
+		, map[TrieNodeType from, set[PredefOp] to] declaresInTypeOrBaseTypeMultimap = {}
 		, map[TrieNodeType from, set[PredefOp] to] implementsMultimap = ()
 		, map[loc origin, set[loc] comment] docuentationMultimap = ()				
 	);
@@ -3539,11 +3520,11 @@ rel[TrieNodeType from, TrieNodeType to] staticRefines() = {
 	<compactNode(specializeByBitmap(false, true)), compactNode()>,
 	<compactNode(specializeByBitmap(false, false)), compactNode()>,
 	
-	<compactHeterogeneousNode(), compactNode()>,
-	<compactHeterogeneousNode(specializeByBitmap(true, true)), compactHeterogeneousNode()>,
-	<compactHeterogeneousNode(specializeByBitmap(true, false)), compactHeterogeneousNode()>,
-	<compactHeterogeneousNode(specializeByBitmap(false, true)), compactHeterogeneousNode()>,
-	<compactHeterogeneousNode(specializeByBitmap(false, false)), compactHeterogeneousNode()>,	
+	//<compactHeterogeneousNode(), compactNode()>,
+	//<compactHeterogeneousNode(specializeByBitmap(true, true)), compactHeterogeneousNode()>,
+	//<compactHeterogeneousNode(specializeByBitmap(true, false)), compactHeterogeneousNode()>,
+	//<compactHeterogeneousNode(specializeByBitmap(false, true)), compactHeterogeneousNode()>,
+	//<compactHeterogeneousNode(specializeByBitmap(false, false)), compactHeterogeneousNode()>,	
 	
 	<bitmapIndexedNode(), compactNode(specializeByBitmap(true, true))>,
 	<hashCollisionNode(), abstractNode()>,
@@ -3603,8 +3584,7 @@ list[&T] unique(list[&T] ordered) {
 //"<toString(jdt)> {
 //
 //	<for (item <- nestedContent) {>
-//		<item>
-//	<}>
+//		<item><}>
 //}";
 //}
 
@@ -3646,8 +3626,7 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 "<toString(jdt)> {
 
 	<for (item <- nestedContent) {>
-		<item>
-	<}>
+		<item><}>
 }";
 }
 
