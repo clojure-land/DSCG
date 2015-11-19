@@ -51,7 +51,7 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nod
 		//fieldOffset("slotArity"),
 
 		*createContentArgumentList(ts, nodeType),
-		constructor()
+		specializedBitmapIndexedNodeConstructor()
 	];
 
 	return  [ <nodeType,method> | method <- declaredMethods]; 
@@ -220,7 +220,7 @@ when isOptionEnabled(ts.setup, useHeterogeneousEncoding());
 
 // TODO: obsolete 'contentArguments'
 list[PredefOp] createContentArgumentList(ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m)) 
-	= [ constructor() ]
+	= [ specializedBitmapIndexedNodeConstructor() ]
 	+ [ contentArgument_PayloadTuple(rowId, columnId) | rowId <- [1..m+1], columnId <- [0..size(nodeTupleArgs(ts))] ]
 	+ [ contentArgument_Node(rowId) | rowId <- [1..n+1]]
 when !isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && !isOptionEnabled(ts.setup, useUntypedVariables());
@@ -262,39 +262,39 @@ when arg := \node(ts.ds, ts.tupleTypes, rowId);
 //	= result(NULL());
 
 
-data PredefOp = constructor();
+data PredefOp = specializedBitmapIndexedNodeConstructor();
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::specializedBitmapIndexedNodeConstructor())
 	= constructor(\return(\type), jdt.typeName, args = [ ts.mutator ] + metadataArguments(ts) + contentArguments(n, m, ts), visibility = "private", argsFilter = ts.argsFilter)
 when // (!isOptionEnabled(ts.setup, useSunMiscUnsafe()) || (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && (<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe))) && 
 		// !isOptionEnabled(ts.setup, useSunMiscUnsafe()) && 
 		jdt := specializedBitmapIndexedNode(ts, nodeType) && 
 		\type := jdtToType(jdt);	
 	
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::specializedBitmapIndexedNodeConstructor()) = true;
 
-Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::specializedBitmapIndexedNodeConstructor())
 	= compoundStatement([
 		expressionStatement(super(exprFromString("<if (isOptionEnabled(ts.setup, useStagedMutability())) {>mutator<} else {>null<}>, <use(ts.bitmapField)>, <use(ts.valmapField)>"))),
 		uncheckedStringStatement(initFieldsWithIdendity(contentArguments(n, m, ts))) // TODO: automatically infer which def.args need to be initialized
 	])
 when // (!isOptionEnabled(ts.setup, useSunMiscUnsafe()) || (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && (<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe))) &&  
 		// !isOptionEnabled(ts.setup, useSunMiscUnsafe()) &&
-		def := getDef(ts, artifact, constructor());
+		def := getDef(ts, artifact, specializedBitmapIndexedNodeConstructor());
 
 /*
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::specializedBitmapIndexedNodeConstructor())
 	= constructor(\return(\type), jdt.typeName, visibility = "private")
 when // (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !(<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe)) &&
 		isOptionEnabled(ts.setup, useSunMiscUnsafe()) &&  
 		jdt := specializedBitmapIndexedNode(ts, nodeType) && 
 		\type := jdtToType(jdt);
 
-@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::constructor())
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::specializedBitmapIndexedNodeConstructor())
 	= super(exprFromString("null, <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>, <toString(cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>"))
 when // (isOptionEnabled(ts.setup, useSunMiscUnsafe()) && !(<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe)) &&  
 		isOptionEnabled(ts.setup, useSunMiscUnsafe()) &&
-		def := getDef(ts, artifact, constructor());
+		def := getDef(ts, artifact, specializedBitmapIndexedNodeConstructor());
 */
 
 	//'	<specializedClassNameStr>(<intercalate(", ", mapper(constructorArgs, str(Argument a) { return "<dec(a)>"; }))>) {					
@@ -382,7 +382,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, TrieSpec
 			} 
 		}))>
 			
-		<impl(ts, thisArtifact, constructor())>
+		<impl(ts, thisArtifact, specializedBitmapIndexedNodeConstructor())>
 
 	<if (false) {>	
 	<if (\map() := ts.ds) {>

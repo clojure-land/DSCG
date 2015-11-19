@@ -418,16 +418,16 @@ data Artifact(TrieSpecifics ts = undefinedTrieSpecifics())
  * a graph / lattice with a top element or a tree?
  */
 data TrieNodeType
-	= unknownNodeType()
-	| abstractNode()
-	| compactNode()
-	| compactNode(BitmapSpecialization bitmapSpecialization)
-	| compactHeterogeneousNode()
-	| compactHeterogeneousNode(BitmapSpecialization bitmapSpecialization)
-	| hashCollisionNode()
-	| bitmapIndexedNode()
-	| specializedBitmapIndexedNode(int n, int m) // bool supportsNodes = (n != 0), bool supportsValues = (m != 0))
-	| leafNode();
+	= unknownNodeType(bool isFinal = false)
+	| abstractNode(bool isFinal = false)
+	| compactNode(bool isFinal = false)
+	| compactNode(BitmapSpecialization bitmapSpecialization, bool isFinal = false)
+	| compactHeterogeneousNode(bool isFinal = false)
+	| compactHeterogeneousNode(BitmapSpecialization bitmapSpecialization, bool isFinal = false)
+	| hashCollisionNode(bool isFinal = true)
+	| bitmapIndexedNode(bool isFinal = true)
+	| specializedBitmapIndexedNode(int n, int m, bool isFinal = true) // bool supportsNodes = (n != 0), bool supportsValues = (m != 0))
+	| leafNode(bool isFinal = true);
 
 TrieNodeType compactNode(bool isHeterogeneous:false) = compactNode();
 TrieNodeType compactNode(bool isHeterogeneous:true) = compactHeterogeneousNode();
@@ -3406,33 +3406,42 @@ default lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNode
 // TODO: get ride of global dependencies
 Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 	rel[TrieNodeType from, TrieNodeType to] refines = staticRefines();
+
+	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
+		int heterogeneousBound = tupleLength(ts.ds) * ts.nBound;
 	
-	if (isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useUntypedVariables())) {
+		refines += { <specializedBitmapIndexedNode(n, m), compactNode(specializeByBitmap(true, true))> | m <- [0..ts.nMax+1], n <- [0..heterogeneousBound+1], (n + m) <= heterogeneousBound };
+		//refines += { <specializedBitmapIndexedNode(mn, 0), compactNode()> | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound };
+	} else if (isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useUntypedVariables())) {
 		refines += { <specializedBitmapIndexedNode(n, m), compactNode()> | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound };
-	}
-		
-	if (isOptionEnabled(ts.setup, useSpecialization()) && isOptionEnabled(ts.setup, useUntypedVariables())) {
+	} else if (isOptionEnabled(ts.setup, useSpecialization()) && isOptionEnabled(ts.setup, useUntypedVariables())) {
 		refines += { <specializedBitmapIndexedNode(mn, 0), compactNode()> | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound };
 	}
-	
-	int heterogeneousBound = tupleLength(ts.ds) * ts.nBound;
-	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
-		refines += { <specializedBitmapIndexedNode(n, m), compactNode()> | m <- [0..ts.nMax+1], n <- [0..heterogeneousBound+1], (n + m) <= heterogeneousBound };
-		//refines += { <specializedBitmapIndexedNode(mn, 0), compactNode()> | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound };
-	}
+
+
+	/* PRUNE NOT USED INTERMEDIATE CLASSES [BEGIN] */
+	candidates = { nf | nf <- carrier(refines), nf.isFinal == false };	 		
+
+	usedCandidates = { r | <l, r> <- refines+, l notin candidates && r in candidates };	
+	notUsedCandidates = candidates - usedCandidates;
+
+	refinementsToPrune = domainR(refines+, notUsedCandidates) - domainR(refines+, usedCandidates);
+					
+	refines -= refinementsToPrune;
+	/* PRUNE NOT USED INTERMEDIATE CLASSES [END] */
+		
 	
 	rel[TrieNodeType from, PredefOp to] implements = {};
 	rel[OpBinding from, int to] placements = {}; // calculate an order between declares / implements / overrides	
 		
 	// rel[OpBinding from, OpBinding to] operationRefinement; // ???
 
-	set[TrieNodeType] allTrieNodeTypes = carrier(refines);
-	rel[TrieNodeType from, PredefOp to] declares = toSet([ *declares(ts, current) | current <- allTrieNodeTypes ]);
+	rel[TrieNodeType from, PredefOp to] declares = toSet([ *declares(ts, current) | current <- carrier(refines) ]);
 
 	rel[TrieNodeType from, PredefOp to] declaresInTypeOrBaseType = refines+ o declares;
 	
 	println("buildLanguageAgnosticModel#crawl [on]");
-	for (current <- allTrieNodeTypes) {		
+	for (current <- carrier(refines)) {		
 		// crawl all available implementations		
 		TrieNodeType top = abstractNode();
 		set[PredefOp] transitiveOps = transitiveOps(refines, declares, top, current);
@@ -3490,8 +3499,8 @@ set[PredefOp] transitiveOps(
 
 /* implements of signature that is defined in this or supertype? */
 bool isRealization(Model m, TrieNodeType nodeType, PredefOp op)
-	= op in m.implementsMultimap[nodeType] &&
-			m.declaresInTypeOrBaseTypeMultimap[nodeType]? && op in m.declaresInTypeOrBaseTypeMultimap[nodeType];
+	=  op in (m.implementsMultimap[nodeType]?{}) &&
+			op in (m.declaresInTypeOrBaseTypeMultimap[nodeType]?{});
  
 data Model
 	= model(
@@ -3500,11 +3509,6 @@ data Model
 		rel[TrieNodeType from, PredefOp to] declaresInTypeOrBaseType = {},
 		rel[TrieNodeType from, PredefOp to] implements = {},
 		rel[loc origin, loc comment] documentation = {}
-		
-		//, map[TrieNodeType from, set[TrieNodeType] to] refinesMultimap = toMap(refines)
-		//, map[TrieNodeType from, set[PredefOp] to] declaresMultimap = toMap(declares)
-		//, map[TrieNodeType from, set[PredefOp] to] implementsMultimap = toMap(implements)
-		//, map[loc origin, set[loc] comment] docuentationMultimap = toMap(documentation)
 		
 		, map[TrieNodeType from, set[TrieNodeType] to] refinesMultimap = ()
 		, map[TrieNodeType from, set[PredefOp] to] declaresMultimap = ()
@@ -3519,13 +3523,7 @@ rel[TrieNodeType from, TrieNodeType to] staticRefines() = {
 	<compactNode(specializeByBitmap(true, false)), compactNode()>,
 	<compactNode(specializeByBitmap(false, true)), compactNode()>,
 	<compactNode(specializeByBitmap(false, false)), compactNode()>,
-	
-	//<compactHeterogeneousNode(), compactNode()>,
-	//<compactHeterogeneousNode(specializeByBitmap(true, true)), compactHeterogeneousNode()>,
-	//<compactHeterogeneousNode(specializeByBitmap(true, false)), compactHeterogeneousNode()>,
-	//<compactHeterogeneousNode(specializeByBitmap(false, true)), compactHeterogeneousNode()>,
-	//<compactHeterogeneousNode(specializeByBitmap(false, false)), compactHeterogeneousNode()>,	
-	
+		
 	<bitmapIndexedNode(), compactNode(specializeByBitmap(true, true))>,
 	<hashCollisionNode(), abstractNode()>,
 	<leafNode(), abstractNode()> 
@@ -3596,7 +3594,12 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 	bool jdtIsAbstract = "abstract" in jdt.modifierList;
 
 	// ts.model.declares[nodeType]
-	for (op <- unique(declares(ts, nodeType)<1> + toList(ts.model.implementsMultimap[nodeType])), isPredefOpActive(ts, op)) {
+	list[PredefOp] implementsList = [];
+	if (ts.model.implementsMultimap[nodeType]?) {
+		implementsList = toList(ts.model.implementsMultimap[nodeType]);
+	}
+	
+	for (op <- unique(declares(ts, nodeType)<1> + implementsList), isPredefOpActive(ts, op)) {
 		if (getDef(ts, trieNode(nodeType), op).isActive) {
 			str item = "";		
 			str documentation = getDocumentation(ts, trieNode(nodeType), op);
@@ -3605,13 +3608,13 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 				item += "/**<documentation>*/\n";
 			}
 			
-			if (isRealization(ts.model, nodeType, op)) { // isRedeclaration(ts.model, nodeType, op) || 
+			if (isRealization(ts.model, nodeType, op)) { 
 				item += "@Override ";
 			}
 			
 			Method def = getDef(ts, trieNode(nodeType), op);
 			
-			if (op in ts.model.implementsMultimap[nodeType]) { // && !(property(_,_) := def)
+			if (op in (ts.model.implementsMultimap[nodeType]?{})) {
 				item += impl(ts, trieNode(nodeType), op);
 			} else {
 				item += dec(def, asAbstract = jdtIsAbstract);
@@ -3686,19 +3689,18 @@ Expression decOrImpl(TrieSpecifics ts, Artifact artifact, PredefOp op) {
 //}
 
 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType), PredefOp op) {
-	if (nodeType in ts.model.declaresMultimap && op in ts.model.declaresMultimap[nodeType]) {
+	if (op in (ts.model.declaresMultimap[nodeType]?{})) {
 		fail getDef; // no search in type hierarchy necessary
 	} 
 		
 	TrieNodeType currentNodeType = nodeType; 
-	
-	while (/op !:= ts.model.declaresMultimap[currentNodeType]) {
-		if ({TrieNodeType super, *_} := ts.model.refinesMultimap[currentNodeType]) {
+		
+	while (/op !:= (ts.model.declaresMultimap[currentNodeType]?{})) {
+		if ({TrieNodeType super, *_} := (ts.model.refinesMultimap[currentNodeType]?{})) {
 			currentNodeType = super;
 		}
 		else {
-			println(ts.model.declaresMultimap[currentNodeType]);
-			throw "Method <op> is neither defined in <nodeType> or any of its base types.";
+			throw "Method <op> is neither defined in <currentNodeType> or any of its base types.";
 		}
 	}
 
