@@ -15,6 +15,7 @@ import List;
 import String;
 
 import dscg::Common;
+import dscg::CoreModel;
 
 str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy:false) {  
 	str result = "";
@@ -2567,7 +2568,10 @@ data PredefOp = addressSize();
 	'	throw new RuntimeException(e);
 	'}
 	'
-	'return next;";
+	'return next;"
+//when partitionList := pscene_pscene_typedPayload_typedRarePayload_typedNodes_bounded_simplifyWith_psStripIfReferenceType()
+//		&& [ int dim1, int dim2 ] := mapper(partitionList, int(Partition p) { return size(p); })
+	; 
 
 	
 data PredefOp = specializationsByContentAndNodes();
