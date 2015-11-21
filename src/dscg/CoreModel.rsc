@@ -32,7 +32,7 @@ when /Partition x := partitionList, x.range == unbounded();
 Maybe[int] maxUntypedSlotArityCount(list[Partition] partitionList) { 
 	for([ *_, Partition x, *_ ] := partitionList) {
 		println(x.range);
-		println(size(x));
+		println(uniqueStates(x));
 	}
 
 	return just(1);	
@@ -56,7 +56,7 @@ int logicalSize(Partition p)
 when p is slice;
 
 int logicalSize(Partition p) 
-	= 0 // TODO
+	= size(( emptyRange() | widenLowerAndUpper(it, np.range) | np <- p.sliceList ))
 when p is strip;
 	
 int physicalSize(Partition p) 
@@ -64,7 +64,7 @@ int physicalSize(Partition p)
 when p is slice;
 
 int physicalSize(Partition p) 
-	= 0 // TODO
+	= size(( emptyRange() | widenLowerAndUpper(it, scaleLowerAndUpper(np.range, arity(np.itemType))) | np <- p.sliceList ))
 when p is strip;
 
 Range scaleLowerAndUpper(Range r:range(lower, upper, isUpperIncluded, stride), int factor) 
@@ -79,6 +79,15 @@ default Range widenLowerAndUpper(Range r1, Range r2) { throw "Cannot merge range
 
 int arity(Type::typeSequence(list[Type] typeArguments)) = size(typeArguments);
 default int arity(Type _) = 1;
+
+int uniqueStates(Partition p) 
+	= logicalSize(p)
+when p.contentType != ctSlot();
+
+int uniqueStates(Partition p) 
+	= physicalSize(p)
+when p.contentType == ctSlot();
+
 
 
 
@@ -102,8 +111,9 @@ data Partition
 data Range
 	= unbounded()
 	| range(int lower, int upper, bool isUpperIncluded, int stride);
-	
+			
 Range rangeFromToInclusive(int lower, int upper) = range(lower, upper, true, 1);
+Range emptyRange() = range(0, 0, true, 1);
 	
 /*
 	Example:
