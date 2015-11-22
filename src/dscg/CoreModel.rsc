@@ -16,12 +16,49 @@ import dscg::Common_ContentType;
 
 import IO;
 import List;
+//import lang::rascal::\syntax::Rascal;
 import util::Math;
 import util::Maybe;
 
 
 
 // TODO: infer common collection type for generics 
+
+
+
+void anExperiment() {
+	list[Partition] partitionList = pscene_typedPayload_typedNodes_bounded();
+	
+	map[str, int] substitutionMap = ( "payload": 5, "rarePayload": 3, "node": 10 );
+		
+	// ...
+	
+	JvmMemoryLayoutOption mlOption = compressedOops(true);
+	
+	s = { <s.id, sizeOf(mlOption, s.itemType)> | /Partition s := partitionList, s is slice };
+	
+	println(s);
+}
+
+
+
+/*
+ * Simplified model of JVM settings that influence memory layout of objects. 
+ */
+data JvmMemoryLayoutOption
+	= jvmMemoryLayoutNoop() 
+	| compressedOops(bool isEnabled);
+
+int sizeOf(JvmMemoryLayoutOption _, Type::___primitive(str \type, isArray = false)) = 1 when \type == "byte";
+int sizeOf(JvmMemoryLayoutOption _, Type::___primitive(str \type, isArray = false)) = 2 when \type == "short";
+int sizeOf(JvmMemoryLayoutOption _, Type::___primitive(str \type, isArray = false)) = 4 when \type == "int";
+int sizeOf(JvmMemoryLayoutOption _, Type::___primitive(str \type, isArray = false)) = 8 when \type == "long";
+
+int sizeOf(JvmMemoryLayoutOption::compressedOops(false), Type t) = 8 when t has isArray, t.isArray == false;
+int sizeOf(JvmMemoryLayoutOption::compressedOops(true),  Type t) = 4 when t has isArray, t.isArray == false;
+int sizeOf(JvmMemoryLayoutOption _,  Type t) = 4 when t has isArray, t.isArray == false;
+
+default int sizeOf(JvmMemoryLayoutOption mlOption, Type t) { throw "<mlOption> \n <t>"; }
 
 
 
