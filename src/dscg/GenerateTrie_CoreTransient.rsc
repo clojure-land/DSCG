@@ -56,8 +56,10 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 		<impl(ts, core(transient()), removeAll())>
 		<impl(ts, core(transient()), retainAll())>
 		
-		<impl(ts, core(transient()), containsKey())>
-		<impl(ts, core(transient()), containsKey(customComparator = true))>
+		<impl(ts, core(transient()), containsKey(isRare = false, customComparator = false))>
+		<impl(ts, core(transient()), containsKey(isRare = false, customComparator = true))>
+		<impl(ts, core(transient()), containsKey(isRare = true, customComparator = false))>
+		<impl(ts, core(transient()), containsKey(isRare = true, customComparator = true))>	
 
 		<impl(ts, core(transient()), containsValue())>
 		<impl(ts, core(transient()), containsValue(customComparator = true))>

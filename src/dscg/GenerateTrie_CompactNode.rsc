@@ -97,6 +97,11 @@ Expression maskAndNarrowBitmapCast(TrieSpecifics ts, Expression sourceExpression
 	sourceExpression,
 	integerOrLongPrimitiveType(ts.bitPartitionSize),
 	chunkSizeToPrimitive(ts.bitPartitionSize));
+	
+Expression maskAndWidenBitmapCast(TrieSpecifics ts, Expression sourceExpression) = maskAndWidenPrimitiveCast(
+	sourceExpression,
+	chunkSizeToPrimitive(ts.bitPartitionSize),
+	integerOrLongPrimitiveType(ts.bitPartitionSize));	
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::nodeMap())
 	= property(ts.bitmapField, ts.bitmapField.name, isStateful = true, isConstant = false, hasGetter = true, initializeAtConstruction = true, isActive = !isOptionEnabled(ts.setup, useHeterogeneousEncoding()))
@@ -2440,11 +2445,11 @@ data PredefOp = logicalToPhysicalIndex();
 		break;
 	case RARE_KEY:
 		physicalIndex = TUPLE_LENGTH * index + TUPLE_LENGTH
-				* java.lang.Integer.bitCount(dataMap());
+				* java.lang.Integer.bitCount(<toString(maskAndWidenBitmapCast(ts, exprFromString("dataMap()")))>);
 		break;
 	case RARE_VAL:
 		physicalIndex = TUPLE_LENGTH * index + TUPLE_LENGTH
-				* java.lang.Integer.bitCount(dataMap()) + 1;
+				* java.lang.Integer.bitCount(<toString(maskAndWidenBitmapCast(ts, exprFromString("dataMap()")))>) + 1;
 		break;
 	case NODE:
 		physicalIndex = slotArity() - 1 - index;
@@ -2602,7 +2607,8 @@ data PredefOp = nodeArity();
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::nodeArity()) = isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::nodeArity()) = 
-	generate_bodyOf_staticFieldByGlobalOffset(ts, primitive("int"), "globalNodeArityOffset");
+	// generate_bodyOf_staticFieldByGlobalOffset(ts, primitive("int"), "globalNodeArityOffset");
+	"return Integer.bitCount(<toString(maskAndWidenBitmapCast(ts, exprFromString("nodeMap()")))>);";
 	
 	
 // data PredefOp = payloadArity();
@@ -2610,10 +2616,11 @@ data PredefOp = nodeArity();
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::payloadArity(isRare = _)) = isOptionEnabled(ts.setup, useSunMiscUnsafe());
 
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::payloadArity(isRare = false)) = 
-	generate_bodyOf_staticFieldByGlobalOffset(ts, primitive("int"), "globalPayloadArityOffset");
+	// generate_bodyOf_staticFieldByGlobalOffset(ts, primitive("int"), "globalPayloadArityOffset");
+	"return Integer.bitCount(<toString(maskAndWidenBitmapCast(ts, exprFromString("dataMap()")))>);";	
 
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::payloadArity(isRare = true)) = 
-	"return Integer.bitCount(rareMap());";
+	"return Integer.bitCount(<toString(maskAndWidenBitmapCast(ts, exprFromString("rareMap()")))>);";
 
 
 data PredefOp = slotArity();

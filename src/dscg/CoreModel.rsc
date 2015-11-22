@@ -21,6 +21,10 @@ import util::Maybe;
 
 
 
+// TODO: infer common collection type for generics 
+
+
+
 int maxUntypedSlotArityCount(TrieSpecifics ts)
 	= tupleLength(ts.ds) * ts.nMax 
 when isOptionEnabled(ts.setup, useHeterogeneousEncoding());

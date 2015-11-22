@@ -167,7 +167,8 @@ str printNonEmptyCommentWithNewline(str commentText) {
 	
 data Expression(str commentText = "")
 	= cast(Type \type, Expression e)
-	| maskAndNarrowPrimitiveCast(Expression source, Type sourceType, Type targetType) // TODO: remove legacy 'useSafeUnsigned' 
+	| maskAndNarrowPrimitiveCast(Expression source, Type sourceType, Type targetType) // TODO: remove legacy 'useSafeUnsigned'
+	| maskAndWidenPrimitiveCast(Expression source, Type sourceType, Type targetType) 
 	| bitwiseOr (Expression x, Expression y)
 
 	| mul (Expression l, Expression r)
@@ -760,9 +761,6 @@ str useSafeUnsigned(Argument a) = "<use(a)>" when a has \type && a.\type == prim
 default str useSafeUnsigned(Argument a) { throw "ahhh"; }
 
 
-Expression sourceToTargetMask(Expression source, Type sourceType, Type targetType:primitive("byte")) 
-	= binaryAnd(source, iconst("0xFF"));
-	
 Expression sourceToTargetMask(Expression source, Type sourceType, Type targetType) 
 	= bitwiseAnd(source, hexiconst("0xFF"))
 when targetType == primitive("byte");	
@@ -785,6 +783,27 @@ when e is maskAndNarrowPrimitiveCast;
 str toString(Expression e) =
 	"(<typeToString(e.targetType)>) (<toString(sourceToTargetMask(e.source, e.sourceType, e.targetType))>)"
 when e is maskAndNarrowPrimitiveCast;
+
+
+Expression wideningMask(Expression source, Type sourceType, Type targetType) 
+	= bitwiseAnd(source, hexiconst("0xFF"))
+when sourceType == primitive("byte");	
+	
+Expression wideningMask(Expression source, Type sourceType, Type targetType) 
+	= bitwiseAnd(source, hexiconst("0xFFFF"))
+when sourceType == primitive("short");
+
+default Expression wideningMask(Expression source, Type sourceType, Type targetType) 
+	= source;
+	
+
+str eval(Expression e) =
+	"<eval(wideningMask(e.source, e.sourceType, e.targetType))>"
+when e is maskAndWidenPrimitiveCast;
+
+str toString(Expression e) =
+	"<toString(wideningMask(e.source, e.sourceType, e.targetType))>"
+when e is maskAndWidenPrimitiveCast;
 
 
 str hashCode(Argument a) = primitiveHashCode(a) when isPrimitive(a.\type);

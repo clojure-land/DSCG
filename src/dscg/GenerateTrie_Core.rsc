@@ -487,3 +487,72 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 		
 }";
 }
+
+// TODO: extend JDT generation from model to other than 'trieNode' types
+str __generateCoreClassString(ts, rel[Option,bool] setup, str innerClassesString) = generateCoreClassString(ts);
+
+default str generateCoreClassString(TrieSpecifics ts) 
+	= generateJdtString(ts, jdt, core(immutable()))
+when jdt := coreJdt(ts, immutable(), modifierList = [ "private", "abstract", "static" ]);
+
+lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, Artifact artifact:core(immutable())) 
+	= [ <nodeType,method> | method <- declaredMethodsByCollection(ts)];
+
+list[PredefOp] declaredMethodsByCollection(TrieSpecifics ts) = [
+	
+	emptyTrieNodeConstant(),
+	
+	containsKey(isRare = false, customComparator = false),
+	containsKey(isRare = false, customComparator = true),
+	containsKey(isRare = true, customComparator = false),
+	containsKey(isRare = true, customComparator = true),	
+
+	containsValue(),
+	containsValue(customComparator = true),
+
+	containsEntry(),
+	containsEntry(customComparator = true),
+
+	get(),
+	get(customComparator = true),
+
+	insertTuple(false, false),
+	insertTuple(false, true),
+	insertTuple(true, false),
+	insertTuple(true, true),	
+
+	insertCollection(),
+	insertCollection(customComparator = true),
+	
+	removeTuple(),
+	removeTuple(customComparator = true),
+
+	removeCollection(),
+	removeCollection(customComparator = true),
+
+	retainCollection(),
+	retainCollection(customComparator = true),
+
+	put(),
+	putAll(),
+
+	add(),
+	addAll(),
+
+	clear(),
+	remove(),
+	
+	removeAll(),
+	retainAll(),
+
+	size(),
+	isEmpty(),	
+	iterator(),
+	keyIterator(),
+	valueIterator(),
+	entryIterator(),	
+	tupleIterator(),
+	valueCollectionsSpliterator(),
+	valueCollectionsStream()	
+	
+];
