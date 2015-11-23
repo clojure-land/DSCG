@@ -16,6 +16,8 @@ import dscg::Common_ContentType;
 
 import IO;
 import List;
+import Map;
+import Relation;
 //import lang::rascal::\syntax::Rascal;
 import util::Math;
 import util::Maybe;
@@ -26,20 +28,25 @@ import util::Maybe;
 
 
 
-void anExperiment() {
-	list[Partition] partitionList = pscene_typedPayload_typedNodes_bounded();
-	
-	map[str, int] substitutionMap = ( "payload": 5, "rarePayload": 3, "node": 10 );
-		
-	// ...
-	
+int anExperiment() {
+	list[Partition] partitionList = pscene_typedPayload_typedNodes_bounded();	
+
+	map[str, int] substitutionMap = ( "payload": 2, "rarePayload": 3, "node": 4 );	
+
 	JvmMemoryLayoutOption mlOption = compressedOops(true);
 	
-	s = { <s.id, sizeOf(mlOption, s.itemType)> | /Partition s := partitionList, s is slice };
-	
-	println(s);
+	// TODO: consider amount of bitmaps and their sizes 
+	return sizeOfObjectHeader(mlOption) + partitionListFootprint(partitionList, substitutionMap, mlOption);
 }
 
+int partitionListFootprint(list[Partition] partitionList, map[str, int] substitutionMap, JvmMemoryLayoutOption mlOption) {
+	sizeTypeRelation 
+		= { <s.id, sizeOf(mlOption, s.itemType)> | /Partition s := partitionList, s is slice };
+	
+	return ( 0 | it + size * count | <size, count> <- sizeTypeRelation<1,0> o toRel(substitutionMap) ); 
+}
+
+bool is8ByteAligned(int sizeInBytes) = (sizeInBytes % 8 == 0); 
 
 
 /*
@@ -49,10 +56,15 @@ data JvmMemoryLayoutOption
 	= jvmMemoryLayoutNoop() 
 	| compressedOops(bool isEnabled);
 
+
 int sizeOf(JvmMemoryLayoutOption _, Type::___primitive(str \type, isArray = false)) = 1 when \type == "byte";
 int sizeOf(JvmMemoryLayoutOption _, Type::___primitive(str \type, isArray = false)) = 2 when \type == "short";
 int sizeOf(JvmMemoryLayoutOption _, Type::___primitive(str \type, isArray = false)) = 4 when \type == "int";
 int sizeOf(JvmMemoryLayoutOption _, Type::___primitive(str \type, isArray = false)) = 8 when \type == "long";
+
+// does not consider padding
+int sizeOf(JvmMemoryLayoutOption mlOption, Type::typeSequence(list[Type] typeArguments)) 
+	= ( 0 | it + sizeOf(mlOption, t) | t <- typeArguments );
 
 int sizeOf(JvmMemoryLayoutOption::compressedOops(false), Type t) = 8 when t has isArray, t.isArray == false;
 int sizeOf(JvmMemoryLayoutOption::compressedOops(true),  Type t) = 4 when t has isArray, t.isArray == false;
@@ -60,6 +72,10 @@ int sizeOf(JvmMemoryLayoutOption _,  Type t) = 4 when t has isArray, t.isArray =
 
 default int sizeOf(JvmMemoryLayoutOption mlOption, Type t) { throw "<mlOption> \n <t>"; }
 
+
+int sizeOfObjectHeader(JvmMemoryLayoutOption::compressedOops(true )) = 12;
+int sizeOfObjectHeader(JvmMemoryLayoutOption::compressedOops(false)) = 16;
+default int sizeOfObjectHeader(JvmMemoryLayoutOption _) = 12;
 
 
 int maxUntypedSlotArityCount(TrieSpecifics ts)
