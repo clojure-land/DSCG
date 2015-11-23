@@ -82,7 +82,8 @@ data Type
 	| primitive(str \type, bool isArray = false)
 	| ___primitive(str \type, bool isArray = false)
 	
-	| typeSequence(list[Type] typeArguments)
+	| typeSequence(list[Type] typeArgumentList)
+	| eitherTypeSequence(set[Type] typeArgumentSet)
 	;
 	
 default Type object(bool isArray = false) = specific("Object", isArray = isArray);	 	
@@ -507,8 +508,8 @@ data TrieSpecifics
 			ctPayloadArg(1): valType, 
 			ctPayloadArg(0, isRare = false): keyType, 
 			ctPayloadArg(1, isRare = false): valType, 
-			ctKey(isRare = true): primitiveToClass(keyType), // object()
-			ctVal(isRare = true): primitiveToClass(valType), // object() 
+			ctKey(isRare = true): object(), // primitiveToClass(keyType) 
+			ctVal(isRare = true): object(), // primitiveToClass(valType) 
 			ctNode(): generic("<AbstractNode(ds)><GenericsStr(dataStructureToTupleTypeList(ds, [keyType, valType]))>")),
 					
 		Argument BIT_PARTITION_SIZE = field(primitive("int"), "BIT_PARTITION_SIZE"), 
@@ -863,7 +864,7 @@ default Argument primitiveToClassArgument(Argument nonPrimitive) = nonPrimitive;
 bool isReference(Type t) = !isPrimitive(t);
 
 bool isPrimitive(Type ts) 
-	= ( true | it && isPrimitive(t) | t <- ts.typeArguments ) 
+	= ( true | it && isPrimitive(t) | t <- ts.typeArgumentList) 
 when ts is typeSequence;
 
 bool isPrimitive(Type \type) = true when ___primitive(_) := \type;

@@ -28,6 +28,31 @@ import util::Maybe;
 
 
 
+tuple[&T, &T] toTuple(list[&T] xs:[ x, y ]) = <x, y>;
+tuple[&T, &T, &T] toTuple(list[&T] xs:[ x, y, z ]) = <x, y, z>; 
+ 
+set[&T] toSet(tuple[&T, &T] xs:<x, y>) = { x, y };
+set[&T] toSet(tuple[&T, &T, &T] xs:<x, y, z>) = { x, y, z };
+
+test bool pushDownTest() {
+	Type payloadType = eitherTypeSequence({ s.itemType | /Partition s := simplify(pscene_typedPayload_typedRarePayload_typedNodes(), psStripIfReferenceType()), s is slice, s.contentType is ctPayloadTuple }); 
+
+	return pushDownEitherType(payloadType) == typeSequence([
+		eitherTypeSequence({ primitive("int"), generic("K") }),
+		eitherTypeSequence({ primitive("int"), generic("V") })
+	]);
+}
+
+Type pushDownEitherType(Type t:eitherTypeSequence({ t1, t2 })) 
+	= typeSequence([
+		eitherTypeSequence(toSet(zipped[0])), 
+		eitherTypeSequence(toSet(zipped[1]))])
+when t1 is typeSequence, t2 is typeSequence, zipped := zip(t1.typeArgumentList, t2.typeArgumentList); 
+
+default Type pushDownEitherType(Type \type) { throw "<\type>"; }
+
+
+
 int anExperiment() {
 	list[Partition] partitionList = pscene_typedPayload_typedNodes_bounded();	
 
