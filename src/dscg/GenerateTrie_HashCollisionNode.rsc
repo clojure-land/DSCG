@@ -314,6 +314,12 @@ Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashColli
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), slotArity()) =
 	UNSUPPORTED_OPERATION_EXCEPTION;
+	
+	
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), untypedSlotArity()) = true;
+
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), untypedSlotArity()) =
+	UNSUPPORTED_OPERATION_EXCEPTION;	
 
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getSlot()) = true;

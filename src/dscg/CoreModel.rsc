@@ -48,6 +48,16 @@ int partitionListFootprint(list[Partition] partitionList, map[str, int] substitu
 
 bool is8ByteAligned(int sizeInBytes) = (sizeInBytes % 8 == 0); 
 
+bool is8ByteAligned(map[str, int] substitutionMap) {
+	list[Partition] partitionList = pscene_typedPayload_typedNodes_bounded();	
+	JvmMemoryLayoutOption mlOption = compressedOops(true);
+	 
+	int sizeInBytes = sizeOfObjectHeader(mlOption) + partitionListFootprint(partitionList, substitutionMap, mlOption);
+	
+	return is8ByteAligned(sizeInBytes);
+}
+
+
 
 /*
  * Simplified model of JVM settings that influence memory layout of objects. 

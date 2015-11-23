@@ -16,11 +16,21 @@ import dscg::Common;
 import dscg::ArrayUtils;
 import util::Math;
 
+
+
 str className(TrieSpecifics ts, TrieNodeType nodetype:specializedBitmapIndexedNode(n, m)) = "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
 
-default str generateSpecializedBitmapIndexedNodeClassString(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m)) 
-	= generateJdtString(ts, jdt, nodeType)
-when jdt := specializedBitmapIndexedNode(ts, nodeType, modifierList = [ "private", "static" ]);
+str generateSpecializedBitmapIndexedNodeClassString(TrieSpecifics ts) {  
+	str result = "";
+
+	for(nt <- carrier(ts.model.refines), nt is specializedBitmapIndexedNode) {
+		JavaDataType jdt = specializedBitmapIndexedNode(ts, nt, modifierList = [ "private", "static" ]);
+		result += generateJdtString(ts, jdt, nt);
+		result += "\n\n";
+	}
+		
+	return result;
+}
 
 JavaDataType specializedBitmapIndexedNode(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m), list[str] modifierList = []) {
 

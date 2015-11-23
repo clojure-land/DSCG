@@ -3429,10 +3429,13 @@ Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 	rel[TrieNodeType from, TrieNodeType to] refines = staticRefines();
 
 	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
-		int heterogeneousBound = tupleLength(ts.ds) * ts.nBound;
-	
-		refines += { <specializedBitmapIndexedNode(n, m), compactNode(specializeByBitmap(true, true))> | m <- [0..ts.nMax+1], n <- [0..heterogeneousBound+1], (n + m) <= heterogeneousBound };
-		//refines += { <specializedBitmapIndexedNode(mn, 0), compactNode()> | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound };
+		refines += {
+			<specializedBitmapIndexedNode(mn, m), compactNode(specializeByBitmap(true, true))> 
+				| m <- [0..ts.nMax+1]
+				, mn <- [0..tupleLength(ts.ds) * (ts.nMax - m)  + 1]
+				, (m + ceil(mn/2.0)) <= ts.nBound 
+				//, is8ByteAligned(("payload": m, "node": mn))
+		};
 	} else if (isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useUntypedVariables())) {
 		refines += { <specializedBitmapIndexedNode(n, m), compactNode()> | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound };
 	} else if (isOptionEnabled(ts.setup, useSpecialization()) && isOptionEnabled(ts.setup, useUntypedVariables())) {
