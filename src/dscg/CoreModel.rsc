@@ -18,6 +18,7 @@ import IO;
 import List;
 import Map;
 import Relation;
+import ValueIO;
 //import lang::rascal::\syntax::Rascal;
 import util::Math;
 import util::Maybe;
@@ -43,15 +44,34 @@ test bool pushDownTest() {
 	]);
 }
 
-Type pushDownEitherType(Type t:eitherTypeSequence({ t1, t2 })) 
+Type transformEitherType(Type t:eitherTypeSequence({ t1, t2 })) 
 	= typeSequence([
 		eitherTypeSequence(toSet(zipped[0])), 
 		eitherTypeSequence(toSet(zipped[1]))])
 when t1 is typeSequence, t2 is typeSequence, zipped := zip(t1.typeArgumentList, t2.typeArgumentList); 
 
-default Type pushDownEitherType(Type \type) { throw "<\type>"; }
+default Type transformEitherType(Type t) = t;
+
+Type pushDownEitherType(Type topType) {
+	return top-down visit(topType) {
+		case Type \type => transformEitherType(\type)
+	}
+}
 
 
+
+
+//Type generalizeEitherType(Type t:eitherTypeSequence(set[Type] typeArgumentSet)) = object();
+
+CoreModel filterByContentTypePayloadTuple(CoreModel cm)
+	= [ s | /Partition s := cm, s is slice, s.contentType is ctPayloadTuple ];
+
+default Type generalizeEitherType(Type t) {
+	return bottom-up visit(t) {
+		case eitherTypeSequence(set[Type] typeArgumentSet) => object()
+	}
+}
+ 
 
 int anExperiment() {
 	list[Partition] partitionList = pscene_typedPayload_typedNodes_bounded();	
@@ -188,6 +208,29 @@ when p.contentType == ctSlot();
 	
 	int heterogeneousBound = tupleLength(ts.ds) * ts.nBound;
 */
+
+alias CoreModel = list[Partition];
+
+CoreModel getCoreModel(TrieSpecifics ts) = simplify(pscene_typedPayload_typedRarePayload_typedNodes(), psStripIfReferenceType()); 
+
+//str GenericsExpanded(DataStructure ds:\vector(), list[Type] tupleTypes:[Type keyType, Type valType, *_]) = "\<<typeToString(primitiveToClass(keyType))>, <typeToString(primitiveToClass(valType))>\>";
+//str GenericsExpanded(DataStructure ds:\map(), list[Type] tupleTypes:[Type keyType, Type valType, *_]) = "\<<typeToString(primitiveToClass(keyType))>, <typeToString(primitiveToClass(valType))>\>";
+//str GenericsExpanded(DataStructure ds:\set(), list[Type] tupleTypes:[Type keyType, *_]) = "\<<typeToString(primitiveToClass(keyType))>\>";
+
+str GenericsExpanded(TrieSpecifics ts) {
+	CoreModel cm = getCoreModel(ts);
+
+	Type generalizedType = eitherTypeSequence({ s.itemType | s <- filterByContentTypePayloadTuple(cm) });
+	Type simplifiedType = (generalizeEitherType o pushDownEitherType)(generalizedType);
+
+	list[Type] typeList = singletonOrTypeSequenceToList(simplifiedType);
+	str commaSeparatedTypeList = intercalate(", ", mapper(typeList, typeToString));
+
+	return "\<<commaSeparatedTypeList>\>";
+} 
+
+list[Type] singletonOrTypeSequenceToList(typeSequence(typeArgumentList)) = typeArgumentList;
+default list[Type] singletonOrTypeSequenceToList(Type t) = [ t ]; 
 
 data Direction 
 	= forward()
@@ -364,5 +407,3 @@ when isReference(p1.itemType) && isReference(p2.itemType) &&
 		/strategy:psStripIfReferenceType() := strategySet;								
 		
 default list[Partition] simplifyOne(list[Partition] partitionList, set[PartitionStrategy] strategySet) = partitionList;
-
-
