@@ -13,20 +13,20 @@ module dscg::GenerateTrie_NodeIterator
 
 import dscg::Common;
 
-str generateNodeIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup, str classNamePostfix) {
+str generateNodeIteratorClassString(TrieSpecifics ts) {
 
-	str nodeIteratorClassName = "Trie<toString(ds)><classNamePostfix>NodeIterator";	
+	str nodeIteratorClassName = "Trie<toString(ts.ds)><ts.classNamePostfix>NodeIterator";	
 
 	return 
 	"/**
 	 * Iterator that first iterates over inlined-values and then continues depth
 	 * first recursively.
 	 */
-	private static class <nodeIteratorClassName><GenericsStr(ts.tupleTypes)> implements Iterator\<<AbstractNode(ds)><GenericsStr(ts.tupleTypes)>\> {
+	private static class <nodeIteratorClassName><GenericsStr(ts.tupleTypes)> implements Iterator\<<AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)>\> {
 
-		final Deque\<Iterator\<? extends <AbstractNode(ds)><GenericsStr(ts.tupleTypes)>\>\> nodeIteratorStack;
+		final Deque\<Iterator\<? extends <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)>\>\> nodeIteratorStack;
 
-		<nodeIteratorClassName>(<AbstractNode(ds)><GenericsStr(ts.tupleTypes)> rootNode) {
+		<nodeIteratorClassName>(<AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> rootNode) {
 			nodeIteratorStack = new ArrayDeque\<\>();
 			nodeIteratorStack.push(Collections.singleton(rootNode).iterator());
 		}
@@ -48,12 +48,12 @@ str generateNodeIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartition
 		}
 
 		@Override
-		public <AbstractNode(ds)><GenericsStr(ts.tupleTypes)> next() {
+		public <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> next() {
 			if (!hasNext()) {
 				throw new NoSuchElementException();
 			}
 
-			<AbstractNode(ds)><GenericsStr(ts.tupleTypes)> innerNode = nodeIteratorStack.peek().next();
+			<AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> innerNode = nodeIteratorStack.peek().next();
 
 			if (innerNode.hasNodes()) {
 				nodeIteratorStack.push(innerNode.nodeIterator());

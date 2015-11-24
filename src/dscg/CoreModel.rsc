@@ -135,7 +135,7 @@ default int sizeOfObjectHeader(JvmMemoryLayoutOption _) = 12;
 
 int maxUntypedSlotArityCount(TrieSpecifics ts)
 	= tupleLength(ts.ds) * ts.nMax 
-when isOptionEnabled(ts.setup, useHeterogeneousEncoding());
+when isOptionEnabled(ts, useHeterogeneousEncoding());
 
 Maybe[int] maxUntypedSlotArityCount(list[Partition] partitionList) 
 	= nothing()
@@ -212,25 +212,6 @@ when p.contentType == ctSlot();
 alias CoreModel = list[Partition];
 
 CoreModel getCoreModel(TrieSpecifics ts) = simplify(pscene_typedPayload_typedRarePayload_typedNodes(), psStripIfReferenceType()); 
-
-//str GenericsExpanded(DataStructure ds:\vector(), list[Type] tupleTypes:[Type keyType, Type valType, *_]) = "\<<typeToString(primitiveToClass(keyType))>, <typeToString(primitiveToClass(valType))>\>";
-//str GenericsExpanded(DataStructure ds:\map(), list[Type] tupleTypes:[Type keyType, Type valType, *_]) = "\<<typeToString(primitiveToClass(keyType))>, <typeToString(primitiveToClass(valType))>\>";
-//str GenericsExpanded(DataStructure ds:\set(), list[Type] tupleTypes:[Type keyType, *_]) = "\<<typeToString(primitiveToClass(keyType))>\>";
-
-str GenericsExpanded(TrieSpecifics ts) {
-	CoreModel cm = getCoreModel(ts);
-
-	Type generalizedType = eitherTypeSequence({ s.itemType | s <- filterByContentTypePayloadTuple(cm) });
-	Type simplifiedType = (generalizeEitherType o pushDownEitherType)(generalizedType);
-
-	list[Type] typeList = singletonOrTypeSequenceToList(simplifiedType);
-	str commaSeparatedTypeList = intercalate(", ", mapper(typeList, typeToString));
-
-	return "\<<commaSeparatedTypeList>\>";
-} 
-
-list[Type] singletonOrTypeSequenceToList(typeSequence(typeArgumentList)) = typeArgumentList;
-default list[Type] singletonOrTypeSequenceToList(Type t) = [ t ]; 
 
 data Direction 
 	= forward()
@@ -407,3 +388,56 @@ when isReference(p1.itemType) && isReference(p2.itemType) &&
 		/strategy:psStripIfReferenceType() := strategySet;								
 		
 default list[Partition] simplifyOne(list[Partition] partitionList, set[PartitionStrategy] strategySet) = partitionList;
+
+
+
+
+
+////
+// FUNCTIONS TO MODEL COLLECTIONS GENERICS 
+////////
+
+//Argument argumentFromType(Type \type) =
+
+// TODO: this is flaky ...
+list[Argument(Type)] typeToArgumentConverterList = [ key, val ];
+
+ 
+Argument collTupleArg(TrieSpecifics ts, int idx)
+	= collTupleArgs(ts)[idx];
+/***/
+list[Argument] collTupleArgs(TrieSpecifics ts) 
+	= [ typeToArgumentConverterList[idx](\type) | idx <- [0 .. size], \type := typeList[idx] ]
+when typeList := collTupleTypes(ts), size := size(typeList);
+
+Type collTupleType(TrieSpecifics ts, int idx) = CollectionGenericsExpanded(ts)[idx];
+list[Type] collTupleTypes(TrieSpecifics ts) = CollectionGenericsExpanded(ts);
+
+/*
+ * Expansion to the maximal length of generics for a 'java.util.Collection' data type.
+ */
+list[Type] CollectionGenericsExpanded(TrieSpecifics ts) {
+	CoreModel cm = getCoreModel(ts);
+
+	Type generalizedType = eitherTypeSequence({ s.itemType | s <- filterByContentTypePayloadTuple(cm) });
+	Type simplifiedType = (generalizeEitherType o pushDownEitherType)(generalizedType);
+
+	return singletonOrTypeSequenceToList(simplifiedType);
+} 
+
+str CollectionGenericsExpandedStr(TrieSpecifics ts)
+	= "\<<intercalate(", ", mapper(typeList, typeToString))>\>"
+when typeList := CollectionGenericsExpanded(ts);
+
+/*
+ * Functional view on a data structure. Views set data type as identity function.
+ */
+str SupplierIteratorGenericsStr(TrieSpecifics ts)
+	= "\<<intercalate(", ", mapper(typeList, typeToString))>\>"
+when typeList := singletonToTuple(CollectionGenericsExpanded(ts));
+
+list[&T] singletonToTuple(list[&T] lst:[ fst ]) = [ fst, fst ];
+default list[&T] singletonToTuple(list[&T] lst) = lst;
+
+list[Type] singletonOrTypeSequenceToList(typeSequence(typeArgumentList)) = typeArgumentList;
+default list[Type] singletonOrTypeSequenceToList(Type t) = [ t ];

@@ -140,7 +140,7 @@ str generateLeafNodeClassString(TrieSpecifics ts) {
 //		}
 //
 //		@Override
-//		SupplierIterator<SupplierIteratorGenerics(ds)> payloadIterator() {
+//		SupplierIterator<SupplierIteratorGenericsStr(ts)> payloadIterator() {
 //			return ArrayKeyValueSupplierIterator.of(new Object[] { key, val }, 0, 2);
 //		}
 //
@@ -291,7 +291,7 @@ str generateLeafNodeClassString(TrieSpecifics ts) {
 //		<implOrOverride(getDef(ts, trieNode(abstractNode()), slotArity()),
 //			UNSUPPORTED_OPERATION_EXCEPTION)>
 //
-//		<if (isOptionEnabled(ts.setup, useStructuralEquality())) {>
+//		<if (isOptionEnabled(ts, useStructuralEquality())) {>
 //		@Override
 //		public int hashCode() {
 //			final int prime = 31;

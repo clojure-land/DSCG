@@ -155,7 +155,7 @@ data PredefOp = getKeyValueEntry();
 //		/* DONE */ <implOrOverride(getDef(ts, trieNode(abstractNode()), slotArity()),
 //			UNSUPPORTED_OPERATION_EXCEPTION)>
 //
-//		<if (isOptionEnabled(ts.setup, useStructuralEquality())) {>
+//		<if (isOptionEnabled(ts, useStructuralEquality())) {>
 //		/* DONE */ @Override
 //		public int hashCode() {
 //			final int prime = 31;
@@ -224,7 +224,7 @@ data PredefOp = getKeyValueEntry();
 //					
 //		<impl(ts, trieNode(hashCollisionNode()), isTrieStructureValid())>
 //		
-//		<if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {>
+//		<if (isOptionEnabled(ts, useHeterogeneousEncoding())) {>
 //		/* DONE */ <implOrOverride(getDef(ts, trieNode(compactNode()), getContent(ctPayloadArg(0, isRare = true))), 
 //			UNSUPPORTED_OPERATION_EXCEPTION)>
 //			
@@ -330,7 +330,7 @@ Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashColli
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx, isRare = true))) = true;
 
-// TODO: isOptionEnabled(ts.setup, useHeterogeneousEncoding())
+// TODO: isOptionEnabled(ts, useHeterogeneousEncoding())
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx, isRare = true))) = 
 	UNSUPPORTED_OPERATION_EXCEPTION;
 
@@ -355,7 +355,7 @@ Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashColli
 		
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hashCode()) = true;
 
-// TODO: isOptionEnabled(ts.setup, useStructuralEquality())
+// TODO: isOptionEnabled(ts, useStructuralEquality())
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hashCode()) =
 	"final int prime = 31;
 	int result = 0;
@@ -366,7 +366,7 @@ Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashColli
 	
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), equals()) = true;
 
-// TODO: isOptionEnabled(ts.setup, useStructuralEquality())
+// TODO: isOptionEnabled(ts, useStructuralEquality())
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), equals()) =
 	"if (null == other) {
 		return false;
@@ -423,7 +423,7 @@ Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashColli
 data PredefOp = hashCollisionNodeConstructor();
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:hashCollisionNode()), PredefOp::hashCollisionNodeConstructor())
-	= constructor(\return(\type), jdt.typeName, args = [ *fieldList ], visibility = "private", argsFilter = ts.argsFilter) // metadataArguments(ts)
+	= constructor(\return(\type), jdt.typeName, args = [ *fieldList ], visibility = "private", argsFilter = argsFilter(ts)) // metadataArguments(ts)
 when jdt := hashCollisionNode(ts) && 
 		\type := jdtToType(jdt) &&
 		fieldList := [ predefOpToArgument(ts, artifact, op) | op <- declares(ts, nodeType)<1>, op != hashCollisionNodeConstructor(), opDef := getDef(ts, artifact, op), opDef is property, opDef.isActive && opDef.isStateful && opDef.initializeAtConstruction ];

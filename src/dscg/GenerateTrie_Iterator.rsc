@@ -14,7 +14,7 @@ module dscg::GenerateTrie_Iterator
 import dscg::Common;
 import util::Math;
 
-str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
+str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound)) = 
 	"/**
 	 * Iterator skeleton that uses a fixed stack in depth.
 	 */
@@ -109,7 +109,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 	}
 
 	protected static class <toString(ts.ds)>KeyIterator<GenericsStr(ts.tupleTypes)> extends Abstract<toString(ts.ds)>Iterator<GenericsStr(ts.tupleTypes)> implements
-			<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}> {
+			<if (isOptionEnabled(ts, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenericsStr(ts)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}> {
 
 		<toString(ts.ds)>KeyIterator(<AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> rootNode) {
 			super(rootNode);
@@ -124,7 +124,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 			}
 		}
 
-		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
+		<if (isOptionEnabled(ts, useSupplierIterator())) {>
 		@Override
 		public <typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
 			throw new UnsupportedOperationException();
@@ -133,7 +133,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 
 	<if (\map() := ds) {>
 	protected static class <toString(ts.ds)>ValueIterator<GenericsStr(ts.tupleTypes)> extends Abstract<toString(ts.ds)>Iterator<GenericsStr(ts.tupleTypes)> implements
-			<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenericsReversed(ts.ds, ts.tupleTypes)><} else {>Iterator\<<typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>\><}> {
+			<if (isOptionEnabled(ts, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenericsReversed(ts.ds, ts.tupleTypes)><} else {>Iterator\<<typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>\><}> {
 
 		<toString(ts.ds)>ValueIterator(<AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> rootNode) {
 			super(rootNode);
@@ -148,7 +148,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 			}
 		}
 
-		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
+		<if (isOptionEnabled(ts, useSupplierIterator())) {>
 		@Override
 		public <typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))> get() {
 			throw new UnsupportedOperationException();
@@ -157,14 +157,14 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 
 	<if (\map(multi = false) := ds) {>
 	protected static class <toString(ts.ds)>EntryIterator<GenericsStr(ts.tupleTypes)> extends Abstract<toString(ts.ds)>Iterator<GenericsStr(ts.tupleTypes)> implements
-			<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator\<Map.Entry<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>, <typeToString(primitiveToClass(ts.keyType))>\><} else {>Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\><}> {
+			<if (isOptionEnabled(ts, useSupplierIterator())) {>SupplierIterator\<Map.Entry<SupplierIteratorGenericsStr(ts)>, <typeToString(primitiveToClass(ts.keyType))>\><} else {>Iterator\<Map.Entry<CollectionGenericsExpandedStr(ts)>\><}> {
 
 		<toString(ts.ds)>EntryIterator(<AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> rootNode) {
 			super(rootNode);
 		}
 
 		@Override
-		public Map.Entry<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)> next() {
+		public Map.Entry<SupplierIteratorGenericsStr(ts)> next() {
 			if (!hasNext()) {
 				throw new NoSuchElementException();
 			} else {
@@ -172,7 +172,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 			}
 		}
 
-		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
+		<if (isOptionEnabled(ts, useSupplierIterator())) {>
 		@Override
 		public <typeToString(primitiveToClass(ts.keyType))> get() {
 			throw new UnsupportedOperationException();
@@ -182,7 +182,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 	
 	<if (\map(multi = true) := ds) {>
 	protected static class <toString(ts.ds)>TupleIterator\<K, V, T\> extends Abstract<toString(ts.ds)>Iterator\<K, V\> implements
-			<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator\<Map.Entry<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>, <typeToString(primitiveToClass(ts.keyType))>\><} else {>Iterator\<T\><}> {
+			<if (isOptionEnabled(ts, useSupplierIterator())) {>SupplierIterator\<Map.Entry<SupplierIteratorGenericsStr(ts)>, <typeToString(primitiveToClass(ts.keyType))>\><} else {>Iterator\<T\><}> {
 
 		final BiFunction\<K, V, T\> tupleOf;
 
@@ -221,7 +221,7 @@ str generateIteratorClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize
 			}
 		}
 
-		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
+		<if (isOptionEnabled(ts, useSupplierIterator())) {>
 		@Override
 		public <typeToString(primitiveToClass(ts.keyType))> get() {
 			throw new UnsupportedOperationException();

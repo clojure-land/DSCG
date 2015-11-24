@@ -13,6 +13,5 @@ module dscg::GenerateTrie_AbstractAnyNode
 
 import dscg::Common;
 
-str generateAbstractAnyNodeClassString(ts:___expandedTrieSpecifics(ds, bitPartitionSize, nMax, nBound), rel[Option,bool] setup) = 
-	"protected static interface <ts.abstractAnyNodeClassName>\<K, V\> {}"
-	;
+str generateAbstractAnyNodeClassString(TrieSpecifics ts) 
+	= "protected static interface <ts.abstractAnyNodeClassName>\<K, V\> {}";

@@ -14,7 +14,7 @@ module dscg::GenerateTrie_Result
 import dscg::Common;
 import dscg::GenerateTrie;
 
-str generateResultClassString(TrieSpecifics ts, rel[Option,bool] setup) {
+str generateResultClassString(TrieSpecifics ts) {
 
 	classNameStr = "<ts.ResultStr>";
 

@@ -184,7 +184,7 @@ when !bs.supportsValues;
 data PredefOp = constructor();
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactHeterogeneousNode(BitmapSpecialization bs)), PredefOp::constructor())
-	= constructor(\return(\type), jdt.typeName, args = [ ts.mutator ] + fieldList, visibility = "private", argsFilter = ts.argsFilter) // metadataArguments(ts)
+	= constructor(\return(\type), jdt.typeName, args = [ ts.mutator ] + fieldList, visibility = "private", argsFilter = argsFilter(ts)) // metadataArguments(ts)
 when jdt := compactHeterogeneousNode(ts, nodeType) && 
 		\type := jdtToType(jdt) &&
 		fieldList := [ predefOpToArgument(ts, artifact, op) | op <- declares(ts, nodeType)<1>, op != constructor(), opDef := getDef(ts, artifact, op), opDef is property, opDef.isStateful && opDef.initializeAtConstruction ];

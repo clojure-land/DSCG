@@ -22,7 +22,7 @@ str generate_checkHashCodeAndSize(TrieSpecifics ts) =
 		int hash = 0;
 		int size = 0;		
 	
-		for (Iterator<GenericsExpanded(ts.ds, ts.tupleTypes)> it = keyIterator(); it.hasNext();) {
+		for (Iterator<CollectionGenericsExpandedStr(ts)> it = keyIterator(); it.hasNext();) {
 			<dec(key(ts.keyType))> = it.next();
 	
 			hash += <hashCode(key(ts.keyType))>;
@@ -41,8 +41,8 @@ str generate_checkHashCodeAndSize(TrieSpecifics ts) =
 		int hash = 0;
 		int size = 0;
 		
-		for (Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> it = entryIterator(); it.hasNext();) {
-			final Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> entry = it.next();			
+		for (Iterator\<Map.Entry<CollectionGenericsExpandedStr(ts)>\> it = entryIterator(); it.hasNext();) {
+			final Map.Entry<CollectionGenericsExpandedStr(ts)> entry = it.next();			
 			<dec(key(ts.keyType))> = entry.getKey();
 			<dec(val(ts.valType))> = entry.getValue();
 	
@@ -140,14 +140,14 @@ default str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClas
 	
 @index=2 bool exists_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass)  = true;
 @index=2 str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass) = 
-	"Set\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> entrySet = null;
+	"Set\<java.util.Map.Entry<CollectionGenericsExpandedStr(ts)>\> entrySet = null;
 	'
 	'if (entrySet == null) {
-	'	entrySet = new AbstractSet\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
+	'	entrySet = new AbstractSet\<java.util.Map.Entry<CollectionGenericsExpandedStr(ts)>\>() {
 	'		@Override
-	'		public Iterator\<java.util.Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> iterator() {
-	'			return new Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\>() {
-	'				private final Iterator\<Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)>\> i = entryIterator();
+	'		public Iterator\<java.util.Map.Entry<CollectionGenericsExpandedStr(ts)>\> iterator() {
+	'			return new Iterator\<Map.Entry<CollectionGenericsExpandedStr(ts)>\>() {
+	'				private final Iterator\<Map.Entry<CollectionGenericsExpandedStr(ts)>\> i = entryIterator();
 	'
 	'				@Override
 	'				public boolean hasNext() {
@@ -155,7 +155,7 @@ default str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClas
 	'				}
 	'
 	'				@Override
-	'				public Map.Entry<GenericsExpanded(ts.ds, ts.tupleTypes)> next() {
+	'				public Map.Entry<CollectionGenericsExpandedStr(ts)> next() {
 	'					return i.next();
 	'				}
 	'
@@ -213,7 +213,7 @@ default str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) = ""
 
 @index=2 bool exists_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts)  = true;
 @index=2 str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) =
-	"List<GenericsExpanded(ts.ds, ts.tupleTypes)> list = new ArrayList<GenericsExpanded(ts.ds, ts.tupleTypes)>(cachedSize);
+	"List<CollectionGenericsExpandedStr(ts)> list = new ArrayList<CollectionGenericsExpandedStr(ts)>(cachedSize);
 	'
 	'for (<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))> key : this) {
 	'	list.add(key);
@@ -235,7 +235,7 @@ default str generate_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingCla
 		return false;
 	}
 
-	<if (isOptionEnabled(ts.setup, useStructuralEquality())) {>
+	<if (isOptionEnabled(ts, useStructuralEquality())) {>
 	if (other instanceof <enclosingClass>) {
 		<enclosingClass><QuestionMarkGenerics(ts.ds, ts.tupleTypes)> that = (<enclosingClass><QuestionMarkGenerics(ts.ds, ts.tupleTypes)>) other;
 
@@ -243,7 +243,7 @@ default str generate_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingCla
 			return false;
 		}
 		
-		<if (isOptionEnabled(ts.setup, useIncrementalHashCodes())) {>
+		<if (isOptionEnabled(ts, useIncrementalHashCodes())) {>
 		if (this.hashCode != that.hashCode) {
 			return false;
 		}

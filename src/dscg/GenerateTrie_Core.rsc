@@ -17,7 +17,7 @@ extend dscg::Common;
 extend dscg::Common_Iterator;
 import dscg::GenerateTrie_Core_Common;
 
-str generateCoreClassString(ts, rel[Option,bool] setup, str innerClassesString) {
+str generateCoreClassString(ts, str innerClassesString) {
 	
 	//TrieSpecifics ts = setArtifact(tsSuper, core(immutable()));
 	
@@ -71,7 +71,7 @@ import java.util.stream.StreamSupport;
 
 
 @SuppressWarnings(\"rawtypes\")
-public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
+public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable<toString(ts.ds)><CollectionGenericsExpandedStr(ts)> {
 
 	<impl(ts, core(immutable()), emptyTrieNodeConstant())>
 
@@ -94,13 +94,13 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	}
 
 	<toString(UNCHECKED_ANNOTATION())>
-	public static final <GenericsStr(ts.tupleTypes)> Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> of() {
+	public static final <GenericsStr(ts.tupleTypes)> Immutable<toString(ts.ds)><CollectionGenericsExpandedStr(ts)> of() {
 		return <ts.coreClassName>.<emptyCollectionConstantName>;
 	}
 
 	<if (\map() := ts.ds) {>
 	<toString(UNCHECKED_ANNOTATION())>
-	public static final <GenericsStr(ts.tupleTypes)> Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> of(Object... keyValuePairs) {
+	public static final <GenericsStr(ts.tupleTypes)> Immutable<toString(ts.ds)><CollectionGenericsExpandedStr(ts)> of(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
 			throw new IllegalArgumentException(\"Length of argument list is uneven: no key/value pairs.\");
 		}
@@ -120,7 +120,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	
 	<if (ts.ds == \set()) {>
 	<toString(UNCHECKED_ANNOTATION())>
-	public static final <GenericsStr(ts.tupleTypes)> Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> of(<typeToString(ts.keyType)>... keys) {
+	public static final <GenericsStr(ts.tupleTypes)> Immutable<toString(ts.ds)><CollectionGenericsExpandedStr(ts)> of(<typeToString(ts.keyType)>... keys) {
 		<dec(asVar(immutableResult))> = <ts.coreClassName>.<emptyCollectionConstantName>;
 
 		for (<dec(key(ts.keyType))> : keys) {
@@ -132,13 +132,13 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	<}>
 	
 	<toString(UNCHECKED_ANNOTATION())>
-	public static final <GenericsStr(ts.tupleTypes)> Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> transientOf() {
+	public static final <GenericsStr(ts.tupleTypes)> Transient<toString(ts.ds)><CollectionGenericsExpandedStr(ts)> transientOf() {
 		return <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 	}
 
 	<if (\map() := ts.ds) {>
 	<toString(UNCHECKED_ANNOTATION())>
-	public static final <GenericsStr(ts.tupleTypes)> Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> transientOf(Object... keyValuePairs) {
+	public static final <GenericsStr(ts.tupleTypes)> Transient<toString(ts.ds)><CollectionGenericsExpandedStr(ts)> transientOf(Object... keyValuePairs) {
 		if (keyValuePairs.length % 2 != 0) {
 			throw new IllegalArgumentException(
 							\"Length of argument list is uneven: no key/value pairs.\");
@@ -159,8 +159,8 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	
 	<if (ts.ds == \set()) {>
 	<toString(UNCHECKED_ANNOTATION())>
-	public static final <GenericsStr(ts.tupleTypes)> Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> transientOf(<typeToString(ts.keyType)>... keys) {
-		final Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> result = <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
+	public static final <GenericsStr(ts.tupleTypes)> Transient<toString(ts.ds)><CollectionGenericsExpandedStr(ts)> transientOf(<typeToString(ts.keyType)>... keys) {
+		final Transient<toString(ts.ds)><CollectionGenericsExpandedStr(ts)> result = <ts.coreClassName>.<emptyCollectionConstantName>.asTransient();
 
 		for (<dec(key(ts.keyType))> : keys) {
 			<toString(call(transientResult, getDef(ts, core(transient()), insertTuple(false, false))))>;
@@ -280,12 +280,12 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 
 	@Override
 	public boolean isTransientSupported() {
-		return <isOptionEnabled(ts.setup, useStagedMutability())>; 
+		return <isOptionEnabled(ts, useStagedMutability())>; 
 	}
 
 	@Override
-	public Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> asTransient() {
-		<if (isOptionEnabled(ts.setup, useStagedMutability())) {> return new Transient<ts.coreClassName><GenericsStr(ts.tupleTypes)>(this); <} else {> <toString(UNSUPPORTED_OPERATION_EXCEPTION)> <}>		
+	public Transient<toString(ts.ds)><CollectionGenericsExpandedStr(ts)> asTransient() {
+		<if (isOptionEnabled(ts, useStagedMutability())) {> return new Transient<ts.coreClassName><GenericsStr(ts.tupleTypes)>(this); <} else {> <toString(UNSUPPORTED_OPERATION_EXCEPTION)> <}>		
 	}
 
 	<if (false) {>
@@ -468,7 +468,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	
 	<innerClassesString>
 		
-	<if (isOptionEnabled(ts.setup, useSunMiscUnsafe())) {>
+	<if (isOptionEnabled(ts, useSunMiscUnsafe())) {>
 	private abstract static class DataLayoutHelper<GenericsStr(ts.tupleTypes)> <extendsStr(compactNode(ts, compactNode(specializeByBitmap(true, true))))> {
 
 		private static final long[] arrayOffsets = arrayOffsets(DataLayoutHelper.class,
@@ -489,7 +489,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 }
 
 // TODO: extend JDT generation from model to other than 'trieNode' types
-str __generateCoreClassString(ts, rel[Option,bool] setup, str innerClassesString) = generateCoreClassString(ts);
+str __generateCoreClassString(ts, str innerClassesString) = generateCoreClassString(ts);
 
 default str generateCoreClassString(TrieSpecifics ts) 
 	= generateJdtString(ts, jdt, core(immutable()))

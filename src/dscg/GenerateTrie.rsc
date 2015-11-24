@@ -210,12 +210,12 @@ void doGenerate(TrieConfig cfg, str overideClassNamePostfixWith = "") {
 	//	TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts);
 	//	
 	//	innerClassStrings = innerClassStrings
-	//	+ [ generateResultClassString(tsSet, ts.setup) ]
+	//	+ [ generateResultClassString(tsSet) ]
 	//	+ [ generateAbstractNodeClassString(tsSet)]		
-	//	+ [ generateCompactNodeClassString(tsSet, ts.setup)];
+	//	+ [ generateCompactNodeClassString(tsSet)];
 	//}	
 		
-	list[str] classStrings = [ generateCoreClassString(ts, ts.setup, intercalate("\n", innerClassStrings))];			
+	list[str] classStrings = [ generateCoreClassString(ts, intercalate("\n", innerClassStrings))];			
 		
 	// writeFile(|project://DSCG/gen/org/eclipse/imp/pdb/facts/util/AbstractSpecialisedTrieMap.java|, classStrings);
 
@@ -227,57 +227,57 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 
 	list[str] innerClassStrings 
 		= [ generateOptionalClassString() ]
-		+ [ generateResultClassString(ts, ts.setup) ]
-		+ [ generateAbstractAnyNodeClassString(ts, ts.setup)]
+		+ [ generateResultClassString(ts) ]
+		+ [ generateAbstractAnyNodeClassString(ts)]
 		+ [ generateAbstractNodeClassString(ts, isLegacy = isLegacy)]
 		+ [ generateCompactNodeClassString(ts, isLegacy)];
 		// + [ generateFeatureFlagsClassString(ts, isLegacy = true)];
 
-	//if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
+	//if (isOptionEnabled(ts, useHeterogeneousEncoding())) {
 	//	innerClassStrings = innerClassStrings + [ generateCompactHeterogeneousNodeClassString(ts, isLegacy = isLegacy)];
 	//}
 
-	if (isOptionEnabled(ts.setup, separateTrieAndLeafNodes())) {
+	if (isOptionEnabled(ts, separateTrieAndLeafNodes())) {
 		innerClassStrings = innerClassStrings + [ generateLeafNodeClassString(ts)];
 	}
 
-	if (!isOptionEnabled(ts.setup, useSpecialization()) || ts.nBound < ts.nMax) {
+	if (!isOptionEnabled(ts, useSpecialization()) || ts.nBound < ts.nMax) {
 		innerClassStrings = innerClassStrings + [ generateBitmapIndexedNodeClassString(ts, isLegacy = isLegacy)];
 	}
 
 	innerClassStrings 
 		= innerClassStrings
 		+ [ generateHashCollisionNodeClassString(ts, isLegacy = isLegacy)]
-		+ [ generateIteratorClassString(ts, ts.setup)] // , classNamePostfix
+		+ [ generateIteratorClassString(ts)] // , classNamePostfix
 		;
 	
-	if (!isOptionEnabled(ts.setup, useFixedStackIterator())) {
-		innerClassStrings = innerClassStrings + [ generateEasyIteratorClassString(ts, ts.setup)];
+	if (!isOptionEnabled(ts, useFixedStackIterator())) {
+		innerClassStrings = innerClassStrings + [ generateEasyIteratorClassString(ts)];
 	}
 	
 	innerClassStrings 
 		= innerClassStrings
-		+ [ generateNodeIteratorClassString(ts, ts.setup, ts.classNamePostfix)]		
+		+ [ generateNodeIteratorClassString(ts) ]		
 		;
 		
-	if (isOptionEnabled(ts.setup, useStagedMutability())) { 
+	if (isOptionEnabled(ts, useStagedMutability())) { 
 		innerClassStrings = innerClassStrings + [ generateCoreTransientClassString(ts)];
 	}	
 		
-	if (isOptionEnabled(ts.setup, useSpecialization()) && !isOptionEnabled(ts.setup, useUntypedVariables()) && !isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
+	if (isOptionEnabled(ts, useSpecialization()) && !isOptionEnabled(ts, useUntypedVariables()) && !isOptionEnabled(ts, useHeterogeneousEncoding())) {
 		innerClassStrings = innerClassStrings + 
 		// TODO: [ generateSpecializedBitmapIndexedNodeClassString(ts, specializedBitmapIndexedNode(n, m)) | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound ];
 		[ generateSpecializedNodeWithBitmapPositionsClassString(n, m, ts, ts.classNamePostfix) | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound ];
 	}
 
 	// TODO: fix correct creation of mn instead of m and n		
-	if (isOptionEnabled(ts.setup, useSpecialization()) && isOptionEnabled(ts.setup, useUntypedVariables()) && !isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
+	if (isOptionEnabled(ts, useSpecialization()) && isOptionEnabled(ts, useUntypedVariables()) && !isOptionEnabled(ts, useHeterogeneousEncoding())) {
 		innerClassStrings = innerClassStrings +
 		// TODO: [ generateSpecializedBitmapIndexedNodeClassString(ts, specializedBitmapIndexedNode(n, m)) | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound ]; 
 		[ generateSpecializedNodeWithBitmapPositionsClassString(mn, 0, ts, ts.classNamePostfix) | mn <- [0.. tupleLength(ts.ds) * ts.nMax + 1], mn <= tupleLength(ts.ds) * ts.nBound ];
 	}
 		
-	if (isOptionEnabled(ts.setup, useHeterogeneousEncoding())) {
+	if (isOptionEnabled(ts, useHeterogeneousEncoding())) {
 		innerClassStrings = innerClassStrings + [ generateSpecializedBitmapIndexedNodeClassString(ts) ]; 
 	}	
 	
@@ -346,7 +346,7 @@ list[str] doGenerateInnerClassStrings(TrieSpecifics ts) {
 //	'	}
 //	
 //	'	@Override
-//	'	public SupplierIterator<SupplierIteratorGenerics(ds)> keyIterator() {
+//	'	public SupplierIterator<SupplierIteratorGenericsStr(ts)> keyIterator() {
 //	'		<generate_bodyOf_keyIterator(n)>
 //	'	}	
 //

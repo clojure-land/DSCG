@@ -26,7 +26,7 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 	
 	return
 	"static final class <classNameStr><GenericsStr(ts.tupleTypes)> implements
-					Transient<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> {
+					Transient<toString(ts.ds)><CollectionGenericsExpandedStr(ts)> {
 		final private AtomicReference\<Thread\> mutator;
 		private <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> rootNode;
 		private int hashCode;
@@ -158,7 +158,7 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 		}
 
 		@Override
-		public Immutable<toString(ts.ds)><GenericsExpanded(ts.ds, ts.tupleTypes)> freeze() {
+		public Immutable<toString(ts.ds)><CollectionGenericsExpandedStr(ts)> freeze() {
 			if (mutator.get() == null) {
 				throw new IllegalStateException(\"Transient already frozen.\");
 			}

@@ -14,18 +14,18 @@ module dscg::GenerateTrie_EasyIterator
 import dscg::Common;
 import util::Math;
 
-str generateEasyIteratorClassString(TrieSpecifics ts, rel[Option,bool] setup) = 
+str generateEasyIteratorClassString(TrieSpecifics ts) = 
 	"/**
 	 * Iterator that first iterates over inlined-values and then continues depth
 	 * first recursively.
 	 */
 	private static class Trie<toString(ts.ds)><ts.classNamePostfix>Iterator<GenericsStr(ts.tupleTypes)> implements 
-		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}> {
+		<if (isOptionEnabled(ts, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenericsStr(ts)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}> {
 
 		Iterator\<? extends <AbstractNode(ts.ds)>\>[] nodeIteratorStack = null;
 		int peek = -1;
 
-		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}> currentValueIterator = null;
+		<if (isOptionEnabled(ts, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenericsStr(ts)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}> currentValueIterator = null;
 		Iterator\<? extends <AbstractNode(ts.ds)>\> currentNodeIterator = null;
 
 		Trie<toString(ts.ds)><ts.classNamePostfix>Iterator(<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> rootNode) {
@@ -86,7 +86,7 @@ str generateEasyIteratorClassString(TrieSpecifics ts, rel[Option,bool] setup) =
 			return currentValueIterator.next();
 		}
 
-		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
+		<if (isOptionEnabled(ts, useSupplierIterator())) {>
 		@Override
 		public <typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
 			return currentValueIterator.get();

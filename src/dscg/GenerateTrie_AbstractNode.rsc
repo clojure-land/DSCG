@@ -94,7 +94,7 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 data PredefOp = theUnsafe();
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::theUnsafe())
-	= property(\return(specific("sun.misc.Unsafe")), "unsafe", visibility = "protected", isStateful = true, isConstant = true, hasGetter = false, isActive = isOptionEnabled(ts.setup, useSunMiscUnsafe()));
+	= property(\return(specific("sun.misc.Unsafe")), "unsafe", visibility = "protected", isStateful = true, isConstant = true, hasGetter = false, isActive = isOptionEnabled(ts, useSunMiscUnsafe()));
 	
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::theUnsafe()) = true;
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::theUnsafe()) = 
@@ -207,7 +207,7 @@ data PredefOp = nodeIterator();
 //
 //Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getRareKey())
 //	= method(\return(object()), "getRareKey", args = [ts.index], 
-//		isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding())); // TODO: fix return type
+//		isActive = isOptionEnabled(ts, useHeterogeneousEncoding())); // TODO: fix return type
 
 
 
@@ -222,7 +222,7 @@ data PredefOp = getRareValue();
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), getRareValue())
 	= method(\return(object()), "getRareVal", args = [ts.index], 
-		isActive = isOptionEnabled(ts.setup, useHeterogeneousEncoding()) && \map() := ts.ds); // TODO: fix return type
+		isActive = isOptionEnabled(ts, useHeterogeneousEncoding()) && \map() := ts.ds); // TODO: fix return type
 
 
 
@@ -239,16 +239,16 @@ data PredefOp = payloadIterator();
 // TODO: @Deprecated
 // TODO: fix generics in return type
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), payloadIterator())
-	= method(\return(generic(isOptionEnabled(ts.setup, useSupplierIterator()) ? "SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)>" : "Iterator\<<typeToString(primitiveToClass(ts.keyType))>\>")), "payloadIterator", isActive = !isOptionEnabled(ts.setup, useFixedStackIterator()));
+	= method(\return(generic(isOptionEnabled(ts, useSupplierIterator()) ? "SupplierIterator<SupplierIteratorGenericsStr(ts)>" : "Iterator\<<typeToString(primitiveToClass(ts.keyType))>\>")), "payloadIterator", isActive = !isOptionEnabled(ts, useFixedStackIterator()));
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::payloadIterator()) = true;
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::payloadIterator()) = 
-	"return new <if (isOptionEnabled(ts.setup, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenerics(ts.ds, ts.tupleTypes)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}>() {
+	"return new <if (isOptionEnabled(ts, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenericsStr(ts)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}>() {
 	
 		int nextIndex = 0;
 		final int payloadArity = <AbstractNode(ts.ds)>.this.payloadArity();
 	
-		<if (isOptionEnabled(ts.setup, useSupplierIterator())) {>
+		<if (isOptionEnabled(ts, useSupplierIterator())) {>
 		@Override
 		public <typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
 			if (nextIndex == 0 || nextIndex \> <AbstractNode(ts.ds)>.this.payloadArity()) {
@@ -283,7 +283,7 @@ data PredefOp = sizePredicate();
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), sizePredicate())
 	= method(\return(primitive("byte")), "sizePredicate");
 
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), sizePredicate()) = isOptionEnabled(ts.setup, useSunMiscUnsafe());
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), sizePredicate()) = isOptionEnabled(ts, useSunMiscUnsafe());
 
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), sizePredicate()) = 
 	"if (this.nodeArity() == 0) {
@@ -336,5 +336,5 @@ data PredefOp = insertTuple(bool isRare, bool customComparator);
 	= method(\return(jdtToType(abstractNode(ts))), "<insertTupleMethodName(ts.ds, artifact)>", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)), ts.keyHash, ts.shift, ts.details ]);
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), op:insertTuple(isRare:_, customComparator:true))
-	= method(\return(jdtToType(abstractNode(ts))), "<insertTupleMethodName(ts.ds, artifact)>", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts.setup, methodsWithComparator()));
+	= method(\return(jdtToType(abstractNode(ts))), "<insertTupleMethodName(ts.ds, artifact)>", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)), ts.keyHash, ts.shift, ts.details, ts.comparator], isActive = isOptionEnabled(ts, methodsWithComparator()));
 	
