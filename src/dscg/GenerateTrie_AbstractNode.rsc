@@ -41,8 +41,10 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 	/* EXPERIMENTAL */ insertTuple(true, false),
 	/* EXPERIMENTAL */ insertTuple(true, true),
 
-	removeTuple(),
-	removeTuple(customComparator = true),	
+	removeTuple(isRare = false, customComparator = false),
+	removeTuple(isRare = false, customComparator = true),
+	removeTuple(isRare = true, customComparator = false),
+	removeTuple(isRare = true, customComparator = true),
 		
 	hasNodes(),
 	nodeArity(),
@@ -144,7 +146,7 @@ data PredefOp = size();
 @index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::size()) =
 	compoundExpr([
 		exprFromString(
-			"final Iterator\<<typeToString(primitiveToClass(ts.keyType))>\> it = new <toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(this);
+			"final Iterator\<<typeToString(expandedExactBoundCollectionTypes(ts)[0])>\> it = new <toString(ts.ds)>KeyIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(this);
 
 			int size = 0;
 			while (it.hasNext()) {
@@ -239,18 +241,18 @@ data PredefOp = payloadIterator();
 // TODO: @Deprecated
 // TODO: fix generics in return type
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), payloadIterator())
-	= method(\return(generic(isOptionEnabled(ts, useSupplierIterator()) ? "SupplierIterator<SupplierIteratorGenericsStr(ts)>" : "Iterator\<<typeToString(primitiveToClass(ts.keyType))>\>")), "payloadIterator", isActive = !isOptionEnabled(ts, useFixedStackIterator()));
+	= method(\return(generic(isOptionEnabled(ts, useSupplierIterator()) ? "SupplierIterator<SupplierIteratorGenericsStr(ts)>" : "Iterator\<<typeToString(expandedExactBoundCollectionTypes(ts)[0])>\>")), "payloadIterator", isActive = !isOptionEnabled(ts, useFixedStackIterator()));
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::payloadIterator()) = true;
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), PredefOp::payloadIterator()) = 
-	"return new <if (isOptionEnabled(ts, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenericsStr(ts)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}>() {
+	"return new <if (isOptionEnabled(ts, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenericsStr(ts)><} else {>Iterator\<<typeToString(expandedExactBoundCollectionTypes(ts)[0])>\><}>() {
 	
 		int nextIndex = 0;
 		final int payloadArity = <AbstractNode(ts.ds)>.this.payloadArity();
 	
 		<if (isOptionEnabled(ts, useSupplierIterator())) {>
 		@Override
-		public <typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
+		public <typeToString(primitiveToClass(dsAtFunction__range_type(ts)))> get() {
 			if (nextIndex == 0 || nextIndex \> <AbstractNode(ts.ds)>.this.payloadArity()) {
 				throw new NoSuchElementException();
 			}
@@ -264,7 +266,7 @@ data PredefOp = payloadIterator();
 		}
 	
 		@Override
-		public <typeToString(primitiveToClass(ts.keyType))> next() {
+		public <typeToString(expandedExactBoundCollectionTypes(ts)[0])> next() {
 			if (!hasNext())
 				throw new NoSuchElementException();
 			return <AbstractNode(ts.ds)>.this.getKey(nextIndex++);

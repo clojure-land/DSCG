@@ -20,7 +20,7 @@ str generateResultClassString(TrieSpecifics ts) {
 
 	return
 	"static final class <classNameStr><GenericsStr(ts.tupleTypes)> {
-		private <typeToString(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes))> replacedValue;
+		private <typeToString(dsAtFunction__range_type(ts))> replacedValue;
 		private boolean isModified;
 		private boolean isReplaced;
 
@@ -29,7 +29,7 @@ str generateResultClassString(TrieSpecifics ts) {
 			this.isModified = true;
 		}
 
-		public void updated(<typeToString(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes))> replacedValue) {
+		public void updated(<typeToString(dsAtFunction__range_type(ts))> replacedValue) {
 			this.replacedValue = replacedValue;
 			this.isModified = true;
 			this.isReplaced = true;
@@ -51,7 +51,7 @@ str generateResultClassString(TrieSpecifics ts) {
 			return isReplaced;
 		}
 
-		public <typeToString(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes))> getReplacedValue() {
+		public <typeToString(dsAtFunction__range_type(ts))> getReplacedValue() {
 			return replacedValue;
 		}
 	}";

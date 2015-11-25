@@ -20,12 +20,12 @@ str generateEasyIteratorClassString(TrieSpecifics ts) =
 	 * first recursively.
 	 */
 	private static class Trie<toString(ts.ds)><ts.classNamePostfix>Iterator<GenericsStr(ts.tupleTypes)> implements 
-		<if (isOptionEnabled(ts, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenericsStr(ts)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}> {
+		<if (isOptionEnabled(ts, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenericsStr(ts)><} else {>Iterator\<<typeToString(expandedExactBoundCollectionTypes(ts)[0])>\><}> {
 
 		Iterator\<? extends <AbstractNode(ts.ds)>\>[] nodeIteratorStack = null;
 		int peek = -1;
 
-		<if (isOptionEnabled(ts, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenericsStr(ts)><} else {>Iterator\<<typeToString(primitiveToClass(ts.keyType))>\><}> currentValueIterator = null;
+		<if (isOptionEnabled(ts, useSupplierIterator())) {>SupplierIterator<SupplierIteratorGenericsStr(ts)><} else {>Iterator\<<typeToString(expandedExactBoundCollectionTypes(ts)[0])>\><}> currentValueIterator = null;
 		Iterator\<? extends <AbstractNode(ts.ds)>\> currentNodeIterator = null;
 
 		Trie<toString(ts.ds)><ts.classNamePostfix>Iterator(<CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> rootNode) {
@@ -88,7 +88,7 @@ str generateEasyIteratorClassString(TrieSpecifics ts) =
 
 		<if (isOptionEnabled(ts, useSupplierIterator())) {>
 		@Override
-		public <typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))> get() {
+		public <typeToString(primitiveToClass(dsAtFunction__range_type(ts)))> get() {
 			return currentValueIterator.get();
 		}<}>
 

@@ -29,12 +29,6 @@ import util::Maybe;
 
 
 
-tuple[&T, &T] toTuple(list[&T] xs:[ x, y ]) = <x, y>;
-tuple[&T, &T, &T] toTuple(list[&T] xs:[ x, y, z ]) = <x, y, z>; 
- 
-set[&T] toSet(tuple[&T, &T] xs:<x, y>) = { x, y };
-set[&T] toSet(tuple[&T, &T, &T] xs:<x, y, z>) = { x, y, z };
-
 test bool pushDownTest() {
 	Type payloadType = eitherTypeSequence({ s.itemType | /Partition s := simplify(pscene_typedPayload_typedRarePayload_typedNodes(), psStripIfReferenceType()), s is slice, s.contentType is ctPayloadTuple }); 
 
@@ -60,11 +54,13 @@ Type pushDownEitherType(Type topType) {
 
 
 
-
 //Type generalizeEitherType(Type t:eitherTypeSequence(set[Type] typeArgumentSet)) = object();
 
 CoreModel filterByContentTypePayloadTuple(CoreModel cm)
 	= [ s | /Partition s := cm, s is slice, s.contentType is ctPayloadTuple ];
+
+CoreModel filterByContentTypePayloadTuple(CoreModel cm, set[str] idSet)
+	= [ s | s <- filterByContentTypePayloadTuple(cm), s.id in idSet ];
 
 default Type generalizeEitherType(Type t) {
 	return bottom-up visit(t) {
@@ -211,7 +207,13 @@ when p.contentType == ctSlot();
 
 alias CoreModel = list[Partition];
 
-CoreModel getCoreModel(TrieSpecifics ts) = simplify(pscene_typedPayload_typedRarePayload_typedNodes(), psStripIfReferenceType()); 
+CoreModel getCoreModel(TrieSpecifics ts) = simplify(currentCoreModel(), psStripIfReferenceType()); 
+
+list[Partition] currentCoreModel() = [
+		slice("payload", ctPayloadTuple(isRare = false), typeSequence([ primitive("int"), primitive("int") ])),
+		slice("rarePayload", ctPayloadTuple(isRare = true), typeSequence([ object(), object() ])),		
+		slice("node", ctNode(), specific("Node"), direction = backward())
+	];
 
 data Direction 
 	= forward()
@@ -397,22 +399,6 @@ default list[Partition] simplifyOne(list[Partition] partitionList, set[Partition
 // FUNCTIONS TO MODEL COLLECTIONS GENERICS 
 ////////
 
-//Argument argumentFromType(Type \type) =
-
-// TODO: this is flaky ...
-list[Argument(Type)] typeToArgumentConverterList = [ key, val ];
-
- 
-Argument collTupleArg(TrieSpecifics ts, int idx)
-	= collTupleArgs(ts)[idx];
-/***/
-list[Argument] collTupleArgs(TrieSpecifics ts) 
-	= [ typeToArgumentConverterList[idx](\type) | idx <- [0 .. size], \type := typeList[idx] ]
-when typeList := collTupleTypes(ts), size := size(typeList);
-
-Type collTupleType(TrieSpecifics ts, int idx) = CollectionGenericsExpanded(ts)[idx];
-list[Type] collTupleTypes(TrieSpecifics ts) = CollectionGenericsExpanded(ts);
-
 /*
  * Expansion to the maximal length of generics for a 'java.util.Collection' data type.
  */
@@ -436,8 +422,87 @@ str SupplierIteratorGenericsStr(TrieSpecifics ts)
 	= "\<<intercalate(", ", mapper(typeList, typeToString))>\>"
 when typeList := singletonToTuple(CollectionGenericsExpanded(ts));
 
+
+
+list[Type] GenericsExpandedUpperBounded(TrieSpecifics ts) 
+	= mapper(CollectionGenericsExpanded(ts), upperBoundGeneric);
+
+str GenericsExpandedUpperBoundedStr(TrieSpecifics ts)
+	= "\<<intercalate(", ", mapper(typeList, typeToString))>\>"
+when typeList := GenericsExpandedUpperBounded(ts);
+
+
+
+Type dsAtFunction__domain_type(TrieSpecifics ts) 
+	= singletonToTuple(CollectionGenericsExpanded(ts))[0];
+
+Type dsAtFunction__range_type(TrieSpecifics ts) 
+	= singletonToTuple(CollectionGenericsExpanded(ts))[1];
+
+
+
+
+
+////
+// TUPLE ARGUMENTS
+////////
+
+// TODO: this is flaky ...
+list[Argument(Type)] typeToArgumentConverterList = [ key, val ];
+
+ 
+Argument collTupleArg(TrieSpecifics ts, int idx)
+	= collTupleArgs(ts)[idx];
+/***/
+list[Argument] collTupleArgs(TrieSpecifics ts) 
+	= [ typeToArgumentConverterList[idx](\type) | idx <- [0 .. size], \type := typeList[idx] ]
+when typeList := collTupleTypes(ts), size := size(typeList);
+
+Type collTupleType(TrieSpecifics ts, int idx) = CollectionGenericsExpanded(ts)[idx];
+list[Type] collTupleTypes(TrieSpecifics ts) = CollectionGenericsExpanded(ts);
+
+
+
+
+//Argument payloadTupleArg(TrieSpecifics ts, int idx, bool isRare = false) = payloadTupleArgs(ts, isRare = isRare)[idx];
+////list[Argument] payloadTupleArgs(TrieSpecifics ts) = __payloadTuple(ts.ds, ts.tupleTypes);
+//list[Argument] payloadTupleArgs(TrieSpecifics ts, bool isRare = false) = contentList(ts, ctPayloadTuple(isRare = isRare));
+/***/
+list[Argument] payloadTupleArgs(TrieSpecifics ts, bool isRare = false)
+	= [ typeToArgumentConverterList[idx](\type) | idx <- [0 .. size], \type := typeList[idx] ]
+when typeList := payloadTupleTypes(ts, isRare = isRare), size := size(typeList);
+
+Argument payloadTupleArg(TrieSpecifics ts, int idx, bool isRare = false) = payloadTupleArgs(ts, isRare = isRare)[idx];
+
+list[Type] payloadTupleTypes(TrieSpecifics ts, bool isRare = false, str payloadId = isRare ? "rarePayload" : "payload") {
+	CoreModel cm = getCoreModel(ts);
+
+	Type generalizedType = eitherTypeSequence({ s.itemType | s <- filterByContentTypePayloadTuple(cm, { payloadId }) });
+	Type simplifiedType = (generalizeEitherType o pushDownEitherType)(generalizedType);
+
+	return singletonOrTypeSequenceToList(simplifiedType);
+} 
+
+
+
+
+
+
+
+
+
+////
+// UTILITY 
+////////
+
 list[&T] singletonToTuple(list[&T] lst:[ fst ]) = [ fst, fst ];
 default list[&T] singletonToTuple(list[&T] lst) = lst;
 
 list[Type] singletonOrTypeSequenceToList(typeSequence(typeArgumentList)) = typeArgumentList;
 default list[Type] singletonOrTypeSequenceToList(Type t) = [ t ];
+
+tuple[&T, &T] toTuple(list[&T] xs:[ x, y ]) = <x, y>;
+tuple[&T, &T, &T] toTuple(list[&T] xs:[ x, y, z ]) = <x, y, z>; 
+ 
+set[&T] toSet(tuple[&T, &T] xs:<x, y>) = { x, y };
+set[&T] toSet(tuple[&T, &T, &T] xs:<x, y, z>) = { x, y, z };

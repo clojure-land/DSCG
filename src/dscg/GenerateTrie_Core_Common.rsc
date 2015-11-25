@@ -60,12 +60,12 @@ default str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass)
 
 @index=2 bool exists_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass)  = true;
 @index=2 str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass) =
-	"Set\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\> keySet = null;
+	"Set\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ts)))>\> keySet = null;
 	'
 	'if (keySet == null) {
-	'	keySet = new AbstractSet\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\>() {
+	'	keySet = new AbstractSet\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ts)))>\>() {
 	'		@Override
-	'		public Iterator\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>\> iterator() {
+	'		public Iterator\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ts)))>\> iterator() {
 	'			return <enclosingClass>.this.keyIterator();
 	'		}
 	'
@@ -100,12 +100,12 @@ default str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass)
 
 @index=2 bool exists_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass)  = true;
 @index=2 str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) = 
-	"Collection\<<typeToString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\> values = null;
+	"Collection\<<typeToString(primitiveToClass(dsAtFunction__range_type(ts)))>\> values = null;
 	'
 	'if (values == null) {
-	'	values = new AbstractCollection\<<typeToString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\>() {
+	'	values = new AbstractCollection\<<typeToString(primitiveToClass(dsAtFunction__range_type(ts)))>\>() {
 	'		@Override
-	'		public Iterator\<<typeToString(primitiveToClass(dsAtFunction__range_type_of_tuple(ts.ds, ts.tupleTypes)))>\> iterator() {
+	'		public Iterator\<<typeToString(primitiveToClass(dsAtFunction__range_type(ts)))>\> iterator() {
 	'			return <enclosingClass>.this.valueIterator();
 	'		}
 	'
@@ -200,7 +200,7 @@ default str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) = "";
 	"Object[] array = new Object[cachedSize];
 	'
 	'int idx = 0;
-	'for (<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))> key : this) {
+	'for (<typeToString(primitiveToClass(dsAtFunction__domain_type(ts)))> key : this) {
 	'	array[idx++] = key;
 	'}
 	'
@@ -215,7 +215,7 @@ default str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) = ""
 @index=2 str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) =
 	"List<CollectionGenericsExpandedStr(ts)> list = new ArrayList<CollectionGenericsExpandedStr(ts)>(cachedSize);
 	'
-	'for (<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))> key : this) {
+	'for (<typeToString(primitiveToClass(dsAtFunction__domain_type(ts)))> key : this) {
 	'	list.add(key);
 	'}
 	'
@@ -269,14 +269,14 @@ if (other instanceof <toString(ts.ds)>) {
 
 		try {
 			@SuppressWarnings(\"unchecked\")
-			<dec(key(ts.keyType))> = (<typeToString(primitiveToClass(dsAtFunction__domain_type(ts.ds, ts.tupleTypes)))>) entry.getKey();
-			final Optional<MapsToGenerics(ts.ds, ts.tupleTypes)> result = rootNode.findByKey(key, <toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType)))))>, 0);
+			<dec(key(ts.keyType))> = (<typeToString(primitiveToClass(dsAtFunction__domain_type(ts)))>) entry.getKey();
+			final Optional<MapsToGenericsStr(ts)> result = rootNode.findByKey(key, <toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType)))))>, 0);
 
 			if (!result.isPresent()) {
 				return false;
 			} else {
 				@SuppressWarnings(\"unchecked\")
-				<dec(collTupleArg(ts, 1))> = (<typeToString(primitiveToClass(dsAtFunction__range_type(ts.ds, ts.tupleTypes)))>) entry.getValue();
+				<dec(collTupleArg(ts, 1))> = (<typeToString(primitiveToClass(dsAtFunction__range_type(ts)))>) entry.getValue();
 
 				if (!result.get().equals(<use(collTupleArg(ts, 1))>)) {
 					return false;
