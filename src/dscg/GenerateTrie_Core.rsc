@@ -196,8 +196,10 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	<impl(ts, core(immutable()), insertCollection())>
 	<impl(ts, core(immutable()), insertCollection(customComparator = true))>
 	
-	<impl(ts, core(immutable()), removeTuple())>
-	<impl(ts, core(immutable()), removeTuple(customComparator = true))>
+	<impl(ts, core(immutable()), removeTuple(isRare = false, customComparator = false))>
+	<impl(ts, core(immutable()), removeTuple(isRare = false, customComparator = true))>
+	<impl(ts, core(immutable()), removeTuple(isRare = true, customComparator = false))>
+	<impl(ts, core(immutable()), removeTuple(isRare = true, customComparator = true))>	
 
 	<impl(ts, core(immutable()), removeCollection())>
 	<impl(ts, core(immutable()), removeCollection(customComparator = true))>

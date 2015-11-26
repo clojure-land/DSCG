@@ -1185,248 +1185,235 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nod
 	= [ <nodeType,constructor()>, <nodeType,nodeMap()>, <nodeType,dataMap()>, <nodeType,rawMap1()>, <nodeType,rawMap2()>];	
 
 str emptyTrieNodeConstantName = "EMPTY_NODE";
-str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy:true) {
-	
-	//TrieSpecifics ts = setArtifact(tsSuper, trieNode(compactNode()));
-	
-	abstractMembers = [ bitmapMethod, valmapMethod ];
-	concreteMembers = [];
-	
-	members = abstractMembers + concreteMembers;	
-	
-	constructorArgs = asFieldList(
-		  ts.mutator 
-		+ members);
-
-	str classNameStr = "<CompactNode(ts.ds)>"; 
-
-	int n = 0; // TODO: remove
-	int m = 0; // TODO: remove
-
-	return
-	"protected static abstract class <classNameStr><GenericsStr(ts.tupleTypes)> extends Abstract<toString(ts.ds)>Node<GenericsStr(ts.tupleTypes)> {
-		
-		<impl(ts, trieNode(compactNode()), hashCodeLength())>
-		<impl(ts, trieNode(compactNode()), bitPartitionSize())>
-		<impl(ts, trieNode(compactNode()), bitPartitionMask())>
-		
-		<impl(ts, trieNode(compactNode()), mask())>
-		<impl(ts, trieNode(compactNode()), bitpos())>		
-		
-		<dec(getDef(ts, trieNode(compactNode()), nodeMap()), asAbstract = true)>
-		<dec(getDef(ts, trieNode(compactNode()), dataMap()), asAbstract = true)>
-
-		<if (isOptionEnabled(ts, useHeterogeneousEncoding())) {>
-			<dec(getDef(ts, trieNode(compactNode()), rareMap()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), rawMap1()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), rawMap2()), asAbstract = true)>
-			
-			<impl(ts, trieNode(compactNode()), isRare1())>
-			<impl(ts, trieNode(compactNode()), isRare2())>
-			<impl(ts, trieNode(compactNode()), isRareBitpos())>	
-		<}>
-		
-		<dec(getDef(ts, trieNode(compactNode()), contentTypeEnum()))>
-		
-		<impl(ts, trieNode(compactNode()), logicalToPhysicalIndex())>
-		
-		<impl(ts, trieNode(compactNode()), nodeInvariant())>
-
-		<impl(ts, trieNode(compactNode()), copyAndInsertNode())>
-		<impl(ts, trieNode(compactNode()), copyAndInsertNode_nextClass())>
-		<impl(ts, trieNode(compactNode()), copyAndRemoveNode())>
-		<impl(ts, trieNode(compactNode()), copyAndRemoveNode_nextClass())>
-
-		<if (isOptionEnabled(ts, useSunMiscUnsafe())) {>			
-			<impl(ts, trieNode(compactNode()), arrayOffsetsFunction())>
-			<impl(ts, trieNode(compactNode()), fieldOffsetFunction())>			
-
-			<impl(ts, trieNode(compactNode()), getSlot())>
-			<impl(ts, trieNode(compactNode()), getContent(ctPayloadArg(0)))>
-			<impl(ts, trieNode(compactNode()), getContent(ctPayloadArg(1)))>
-			<impl(ts, trieNode(compactNode()), getContent(ctPayloadArg(0, isRare = true)))>
-			<impl(ts, trieNode(compactNode()), getContent(ctPayloadArg(1, isRare = true)))>
-			<impl(ts, trieNode(compactNode()), getKeyValueEntry())>
-			<impl(ts, trieNode(compactNode()), getContent(ctNode()))>
-						
-			<impl(ts, trieNode(compactNode()), copyAndInsertNode())>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode_nextClass()), asAbstract = true)>
-			<impl(ts, trieNode(compactNode()), copyAndRemoveNode())>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode_nextClass()), asAbstract = true)>
-			<impl(ts, trieNode(compactNode()), copyAndSetValue(false))>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue_nextClass()), asAbstract = true)>
-			<impl(ts, trieNode(compactNode()), copyAndInsertValue())>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue_nextClass()), asAbstract = true)>
-			<impl(ts, trieNode(compactNode()), copyAndRemoveValue())>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue_nextClass()), asAbstract = true)>
-			<impl(ts, trieNode(compactNode()), copyAndSetNode(false))>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndSetNode_nextClass()), asAbstract = true)>
-			<impl(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode())>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode_nextClass()), asAbstract = true)>
-			<impl(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline())>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass()), asAbstract = true)>		
-		< } else {>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode_nextClass()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode_nextClass()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue(false)), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue_nextClass()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue_nextClass()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue_nextClass()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndSetNode(false)), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndSetNode_nextClass()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode_nextClass()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()), asAbstract = true)>
-			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass()), asAbstract = true)>			
-		<}>
-		
-		</* TODO: specialize removed(..) to remove this method from this interface */"">
-		<impl(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode())>
-
-		<impl(ts, trieNode(compactNode()), mergeTwoKeyValPairs())>
-		<impl(ts, trieNode(compactNode()), mergeNodeAndKeyValPair())>
-	
-	<implOrOverride(ts.nodeOf_BitmapIndexedNode,
-		"return <toString(call(ts.BitmapIndexedNode_constructor, inferredGenericsStr = InferredGenerics(ts.ds, ts.tupleTypes)))>;")>
-
-	<generate_specializationFactoryMethods(ts)>
-
-	<for (op <- createNodeFactorySpecializationList(ts, compactNode())) {>
-		<impl(ts, trieNode(compactNode()), op)>
-	<}>
-
-	<impl(ts, trieNode(compactNode()), index2())>
-	<impl(ts, trieNode(compactNode()), index3())>
-
-	<impl(ts, trieNode(compactNode()), dataIndex())>
-	<impl(ts, trieNode(compactNode()), nodeIndex())>
-	<impl(ts, trieNode(compactNode()), rareIndex())>
-	
-	<impl(ts, trieNode(compactNode()), nodeAt())>
-		
-	<impl(ts, trieNode(compactNode()), containsKey())>
-	<impl(ts, trieNode(compactNode()), containsKey(customComparator = true))>
-
-	<impl(ts, trieNode(compactNode()), get())>
-	<impl(ts, trieNode(compactNode()), get(customComparator = true))>
-	
-	<impl(ts, trieNode(compactNode()), insertTuple(false, false))>
-	<impl(ts, trieNode(compactNode()), insertTuple(false, true))>
-
-	/* EXPERIMENTAL <impl(ts, trieNode(compactNode()), insertTuple(true, false))> */
-	/* EXPERIMENTAL <impl(ts, trieNode(compactNode()), insertTuple(true, true))> */
-
-	<impl(ts, trieNode(compactNode()), removeTuple())>
-	<impl(ts, trieNode(compactNode()), removeTuple(customComparator = true))>
-
-	<impl(ts, trieNode(compactNode()), recoverMask())>
-	<impl(ts, trieNode(compactNode()), toString())>
-
-	<impl(ts, trieNode(compactNode()), isTrieStructureValid())>
-		
-	'}
-	
-	protected static abstract class <className(ts, compactNode(specializeByBitmap(true, true)))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
-
-		private <dec(ts.bitmapField)>;
-		private <dec(ts.valmapField)>;
-
-		<className(ts, compactNode(specializeByBitmap(true, true)))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
-			this.<bitmapField.name> = <bitmapField.name>;
-			this.<valmapField.name> = <valmapField.name>;
-		}
-
-		@Override
-		public <typeToString(ts.bitmapField.\type)> <bitmapField.name>() {
-			return <bitmapField.name>;
-		}
-
-		@Override
-		public <typeToString(ts.valmapField.\type)> <valmapField.name>() {
-			return <valmapField.name>;
-		}
-
-	}
-
-	<if (isOptionEnabled(ts,useSpecialization())) {>
-	protected static abstract class <className(ts, compactNode(specializeByBitmap(true, false)))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
-
-		private <dec(ts.bitmapField)>;
-
-		<className(ts, compactNode(specializeByBitmap(true, false)))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
-			this.<bitmapField.name> = <bitmapField.name>;
-		}
-
-		@Override
-		public <typeToString(ts.bitmapField.\type)> <bitmapField.name>() {
-			return <bitmapField.name>;
-		}
-
-		@Override
-		public <typeToString(ts.valmapField.\type)> <valmapField.name>() {
-			return 0;
-		}
-
-	}
-
-	protected static abstract class <className(ts, compactNode(specializeByBitmap(false, true)))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
-
-		private <dec(ts.valmapField)>;
-
-		<className(ts, compactNode(specializeByBitmap(false, true)))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
-			this.<valmapField.name> = <valmapField.name>;
-		}
-
-		@Override
-		public <typeToString(ts.bitmapField.\type)> <bitmapField.name>() {
-			return 0;
-		}
-
-		@Override
-		public <typeToString(ts.valmapField.\type)> <valmapField.name>() {
-			return <valmapField.name>;
-		}
-
-	}
-	
-	protected static abstract class <className(ts, compactNode(specializeByBitmap(false, false)))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
-
-		<className(ts, compactNode(specializeByBitmap(false, false)))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
-		}
-
-		@Override
-		public <typeToString(ts.bitmapField.\type)> <bitmapField.name>() {
-			return 0;
-		}
-
-		@Override
-		public <typeToString(ts.valmapField.\type)> <valmapField.name>() {
-			return 0;
-		}
-
-	}
-	<}>
-	"
-	;
-	
-}
-
-/*
-case BASE_BASE: {
-	final int nodeMap = 0;
-	final int dataMap = bitpos(mask0) | bitpos(mask1);
-	
-	if (mask0 < mask1) {
-		return nodeOf0x2(null, nodeMap, dataMap, key0, val0, key1, val1);
-	} else {
-		return nodeOf0x2(null, nodeMap, dataMap, key1, val1, key0, val0);
-	}					
-}
-*/
+//str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy:true) {
+//	
+//	//TrieSpecifics ts = setArtifact(tsSuper, trieNode(compactNode()));
+//	
+//	abstractMembers = [ bitmapMethod, valmapMethod ];
+//	concreteMembers = [];
+//	
+//	members = abstractMembers + concreteMembers;	
+//	
+//	constructorArgs = asFieldList(
+//		  ts.mutator 
+//		+ members);
+//
+//	str classNameStr = "<CompactNode(ts.ds)>"; 
+//
+//	int n = 0; // TODO: remove
+//	int m = 0; // TODO: remove
+//
+//	return
+//	"protected static abstract class <classNameStr><GenericsStr(ts.tupleTypes)> extends Abstract<toString(ts.ds)>Node<GenericsStr(ts.tupleTypes)> {
+//		
+//		<impl(ts, trieNode(compactNode()), hashCodeLength())>
+//		<impl(ts, trieNode(compactNode()), bitPartitionSize())>
+//		<impl(ts, trieNode(compactNode()), bitPartitionMask())>
+//		
+//		<impl(ts, trieNode(compactNode()), mask())>
+//		<impl(ts, trieNode(compactNode()), bitpos())>		
+//		
+//		<dec(getDef(ts, trieNode(compactNode()), nodeMap()), asAbstract = true)>
+//		<dec(getDef(ts, trieNode(compactNode()), dataMap()), asAbstract = true)>
+//
+//		<if (isOptionEnabled(ts, useHeterogeneousEncoding())) {>
+//			<dec(getDef(ts, trieNode(compactNode()), rareMap()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), rawMap1()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), rawMap2()), asAbstract = true)>
+//			
+//			<impl(ts, trieNode(compactNode()), isRare1())>
+//			<impl(ts, trieNode(compactNode()), isRare2())>
+//			<impl(ts, trieNode(compactNode()), isRareBitpos())>	
+//		<}>
+//		
+//		<dec(getDef(ts, trieNode(compactNode()), contentTypeEnum()))>
+//		
+//		<impl(ts, trieNode(compactNode()), logicalToPhysicalIndex())>
+//		
+//		<impl(ts, trieNode(compactNode()), nodeInvariant())>
+//
+//		<impl(ts, trieNode(compactNode()), copyAndInsertNode())>
+//		<impl(ts, trieNode(compactNode()), copyAndInsertNode_nextClass())>
+//		<impl(ts, trieNode(compactNode()), copyAndRemoveNode())>
+//		<impl(ts, trieNode(compactNode()), copyAndRemoveNode_nextClass())>
+//
+//		<if (isOptionEnabled(ts, useSunMiscUnsafe())) {>			
+//			<impl(ts, trieNode(compactNode()), arrayOffsetsFunction())>
+//			<impl(ts, trieNode(compactNode()), fieldOffsetFunction())>			
+//
+//			<impl(ts, trieNode(compactNode()), getSlot())>
+//			<impl(ts, trieNode(compactNode()), getContent(ctPayloadArg(0)))>
+//			<impl(ts, trieNode(compactNode()), getContent(ctPayloadArg(1)))>
+//			<impl(ts, trieNode(compactNode()), getContent(ctPayloadArg(0, isRare = true)))>
+//			<impl(ts, trieNode(compactNode()), getContent(ctPayloadArg(1, isRare = true)))>
+//			<impl(ts, trieNode(compactNode()), getKeyValueEntry())>
+//			<impl(ts, trieNode(compactNode()), getContent(ctNode()))>
+//						
+//			<impl(ts, trieNode(compactNode()), copyAndInsertNode())>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode_nextClass()), asAbstract = true)>
+//			<impl(ts, trieNode(compactNode()), copyAndRemoveNode())>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode_nextClass()), asAbstract = true)>
+//			<impl(ts, trieNode(compactNode()), copyAndSetValue(false))>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue_nextClass()), asAbstract = true)>
+//			<impl(ts, trieNode(compactNode()), copyAndInsertValue())>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue_nextClass()), asAbstract = true)>
+//			<impl(ts, trieNode(compactNode()), copyAndRemoveValue())>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue_nextClass()), asAbstract = true)>
+//			<impl(ts, trieNode(compactNode()), copyAndSetNode(false))>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndSetNode_nextClass()), asAbstract = true)>
+//			<impl(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode())>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode_nextClass()), asAbstract = true)>
+//			<impl(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline())>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass()), asAbstract = true)>		
+//		< } else {>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertNode_nextClass()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveNode_nextClass()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue(false)), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndSetValue_nextClass()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndInsertValue_nextClass()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndRemoveValue_nextClass()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndSetNode(false)), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndSetNode_nextClass()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode_nextClass()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()), asAbstract = true)>
+//			<dec(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass()), asAbstract = true)>			
+//		<}>
+//		
+//		</* TODO: specialize removed(..) to remove this method from this interface */"">
+//		<impl(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode())>
+//
+//		<impl(ts, trieNode(compactNode()), mergeTwoKeyValPairs())>
+//		<impl(ts, trieNode(compactNode()), mergeNodeAndKeyValPair())>
+//	
+//	<implOrOverride(ts.nodeOf_BitmapIndexedNode,
+//		"return <toString(call(ts.BitmapIndexedNode_constructor, inferredGenericsStr = InferredGenerics(ts.ds, ts.tupleTypes)))>;")>
+//
+//	<generate_specializationFactoryMethods(ts)>
+//
+//	<for (op <- createNodeFactorySpecializationList(ts, compactNode())) {>
+//		<impl(ts, trieNode(compactNode()), op)>
+//	<}>
+//
+//	<impl(ts, trieNode(compactNode()), index2())>
+//	<impl(ts, trieNode(compactNode()), index3())>
+//
+//	<impl(ts, trieNode(compactNode()), dataIndex())>
+//	<impl(ts, trieNode(compactNode()), nodeIndex())>
+//	<impl(ts, trieNode(compactNode()), rareIndex())>
+//	
+//	<impl(ts, trieNode(compactNode()), nodeAt())>
+//		
+//	<impl(ts, trieNode(compactNode()), containsKey())>
+//	<impl(ts, trieNode(compactNode()), containsKey(customComparator = true))>
+//
+//	<impl(ts, trieNode(compactNode()), get())>
+//	<impl(ts, trieNode(compactNode()), get(customComparator = true))>
+//	
+//	<impl(ts, trieNode(compactNode()), insertTuple(false, false))>
+//	<impl(ts, trieNode(compactNode()), insertTuple(false, true))>
+//
+//	/* EXPERIMENTAL <impl(ts, trieNode(compactNode()), insertTuple(true, false))> */
+//	/* EXPERIMENTAL <impl(ts, trieNode(compactNode()), insertTuple(true, true))> */
+//
+//	<impl(ts, trieNode(compactNode()), removeTuple())>
+//	<impl(ts, trieNode(compactNode()), removeTuple(customComparator = true))>
+//
+//	<impl(ts, trieNode(compactNode()), recoverMask())>
+//	<impl(ts, trieNode(compactNode()), toString())>
+//
+//	<impl(ts, trieNode(compactNode()), isTrieStructureValid())>
+//		
+//	'}
+//	
+//	protected static abstract class <className(ts, compactNode(specializeByBitmap(true, true)))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
+//
+//		private <dec(ts.bitmapField)>;
+//		private <dec(ts.valmapField)>;
+//
+//		<className(ts, compactNode(specializeByBitmap(true, true)))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
+//			this.<bitmapField.name> = <bitmapField.name>;
+//			this.<valmapField.name> = <valmapField.name>;
+//		}
+//
+//		@Override
+//		public <typeToString(ts.bitmapField.\type)> <bitmapField.name>() {
+//			return <bitmapField.name>;
+//		}
+//
+//		@Override
+//		public <typeToString(ts.valmapField.\type)> <valmapField.name>() {
+//			return <valmapField.name>;
+//		}
+//
+//	}
+//
+//	<if (isOptionEnabled(ts,useSpecialization())) {>
+//	protected static abstract class <className(ts, compactNode(specializeByBitmap(true, false)))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
+//
+//		private <dec(ts.bitmapField)>;
+//
+//		<className(ts, compactNode(specializeByBitmap(true, false)))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
+//			this.<bitmapField.name> = <bitmapField.name>;
+//		}
+//
+//		@Override
+//		public <typeToString(ts.bitmapField.\type)> <bitmapField.name>() {
+//			return <bitmapField.name>;
+//		}
+//
+//		@Override
+//		public <typeToString(ts.valmapField.\type)> <valmapField.name>() {
+//			return 0;
+//		}
+//
+//	}
+//
+//	protected static abstract class <className(ts, compactNode(specializeByBitmap(false, true)))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
+//
+//		private <dec(ts.valmapField)>;
+//
+//		<className(ts, compactNode(specializeByBitmap(false, true)))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
+//			this.<valmapField.name> = <valmapField.name>;
+//		}
+//
+//		@Override
+//		public <typeToString(ts.bitmapField.\type)> <bitmapField.name>() {
+//			return 0;
+//		}
+//
+//		@Override
+//		public <typeToString(ts.valmapField.\type)> <valmapField.name>() {
+//			return <valmapField.name>;
+//		}
+//
+//	}
+//	
+//	protected static abstract class <className(ts, compactNode(specializeByBitmap(false, false)))><GenericsStr(ts.tupleTypes)> extends <CompactNode(ts.ds)><GenericsStr(ts.tupleTypes)> {
+//
+//		<className(ts, compactNode(specializeByBitmap(false, false)))>(final AtomicReference\<Thread\> mutator, <dec(ts.bitmapField)>, <dec(ts.valmapField)>) {
+//		}
+//
+//		@Override
+//		public <typeToString(ts.bitmapField.\type)> <bitmapField.name>() {
+//			return 0;
+//		}
+//
+//		@Override
+//		public <typeToString(ts.valmapField.\type)> <valmapField.name>() {
+//			return 0;
+//		}
+//
+//	}
+//	<}>
+//	"
+//	;
+//	
+//}
 
 @index=2 str generate_bodyOf_mergeTwoValues(TrieSpecifics ts, Artifact artifact, PredefOp op:mergeTwoKeyValPairs(ContentType ct0, ContentType ct1), Position pos:positionBitmap()) =
 	"<dec(ts.bitmapField)> = (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask0))))> | <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask1))))>);
