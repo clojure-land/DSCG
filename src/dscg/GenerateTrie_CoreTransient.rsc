@@ -67,8 +67,8 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 		<impl(ts, core(transient()), containsEntry())>
 		<impl(ts, core(transient()), containsEntry(customComparator = true))>
 		
-		<impl(ts, core(transient()), get())>
-		<impl(ts, core(transient()), get(customComparator = true))>
+		<impl(ts, core(transient()), get(isRare = false, customComparator = false))>
+		<impl(ts, core(transient()), get(isRare = false, customComparator = true))>
 		
 		<impl(ts, core(transient()), insertTuple(false, false))>
 		<impl(ts, core(transient()), insertTuple(false, true))>
@@ -173,3 +173,55 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 	}"
 	;
 }
+
+/*
+ * TODO: use different return types dependent on data types. 
+ */
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:removeTuple(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:removeTuple(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) =
+	"if (mutator.get() == null) {
+		throw new IllegalStateException(\"Transient already frozen.\");
+	}
+
+	<dec(ts.keyHash)> = <hashCode(content(ts, ctPayloadArg(0, isRare = op.isRare)))>;
+	<dec(ts.details)> = <ts.ResultStr>.unchanged();
+	
+	<dec(\inode(ts.ds, ts.tupleTypes, "newRootNode"))> = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), removeTuple(customComparator = op.customComparator)), 
+					argsOverride = (ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ts.keyHash))), ts.shift: constant(ts.shift.\type, "0"))))>;
+
+	if (<use(ts.details)>.isModified()) {
+		<if (\map() := ts.ds) {>assert <use(ts.details)>.hasReplacedValue(); <dec(ts.valHash)> = <hashCode(content(ts, ctPayloadArg(1, isRare = op.isRare), "<use(ts.details)>.getReplacedValue()"))>;\n\n<}>rootNode = newRootNode;
+		<toString(expressionStatement(assign(ts.hashCodeProperty, updateProperty(ts, op, hashCodeProperty(), onRemove(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(ts.valHash) ])))))>
+		<toString(expressionStatement(assign(ts.sizeProperty, updateProperty(ts, op, sizeProperty(), onRemove()))))>
+	
+		if (DEBUG) {
+			assert checkHashCodeAndSize(hashCode, cachedSize);
+		}
+		return <eval(resultOf(ts, artifact, op, onRemove(), payloadTupleExprList = cutToTupleSize(ts, [ useExpr(key(ts.keyType)), replacedValueExpr ])))>;
+	}
+
+	if (DEBUG) {
+		assert checkHashCodeAndSize(hashCode, cachedSize);
+	}
+	
+	return <toString(resultOf(ts, artifact, op, onRemoveNotFound()))>;"
+when replacedValueExpr := exprFromString("<use(ts.details)>.getReplacedValue()")
+		&& rootNode := jdtToVal(abstractNode(ts), "rootNode");
+		
+Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple(), onRemove(), list[Expression] payloadTupleExprList = []) 
+	= payloadTupleExprList[1]
+when \map(multi = false) := ts.ds;
+
+Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple(), onRemove(), list[Expression] payloadTupleExprList = []) 
+	= boolean(true)
+when !(\map(multi = false) := ts.ds);
+
+Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple(), onRemoveNotFound(), list[Expression] payloadTupleExprList = []) 
+	= NULL()
+when \map(multi = false) := ts.ds;
+
+Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple(), onRemoveNotFound(), list[Expression] payloadTupleExprList = []) 
+	= boolean(false)
+when !(\map(multi = false) := ts.ds);

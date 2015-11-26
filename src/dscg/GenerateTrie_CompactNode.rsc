@@ -632,8 +632,8 @@ when valIdx := val(primitive("int"), "valIdx") &&
 // TODO: unify copyPayloadRange and copyNodeRange
 str copyPayloadRange(TrieSpecifics ts, Artifact artifact, Expression from, Expression to, Expression(Expression) srcIndexShift, Expression(Expression) dstIndexShift, bool isRare = false, map[ContentType, Expression] argsOverride = ()) = 
 	"<if (fromPlusOne != to) {>for (int i = <toString(from)>; i \< <toString(to)>; i++) {<}>
-		unsafe.<unsafePutMethodNameFromType(ts.ct2type[ctKey(isRare = isRare)])>(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctKey(isRare = isRare), dstIndexShift(i)))>], <if (argsOverride[ctKey(isRare = isRare)]?) {><toString(argsOverride[ctKey(isRare = isRare)])><} else {>unsafe.<unsafeGetMethodNameFromType(ts.ct2type[ctKey(isRare = isRare)])>(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctKey(isRare = isRare), srcIndexShift(i)))>])<}>);
-		unsafe.<unsafePutMethodNameFromType(ts.ct2type[ctVal(isRare = isRare)])>(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctVal(isRare = isRare), dstIndexShift(i)))>], <if (argsOverride[ctVal(isRare = isRare)]?) {><toString(argsOverride[ctVal(isRare = isRare)])><} else {>unsafe.<unsafeGetMethodNameFromType(ts.ct2type[ctVal(isRare = isRare)])>(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctVal(isRare = isRare), srcIndexShift(i)))>])<}>);
+		unsafe.<unsafePutMethodNameFromType(ct2type(ts)[ctKey(isRare = isRare)])>(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctKey(isRare = isRare), dstIndexShift(i)))>], <if (argsOverride[ctKey(isRare = isRare)]?) {><toString(argsOverride[ctKey(isRare = isRare)])><} else {>unsafe.<unsafeGetMethodNameFromType(ct2type(ts)[ctKey(isRare = isRare)])>(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctKey(isRare = isRare), srcIndexShift(i)))>])<}>);
+		unsafe.<unsafePutMethodNameFromType(ct2type(ts)[ctVal(isRare = isRare)])>(dst, dstArrayOffsets[dst.<toString(callLogicalToPhysical(ts, artifact, ctVal(isRare = isRare), dstIndexShift(i)))>], <if (argsOverride[ctVal(isRare = isRare)]?) {><toString(argsOverride[ctVal(isRare = isRare)])><} else {>unsafe.<unsafeGetMethodNameFromType(ct2type(ts)[ctVal(isRare = isRare)])>(src, srcArrayOffsets[src.<toString(callLogicalToPhysical(ts, artifact, ctVal(isRare = isRare), srcIndexShift(i)))>])<}>);
 	<if (fromPlusOne != to) {>}<}>"
 when fromPlusOne := plus(from, iconst(1)) &&
 		i := (fromPlusOne == to ? from : useExpr(var(primitive("int"), "i")));
@@ -1781,6 +1781,10 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 	'	return this;
 	'}" 
 when \map(multi = true) := ts.ds;
+		
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple()) = true;
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple())
+	= generate_bodyOf_SpecializedBitmapPositionNode_removed(ts, op);	
 	
 default bool exists_bodyOf_SpecializedBitmapPositionNode_removed(TrieSpecifics ts, PredefOp op, 
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true;
@@ -2109,8 +2113,8 @@ default str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts, Artifact artif
 	"// assert !(<equalityDefaultForArguments(key(ts.keyType, "key0"), key(ts.keyType, "key1"))>);
 	
 	if (<use(ts.shift)> \>= <toString(call(getDef(ts, trieNode(compactNode()), hashCodeLength())))>) {
-		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<typeToString(nodeTupleType(ts, 0))>[]) new <if (isPrimitive(nodeTupleArg(ts, 0))) {><typeToString(nodeTupleType(ts, 0))><} else {>Object<}>[] { <use(appendToName([ "0", "1" ], nodeTupleArg(ts, 0)))> }
-						<if (\map() := ts.ds) {>, (<typeToString(nodeTupleType(ts, 1))>[]) new <if (isPrimitive(nodeTupleArg(ts, 1))) {><typeToString(nodeTupleType(ts, 1))><} else {>Object<}>[] { <use(appendToName([ "0", "1" ], nodeTupleArg(ts, 1)))> }<}>);
+		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<typeToString(collTupleType(ts, 0))>[]) new <if (isPrimitive(collTupleArg(ts, 0))) {><typeToString(collTupleType(ts, 0))><} else {>Object<}>[] { <use(appendToName([ "0", "1" ], collTupleArg(ts, 0)))> }
+						<if (\map() := ts.ds) {>, (<typeToString(collTupleType(ts, 1))>[]) new <if (isPrimitive(collTupleArg(ts, 1))) {><typeToString(collTupleType(ts, 1))><} else {>Object<}>[] { <use(appendToName([ "0", "1" ], collTupleArg(ts, 1)))> }<}>);
 	}
 
 	<dec(ts.mask0)> = <toString(call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
@@ -2264,7 +2268,7 @@ when isOptionEnabled(ts, useSunMiscUnsafe());
 data PredefOp = getContentFunction(ContentType ct);
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp op:getContentFunction(ct:ctPayloadArg(0)))
-	= function(\return(ts.ct2type[ct]), "<contentAccessorMethodName(ct)>", generics = ts.tupleTypes, args = [classArgumentWithUpperBoundCompactNode(ts, "clazz"), jdtToVal(compactNode(ts), "instance"), ts.index], isActive = isOptionEnabled(ts, useSunMiscUnsafe()));
+	= function(\return(ct2type(ts)[ct]), "<contentAccessorMethodName(ct)>", generics = ts.tupleTypes, args = [classArgumentWithUpperBoundCompactNode(ts, "clazz"), jdtToVal(compactNode(ts), "instance"), ts.index], isActive = isOptionEnabled(ts, useSunMiscUnsafe()));
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:getContentFunction(ct:ctPayloadArg(0)))
 	= true when isOptionEnabled(ts, useSunMiscUnsafe());
@@ -2274,7 +2278,7 @@ data PredefOp = getContentFunction(ContentType ct);
 	// TODO: generate global offset for begin of rare payload
 	'try {
 	'	long keyOffset = arrayBase <if (ct.isRare) {>+ (TUPLE_LENGTH * 4 * instance.payloadArity()) <}>+ (TUPLE_LENGTH * addressSize) * index;
-	'	return (<typeToString(ts.ct2type[ct])>) unsafe.<unsafeGetMethodNameFromType(ts.ct2type[ct])>(instance, keyOffset);
+	'	return (<typeToString(ct2type(ts)[ct])>) unsafe.<unsafeGetMethodNameFromType(ct2type(ts)[ct])>(instance, keyOffset);
 	'} catch (SecurityException e) {
 	'	throw new RuntimeException(e);
 	'}"
@@ -2288,7 +2292,7 @@ when isOptionEnabled(ts, useSunMiscUnsafe());
 	= true when isOptionEnabled(ts, useSunMiscUnsafe());
 
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), op:getContent(ContentType ct)) 
-	= generate_bodyOf_getXXX(ts, artifact, typeToString(ts.ct2type[ct]), "ContentType.<prettyPrintContentType(ct)>", unsafeGetMethodNameFromType(ts.ct2type[ct]))
+	= generate_bodyOf_getXXX(ts, artifact, typeToString(ct2type(ts)[ct]), "ContentType.<prettyPrintContentType(ct)>", unsafeGetMethodNameFromType(ct2type(ts)[ct]))
 when isOptionEnabled(ts, useSunMiscUnsafe());
 
 
@@ -2743,7 +2747,34 @@ when isOptionEnabled(ts, useSunMiscUnsafe());
 		";
 */	
 	
-	
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:get(), 
+	str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true;
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:get(),
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
+	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
+	'<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;
+	'
+	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), bitmapName(ctKey(isRare = op.isRare))))> = this.<bitmapAccessor(ctKey(isRare = op.isRare))>;
+	'if (<isBitInBitmap(bitmapName(ctPayloadTuple(isRare = op.isRare)), "bitpos")>) { // inplace value
+	'	<dec(ts.index)> = index(<bitmapName(ctKey(isRare = op.isRare))>, mask, bitpos);
+	'
+	'	if (<eq(content(ts, ctPayloadArg(0, isRare = op.isRare), "<contentAccessorMethodName(ctPayloadArg(0, isRare = op.isRare))>(<use(ts.index)>)"), content(ts, ctPayloadArg(0, isRare = op.isRare)))>) {
+	'		<if (\set() := ts.ds) {>return Optional.of(getKey(<use(ts.index)>));<} else {><dec(result)> = <toString(call(getDef(ts, trieNode(abstractNode()), getContent(ctPayloadArg(1, isRare = op.isRare)))))>; 
+	'
+	'		return Optional.of(<use(result)>);<}>
+	'	}
+	'
+	'	return Optional.empty();
+	'}
+	'
+	'if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
+	'	final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNode = nodeAt(bitpos);
+	'
+	'	return subNode.findByKey(key, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
+	'}
+	'
+	'return Optional.empty();"
+when result := val(primitiveToClass(dsAtFunction__range_type(ts)), "result");	
 	
 	
 	

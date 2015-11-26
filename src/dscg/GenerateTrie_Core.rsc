@@ -185,8 +185,8 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	<impl(ts, core(immutable()), containsEntry())>
 	<impl(ts, core(immutable()), containsEntry(customComparator = true))>
 
-	<impl(ts, core(immutable()), get())>
-	<impl(ts, core(immutable()), get(customComparator = true))>
+	<impl(ts, core(immutable()), get(isRare = false, customComparator = false))>
+	<impl(ts, core(immutable()), get(isRare = false, customComparator = true))>
 
 	<impl(ts, core(immutable()), insertTuple(false, false))>
 	<impl(ts, core(immutable()), insertTuple(false, true))>
@@ -558,3 +558,25 @@ list[PredefOp] declaredMethodsByCollection(TrieSpecifics ts) = [
 	valueCollectionsStream()	
 	
 ];
+
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:removeTuple(), 
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:removeTuple(),
+		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
+	"<dec(ts.keyHash)> = <hashCode(content(ts, ctPayloadArg(0, isRare = op.isRare)))>;
+	'<dec(ts.details)> = <ts.ResultStr>.unchanged();
+	
+	<dec(\inode(ts.ds, ts.tupleTypes, "newRootNode"))> = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), removeTuple(customComparator = op.customComparator)), 
+					argsOverride = (ts.mutator: NULL(), 
+						ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ts.keyHash))), 
+						ts.shift: constant(ts.shift.\type, "0"))))>;
+		
+	if (<use(ts.details)>.isModified()) {
+		<if (\map() := ts.ds) {>assert <use(ts.details)>.hasReplacedValue(); <dec(ts.valHash)> = <hashCode(content(ts, ctPayloadArg(1, isRare = op.isRare), "<use(ts.details)>.getReplacedValue()"))>;<}>return 
+			new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, 
+				<eval(updateProperty(ts, op, hashCodeProperty(), onRemove(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(ts.valHash) ])))>, 
+				<eval(updateProperty(ts, op, sizeProperty(), onRemove()))>);
+	}
+
+	return this;"
+when rootNode := jdtToVal(abstractNode(ts), "rootNode");

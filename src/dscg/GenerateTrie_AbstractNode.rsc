@@ -33,13 +33,15 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 	containsKey(isRare = true, customComparator = false),
 	containsKey(isRare = true, customComparator = true),		
 
-	get(),
-	get(customComparator = true),
+	get(isRare = false, customComparator = false),
+	get(isRare = false, customComparator = true),
+	get(isRare = true, customComparator = false),
+	get(isRare = true, customComparator = true),		
 
 	insertTuple(false, false),
 	insertTuple(false, true),
-	/* EXPERIMENTAL */ insertTuple(true, false),
-	/* EXPERIMENTAL */ insertTuple(true, true),
+	insertTuple(true, false),
+	insertTuple(true, true),
 
 	removeTuple(isRare = false, customComparator = false),
 	removeTuple(isRare = false, customComparator = true),
@@ -194,7 +196,7 @@ data PredefOp = nodeIterator();
 // data PredefOp = getContent(ContentType ct);
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), op:getContent(ContentType ct))
-	= method(\return(ts.ct2type[ct]), "<contentAccessorMethodName(ct)>", args = [ts.index]);
+	= method(\return(ct2type(ts)[ct]), "<contentAccessorMethodName(ct)>", args = [ts.index]);
 
 
 
@@ -231,7 +233,7 @@ data PredefOp = getRareValue();
 data PredefOp = getKeyValueEntry();
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact, getKeyValueEntry())
-	= method(\return(jdtToType(jul_Map_Entry(nodeTupleTypes(ts)))), "getKeyValueEntry", args = [ts.index], isActive = \map(multi = false) := ts.ds)
+	= method(\return(jdtToType(jul_Map_Entry(collTupleTypes(ts)))), "getKeyValueEntry", args = [ts.index], isActive = \map(multi = false) := ts.ds)
 when trieNode(_) := artifact;	
 
 

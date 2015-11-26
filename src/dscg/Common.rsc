@@ -25,8 +25,8 @@ import analysis::graphs::Graph;
 
 import dscg::ArrayUtils;
 
-extend dscg::Common_ContentType;
 extend dscg::CoreModel;
+extend dscg::Common_ContentType;
 
 /* PUBLIC CONSTANTS */
 public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");
@@ -42,7 +42,9 @@ public str targetFolder = "src/main/java/<replaceAll(targetBasePackage, ".", "/"
 
 /* DATA SECTION */
 data ContentType
-	= ctPayloadArg(int index, bool isRare = false)
+	= ctCollectionTuple()
+	| ctCollectionArg(int index)
+	| ctPayloadArg(int index, bool isRare = false)
 	| ctPayloadTuple(bool isRare = false)
 	| ctPayloadTuple(ContentType _1)
 	| ctPayloadTuple(ContentType _1, ContentType _2)
@@ -57,7 +59,7 @@ str contentArgIdPrefix(int index:1, bool isRare = false) = isRare ? "rareVal" : 
 
 Argument content(TrieSpecifics ts, ContentType ct) = content(ts, ct, "<contentArgIdPrefix(ct.index)>") when ct is ctPayloadArg;
 Argument content(TrieSpecifics ts, ContentType ct, int i) = content(ts, ct, "<contentArgIdPrefix(ct.index)><i>") when ct is ctPayloadArg;
-Argument content(TrieSpecifics ts, ContentType ct, str name) = val(ts.ct2type[ct], "<name>") when ct is ctPayloadArg;
+Argument content(TrieSpecifics ts, ContentType ct, str name) = val(ct2type(ts)[ct], "<name>") when ct is ctPayloadArg;
 
 list[Argument] contentList(TrieSpecifics ts, ContentType ct:ctPayloadTuple()) = take(tupleLength(ts.ds), [ content(ts, ctKey(isRare = ct.isRare)), content(ts, ctVal(isRare = ct.isRare)) ]);
 
@@ -506,16 +508,7 @@ bool supportsConversionBetweenGenericAndSpecialized(TrieSpecifics ts) = isOption
 data TrieSpecifics 
 	= undefinedTrieSpecifics()
 	| ___expandedTrieSpecifics(DataStructure ds, int bitPartitionSize, int nMax, int nBound, Type keyType = generic("K"), Type valType = generic("V"), str classNamePostfix = "", rel[Option,bool] setup = {}, Model model = model(), 
-					
-		map[ContentType, Type] ct2type = (
-			ctPayloadArg(0): keyType, 
-			ctPayloadArg(1): valType, 
-			ctPayloadArg(0, isRare = false): keyType, 
-			ctPayloadArg(1, isRare = false): valType, 
-			ctKey(isRare = true): object(), // primitiveToClass(keyType) 
-			ctVal(isRare = true): object(), // primitiveToClass(valType) 
-			ctNode(): generic("<AbstractNode(ds)><GenericsStr(dataStructureToTupleTypeList(ds, [keyType, valType]))>")),
-					
+							
 		Argument BIT_PARTITION_SIZE = field(primitive("int"), "BIT_PARTITION_SIZE"), 
 				
 		Argument bitposField = ___bitposField(bitPartitionSize),
@@ -601,7 +594,17 @@ data TrieSpecifics
 	Method nodeOf_BitmapIndexedNode = function(compactNodeClassReturn, "nodeOf", generics = genericTupleTypes, args = [ mutator, bitmapField, valmapField, BitmapIndexedNode_contentArray, BitmapIndexedNode_payloadArity, BitmapIndexedNode_nodeArity ], argsFilter = argsFilter, isActive = !isOptionEnabled(setup,useSpecialization()) || nBound < nMax),
 */	
 	
-	
+map[ContentType, Type] ct2type(TrieSpecifics ts) = (
+	// ctCollectionTuple(): ???,
+	ctCollectionArg(0): collTupleTypes(ts)[0],
+	ctCollectionArg(1): collTupleTypes(ts)[1],
+	ctPayloadArg(0): payloadTupleTypes(ts)[0], 
+	ctPayloadArg(1): payloadTupleTypes(ts)[1], 
+	ctPayloadArg(0, isRare = false): payloadTupleTypes(ts)[0], 
+	ctPayloadArg(1, isRare = false): payloadTupleTypes(ts)[1], 
+	ctKey(isRare = true): payloadTupleTypes(ts, isRare = true)[0], 
+	ctVal(isRare = true): payloadTupleTypes(ts, isRare = true)[1],
+	ctNode(): generic("<AbstractNode(ts.ds)><GenericsStr(dataStructureToTupleTypeList(ts.ds, [ ts.keyType, ts.valType ]))>"));		
 	
 TrieSpecifics trieSpecifics(DataStructure ds, int bitPartitionSize, int nBound, Type __keyType, Type __valType, str __classNamePostfix, rel[Option,bool] __setup, Artifact __artifact) {
 	if (bitPartitionSize < 1 || bitPartitionSize > 6) {
@@ -1716,7 +1719,7 @@ when genericTypeT := generic("T");
 
 
 
-data PredefOp = get(bool customComparator = false);
+data PredefOp = get(bool isRare = false, bool customComparator = false);
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(_), get(customComparator = false))
 	= method(\return(primitiveToClass(dsAtFunction__range_type(ts))), "get", args = [ __labeledArgument(payloadTuple(), ts.stdObjectArg) ], visibility = "public", isActive = true);
@@ -1726,11 +1729,11 @@ data PredefOp = get(bool customComparator = false);
 	= method(\return(primitiveToClass(dsAtFunction__range_type(ts))), "getEquivalent", args = [ __labeledArgument(payloadTuple(), ts.stdObjectArg), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts, methodsWithComparator()));
 //when core(_) := artifact || unknownArtifact() := artifact;
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), get(customComparator = false))
-	= method(\return(specific("Optional", typeArguments = [ primitiveToClass(dsAtFunction__range_type(ts)) ])), "findByKey", args = [ __labeledArgument(payloadTuple(), key(ts.keyType)), ts.keyHash, ts.shift ]);
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), PredefOp op:get(customComparator = false))
+	= method(\return(specific("Optional", typeArguments = [ primitiveToClass(dsAtFunction__range_type(ts)) ])), "findByKey", args = [ __labeledArgument(payloadTuple(), payloadTupleArg(ts, 0, isRare = op.isRare)), ts.keyHash, ts.shift ]);
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), get(customComparator = true))
-	= method(\return(specific("Optional", typeArguments = [ primitiveToClass(dsAtFunction__range_type(ts)) ])), "findByKey", args = [ __labeledArgument(payloadTuple(), key(ts.keyType)), ts.keyHash, ts.shift, ts.comparator], isActive = isOptionEnabled(ts, methodsWithComparator()));
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), PredefOp op:get(customComparator = true))
+	= method(\return(specific("Optional", typeArguments = [ primitiveToClass(dsAtFunction__range_type(ts)) ])), "findByKey", args = [ __labeledArgument(payloadTuple(), payloadTupleArg(ts, 0, isRare = op.isRare)), ts.keyHash, ts.shift, ts.comparator], isActive = isOptionEnabled(ts, methodsWithComparator()));
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:get())  = true;
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:get()) = 
@@ -1751,46 +1754,6 @@ data PredefOp = get(bool customComparator = false);
 	}"
 when rootNode := jdtToVal(abstractNode(ts), "rootNode");
 
-// TODO: getPayload function by index
-// previously used arguments (int n, int m)
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:get(), 
-	str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true;
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:get(),
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
-	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
-	'<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;
-	'
-	'if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
-	'	<dec(ts.index)> = dataIndex(bitpos);
-	'	if (<eq(key(ts.keyType, "getKey(<use(ts.index)>)"), key(ts.keyType))>) {
-	'		<if (\set() := ts.ds) {>return Optional.of(getKey(<use(ts.index)>));<} else {><dec(result)> = <toString(call(getDef(ts, trieNode(abstractNode()), getContent(ctPayloadArg(1)))))>; 
-	'
-	'		return Optional.of(<use(result)>);<}>
-	'	}
-	'
-	'	return Optional.empty();
-	'}
-	'
-	'if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
-	'	final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNode = nodeAt(bitpos);
-	'
-	'	return subNode.findByKey(key, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))><if (!(eq == equalityDefaultForArguments)) {>, <cmpName><}>);
-	'}
-	'
-	'return Optional.empty();"
-when result := val(primitiveToClass(dsAtFunction__range_type(ts)), "result");
-
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:get(), 
-	str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true;
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:get(),
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
-	"for (int i = 0; i \< keys.length; i++) {
-		<dec(key(ts.keyType, "_key"))> = keys[i];
-		if (<eq(key(ts.keyType), key(ts.keyType, "_key"))>) {
-			<if(\set() := ts.ds) {>return Optional.of(_key);<} else {><dec(nodeTupleArg(ts, 1))> = vals[i]; return Optional.of(<use(nodeTupleArg(ts, 1))>);<}>				
-		}
-	}
-	return Optional.empty();";
 
 
 
@@ -1878,7 +1841,7 @@ default str containsKeyMethodName(DataStructure _) = "containsKey";
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:containsKey(isRare = true)) = 
 	"try {
 		<toString(UNCHECKED_ANNOTATION())>
-		<dec(content(ts, ctPayloadArg(0, isRare = true)))> = (<typeToString(ts.ct2type[ctPayloadArg(0, isRare = true)])>) o;
+		<dec(content(ts, ctPayloadArg(0, isRare = true)))> = (<typeToString(ct2type(ts)[ctPayloadArg(0, isRare = true)])>) o;
 		return rootNode.<toString(call(getDef(ts, trieNode(abstractNode()), op), 
 					argsOverride = (ts.keyHash: keyHashExpr, ts.shift: constant(ts.shift.\type, "0"))))>;
 	} catch (ClassCastException unused) {
@@ -1901,22 +1864,7 @@ when keyHashExpr := call(
 							PredefArgLabel::hashCode(): 
 								hashCodeExpr(ts, content(ts, ctPayloadArg(0, isRare = false)))
 						)
-					);					
-
-// previously used arguments (int n, int m)
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:containsKey(), 
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:containsKey(),
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) =
-	"if (this.hash == keyHash) {
-		for (<typeToString(ts.keyType)> k : keys) {
-			if (<eq(key(ts.keyType, "k"), key(ts.keyType))>) {
-				return true;
-			}
-		}
-	}
-	return false;";
-
+					);
 
 
 
@@ -2184,91 +2132,6 @@ Expression updateProperty(TrieSpecifics ts, op:removeTuple(), hashCodeProperty()
 Expression updateProperty(TrieSpecifics ts, op:removeTuple(), sizeProperty(), onRemove(), Expression sizeProperty = useExpr(ts.sizeProperty))
 	= minus(sizeProperty, iconst(1));
 
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(isRare:_, customComparator:_), 
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
-		TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = true; 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(isRare:_, customComparator:_),
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments,
-		TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
-	//if (this.hash != keyHash) {
-	//	details.modified();
-	//	return mergeNodeAndKeyValPair(this, this.hash, <use(ts.payloadTuple)>, keyHash, shift);
-	//}
-
-	"assert this.hash == keyHash;
-	
-	for (int idx = 0; idx \< keys.length; idx++) {
-		if (<eq(key(ts.keyType, "keys[idx]"), key(ts.keyType))>) {
-			<updatedOn_KeysEqual(ts, artifact, op, eq)>
-		}
-	}
-	
-	<updatedOn_NoTuple(ts, artifact, op, eq)>";
-
-str updatedOn_KeysEqual(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(isRare:_, customComparator:_), 
-		str(Argument, Argument) eq) = 
-	"return this;" 
-when \set() := ts.ds;	
-	
-// TODO: rewrite as ASTs and merge both cases for maps
-str updatedOn_KeysEqual(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(isRare:_, customComparator:_), 
-		str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
-	"<dec(prependToName(nodeTupleArg(ts, 1), "current"))> = vals[idx];
-
-	if (<eq(prependToName(nodeTupleArg(ts, 1), "current"), val(ts.valType))>) {
-		return this;
-	} else {
-		// add new mapping	
-		<dec(field(asArray(nodeTupleType(ts, 1)), "src"))> = this.vals;
-		<arraycopyAndSetTuple(val(asArray(nodeTupleType(ts, 1)), "src"), val(asArray(nodeTupleType(ts, 1)), "dst"), 1, [val(ts.valType)], field(primitive("int"), "idx"))>
-	
-		final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> thisNew = new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(this.hash, this.keys, dst);
-	
-		details.updated(currentVal);
-		return thisNew;
-	}"
-when \map(multi = false) := ts.ds;
-
-// TODO: rewrite as ASTs and merge both cases for maps
-str updatedOn_KeysEqual(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(isRare:_, customComparator:_), 
-		str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
-	"<dec(prependToName(nodeTupleArg(ts, 1), "current"))> = vals[idx];
-
-	if (<toString(call(prependToName(nodeTupleArg(ts, 1), "current"), getDef(tsSet, core(immutable()), containsKey(customComparator = op.customComparator)), 
-			labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>) {
-		return this;
-	} else {
-		// add new mapping
-		<dec(appendToName(collTupleArg(ts, 1), "New"))> = <toString(call(prependToName(nodeTupleArg(ts, 1), "current"), getDef(tsSet, core(immutable()), insertTuple(isRare, customOperator)), 
-				labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;				
-	
-		<dec(field(asArray(nodeTupleType(ts, 1)), "src"))> = this.vals;
-		<arraycopyAndSetTuple(val(asArray(nodeTupleType(ts, 1)), "src"), val(asArray(nodeTupleType(ts, 1)), "dst"), 1, [ appendToName(collTupleArg(ts, 1), "New") ], field(primitive("int"), "idx"))>
-	
-		final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> thisNew = new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(this.hash, this.keys, dst);
-	
-		details.modified();
-		return thisNew;
-	}" 
-when \map(multi = true) := ts.ds;	
-
-default str updatedOn_NoTuple(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(isRare:_, customComparator:_), str(Argument, Argument) eq) = 
-	"<arraycopyAndInsertTuple(field(asArray(ts.keyType), "this.keys"), field(asArray(ts.keyType), "keysNew"), 1, [key(ts.keyType)], field(primitive("int"), "keys.length"))>
-	<if (\map() := ts.ds) {><arraycopyAndInsertTuple(field(asArray(ts.valType), "this.vals"), field(asArray(ts.valType), "valsNew"), 1, [val(ts.valType)], field(primitive("int"), "vals.length"))><}>
-	
-	details.modified();
-	return new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash, keysNew<if (\map() := ts.ds) {>, valsNew<}>);";
-		
-str updatedOn_NoTuple(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:insertTuple(isRare:_, customComparator:_), str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
-	"// add new tuple
-	'<dec(appendToName(collTupleArg(ts, 1), "New"))> = <tsSet.coreSpecializedClassName>.setOf(<use(val(ts.valType))>);	
-	'
-	'<arraycopyAndInsertTuple(val(asArray(ts.keyType), "this.keys"), val(asArray(ts.keyType), "keysNew"), 1, [key(ts.keyType)], field(primitive("int"), "keys.length"))>
-	'<arraycopyAndInsertTuple(val(asArray(nodeTupleType(ts, 1)), "this.vals"), val(asArray(nodeTupleType(ts, 1)), "valsNew"), 1, [appendToName(collTupleArg(ts, 1), "New")], field(primitive("int"), "vals.length"))>
-	
-	details.modified();
-	return new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash, keysNew<if (\map() := ts.ds) {>, valsNew<}>);"
-when \map(multi = true) := ts.ds;
 
 
 
@@ -2450,175 +2313,7 @@ data PredefOp = removeTuple(bool isRare = false, bool customComparator = false);
 	return method(\return(returnType), methodName, args = argsBuilder, visibility = "public");
 }
 
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:removeTuple(), 
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:removeTuple(),
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
-	"<dec(ts.keyHash)> = key.hashCode();
-	<dec(ts.details)> = <ts.ResultStr>.unchanged();
 
-	<dec(\inode(ts.ds, ts.tupleTypes, "newRootNode"))> = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), removeTuple(customComparator = op.customComparator)), 
-					argsOverride = (ts.mutator: NULL(), 
-						ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ts.keyHash))), 
-						ts.shift: constant(ts.shift.\type, "0"))))>;
-	
-	if (<use(ts.details)>.isModified()) {
-		<if (\map() := ts.ds) {>assert <use(ts.details)>.hasReplacedValue(); <dec(ts.valHash)> = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;<}>return 
-			new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, 
-				<eval(updateProperty(ts, op, hashCodeProperty(), onRemove(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(ts.valHash) ])))>, 
-				<eval(updateProperty(ts, op, sizeProperty(), onRemove()))>);
-	}
-
-	return this;"
-when rootNode := jdtToVal(abstractNode(ts), "rootNode");
-
-/*
- * TODO: use different return types dependent on data types. 
- */
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:removeTuple(), 
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:removeTuple(), 
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) =
-	"if (mutator.get() == null) {
-		throw new IllegalStateException(\"Transient already frozen.\");
-	}
-
-	<dec(ts.keyHash)> = key.hashCode();
-	<dec(ts.details)> = <ts.ResultStr>.unchanged();
-	
-	<dec(\inode(ts.ds, ts.tupleTypes, "newRootNode"))> = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), removeTuple(customComparator = op.customComparator)), 
-					argsOverride = (ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ts.keyHash))), ts.shift: constant(ts.shift.\type, "0"))))>;
-
-	if (<use(ts.details)>.isModified()) {
-		<if (\map() := ts.ds) {>assert <use(ts.details)>.hasReplacedValue(); <dec(ts.valHash)> = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;\n\n<}>rootNode = newRootNode;
-		<toString(expressionStatement(assign(ts.hashCodeProperty, updateProperty(ts, op, hashCodeProperty(), onRemove(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(ts.valHash) ])))))>
-		<toString(expressionStatement(assign(ts.sizeProperty, updateProperty(ts, op, sizeProperty(), onRemove()))))>
-	
-		if (DEBUG) {
-			assert checkHashCodeAndSize(hashCode, cachedSize);
-		}
-		return <eval(resultOf(ts, artifact, op, onRemove(), payloadTupleExprList = cutToTupleSize(ts, [ useExpr(key(ts.keyType)), replacedValueExpr ])))>;
-	}
-
-	if (DEBUG) {
-		assert checkHashCodeAndSize(hashCode, cachedSize);
-	}
-	
-	return <toString(resultOf(ts, artifact, op, onRemoveNotFound()))>;"
-when replacedValueExpr := exprFromString("<use(ts.details)>.getReplacedValue()")
-		&& rootNode := jdtToVal(abstractNode(ts), "rootNode");
-
-Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple(), onRemove(), list[Expression] payloadTupleExprList = []) 
-	= payloadTupleExprList[1]
-when \map(multi = false) := ts.ds;
-
-Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple(), onRemove(), list[Expression] payloadTupleExprList = []) 
-	= boolean(true)
-when !(\map(multi = false) := ts.ds);
-
-Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple(), onRemoveNotFound(), list[Expression] payloadTupleExprList = []) 
-	= NULL()
-when \map(multi = false) := ts.ds;
-
-Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple(), onRemoveNotFound(), list[Expression] payloadTupleExprList = []) 
-	= boolean(false)
-when !(\map(multi = false) := ts.ds);
-
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple()) = true;
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple())
-	= generate_bodyOf_SpecializedBitmapPositionNode_removed(ts, op);
-
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:removeTuple(), 
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true;
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:removeTuple(),
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
-	"for (int idx = 0; idx \< keys.length; idx++) {
-		if (<eq(key(ts.keyType, "keys[idx]"), key(ts.keyType))>) {
-			<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = vals[idx]; details.updated(currentVal);<}><if (\set() := ts.ds) {>details.modified();<}>
-			
-			if (this.arity() == 1) {						
-				return <toString(call(getDef(ts, core(immutable()), emptyTrieNodeConstant())))>;
-			} else if (this.arity() == 2) {
-				/*
-				 * Create root node with singleton element. This node
-				 * will be a) either be the new root returned, or b)
-				 * unwrapped and inlined.
-				 */
-				<dec(key(ts.keyType, "theOtherKey"))> = (idx == 0) ? keys[1] : keys[0];
-				<if (\map() := ts.ds) {><dec(val(ts.valType, "theOtherVal"))> = (idx == 0) ? vals[1] : vals[0];<}>
-				return <toString(call(getDef(ts, core(immutable()), emptyTrieNodeConstant())))>.updated(mutator,
-								theOtherKey<if (\map() := ts.ds) {>, theOtherVal<}>, keyHash, 0, details<if (!(eq == equalityDefaultForArguments)) {>, cmp<}>);
-			} else {
-				<arraycopyAndRemoveTuple(field(asArray(ts.keyType), "this.keys"), field(asArray(ts.keyType), "keysNew"), 1, field(primitive("int"), "idx"))>
-				<if (\map() := ts.ds) {><arraycopyAndRemoveTuple(field(asArray(ts.valType), "this.vals"), field(asArray(ts.valType), "valsNew"), 1, field(primitive("int"), "idx"))><}>
-	
-				return new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash, keysNew<if (\map() := ts.ds) {>, valsNew<}>);
-			}
-		}
-	}
-	return this;"
-when !(\map(multi = true) := ts.ds);
-	
-
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:removeTuple(), 
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true;
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:removeTuple(),
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
-	"for (int idx = 0; idx \< keys.length; idx++) {
-		if (<eq(key(ts.keyType, "keys[idx]"), key(ts.keyType))>) {					
-			<removedOn_TupleFound(ts, artifact, op, eq)>
-		}
-	}
-	return this;"
-when \map(multi = true) := ts.ds;	
-
-	
-str removedOn_TupleFound(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), op:removeTuple(), 
-		str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
-	"<dec(collCur)> = getVal(idx);
-	'
-	'if(<toString(call(collCur, getDef(tsSet, core(immutable()), containsKey()) 
-					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>) {
-	'	details.updated(<use(val(ts.valType))>);
-	'	
-	'	// remove tuple
-	'	<dec(collNew)> = <toString(call(collCur, getDef(tsSet, core(immutable()), removeTuple(customComparator = op.customComparator)), 
-					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;
-	'	
-	'	if (<toString(call(collNew, getDef(tsSet, core(immutable()), size())))> != 0) {
-	'		// update mapping
-			<arraycopyAndSetTuple(val(asArray(nodeTupleType(ts, 1)), "this.vals"), field(asArray(nodeTupleType(ts, 1)), "valsNew"), 1, [collNew], field(primitive("int"), "idx"))>
-	
-			return new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash, keys, valsNew);
-	'	} else {
-	'		// drop mapping
-			if (this.arity() == 2) {
-				/*
-				 * Create root node with singleton element. This node
-				 * will be a) either be the new root returned, or b)
-				 * unwrapped and inlined.
-				 */
-				<dec(key(ts.keyType, "theOtherKey"))> = (idx == 0) ? keys[1] : keys[0];
-				<dec(val(collType, "theOtherVal"))> = (idx == 0) ? vals[1] : vals[0];
-				
-				<dec(ts.bitmapField)> = 0;
-				<dec(ts.valmapField)> = bitpos(mask(hash, 0));
-								
-				return <AbstractNode(ts.ds)>.<GenericsStr(ts.tupleTypes)> nodeOf(mutator, <use(ts.bitmapField)>, <use(ts.valmapField)>, theOtherKey, theOtherVal);
-			} else {
-	'			<arraycopyAndRemoveTuple(field(asArray(ts.keyType), "this.keys"), field(asArray(ts.keyType), "keysNew"), 1, field(primitive("int"), "idx"))>
-	'			<arraycopyAndRemoveTuple(field(asArray(collType), "this.vals"), field(asArray(collType), "valsNew"), 1, field(primitive("int"), "idx"))>
-	'
-	'			return new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash, keysNew<if (\map() := ts.ds) {>, valsNew<}>);		
-	'		}
-	'	}	
-	'} else {	
-	'	return this;
-	'}" 
-when \map(multi = true) := ts.ds 
-		&& collCur := prependToName(nodeTupleArg(ts, 1), "current")
-		&& collNew := appendToName(nodeTupleArg(ts, 1), "New")
-		&& collType := nodeTupleType(ts, 1);
 
 
 
@@ -3139,16 +2834,6 @@ data PredefOp = mergeNodeAndKeyValPair();
 
 
 
-data PredefOp = abstractNode_getKeyValueEntry();
-
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), abstractNode_getKeyValueEntry())
-	= method(\return(generic("java.util.Map.Entry\<<intercalate(", ", mapper(nodeTupleTypes(ts), primitiveToClass o typeToString))>\>")), "getKeyValueEntry", args = [index], isActive = \map() := ts.ds);
-
-
-
-
-
-
 data PredefOp = isTrieStructureValid();
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::isTrieStructureValid())
@@ -3185,10 +2870,6 @@ for (byte i = 0; i \< nodeArity(); i++) {
 }
 
 return true;";
-
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::isTrieStructureValid())  = true;
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), PredefOp::isTrieStructureValid()) =
-	"return true;";
 
 
 

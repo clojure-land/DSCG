@@ -23,9 +23,9 @@ str generate_checkHashCodeAndSize(TrieSpecifics ts) =
 		int size = 0;		
 	
 		for (Iterator<CollectionGenericsExpandedStr(ts)> it = keyIterator(); it.hasNext();) {
-			<dec(key(ts.keyType))> = it.next();
+			<dec(collTupleArg(ts, 0))> = it.next();
 	
-			hash += <hashCode(key(ts.keyType))>;
+			hash += <hashCode(collTupleArg(ts, 0))>;
 			size += 1;
 		}
 	
@@ -43,10 +43,10 @@ str generate_checkHashCodeAndSize(TrieSpecifics ts) =
 		
 		for (Iterator\<Map.Entry<CollectionGenericsExpandedStr(ts)>\> it = entryIterator(); it.hasNext();) {
 			final Map.Entry<CollectionGenericsExpandedStr(ts)> entry = it.next();			
-			<dec(key(ts.keyType))> = entry.getKey();
-			<dec(val(ts.valType))> = entry.getValue();
+			<dec(collTupleArg(ts, 0))> = entry.getKey();
+			<dec(collTupleArg(ts, 1))> = entry.getValue();
 	
-			hash += <hashCode(key(ts.keyType))> ^ <hashCode(val(ts.valType))>;
+			hash += <hashCode(collTupleArg(ts, 0))> ^ <hashCode(collTupleArg(ts, 1))>;
 			size += 1;
 		}
 	
@@ -269,8 +269,8 @@ if (other instanceof <toString(ts.ds)>) {
 
 		try {
 			@SuppressWarnings(\"unchecked\")
-			<dec(key(ts.keyType))> = (<typeToString(primitiveToClass(dsAtFunction__domain_type(ts)))>) entry.getKey();
-			final Optional<MapsToGenericsStr(ts)> result = rootNode.findByKey(key, <toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, key(ts.keyType)))))>, 0);
+			<dec(collTupleArg(ts, 0))> = (<typeToString(primitiveToClass(dsAtFunction__domain_type(ts)))>) entry.getKey();
+			final Optional<MapsToGenericsStr(ts)> result = rootNode.findByKey(key, <toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, collTupleArg(ts, 0)))))>, 0);
 
 			if (!result.isPresent()) {
 				return false;
