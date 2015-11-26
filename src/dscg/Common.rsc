@@ -2358,40 +2358,45 @@ Expression unboxPayloadFromTuple(TrieSpecifics ts, Argument arg, int idx) { // a
 }
 
 
-
+/*
+ * TODO: currently broken for regular collections due to the removal of 'mapper(collTupleArgs(ts), primitiveToClassArgument))'
+ */
 data PredefOp = removeTuple(bool isRare = false, bool customComparator = false);
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), removeTuple(customComparator = false))
-	= method(\return(expandedExactBoundCollectionType(ts, immutable())), "__remove", args = [ labeledArgumentList(payloadTuple(), mapper(collTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true)
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp op:removeTuple(customComparator = false))
+	= method(\return(expandedExactBoundCollectionType(ts, immutable())), "__remove", args = [ labeledArgumentList(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)) ], visibility = "public", isActive = true)
 when \map(multi = true) := ts.ds; 
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), removeTuple(customComparator = true))
-	= method(\return(expandedExactBoundCollectionType(ts, immutable())), "__removeEquivalent", args = [ labeledArgumentList(payloadTuple(), mapper(collTupleArgs(ts), primitiveToClassArgument)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts, methodsWithComparator()))
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp op:removeTuple(customComparator = true))
+	= method(\return(expandedExactBoundCollectionType(ts, immutable())), "__removeEquivalent", args = [ labeledArgumentList(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts, methodsWithComparator()))
 when \map(multi = true) := ts.ds; 
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), removeTuple(customComparator = false))
-	= method(\return(expandedExactBoundCollectionType(ts, immutable())), "__remove", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(collTupleArg(ts, 0))) ], visibility = "public", isActive = true)
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp op:removeTuple(customComparator = false))
+	= method(\return(expandedExactBoundCollectionType(ts, immutable())), "__remove", args = [ __labeledArgument(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)[0]) ], visibility = "public", isActive = true)
 when !(\map(multi = true) := ts.ds); 
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), removeTuple(customComparator = true))
-	= method(\return(expandedExactBoundCollectionType(ts, immutable())), "__removeEquivalent", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(collTupleArg(ts, 0))), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts, methodsWithComparator()))
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(immutable()), PredefOp op:removeTuple(customComparator = true))
+	= method(\return(expandedExactBoundCollectionType(ts, immutable())), "__removeEquivalent", args = [ __labeledArgument(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)[0]), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts, methodsWithComparator()))
 when !(\map(multi = true) := ts.ds); 
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), removeTuple(customComparator = false))
-	= method(\return(primitive("boolean")), "__remove", args = [ labeledArgumentList(payloadTuple(), mapper(collTupleArgs(ts), primitiveToClassArgument)) ], visibility = "public", isActive = true)
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), PredefOp op:removeTuple(customComparator = false))
+	= method(\return(primitive("boolean")), "__remove", args = [ labeledArgumentList(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)) ], visibility = "public", isActive = true)
 when !(\map(multi = false) := ts.ds);
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), removeTuple(customComparator = true))
-	= method(\return(primitive("boolean")), "__removeEquivalent", args = [ labeledArgumentList(payloadTuple(), mapper(collTupleArgs(ts), primitiveToClassArgument)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts, methodsWithComparator()))
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), PredefOp op:removeTuple(customComparator = true))
+	= method(\return(primitive("boolean")), "__removeEquivalent", args = [ labeledArgumentList(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts, methodsWithComparator()))
 when !(\map(multi = false) := ts.ds);
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), removeTuple(customComparator = false))
-	= method(\return(primitiveToClass(collTupleType(ts, 1))), "__remove", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(collTupleArg(ts, 0))) ], visibility = "public", isActive = true)
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), PredefOp op:removeTuple(customComparator = false))
+	= method(\return(primitiveToClass(collTupleType(ts, 1))), "__remove", args = [ __labeledArgument(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)[0]) ], visibility = "public", isActive = true)
 when \map(multi = false) := ts.ds;
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), removeTuple(customComparator = true))
-	= method(\return(primitiveToClass(collTupleType(ts, 1))), "__removeEquivalent", args = [ __labeledArgument(payloadTuple(), primitiveToClassArgument(collTupleArg(ts, 0))), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts, methodsWithComparator()))
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:core(transient()), PredefOp op:removeTuple(customComparator = true))
+	= method(\return(primitiveToClass(collTupleType(ts, 1))), "__removeEquivalent", args = [ __labeledArgument(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)[0]), ts.comparator ], visibility = "public", isActive = isOptionEnabled(ts, methodsWithComparator()))
 when \map(multi = false) := ts.ds;
+
+
+
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(_), op:removeTuple(customComparator = false))
 	= method(\return(jdtToType(abstractNode(ts))), "removed", args = [ ts.mutator, labeledArgumentList(payloadTuple(), payloadTupleArgs(ts, isRare = op.isRare)), ts.keyHash, ts.shift, ts.details ], ts = ts)
