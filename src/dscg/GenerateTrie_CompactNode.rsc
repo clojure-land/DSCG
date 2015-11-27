@@ -1734,6 +1734,9 @@ str bitmapIndex(ContentType ct) = "<bitmapPrefix(ct)>Index";
 
 str contentAccessor(ContentType ct, str index) = "<contentAccessorMethodName(ct)>(<index>)";
 
+default str removedOn_KeysDifferent(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) =
+	"return this;";
+
 default str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq) =
 	"<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = getVal(dataIndex); details.updated(currentVal);<} else {>details.modified();<}>
 	
@@ -1774,29 +1777,25 @@ str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpeci
 	'}" 
 when \map(multi = true) := ts.ds;
 		
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple()) = true;
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple())
-	= generate_bodyOf_SpecializedBitmapPositionNode_removed(ts, op);	
-	
-default str generate_bodyOf_SpecializedBitmapPositionNode_removed(TrieSpecifics ts, PredefOp op,
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) {
+/*
+	CURSOR ...	
+*/		
 		
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple()) = true;
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple()) {
 	Argument subNode 	= \inode(ts.ds, ts.tupleTypes, "subNode");
 	Argument subNodeNew = \inode(ts.ds, ts.tupleTypes, "subNodeNew");
 
 	return
 	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
 	'<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;
-
-	if ((<use(valmapMethod)> & bitpos) != 0) { // inplace value
-		<dec(field(primitive("int"), "dataIndex"))> = dataIndex(bitpos);
-		
-		if (<eq(key(ts.keyType, "getKey(dataIndex)"), key(ts.keyType))>) {
-			<removedOn_TupleFound(ts, eq)>
-		} else {		
-			return this;
-		}
-	} else if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
+	'
+	'<removeTuple_checkForInplace(ts, artifact, op, false)>
+	'
+	'<removeTuple_checkForInplace(ts, artifact, op, true)>
+	
+	// check for node (not value)
+	if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
 		<dec(subNode)> = nodeAt(bitpos);
 		<dec(subNodeNew)> = <toString(call(subNode, getDef(ts, trieNode(abstractNode()), op), argsOverride = (ts.shift: exprFromString("shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>"))))>;
 
@@ -1826,8 +1825,24 @@ default str generate_bodyOf_SpecializedBitmapPositionNode_removed(TrieSpecifics 
 		}		
 	}
 
+	// no value
 	return this;";
 }
+	
+str removeTuple_checkForInplace(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) = 
+	"// TODO: generalize bitmap declaration/if/index assignment in code generator pattern
+	'// check for inplace <if (isRareCase) {>(rare) <}>value
+	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), bitmapName(ctPayloadTuple(isRare = isRareCase))))> = <bitmapAccessor(ctKey(isRare = isRareCase))>;
+	'if (<isBitInBitmap(bitmapName(ctPayloadTuple(isRare = isRareCase)), "bitpos")>) {
+	'	<dec(field(primitive("int"), "<bitmapPrefix(ctPayloadTuple(isRare = isRareCase))>Index"))> = index(<bitmapName(ctPayloadTuple(isRare = isRareCase))>, mask, bitpos);
+	'	<dec(content(ts, ctKey(isRare = isRareCase), "currentKey"))> = <contentAccessor(ctKey(isRare = isRareCase), "<bitmapPrefix(ctPayloadTuple(isRare = isRareCase))>Index")>;
+	'	
+	'	if (<selectEq(op)(content(ts, ctKey(isRare = isRareCase), "currentKey"), content(ts, ctKey(isRare = isRareCase)))>) {
+	'		<removedOn_TupleFound(ts, selectEq(op))>
+	'	} else {
+	'		<removedOn_KeysDifferent(ts, artifact, op, isRareCase)>				
+	'	}
+	'}";
 	
 default str removed_value_block2(TrieSpecifics ts) =
 	"if (this.arity() == <ts.nBound + 1>) {
