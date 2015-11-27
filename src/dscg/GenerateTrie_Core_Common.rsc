@@ -55,10 +55,8 @@ str generate_checkHashCodeAndSize(TrieSpecifics ts) =
 	"
 when \map() := ts.ds;
 
-default bool exists_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass)  = true;
 default str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass) = "";
 
-@index=2 bool exists_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass)  = true;
 @index=2 str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass) =
 	"Set\<<typeToString(primitiveToClass(dsAtFunction__domain_type(ts)))>\> keySet = null;
 	'
@@ -95,10 +93,8 @@ default str generate_bodyOf_jul_Map_keySet(TrieSpecifics ts, str enclosingClass)
 when \map() := ts.ds
 	;
 
-default bool exists_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass)  = true;
 default str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) = "";
 
-@index=2 bool exists_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass)  = true;
 @index=2 str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass) = 
 	"Collection\<<typeToString(primitiveToClass(dsAtFunction__range_type(ts)))>\> values = null;
 	'
@@ -135,10 +131,8 @@ default str generate_bodyOf_jul_Map_values(TrieSpecifics ts, str enclosingClass)
 when \map() := ts.ds
 	;
 	
-default bool exists_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass)  = true;
 default str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass) = "";	
 	
-@index=2 bool exists_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass)  = true;
 @index=2 str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClass) = 
 	"Set\<java.util.Map.Entry<CollectionGenericsExpandedStr(ts)>\> entrySet = null;
 	'
@@ -192,10 +186,8 @@ default str generate_bodyOf_jul_Map_entrySet(TrieSpecifics ts, str enclosingClas
 when \map() := ts.ds
 	;
 	
-default bool exists_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts)  = true;
 default str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) = ""; // { throw "Ahhh"; } // we don't have lazy evaluation
 
-@index=2 bool exists_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts)  = true;
 @index=2 str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) =
 	"Object[] array = new Object[cachedSize];
 	'
@@ -208,10 +200,8 @@ default str generate_bodyOf_jul_Collection_toObjectArray(TrieSpecifics ts) = "";
 when ts.ds == \set()
 	;	
 
-default bool exists_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts)  = true;
 default str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) = ""; // { throw "Ahhh"; } // we don't have lazy evaluation
 
-@index=2 bool exists_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts)  = true;
 @index=2 str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) =
 	"List<CollectionGenericsExpandedStr(ts)> list = new ArrayList<CollectionGenericsExpandedStr(ts)>(cachedSize);
 	'
@@ -223,10 +213,8 @@ default str generate_bodyOf_jul_Collection_toGenericArray(TrieSpecifics ts) = ""
 when ts.ds == \set()
 	;	
 	
-default bool exists_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass)  = true;
 default str generate_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass) = "";
 
-@index=2 bool exists_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass)  = true;
 @index=2 str generate_bodyOf_CoreCommon_equals(TrieSpecifics ts, str enclosingClass) = 
 	"if (other == this) {
 		return true;

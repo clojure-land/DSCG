@@ -25,8 +25,8 @@ import analysis::graphs::Graph;
 
 import dscg::ArrayUtils;
 
-extend dscg::CoreModel;
 extend dscg::Common_ContentType;
+extend dscg::CoreModel;
 
 /* PUBLIC CONSTANTS */
 public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");
@@ -1634,15 +1634,13 @@ data PredefOp = valueIterator();
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:valueIterator())  = true;
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:valueIterator()) = generate_bodyOf_CoreCommon_valueIterator(ts, artifact, op); 
 
-default bool exists_bodyOf_CoreCommon_valueIterator(TrieSpecifics ts, Artifact artifact, PredefOp _)  = true;
 default str generate_bodyOf_CoreCommon_valueIterator(TrieSpecifics ts, Artifact artifact, PredefOp _) { throw "Ahhh"; }
 
-@index=2 bool exists_bodyOf_CoreCommon_valueIterator(TrieSpecifics ts, Artifact artifact, valueIterator())  = true;
+
 @index=2 str generate_bodyOf_CoreCommon_valueIterator(TrieSpecifics ts, Artifact artifact, valueIterator()) = 
 	"return new <classnamePrefixFor(artifact)><toString(ts.ds)>ValueIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(<toString(rootNodeOrThis(artifact))>);"
 when \map(multi = false) := ts.ds;
 
-@index=2 bool exists_bodyOf_CoreCommon_valueIterator(TrieSpecifics ts, Artifact artifact, valueIterator())  = true;
 @index=2 str generate_bodyOf_CoreCommon_valueIterator(TrieSpecifics ts, Artifact artifact, valueIterator()) = 
 	"return valueCollectionsStream().flatMap(Set::stream).iterator();"
 when \map(multi = true) := ts.ds;
@@ -1659,15 +1657,12 @@ data PredefOp = entryIterator();
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:entryIterator())  = true;
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(_), op:entryIterator()) = generate_bodyOf_CoreCommon_entryIterator(ts, artifact, op); 
 
-default bool exists_bodyOf_CoreCommon_entryIterator(TrieSpecifics ts, Artifact artifact, PredefOp _)  = true;
 default str generate_bodyOf_CoreCommon_entryIterator(TrieSpecifics ts, Artifact artifact, PredefOp _) { throw "Ahhh"; }
 
-@index=2 bool exists_bodyOf_CoreCommon_entryIterator(TrieSpecifics ts, Artifact artifact, entryIterator())  = true;
 @index=2 str generate_bodyOf_CoreCommon_entryIterator(TrieSpecifics ts, Artifact artifact, entryIterator()) = 
 	"return new <classnamePrefixFor(artifact)><toString(ts.ds)>EntryIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(<toString(rootNodeOrThis(artifact))>);"
 when \map(multi = false) := ts.ds;
 
-@index=2 bool exists_bodyOf_CoreCommon_entryIterator(TrieSpecifics ts, Artifact artifact, entryIterator())  = true;
 @index=2 str generate_bodyOf_CoreCommon_entryIterator(TrieSpecifics ts, Artifact artifact, entryIterator()) = 
 	"return new <classnamePrefixFor(artifact)><toString(ts.ds)>TupleIterator<InferredGenerics(ts.ds, ts.tupleTypes)>(<toString(rootNodeOrThis(artifact))>, AbstractSpecialisedImmutableMap::entryOf);"
 when \map(multi = true) := ts.ds;

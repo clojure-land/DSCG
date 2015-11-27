@@ -1501,18 +1501,15 @@ when isOptionEnabled(ts, useSpecialization());
 	'}"
 when !isOptionEnabled(ts, useSpecialization());	
 
-@index=2 bool exists_bodyOf_mergeOnNextLevel(TrieSpecifics ts, Position pos:positionField()) = true; 
 @index=2 str generate_bodyOf_mergeOnNextLevel(TrieSpecifics ts, Position pos:positionField()) =
 	"return nodeOf<1>x<0>(null, (byte) mask0, node);"
 when isOptionEnabled(ts, useSpecialization());
 
-@index=2 bool exists_bodyOf_mergeOnNextLevel(TrieSpecifics ts, Position pos:positionBitmap()) = true; 
 @index=2 str generate_bodyOf_mergeOnNextLevel(TrieSpecifics ts, Position pos:positionBitmap()) =
 	"<dec(ts.bitmapField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask0))))>;
 	'return nodeOf<1>x<0>(null, <use(bitmapField)>, (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) 0, node);"
 when isOptionEnabled(ts, useSpecialization());		
 	
-@index=2 bool exists_bodyOf_mergeOnNextLevel(TrieSpecifics ts, Position _) = true; 
 @index=2 str generate_bodyOf_mergeOnNextLevel(TrieSpecifics ts, Position _) =
 	"<dec(ts.bitmapField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask0))))>;
 	'return <toString(call(ts.nodeOf_BitmapIndexedNode, 
@@ -1524,16 +1521,13 @@ when isOptionEnabled(ts, useSpecialization());
 						ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "1")))))>;"
 when !isOptionEnabled(ts, useSpecialization());	
 
-default bool exists_bodyOf_mergeOnNextLevel(TrieSpecifics _, Option _, Position _)  = true;
 default str generate_bodyOf_mergeOnNextLevel(TrieSpecifics _, Option _, Position _) { throw "something went wrong"; }
 
-@index=2 bool exists_bodyOf_mergeNodeAndValue(TrieSpecifics ts, Position pos:positionField()) = true; 
 @index=2 str generate_bodyOf_mergeNodeAndValue(TrieSpecifics ts, Position pos:positionField()) =
 	"// store values before node
 	'return nodeOf<1>x<1>(null, (byte) mask1, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, (byte) mask0, node0);"
 when isOptionEnabled(ts, useSpecialization());
 
-@index=2 bool exists_bodyOf_mergeNodeAndValue(TrieSpecifics ts, Position pos:positionBitmap()) = true; 
 @index=2 str generate_bodyOf_mergeNodeAndValue(TrieSpecifics ts, Position pos:positionBitmap()) =
 	"<dec(ts.bitmapField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask0))))>;
 	'<dec(ts.valmapField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask1))))>;
@@ -1542,7 +1536,6 @@ when isOptionEnabled(ts, useSpecialization());
 	'return nodeOf<1>x<1>(null, <use(bitmapField)>, <use(valmapField)>, <use(__payloadTuple(ts.ds, ts.tupleTypes, 1))>, node0);"
 when isOptionEnabled(ts, useSpecialization());		
 	
-@index=2 bool exists_bodyOf_mergeNodeAndValue(TrieSpecifics ts, Position _) = true; 
 @index=2 str generate_bodyOf_mergeNodeAndValue(TrieSpecifics ts, Position _) =
 	"<dec(ts.bitmapField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask0))))>;
 	'<dec(ts.valmapField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: useExpr(ts.mask1))))>;
@@ -1555,7 +1548,6 @@ when isOptionEnabled(ts, useSpecialization());
 								ts.BitmapIndexedNode_nodeArity: cast(ts.BitmapIndexedNode_nodeArity.\type, constant(ts.BitmapIndexedNode_nodeArity.\type, "1")))))>;"
 when !isOptionEnabled(ts, useSpecialization());			
 
-default bool exists_bodyOf_mergeNodeAndValue(TrieSpecifics _, Option _, Position _)  = true;
 default str generate_bodyOf_mergeNodeAndValue(TrieSpecifics _, Option _, Position _) { throw "something went wrong"; }
 		
 str updatedOn_KeysEqual(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) = 
@@ -1786,8 +1778,6 @@ when \map(multi = true) := ts.ds;
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple())
 	= generate_bodyOf_SpecializedBitmapPositionNode_removed(ts, op);	
 	
-default bool exists_bodyOf_SpecializedBitmapPositionNode_removed(TrieSpecifics ts, PredefOp op, 
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true;
 default str generate_bodyOf_SpecializedBitmapPositionNode_removed(TrieSpecifics ts, PredefOp op,
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) {
 		
@@ -2169,7 +2159,6 @@ default str generate_bodyOf_mergeTwoKeyValPairs(TrieSpecifics ts, Artifact artif
 	}"
 when isOptionEnabled(ts, usePathCompression());
 		
-default bool exists_bodyOf_mergeNodeAndKeyValPair(TrieSpecifics ts)  = true;
 default str generate_bodyOf_mergeNodeAndKeyValPair(TrieSpecifics ts) = 
 	"<dec(ts.mask0)> = <toString(call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.keyHash: useExpr(ts.keyHash0))))>;
 	<dec(ts.mask1)> = <toString(call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.keyHash: useExpr(ts.keyHash1))))>;
@@ -2184,7 +2173,6 @@ default str generate_bodyOf_mergeNodeAndKeyValPair(TrieSpecifics ts) =
 		<generate_bodyOf_mergeOnNextLevel(ts, positionBitmap())>
 	}";	
 
-@index=2 bool exists_bodyOf_mergeNodeAndKeyValPair(TrieSpecifics ts) = true;
 @index=2 str generate_bodyOf_mergeNodeAndKeyValPair(TrieSpecifics ts) = 
 	"if (keyHash0 == keyHash1) {
 		return new <ts.hashCollisionClassName><InferredGenerics(ts.ds, ts.tupleTypes)>(keyHash0, (<typeToString(ts.keyType)>[]) new <if (isPrimitive(ts.keyType)) {><typeToString(ts.keyType)><} else {>Object<}>[] { key0, key1 }

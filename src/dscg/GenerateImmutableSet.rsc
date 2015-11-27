@@ -34,12 +34,10 @@ str equalityComparator(x, y) = "<cmpName>.compare(<x>, <y>) == 0";
 
 	
 
-@index=2 bool exists_bodyOf_containsKeyOrVal(0, str(str, str) eq, prefix)  = true;
 @index=2 str generate_bodyOf_containsKeyOrVal(0, str(str, str) eq, prefix) 
 	= "return false;"
 	;
 
-@index=2 bool exists_bodyOf_containsKeyOrVal(int n, str(str, str) eq, prefix)  = true;
 @index=2 str generate_bodyOf_containsKeyOrVal(int n, str(str, str) eq, prefix) 
 	= intercalate(" else ", ["if(<eq("<prefix>", "<prefix><i>")>) { return true; }" | i <- [1..n+1]])
 	+ " else { return false; }"
@@ -48,12 +46,10 @@ str equalityComparator(x, y) = "<cmpName>.compare(<x>, <y>) == 0";
 
 
 
-@index=2 bool exists_bodyOf_get(0, str(str, str) eq)  = true;
 @index=2 str generate_bodyOf_get(0, str(str, str) eq) 
 	= "return null;"
 	;
 		
-@index=2 bool exists_bodyOf_get(int n, str(str, str) eq)  = true;
 @index=2 str generate_bodyOf_get(int n, str(str, str) eq) 
 	= intercalate(" else ", ["if(<eq("<keyName>", "<keyName><i>")>) { return <keyName><i>; }" | i <- [1..n+1]])
 	+ " else { return null; }"
@@ -62,12 +58,10 @@ str equalityComparator(x, y) = "<cmpName>.compare(<x>, <y>) == 0";
 
 
 
-@index=2 bool exists_bodyOf_insert(0, str(str, str) eq) = true;
 @index=2 str generate_bodyOf_insert(0, str(str, str) eq)
 	= "return setOf(<keyName>);"
 	;
 
-@index=2 bool exists_bodyOf_insert(int n, str(str, str) eq)	 = true;
 @index=2 str generate_bodyOf_insert(int n, str(str, str) eq)	
 	= intercalate(" else ", ["if(<eq("<keyName>", "<keyName><i>")>) { return setOf(<keyArgsReplaced(n, i)>); }" | i <- [1..n+1]])
 	+ " else { return setOf(<keyArgsUnmodified(n)>, <keyName>); }"
@@ -115,12 +109,10 @@ str keyValArgsRemoved(int n, int j)
 
 
 
-@index=2 bool exists_bodyOf_remove(0, str(str, str) eq) = true;
 @index=2 str generate_bodyOf_remove(0, str(str, str) eq)
 	= "return this;"
 	;
 
-@index=2 bool exists_bodyOf_remove(int n, str(str, str) eq)  = true;
 @index=2 str generate_bodyOf_remove(int n, str(str, str) eq) 
 	= intercalate(" else ", ["if(<eq("<keyName>", "<keyName><i>")>) { return setOf(<keyArgsRemoved(n, i)>); }" | i <- [1..n+1]])
 	+ " else { return this; }"
@@ -129,15 +121,10 @@ str keyValArgsRemoved(int n, int j)
 
 
 
-@index=2 bool exists_bodyOf_keyIterator(0) = true;
 @index=2 str generate_bodyOf_keyIterator(0)
 	= "return EmptySupplierIterator.emptyIterator();"
 	;
 	
-// TODO: bool exists_bodyOf_keyIterator(1) = true;
-// str generate_bodyOf_keyIterator(1) = ???	
-
-@index=2 bool exists_bodyOf_keyIterator(int n)  = true;
 @index=2 str generate_bodyOf_keyIterator(int n) = 
 	"		return new SupplierIterator\<K, K\>() {
 	'			int cursor = 1;

@@ -235,7 +235,6 @@ data PredefOp = getKeyValueEntry();
 //	;
 //}
 
-@index=2 bool exists_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound))  = true;
 @index=2 str generate_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\map(), bitPartitionSize, nMax, nBound)) = 
 	"
 		// TODO: change representation of keys and values
@@ -251,7 +250,6 @@ data PredefOp = getKeyValueEntry();
 	"
 	;
 	
-@index=2 bool exists_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound))  = true;
 @index=2 str generate_bodyOf_payloadIterator(ts:___expandedTrieSpecifics(ds:\set(), bitPartitionSize, nMax, nBound)) = 
 	"
 		final Object[] keysAndVals = new Object[2 * keys.length];

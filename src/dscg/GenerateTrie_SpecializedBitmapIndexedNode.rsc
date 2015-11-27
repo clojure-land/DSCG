@@ -534,12 +534,10 @@ when isOptionEnabled(ts, useUntypedVariables());
 	= generate_bodyOf_getKey(m)
 when !isOptionEnabled(ts, useUntypedVariables());
 
-@index=2 bool exists_bodyOf_getKey(0) = true;
 @index=2 str generate_bodyOf_getKey(0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
-	
-default bool exists_bodyOf_getKey(int m)  = true;
+
 default str generate_bodyOf_getKey(int m) = 	
 	"		switch(index) {
 	'			<for (i <- [1..m+1]) {>case <i-1>:
@@ -563,12 +561,10 @@ when isOptionEnabled(ts, useUntypedVariables());
 	= generate_bodyOf_getValue(m)
 when !isOptionEnabled(ts, useUntypedVariables());
 
-@index=2 bool exists_bodyOf_getValue(0) = true;
 @index=2 str generate_bodyOf_getValue(0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
 	
-default bool exists_bodyOf_getValue(int m)  = true;
 default str generate_bodyOf_getValue(int m) = 	
 	"		switch(index) {
 	'			<for (i <- [1..m+1]) {>case <i-1>:
@@ -1402,11 +1398,8 @@ when !isOptionEnabled(ts, useHeterogeneousEncoding()) && !isOptionEnabled(ts, us
 	= "return \"\";";
 
 
-@index=2 bool exists_bodyOf_sizePredicate(0, 0, TrieSpecifics ts)  = true;
 @index=2 str generate_bodyOf_sizePredicate(0, 0, TrieSpecifics ts) = "sizeEmpty()";
-@index=2 bool exists_bodyOf_sizePredicate(0, 1, TrieSpecifics ts)  = true;
 @index=2 str generate_bodyOf_sizePredicate(0, 1, TrieSpecifics ts) = "sizeOne()";	
-default bool exists_bodyOf_sizePredicate(int n, int m, TrieSpecifics ts)  = true;
 default str generate_bodyOf_sizePredicate(int n, int m, TrieSpecifics ts) = "sizeMoreThanOne()";
 
 
@@ -1489,19 +1482,16 @@ default str generate_bodyOf_removeNodeAndInlineValue(int n, int m, int j) =
 	'}";
 	
 	
-@index=2 bool exists_bodyOf_updated(0, 0, str(str, str) eq)  = true;
 @index=2 str generate_bodyOf_updated(0, 0, str(str, str) eq) = 
 	"final byte mask = (byte) ((keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>);
 	'return <ts.ResultStr>.modified(<nodeOf(0, 1, "mask, <keyName><if (\map() := ts.ds) {>, <valName><}>")>);"
 	;
-	
-@index=2 bool exists_bodyOf_updated(_, _, _, str(str, str) eq)	 = true;
+
 @index=2 str generate_bodyOf_updated(_, _, _, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(ts,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 
-default bool exists_bodyOf_updated(int n, int m, DataStructure ds, str(str, str) eq)  = true;
 default str generate_bodyOf_updated(int n, int m, DataStructure ds, str(str, str) eq) {	
 	// TODO merge both functions
 	replaceValueByNode = str (int i, int j) {	
@@ -1612,18 +1602,15 @@ default str generate_bodyOf_updated(int n, int m, DataStructure ds, str(str, str
 	'return result;";	
 }	
 
-@index=2 bool exists_bodyOf_removed(0, 0, _, _, str(str, str) eq) = true;
 @index=2 str generate_bodyOf_removed(0, 0, _, _, str(str, str) eq)
 	= "return <ts.ResultStr>.unchanged(this);"
 	;
 	
-@index=2 bool exists_bodyOf_removed(_, _, _, str(str, str) eq)	 = true;
 @index=2 str generate_bodyOf_removed(_, _, _, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(ts,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 
-@index=2 bool exists_bodyOf_removed(0, 2, _, _, str(str, str) eq)  = true;
 @index=2 str generate_bodyOf_removed(0, 2, _, _, str(str, str) eq) {
 	removed_clause_inline = str (int i) { return 
 		"if (mask == <keyPosName><i>) {
@@ -1652,7 +1639,6 @@ when !(isOptionEnabled(ts,methodsWithComparator()) || (eq == equalityDefault))
 	'return result;";		
 }
 
-default bool exists_bodyOf_removed(int n, int m, DataStructure ds, str(str, str) eq)  = true;
 default str generate_bodyOf_removed(int n, int m, DataStructure ds, str(str, str) eq) {	
 	removed_clause_inline = str (int i) { return 
 		"if (mask == <keyPosName><i>) {
@@ -1708,18 +1694,15 @@ default str generate_bodyOf_removed(int n, int m, DataStructure ds, str(str, str
 	'return result;";
 }
 		
-@index=2 bool exists_bodyOf_containsKey(0, 0, _, _, str(str, str) eq)  = true;
 @index=2 str generate_bodyOf_containsKey(0, 0, _, _, str(str, str) eq) 
 	= "return false;"
 	;
 	
-@index=2 bool exists_bodyOf_containsKey(_, _, _, str(str, str) eq)	 = true;
 @index=2 str generate_bodyOf_containsKey(_, _, _, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(ts,methodsWithComparator()) || (eq == equalityDefault))
 	;
 
-default bool exists_bodyOf_containsKey(int n, int m, DataStructure ds, str(str, str) eq)  = true;
 default str generate_bodyOf_containsKey(int n, int m, DataStructure ds, str(str, str) eq) 
 	= "final byte mask = (byte) ((keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>);\n\n"	
 	+ intercalate(" else ", 
@@ -1729,7 +1712,6 @@ default str generate_bodyOf_containsKey(int n, int m, DataStructure ds, str(str,
 	;
 
 /* binary search version */
-//default bool exists_bodyOf_containsKey(int n, int m, DataStructure ds, str(str, str) eq) = true;
 //str generate_bodyOf_containsKey(int n, int m, DataStructure ds, str(str, str) eq)
 //	= 
 //	"final byte mask = (byte) ((keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>);\n\n
@@ -1740,13 +1722,11 @@ default str generate_bodyOf_containsKey(int n, int m, DataStructure ds, str(str,
 
 
 
-@index=2 bool exists_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq)  = true;
 @index=2 str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq) =
 	"return false;"
 when left > right;	
 
 
-@index=2 bool exists_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq)  = true;
 @index=2 str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq) =
 	"/*<left>..<right>*/
 	'if (mask == <nodePosName><left>) {
@@ -1756,7 +1736,6 @@ when left > right;
 	'}"
 when left == right;	
 
-@index=2 bool exists_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq)  = true;
 @index=2 str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq) =
 	"/*<left>..<right>*/
 	'if (mask == <nodePosName><left>) {
@@ -1772,7 +1751,6 @@ when left == right;
 	'}"
 when left == right - 1;	
 	
-default bool exists_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq)  = true;
 default str generate_bodyOf_containsKey_binarySearchNode(int left, int right, str(str, str) eq) { 	
  	int pivot = (left + right) / 2;
  	
@@ -1799,13 +1777,11 @@ default str generate_bodyOf_containsKey_binarySearchNode(int left, int right, st
 
 
 
-@index=2 bool exists_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq)  = true;
 @index=2 str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq) =
 	"//return false;"
 when left > right;	
 
 
-@index=2 bool exists_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq)  = true;
 @index=2 str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq) =
 	"/*<left>..<right>*/
 	'if (mask == <keyPosName><left> && <eq("<keyName>", "<keyName><left>")>) {
@@ -1815,7 +1791,6 @@ when left > right;
 	'}"
 when left == right;	
 
-@index=2 bool exists_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq)  = true;
 @index=2 str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq) =
 	"/*<left>..<right>*/
 	'if (mask == <keyPosName><left> && <eq("<keyName>", "<keyName><left>")>) {
@@ -1831,7 +1806,6 @@ when left == right;
 	'}"
 when left == right - 1;	
 	
-default bool exists_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq)  = true;
 default str generate_bodyOf_containsKey_binarySearchPayload(int left, int right, str(str, str) eq) { 	
  	int pivot = (left + right) / 2;
  	
@@ -1866,18 +1840,15 @@ default str generate_bodyOf_containsKey_binarySearchPayload(int left, int right,
 
 
 	
-@index=2 bool exists_bodyOf_findByKey(0, 0, _, _, str(str, str) eq)  = true;
 @index=2 str generate_bodyOf_findByKey(0, 0, _, _, str(str, str) eq) 
 	= "return Optional.empty();"
 	;
 
-@index=2 bool exists_bodyOf_findByKey(_, _, _, str(str, str) eq)	 = true;
 @index=2 str generate_bodyOf_findByKey(_, _, _, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(ts,methodsWithComparator()) || (eq == equalityDefault))
 	;
 
-default bool exists_bodyOf_findByKey(int n, int m, DataStructure ds, str(str, str) eq)  = true;
 default str generate_bodyOf_findByKey(int n, int m, DataStructure ds, str(str, str) eq) 
 	= "final byte mask = (byte) ((keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>);\n\n"	
 	+ intercalate(" else ", 
@@ -1958,13 +1929,11 @@ str generateGenericNodeClassString(int n, int m, TrieSpecifics ts) =
 	";
 
 	
-@index=2 bool exists_bodyOf_copyAndInsertNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
 @index=2 str generate_bodyOf_copyAndInsertNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when !isOptionEnabled(ts,useUntypedVariables()) && (n + m ) >= ts.nMax
 	;	
 
-@index=2 bool exists_bodyOf_copyAndInsertNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
 @index=2 str generate_bodyOf_copyAndInsertNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =
 	"	<dec(field(primitive("int"), "idx"))> = nodeIndex(bitpos);
 	'
@@ -1980,13 +1949,11 @@ when !isOptionEnabled(ts,useUntypedVariables()) && (n + m ) >= ts.nMax
 when !isOptionEnabled(ts,useUntypedVariables()) && (n + m ) < ts.nMax
 	;	
 	
-@index=2 bool exists_bodyOf_copyAndInsertNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
 @index=2 str generate_bodyOf_copyAndInsertNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when isOptionEnabled(ts,useUntypedVariables()) && (mn >= tupleLength(ts.ds) * ts.nMax)
 	;	
 	
-@index=2 bool exists_bodyOf_copyAndInsertNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
 @index=2 str generate_bodyOf_copyAndInsertNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity() + nodeIndex(bitpos);
 	'
@@ -2003,13 +1970,11 @@ when isOptionEnabled(ts,useUntypedVariables()) && (mn < tupleLength(ts.ds) * ts.
 	;
 	
 	
-@index=2 bool exists_bodyOf_copyAndRemoveNode(int n:0, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
 @index=2 str generate_bodyOf_copyAndRemoveNode(int n:0, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when !isOptionEnabled(ts,useUntypedVariables())
 	;	
 
-@index=2 bool exists_bodyOf_copyAndRemoveNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
 @index=2 str generate_bodyOf_copyAndRemoveNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) =
 	"	<dec(field(primitive("int"), "idx"))> = nodeIndex(bitpos);
 	'
@@ -2025,7 +1990,6 @@ when !isOptionEnabled(ts,useUntypedVariables())
 when !isOptionEnabled(ts,useUntypedVariables())
 	;
 	
-@index=2 bool exists_bodyOf_copyAndRemoveNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = true;
 @index=2 str generate_bodyOf_copyAndRemoveNode(int n, int m, TrieSpecifics ts, int mn = tupleLength(ts.ds)*m+n) = 	
 	"	<dec(field(primitive("int"), "idx"))> = <use(tupleLengthConstant)> * payloadArity() + nodeIndex(bitpos);
 	'
@@ -2041,12 +2005,10 @@ when !isOptionEnabled(ts,useUntypedVariables())
 when isOptionEnabled(ts,useUntypedVariables())	
 	;			
 	
-@index=2 bool exists_bodyOf_getKeyValueEntry(TrieSpecifics ts, 0) = true;
 @index=2 str generate_bodyOf_getKeyValueEntry(TrieSpecifics ts, 0)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 	;
 	
-default bool exists_bodyOf_getKeyValueEntry(TrieSpecifics ts, int m)  = true;
 default str generate_bodyOf_getKeyValueEntry(TrieSpecifics ts, int m) = 	
 	"		switch(index) {
 	'			<for (i <- [1..m+1]) {>case <i-1>:
@@ -2094,13 +2056,11 @@ str generateCompactNodeString() =
 	}"
 	;
 	
-@index=2 bool exists_bodyOf_GenericNode_containsKey(_, _, _, str(str, str) eq)	 = true;
 @index=2 str generate_bodyOf_GenericNode_containsKey(_, _, _, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(ts,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 	
-default bool exists_bodyOf_GenericNode_containsKey(int n, int m, TrieSpecifics ts, str(str, str) eq)  = true;
 default str generate_bodyOf_GenericNode_containsKey(int n, int m, TrieSpecifics ts, str(str, str) eq) = 
 	"final int mask = (<keyName>Hash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>;
 	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
@@ -2116,13 +2076,11 @@ default str generate_bodyOf_GenericNode_containsKey(int n, int m, TrieSpecifics 
 	'return false;"
 	;
 	
-@index=2 bool exists_bodyOf_GenericNode_findByKey(_, _, _, str(str, str) eq)	 = true;
 @index=2 str generate_bodyOf_GenericNode_findByKey(_, _, _, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(ts,methodsWithComparator()) || (eq == equalityDefault))
 	;		
 	
-default bool exists_bodyOf_GenericNode_findByKey(int n, int m, TrieSpecifics ts, str(str, str) eq)  = true;
 default str generate_bodyOf_GenericNode_findByKey(int n, int m, TrieSpecifics ts, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>;
 	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
@@ -2150,13 +2108,11 @@ default str generate_bodyOf_GenericNode_findByKey(int n, int m, TrieSpecifics ts
 	'return Optional.empty();"
 	;
 	
-@index=2 bool exists_bodyOf_GenericNode_updated(_, _, _, str(str, str) eq)	 = true;
 @index=2 str generate_bodyOf_GenericNode_updated(_, _, _, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(ts,methodsWithComparator()) || (eq == equalityDefault))
 	;	
 	
-default bool exists_bodyOf_GenericNode_updated(int n, int m, TrieSpecifics ts, str(str, str) eq)  = true;
 default str generate_bodyOf_GenericNode_updated(int n, int m, TrieSpecifics ts, str(str, str) eq) = 
 	"final int mask = (keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>;
 	'<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
@@ -2238,13 +2194,11 @@ default str generate_bodyOf_GenericNode_updated(int n, int m, TrieSpecifics ts, 
 	'	return <ts.ResultStr>.modified(thisNew);
 	'}";	
 		
-@index=2 bool exists_bodyOf_GenericNode_removed(_, _, _, str(str, str) eq)	 = true;
 @index=2 str generate_bodyOf_GenericNode_removed(_, _, _, str(str, str) eq)	
 	= "throw new UnsupportedOperationException();"
 when !(isOptionEnabled(ts,methodsWithComparator()) || (eq == equalityDefault))
 	;			
 		
-default bool exists_bodyOf_GenericNode_removed(int n, int m, TrieSpecifics ts, str(str, str) eq)  = true;
 default str generate_bodyOf_GenericNode_removed(int n, int m, TrieSpecifics ts, str(str, str) eq) =
 	"final int mask = (keyHash \>\>\> shift) & <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionMask())))>;
 	<dec(ts.bitposField)> = <toString(call(ts.CompactNode_bitpos))>;
