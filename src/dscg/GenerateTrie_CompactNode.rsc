@@ -576,7 +576,7 @@ when offset := val(primitive("long"), "global<capitalize(bitmapName)>Offset") &&
 data PredefOp = copyAndInsertValue(bool isRare);
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp op:copyAndInsertValue(bool isRare))
-	= method(\return(jdtToType(compactNode(ts))), "copyAndInsertValue", args = [ts.mutator, ts.bitposField, *nodeTupleArgs(ts, isRare = isRare)]);
+	= method(\return(jdtToType(compactNode(ts))), "copyAndInsert<if (isRare) {>Rare<}>Value", args = [ts.mutator, ts.bitposField, *nodeTupleArgs(ts, isRare = isRare)]);
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndInsertValue(bool isRare)) 
 	= true when isOptionEnabled(ts, useSunMiscUnsafe());
@@ -740,7 +740,7 @@ data PredefOp = copyAndRemoveValue_nextClass();
 data PredefOp = copyAndSetValue(bool isRare);
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:copyAndSetValue(bool isRare))
-	= method(\return(jdtToType(compactNode(ts))), "copyAndSetValue", lazyArgs = list[Argument]() { return [ts.mutator, ts.bitposField, payloadTupleArg(ts, 1, isRare = isRare) ]; }, isActive = \map() := ts.ds);
+	= method(\return(jdtToType(compactNode(ts))), "copyAndSet<if (isRare) {>Rare<}>Value", lazyArgs = list[Argument]() { return [ts.mutator, ts.bitposField, payloadTupleArg(ts, 1, isRare = isRare) ]; }, isActive = \map() := ts.ds);
 
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndSetValue(bool isRare)) 
@@ -1562,7 +1562,7 @@ str updatedOn_KeysEqual(TrieSpecifics ts, Artifact artifact, PredefOp op, bool i
 	'} else {
 	'	// update mapping
 	'	details.updated(currentVal);
-	'	return copyAndSetValue(mutator, bitpos, val);
+	'	return copyAndSet<if (isRareCase) {>Rare<}>Value(mutator, bitpos, val);
 	'}" 
 when \map(multi = false) := ts.ds && isOptionEnabled(ts, compareValueAtMapPut());
 
@@ -1571,7 +1571,7 @@ str updatedOn_KeysEqual(TrieSpecifics ts, Artifact artifact, PredefOp op, bool i
 	'
 	'// update mapping
 	'details.updated(currentVal);
-	'return copyAndSetValue(mutator, bitpos, val);" 
+	'return copyAndSet<if (isRareCase) {>Rare<}>Value(mutator, bitpos, val);" 
 when \map(multi = false) := ts.ds && !isOptionEnabled(ts, compareValueAtMapPut());
 
 str updatedOn_KeysEqual(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
@@ -1638,11 +1638,11 @@ when \map(multi = true) := ts.ds;
 
 
 
-default str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq) = 
+default str updatedOn_NoTuple(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) = 
 	"<use(ts.details)>.modified();
-	'return copyAndInsertValue(mutator, bitpos, key<if (\map() := ts.ds) {>, val<}>);";
+	'return copyAndInsert<if (isRareCase) {>Rare<}>Value(mutator, bitpos, key<if (\map() := ts.ds) {>, val<}>);";
 		
-str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+str updatedOn_NoTuple(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"final int valHash = <hashCode(val(ts.valType))>;
 	'// <dec(nodeTupleArg(ts, 1))> = <toString(call(exprFromString("CompactSetNode.EMPTY_NODE"), getDef(tsSet, trieNode(abstractNode()), insertTuple(false, false)), // insertTuple???  
 					argsOverride = (ts.mutator: NULL(), 
@@ -1654,7 +1654,7 @@ str updatedOn_NoTuple(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecific
 	' <dec(collTupleArg(ts, 1))> = <tsSet.coreSpecializedClassName>.setOf(<use(val(ts.valType))>);
 	'
 	'details.modified();
-	'return copyAndInsertValue(mutator, bitpos, <use(nodeTupleArgs(ts))>);"
+	'return copyAndInsert<if (isRareCase) {>Rare<}>Value(mutator, bitpos, <use(nodeTupleArgs(ts))>);"
 when \map(multi = true) := ts.ds;
 
 
@@ -1693,7 +1693,7 @@ str (Argument, Argument) selectEq(PredefOp op) = op has customComparator && op.c
 	'}
 	'
 	'// no value
-	'<updatedOn_NoTuple(ts, selectEq(op))>"
+	'<updatedOn_NoTuple(ts, artifact, op, isRare)>"
 	;
 }
 
@@ -1737,14 +1737,23 @@ str contentAccessor(ContentType ct, str index) = "<contentAccessorMethodName(ct)
 default str removedOn_KeysDifferent(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) =
 	"return this;";
 
-default str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq) =
-	"<if (\map() := ts.ds) {><dec(val(ts.valType, "currentVal"))> = getVal(dataIndex); details.updated(currentVal);<} else {>details.modified();<}>
+default str removedOn_TupleFound(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) =
+	"<removedOn_TupleFound_modification(ts, artifact, op, isRareCase)>
 	
 	<removed_value_block1(ts)> else <if (supportsConversionBetweenGenericAndSpecialized(ts)) {><removed_value_block2(ts)> else<}> {					
-		return copyAndRemoveValue(mutator, bitpos);
+		return copyAndRemove<if (isRareCase) {>Rare<}>Value(mutator, bitpos);
 	}";
 	
-str removedOn_TupleFound(TrieSpecifics ts, str(Argument, Argument) eq, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
+str removedOn_TupleFound_modification(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) =
+	"<dec(content(ts, ctVal(isRare = isRareCase), "currentVal"))> = <contentAccessor(ctVal(isRare = isRareCase), "<bitmapPrefix(ctPayloadTuple(isRare = isRareCase))>Index")>;
+	'details.updated(currentVal);"
+when \map() := ts.ds;
+	
+str removedOn_TupleFound_modification(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) =
+	"details.modified();"
+when \set() := ts.ds;
+	
+str removedOn_TupleFound(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"<dec(nodeTupleArg(ts, 1))> = getVal(dataIndex); 
 	'
 	'final int valHash = <hashCode(val(ts.valType))>;
@@ -1790,9 +1799,7 @@ when \map(multi = true) := ts.ds;
 	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
 	'<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;
 	'
-	'<removeTuple_checkForInplace(ts, artifact, op, false)>
-	'
-	'<removeTuple_checkForInplace(ts, artifact, op, true)>
+	'<removeTuple_checkForInplace(ts, artifact, op, op.isRare)>
 	
 	// check for node (not value)
 	if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
@@ -1838,7 +1845,7 @@ str removeTuple_checkForInplace(TrieSpecifics ts, Artifact artifact, PredefOp op
 	'	<dec(content(ts, ctKey(isRare = isRareCase), "currentKey"))> = <contentAccessor(ctKey(isRare = isRareCase), "<bitmapPrefix(ctPayloadTuple(isRare = isRareCase))>Index")>;
 	'	
 	'	if (<selectEq(op)(content(ts, ctKey(isRare = isRareCase), "currentKey"), content(ts, ctKey(isRare = isRareCase)))>) {
-	'		<removedOn_TupleFound(ts, selectEq(op))>
+	'		<removedOn_TupleFound(ts, artifact, op, isRareCase)>
 	'	} else {
 	'		<removedOn_KeysDifferent(ts, artifact, op, isRareCase)>				
 	'	}
@@ -1850,7 +1857,8 @@ default str removed_value_block2(TrieSpecifics ts) =
 	'}";
 	
 default str removed_value_block1(TrieSpecifics ts) =
-	"if (this.payloadArity() == 2 && this.nodeArity() == 0) {
+	"// TODO: support dispatch for heterogeneous case
+	'if (this.payloadArity() == 2 && this.nodeArity() == 0) {
 	'	/*
 	'	 * Create new node with remaining pair. The new node
 	'	 * will a) either become the new root returned, or b)
