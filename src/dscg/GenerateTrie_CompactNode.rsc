@@ -1816,7 +1816,6 @@ when \map(multi = true) := ts.ds;
 		}
 		case 1: {
 			<if (isOptionEnabled(ts,useSpecialization())) {>// inline value (move to front)
-				details.modified();
 				return copyAndMigrateFromNodeToInline(mutator, bitpos, subNodeNew);<} else {>if (this.payloadArity() == 0 && this.nodeArity() == 1) {
 				// escalate (singleton or empty) result
 				return <use(subNodeNew)>;
