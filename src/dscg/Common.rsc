@@ -185,7 +185,7 @@ str printNonEmptyCommentWithNewline(str commentText) {
 	}
 } 
 	
-data Expression(str commentText = "")
+data Expression(str commentText = "") // Type typeCheckedTo = unknown()
 	= cast(Type \type, Expression e)
 	| maskAndNarrowPrimitiveCast(Expression source, Type sourceType, Type targetType) // TODO: remove legacy 'useSafeUnsigned'
 	| maskAndWidenPrimitiveCast(Expression source, Type sourceType, Type targetType) 
@@ -391,7 +391,7 @@ when m.isActive;
 		
 data Expression
 	= decExpr(Argument arg, Expression initExpr = emptyExpression()) 
-	| useExpr(Argument arg)
+	| useExpr(Argument arg, Type typeCheckedTo = arg.\type)
 	;
 	
 Expression useExprList(list[Argument] xs) = compoundExpr(mapper(flattenArgumentList(xs), useExpr));	
@@ -836,10 +836,11 @@ default str hashCode(Argument a) = "<use(a)>.hashCode()";
 str primitiveHashCode(Argument a) = "(int)(<use(a)> ^ (<use(a)> \>\>\> 32))" when a has \type && a.\type == primitive("long");
 default str primitiveHashCode(Argument a) = "(int) <use(a)>";
 
-Expression hashCodeExpr(TrieSpecifics ts, Argument arg) = call(useExpr(arg), getDef(ts, jl_Object(), PredefOp::hashCode())) when !isPrimitive(arg.\type);
-Expression hashCodeExpr(TrieSpecifics ts, Argument arg) = useExpr(arg) when isPrimitive(arg.\type);
-default Expression hashCodeExpr(TrieSpecifics ts, Argument arg) { throw "Ahhh"; } 
+Expression hashCodeExpr(TrieSpecifics ts, Argument arg) = hashCodeExpr(ts, useExpr(arg));
 
+Expression hashCodeExpr(TrieSpecifics ts, Expression e) = call(e, getDef(ts, jl_Object(), PredefOp::hashCode())) when e has typeCheckedTo, !isPrimitive(e.typeCheckedTo);
+Expression hashCodeExpr(TrieSpecifics ts, Expression e) = e when e has typeCheckedTo, isPrimitive(e.typeCheckedTo);
+default Expression hashCodeExpr(TrieSpecifics ts, Expression e) { throw "Ahhh"; } 
 
 
 

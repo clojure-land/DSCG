@@ -560,6 +560,39 @@ list[PredefOp] declaredMethodsByCollection(TrieSpecifics ts) = [
 ];
 
 
+// TODO: similar to Expression maskAndWidenPrimitiveCast(...), unify?
+data Expression = eitherTypeAsSpecificTypeCast(Expression source, Type sourceType, Type targetType, Type typeCheckedTo = targetType);
+	
+Expression unboxEitherTypeWithoutCheck(Expression source, Type sourceType, Type targetType) 
+	= exprFromString("<toString(source)>.<accessorName>()")
+when sourceType is eitherTypeSequence, accessorName := "get<capitalize(typeToString(targetType))>"; 
+
+default Expression unboxEitherTypeWithoutCheck(Expression source, Type sourceType, Type targetType) 
+	= source;
+	
+
+str eval(Expression e) =
+	"<eval(unboxEitherTypeWithoutCheck(e.source, e.sourceType, e.targetType))>"
+when e is eitherTypeAsSpecificTypeCast;
+
+str toString(Expression e) =
+	"<toString(unboxEitherTypeWithoutCheck(e.source, e.sourceType, e.targetType))>"
+when e is eitherTypeAsSpecificTypeCast;
+
+
+test bool test_eitherTypeAsSpecificTypeCast1() = "eitherResult.getInt()" ==
+	toString(
+		eitherTypeAsSpecificTypeCast(exprFromString("eitherResult"), 
+		eitherTypeSequence({ primitive("int"), object() }), 
+		primitive("int")));
+		
+test bool test_eitherTypeAsSpecificTypeCast2() = "eitherResult.getObject()" ==
+	toString(
+		eitherTypeAsSpecificTypeCast(exprFromString("eitherResult"), 
+		eitherTypeSequence({ primitive("int"), object() }), 
+		object()));
+		
+
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:insertTuple(isRare:_, customComparator:_)) = true; 
 
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:insertTuple(isRare:_, customComparator:_)) =
@@ -572,9 +605,16 @@ list[PredefOp] declaredMethodsByCollection(TrieSpecifics ts) = [
 						ts.shift: constant(ts.shift.\type, "0"))))>;
 
 	if (<use(ts.details)>.isModified()) {
-		<if (\map(multi = false) := ts.ds) {>if (<use(ts.details)>.hasReplacedValue()) {
-				<dec(valHashOld)> = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
-				<dec(valHashNew)> = <hashCode(val(ts.valType))>;
+		<if (\map(multi = false) := ts.ds) {>if (<use(ts.details)>.hasReplacedValue()) {	
+				<dec(valHashOld)> = <toString(hashCodeExpr(
+						ts, 
+						eitherTypeAsSpecificTypeCast(
+							exprFromString("<use(ts.details)>.getReplacedValue()"), 					
+							__new__internalPayloadTupleTypes__(ts)[1],					 
+							content(ts, ctPayloadArg(1, isRare = op.isRare)).\type)))>;
+				<dec(valHashNew)> = <toString(hashCodeExpr(
+						ts, 
+						content(ts, ctPayloadArg(1, isRare = op.isRare))))>;
 
 				return 
 					new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, 
@@ -582,7 +622,15 @@ list[PredefOp] declaredMethodsByCollection(TrieSpecifics ts) = [
 						<eval(updateProperty(ts, op, sizeProperty(), onReplacedValue()))>);
 			}
 			
-		<}><if (\map() := ts.ds) {><dec(ts.valHash)> = <hashCode(val(ts.valType))>;<}>return 
+		<}>
+		
+		<if (\map() := ts.ds) {>
+		<dec(ts.valHash)> = <toString(hashCodeExpr(
+				ts, 
+				content(ts, ctPayloadArg(1, isRare = op.isRare))))>;
+		<}>
+		
+		return 
 			new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, 
 				<eval(updateProperty(ts, op, hashCodeProperty(), onInsert(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(ts.valHash) ])))>, 
 				<eval(updateProperty(ts, op, sizeProperty(), onInsert()))>);
