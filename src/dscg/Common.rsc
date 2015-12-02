@@ -103,7 +103,20 @@ str typeToString(t:specific (str typeName, typeArguments = [])) = "<\typeName><i
 str typeToString(t:specific (str typeName, typeArguments = typeArguments)) = "<typeName>\<<intercalate(", ", mapper(t.typeArguments, typeToString))>\><if (t.isArray) {>[]<}>";
 str typeToString(t:primitive(str \type)) = "<\type><if (t.isArray) {>[]<}>";
 str typeToString(t:___primitive(str \type)) = "<\type><if (t.isArray) {>[]<}>";
+str typeToString(t:eitherTypeSequence(set[Type] typeArgumentSet)) = "Either<intercalate("Or", sort(mapper(toList(typeArgumentSet), capitalize o typeToString)))>";
+str typeToString(t:typeSequence(list[Type] typeArgumentList)) { throw "Ahhh: <t>"; } 
 default str typeToString(Type t) { throw "Ahhh: <t>"; }
+
+test bool test_typeToString_eitherTypeSequence1() = 
+	"EitherIntOrLong" == typeToString(eitherTypeSequence({ primitive("int"), primitive("long") }));
+
+test bool test_typeToString_eitherTypeSequence2() = 
+	"EitherAOrInt" == typeToString(eitherTypeSequence({ primitive("int"), specific("A") }));
+	
+test bool test_typeToString_eitherTypeSequence3() = 
+	"EitherIntOrZ" == typeToString(eitherTypeSequence({ primitive("int"), specific("Z") }));	
+	 
+//TODO: test ... typeToString(typeSequence([ primitive("int"), primitive("long") ]))
 
 data Argument
 	= emptyArgument(Type \type = unknown())

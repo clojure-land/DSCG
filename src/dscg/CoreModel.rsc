@@ -18,6 +18,8 @@ import IO;
 import List;
 import Map;
 import Relation;
+import Set;
+import String;
 import ValueIO;
 //import lang::rascal::\syntax::Rascal;
 import util::Math;
@@ -439,6 +441,12 @@ Type dsAtFunction__domain_type(TrieSpecifics ts)
 Type dsAtFunction__range_type(TrieSpecifics ts) 
 	= singletonToTuple(CollectionGenericsExpanded(ts))[1];
 
+Type __internal__dsAtFunction__domain_type(TrieSpecifics ts) 
+	= singletonToTuple(__new__internalPayloadTupleTypes__(ts))[0];
+
+Type __internal__dsAtFunction__range_type(TrieSpecifics ts) 
+	= singletonToTuple(__new__internalPayloadTupleTypes__(ts))[1];
+
 
 
 
@@ -481,11 +489,16 @@ list[Type] payloadTupleTypes(TrieSpecifics ts, bool isRare = false, str payloadI
 	Type simplifiedType = (generalizeEitherType o pushDownEitherType)(generalizedType);
 
 	return singletonOrTypeSequenceToList(simplifiedType);
-} 
+}
 
+list[Type] __new__internalPayloadTupleTypes__(TrieSpecifics ts) {
+	CoreModel cm = getCoreModel(ts);
 
+	Type generalizedType = eitherTypeSequence({ s.itemType | s <- filterByContentTypePayloadTuple(cm) });
+	Type simplifiedType = (pushDownEitherType)(generalizedType);
 
-
+	return singletonOrTypeSequenceToList(simplifiedType);
+}
 
 
 
