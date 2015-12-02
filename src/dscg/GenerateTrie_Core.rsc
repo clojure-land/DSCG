@@ -653,8 +653,15 @@ when valHashOld := val(primitive("int"), "valHashOld")
 						ts.shift: constant(ts.shift.\type, "0"))))>;
 		
 	if (<use(ts.details)>.isModified()) {
-		<if (\map() := ts.ds) {>assert <use(ts.details)>.hasReplacedValue(); <dec(ts.valHash)> = <hashCode(content(ts, ctPayloadArg(1, isRare = op.isRare), "<use(ts.details)>.getReplacedValue()"))>;<}>return 
-			new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, 
+		<if (\map() := ts.ds) {>assert <use(ts.details)>.hasReplacedValue(); 
+			<dec(ts.valHash)> = 
+				<toString(hashCodeExpr(
+					ts, 
+					eitherTypeAsSpecificTypeCast(
+						exprFromString("<use(ts.details)>.getReplacedValue()"), 					
+						__new__internalPayloadTupleTypes__(ts)[1],					 
+						content(ts, ctPayloadArg(1, isRare = op.isRare)).\type)))>;
+		<}>return new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, 
 				<eval(updateProperty(ts, op, hashCodeProperty(), onRemove(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(ts.valHash) ])))>, 
 				<eval(updateProperty(ts, op, sizeProperty(), onRemove()))>);
 	}
