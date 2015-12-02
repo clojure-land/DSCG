@@ -174,13 +174,92 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 	;
 }
 
+
+/*
+ * TODO: Merge with function above; major differences are:
+ * 			* return types;
+ * 			* additional cases for handling value replacement.
+ */
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertTuple(isRare:_, customComparator:_)) = true; 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertTuple(isRare:_, customComparator:_)) =
+	"if (mutator.get() == null) {
+		throw new IllegalStateException(\"Transient already frozen.\");
+	}
+
+	<dec(ts.keyHash)> = <hashCode(content(ts, ctPayloadArg(0, isRare = op.isRare)))>;
+	<dec(ts.details)> = <ts.ResultStr>.unchanged();
+	
+	<dec(\inode(ts.ds, ts.tupleTypes, "newRootNode"))> = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), insertTuple(op.isRare, op.customComparator)), 
+					argsOverride = (ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ts.keyHash))), 
+					ts.shift: constant(ts.shift.\type, "0"))))>;
+
+	if (<use(ts.details)>.isModified()) {
+		<if (\map(multi = false) := ts.ds) {>if (<use(ts.details)>.hasReplacedValue()) {
+			<dec(content(ts, ctPayloadArg(1, isRare = op.isRare), "old"))> = <toString(replacedValueExpr)>;
+
+			<dec(valHashOld)> = <hashCode(content(ts, ctPayloadArg(1, isRare = op.isRare), "old"))>;
+			<dec(valHashNew)> = <hashCode(content(ts, ctPayloadArg(1, isRare = op.isRare)))>;
+
+			rootNode = newRootNode;
+			<toString(expressionStatement(assign(ts.hashCodeProperty, updateProperty(ts, op, hashCodeProperty(), onReplacedValue(), tupleHashesOld = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(valHashOld) ]), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(valHashNew) ])))))>
+			<toString(expressionStatement(assign(ts.sizeProperty, updateProperty(ts, op, sizeProperty(), onReplacedValue()))))>
+
+			if (DEBUG) {
+				assert checkHashCodeAndSize(hashCode, cachedSize);
+			}
+			return <toString(resultOf(ts, artifact, op, onReplacedValue(), payloadTupleExprList = cutToTupleSize(ts, [ useExpr(content(ts, ctPayloadArg(0, isRare = op.isRare))), replacedValueExpr ])))>;
+		} else {<}>			
+			<if (\map() := ts.ds) {><dec(valHashNew)> = <hashCode(content(ts, ctPayloadArg(1, isRare = op.isRare)))>;<}>rootNode = newRootNode;
+			<toString(expressionStatement(assign(ts.hashCodeProperty, updateProperty(ts, op, hashCodeProperty(), onInsert(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(valHashNew) ])))))>
+			<toString(expressionStatement(assign(ts.sizeProperty, updateProperty(ts, op, sizeProperty(), onInsert()))))>
+		
+			if (DEBUG) {
+				assert checkHashCodeAndSize(hashCode, cachedSize);
+			}
+			return <toString(resultOf(ts, artifact, op, onInsert()))>;
+		<if (\map(multi = false) := ts.ds) {>}<}>
+	}
+
+	if (DEBUG) {
+		assert checkHashCodeAndSize(hashCode, cachedSize);
+	}
+	return <toString(resultOf(ts, artifact, op, onInsertAlreadyPresent()))>;"
+when valHashOld := val(primitive("int"), "valHashOld")
+		&& valHashNew := val(primitive("int"), "valHashNew")
+		&& replacedValueExpr := exprFromString("<use(ts.details)>.getReplacedValue()")
+		&& rootNode := jdtToVal(abstractNode(ts), "rootNode");
+
+Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:insertTuple(isRare:_, customComparator:_), onInsert(), list[Expression] payloadTupleExprList = []) 
+	= NULL()
+when \map(multi = false) := ts.ds;
+
+Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:insertTuple(isRare:_, customComparator:_), onInsert(), list[Expression] payloadTupleExprList = []) 
+	= boolean(true)
+when !(\map(multi = false) := ts.ds);
+
+Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:insertTuple(isRare:_, customComparator:_), onReplacedValue(), list[Expression] payloadTupleExprList = []) 
+	= payloadTupleExprList[1]
+when \map(multi = false) := ts.ds;
+
+//Expression resultOf(TrieSpecifics ts, op:insertTuple(isRare:_, customComparator:_), onReplacedValue(), list[Expression] payloadTupleExprList = []) 
+//	= NULL()
+//when core(transient()) := artifact && !(\map(multi = false) := ts.ds);
+
+// implies: either newly inserted, or exact tuple already present
+Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:insertTuple(isRare:_, customComparator:_), onInsertAlreadyPresent(), list[Expression] payloadTupleExprList = []) 
+	= NULL()
+when \map(multi = false) := ts.ds;
+
+Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:insertTuple(isRare:_, customComparator:_), onInsertAlreadyPresent(), list[Expression] payloadTupleExprList = []) 
+	= boolean(false)
+when !(\map(multi = false) := ts.ds);
+
+
 /*
  * TODO: use different return types dependent on data types. 
  */
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:removeTuple(), 
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:removeTuple(), 
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) =
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:removeTuple()) = true; 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:removeTuple()) =
 	"if (mutator.get() == null) {
 		throw new IllegalStateException(\"Transient already frozen.\");
 	}
@@ -199,7 +278,7 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 		if (DEBUG) {
 			assert checkHashCodeAndSize(hashCode, cachedSize);
 		}
-		return <eval(resultOf(ts, artifact, op, onRemove(), payloadTupleExprList = cutToTupleSize(ts, [ useExpr(key(ts.keyType)), replacedValueExpr ])))>;
+		return <eval(resultOf(ts, artifact, op, onRemove(), payloadTupleExprList = cutToTupleSize(ts, [ useExpr(content(ts, ctPayloadArg(0, isRare = op.isRare))), replacedValueExpr ])))>;
 	}
 
 	if (DEBUG) {
@@ -225,3 +304,45 @@ when \map(multi = false) := ts.ds;
 Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:removeTuple(), onRemoveNotFound(), list[Expression] payloadTupleExprList = []) 
 	= boolean(false)
 when !(\map(multi = false) := ts.ds);
+
+
+Argument typeDependentEntryOfCollection(Argument collection, str tupleName) 
+	= val(specific("Map.Entry", typeArguments = collection.\type.typeArguments), tupleName)
+when specific(_, typeArguments = args) := collection.\type; 
+
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertCollection(),
+		Argument transientColl = exactBoundCollectionArg(ts, transient()),
+		Argument entry = typeDependentEntryOfCollection(transientColl, "entry")) = true; 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertCollection(),
+		Argument transientColl = exactBoundCollectionArg(ts, transient()),
+		Argument entry = typeDependentEntryOfCollection(transientColl, "entry")) = 
+	"boolean modified = false;
+
+	for (Map.Entry<GenericsExpandedUpperBoundedStr(ts)> entry : <uncapitalize(toString(ts.ds))>.entrySet()) {
+		<if(\map(multi = false) := ts.ds) {>final boolean isPresent = <toString(
+			call(this(), getDef(ts, artifact, containsKey(customComparator = op.customComparator)), 
+					labeledArgsOverride = (payloadTuple(): unboxPayloadFromTuple(ts, entry)[0])))>;
+		<dec(content(ts, ctCollectionArg(1), "replaced"))> = <toString(call(this(), getDef(ts, artifact, insertTuple(false, op.customComparator)), 
+																			labeledArgsOverride = (payloadTuple(): compoundExpr(unboxPayloadFromTuple(ts, entry)))))>;
+		
+		if (!isPresent || replaced != null) {
+			modified = true;
+		}<} else {>modified |= <toString(call(this(), getDef(ts, artifact, insertTuple(op.isRare, op.customComparator)), 
+																			labeledArgsOverride = (payloadTuple(): compoundExpr(unboxPayloadFromTuple(ts, entry)))))>;<}>
+	}
+
+	return modified;"
+when \map() := ts.ds;
+
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertCollection()) = true; 
+
+// TODO: how to do a batch insert in a heterogeneous case?
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(transient()), op:insertCollection()) = 
+	"boolean modified = false;
+
+	for (<dec(key(ts.keyType))> : <uncapitalize(toString(ts.ds))>) {
+		modified |= <toString(call(this(), getDef(ts, artifact, insertTuple(false, op.customComparator))))>;
+	}
+		
+	return modified;"
+when \set() := ts.ds;

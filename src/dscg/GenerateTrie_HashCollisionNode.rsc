@@ -452,7 +452,7 @@ when def := getDef(ts, artifact, hashCollisionNodeConstructor()) &&
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
 	"for (int i = 0; i \< keys.length; i++) {
 		<dec(key(ct2type(ts)[ctCollectionArg(0)], "_key"))> = keys[i];
-		if (<eq(key(ct2type(ts)[ctCollectionArg(0)]), key(ct2type(ts)[ctCollectionArg(0)], "_key"))>) {
+		if (<eq(key(ct2type(ts)[ctCollectionArg(0)], "_key"), key(ct2type(ts)[ctCollectionArg(0)]))>) {
 			<if(\set() := ts.ds) {>return Optional.of(_key);<} else {><dec(collTupleArg(ts, 1))> = vals[i]; return Optional.of(<use(collTupleArg(ts, 1))>);<}>				
 		}
 	}

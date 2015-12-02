@@ -296,3 +296,27 @@ when ts.ds == \set();
 
 default bool exists_fragmentOf_CoreCommon_equals(TrieSpecifics ts)  = true;
 default str generate_fragmentOf_CoreCommon_equals(TrieSpecifics ts) { throw "Ahhh"; }	
+
+
+
+
+
+list[&T] cutToTupleSize(TrieSpecifics ts, list[&T] listToCut) = take(size(ts.tupleTypes), listToCut);
+
+Expression updateProperty(TrieSpecifics ts, op:insertTuple(isRare:_, customComparator:_), hashCodeProperty(), onInsert(), Expression hashCodeProperty = useExpr(ts.hashCodeProperty), list[Expression] tupleHashesNew = []) 
+	= plus(hashCodeProperty, embrace(bitwiseXor(tupleHashesNew)));  
+
+Expression updateProperty(TrieSpecifics ts, op:insertTuple(isRare:_, customComparator:_), sizeProperty(), onInsert(), Expression sizeProperty = useExpr(ts.sizeProperty))
+	= plus(sizeProperty, iconst(1));
+
+Expression updateProperty(TrieSpecifics ts, op:insertTuple(isRare:_, customComparator:_), hashCodeProperty(), onReplacedValue(), Expression hashCodeProperty = useExpr(ts.hashCodeProperty), list[Expression] tupleHashesOld = [], list[Expression] tupleHashesNew = [])
+	= minus(plus(hashCodeProperty, embrace(bitwiseXor(tupleHashesNew))), embrace(bitwiseXor(tupleHashesOld))); 
+
+Expression updateProperty(TrieSpecifics ts, op:insertTuple(isRare:_, customComparator:_), sizeProperty(), onReplacedValue(), Expression sizeProperty = useExpr(ts.sizeProperty))
+	= sizeProperty;
+
+Expression updateProperty(TrieSpecifics ts, op:removeTuple(), hashCodeProperty(), onRemove(), Expression hashCodeProperty = useExpr(ts.hashCodeProperty), list[Expression] tupleHashesNew = []) 
+	= minus(hashCodeProperty, embrace(bitwiseXor(tupleHashesNew)));  
+
+Expression updateProperty(TrieSpecifics ts, op:removeTuple(), sizeProperty(), onRemove(), Expression sizeProperty = useExpr(ts.sizeProperty))
+	= minus(sizeProperty, iconst(1));

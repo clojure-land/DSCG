@@ -559,10 +559,43 @@ list[PredefOp] declaredMethodsByCollection(TrieSpecifics ts) = [
 	
 ];
 
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:removeTuple(), 
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = true; 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:removeTuple(),
-		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
+
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:insertTuple(isRare:_, customComparator:_)) = true; 
+
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:insertTuple(isRare:_, customComparator:_)) =
+	"<dec(ts.keyHash)> = <hashCode(content(ts, ctPayloadArg(0, isRare = op.isRare)))>;
+	<dec(ts.details)> = <ts.ResultStr>.unchanged();
+
+	<dec(\inode(ts.ds, ts.tupleTypes, "newRootNode"))> = <toString(call(rootNode, getDef(ts, trieNode(abstractNode()), insertTuple(op.isRare, op.customComparator)), 
+					argsOverride = (ts.mutator: NULL(), 
+						ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ts.keyHash))), 
+						ts.shift: constant(ts.shift.\type, "0"))))>;
+
+	if (<use(ts.details)>.isModified()) {
+		<if (\map(multi = false) := ts.ds) {>if (<use(ts.details)>.hasReplacedValue()) {
+				<dec(valHashOld)> = <hashCode(val(ts.valType, "<use(ts.details)>.getReplacedValue()"))>;
+				<dec(valHashNew)> = <hashCode(val(ts.valType))>;
+
+				return 
+					new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, 
+						<eval(updateProperty(ts, op, hashCodeProperty(), onReplacedValue(), tupleHashesOld = [ useExpr(ts.keyHash), useExpr(valHashOld) ], tupleHashesNew = [ useExpr(ts.keyHash), useExpr(valHashNew) ] ))>, 
+						<eval(updateProperty(ts, op, sizeProperty(), onReplacedValue()))>);
+			}
+			
+		<}><if (\map() := ts.ds) {><dec(ts.valHash)> = <hashCode(val(ts.valType))>;<}>return 
+			new <ts.coreClassName><GenericsStr(ts.tupleTypes)>(newRootNode, 
+				<eval(updateProperty(ts, op, hashCodeProperty(), onInsert(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(ts.valHash) ])))>, 
+				<eval(updateProperty(ts, op, sizeProperty(), onInsert()))>);
+	}
+
+	return this;"
+when valHashOld := val(primitive("int"), "valHashOld")
+		&& valHashNew := val(primitive("int"), "valHashNew")
+		&& rootNode := jdtToVal(abstractNode(ts), "rootNode");
+
+
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:removeTuple()) = true; 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:removeTuple()) = 
 	"<dec(ts.keyHash)> = <hashCode(content(ts, ctPayloadArg(0, isRare = op.isRare)))>;
 	'<dec(ts.details)> = <ts.ResultStr>.unchanged();
 	
@@ -580,3 +613,12 @@ list[PredefOp] declaredMethodsByCollection(TrieSpecifics ts) = [
 
 	return this;"
 when rootNode := jdtToVal(abstractNode(ts), "rootNode");
+
+
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:insertCollection(),
+		Argument transientColl = val(expandedExactBoundCollectionType(ts, transient()), "tmpTransient")) = true; 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:core(immutable()), op:insertCollection(),
+		Argument transientColl = val(expandedExactBoundCollectionType(ts, transient()), "tmpTransient")) = 
+	"<dec(transientColl)> = <toString(call(this(), getDef(ts, artifact, asTransient())))>;
+	'<toString(call(transientColl, getDef(ts, core(transient()), insertCollection(customComparator = op.customComparator))))>;
+	'return <toString(call(transientColl, getDef(ts, core(transient()), freeze())))>;";

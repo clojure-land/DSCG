@@ -516,11 +516,11 @@ when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAs
 
 
 
-str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndRemoveValue(), str m = "payloadArity()", str n = "nodeArity()")
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndRemoveValue(bool isRare), str m = "payloadArity()", str n = "nodeArity()")
 	= generate_copyAnd_dstClass_string("<m> - 1", n)
 when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData());
 
-str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromNodeToInline(), str m = "payloadArity()", str n = "nodeArity()")
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromNodeToInline(bool isRare), str m = "payloadArity()", str n = "nodeArity()")
 	= generate_copyAnd_dstClass_string("<m> + 1", "<n> - 1")
 when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData());
 
@@ -692,14 +692,14 @@ data PredefOp = copyAndInsertValue_nextClass();
 	= method(\return(specific("java.lang.Class")), "copyAndInsertValue_nextClass", isActive = isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData()));
 
 
-data PredefOp = copyAndRemoveValue(bool customComparator = false);
+data PredefOp = copyAndRemoveValue(bool isRare);
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveValue())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndRemoveValue", args = [ts.mutator, ts.bitposField]);
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveValue(bool isRare))
+	= method(\return(jdtToType(compactNode(ts))), "copyAndRemove<if (isRare) {>Rare<}>Value", args = [ts.mutator, ts.bitposField]);
 
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndRemoveValue()) 
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndRemoveValue(bool isRare)) 
 	= true when isOptionEnabled(ts, useSunMiscUnsafe());
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndRemoveValue()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndRemoveValue(bool isRare)) =
 	"try {
 		final int valIdx = dataIndex(bitpos);
 		
@@ -959,14 +959,14 @@ data PredefOp = copyAndMigrateFromInlineToNode_nextClass();
 	= method(\return(specific("java.lang.Class")), "copyAndMigrateFromInlineToNode_nextClass", isActive = isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData()));
 
 
-data PredefOp = copyAndMigrateFromNodeToInline(bool customComparator = false);
+data PredefOp = copyAndMigrateFromNodeToInline(bool isRare);
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromNodeToInline())
-	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromNodeToInline", args = [ts.mutator, ts.bitposField, \inode(ts.ds, ts.tupleTypes)]);
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp op:copyAndMigrateFromNodeToInline(bool isRare))
+	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFromNodeTo<if (isRare) {>Rare<}>Inline", args = [ts.mutator, ts.bitposField, \inode(ts.ds, ts.tupleTypes)]);
 
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromNodeToInline()) 
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromNodeToInline(bool isRare)) 
 	= true when isOptionEnabled(ts, useSunMiscUnsafe());
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromNodeToInline()) =
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromNodeToInline(bool isRare)) =
 	"try {
 		<dec(idxOld)> = nodeIndex(bitpos);
 		<dec(idxNew)> = dataIndex(bitpos);	
@@ -1127,7 +1127,8 @@ list[PredefOp] declaredMethodsByCompactNode(TrieSpecifics ts) = [
 	copyAndInsertValue(true),
 	copyAndInsertValue_nextClass(),
 	
-	copyAndRemoveValue(),
+	copyAndRemoveValue(false),
+	copyAndRemoveValue(true),
 	copyAndRemoveValue_nextClass(),
 	
 	copyAndSetNode(false),
@@ -1138,7 +1139,8 @@ list[PredefOp] declaredMethodsByCompactNode(TrieSpecifics ts) = [
 	copyAndMigrateFromInlineToNode(true),
 	copyAndMigrateFromInlineToNode_nextClass(),
 	
-	copyAndMigrateFromNodeToInline(),
+	copyAndMigrateFromNodeToInline(false),
+	copyAndMigrateFromNodeToInline(true),
 	copyAndMigrateFromNodeToInline_nextClass(),
 	
 	removeInplaceValueAndConvertToSpecializedNode(),	
@@ -1740,7 +1742,7 @@ default str removedOn_KeysDifferent(TrieSpecifics ts, Artifact artifact, PredefO
 default str removedOn_TupleFound(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) =
 	"<removedOn_TupleFound_modification(ts, artifact, op, isRareCase)>
 	
-	<removed_value_block1(ts)> else <if (supportsConversionBetweenGenericAndSpecialized(ts)) {><removed_value_block2(ts)> else<}> {					
+	<removed_value_block1(ts, artifact, op, isRareCase)> else <if (supportsConversionBetweenGenericAndSpecialized(ts)) {><removed_value_block2(ts)> else<}> {					
 		return copyAndRemove<if (isRareCase) {>Rare<}>Value(mutator, bitpos);
 	}";
 	
@@ -1775,7 +1777,7 @@ str removedOn_TupleFound(TrieSpecifics ts, Artifact artifact, PredefOp op, bool 
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>;
 	'	
 	'	if (<use(appendToName(nodeTupleArg(ts, 1), "New"))>.size() == 0) { // earlier: arity() == 0
-	'		<removed_value_block1(ts)> else <if (supportsConversionBetweenGenericAndSpecialized(ts)) {><removed_value_block2(ts)> else<}> {					
+	'		<removed_value_block1(ts, artifact, op, isRareCase)> else <if (supportsConversionBetweenGenericAndSpecialized(ts)) {><removed_value_block2(ts)> else<}> {					
 	'			return copyAndRemoveValue(mutator, bitpos);
 	'		}
 	'	} else {
@@ -1855,23 +1857,25 @@ default str removed_value_block2(TrieSpecifics ts) =
 	'	return removeInplaceValueAndConvertToSpecializedNode(mutator, bitpos);
 	'}";
 	
-default str removed_value_block1(TrieSpecifics ts) =
+default str removed_value_block1(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) =
 	"// TODO: support dispatch for heterogeneous case
-	'if (this.payloadArity() == 2 && this.nodeArity() == 0) {
-	'	/*
-	'	 * Create new node with remaining pair. The new node
-	'	 * will a) either become the new root returned, or b)
-	'	 * unwrapped and inlined during returning.
-	'	 */
-	'	final <typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))> newDataMap = (shift == 0) ? (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<use(valmapMethod)> ^ bitpos)
-	'					: <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.shift: constant(primitive("int"), "0"))))))>;
-	'
-	'	<toString(result(call(getDef(ts, trieNode(compactNode()), nodeFactory_Specialization(0, 1)),
-				argsOverride = (
-					ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)), 
-					ts.valmapField: exprFromString("newDataMap")),
-				labeledArgsOverride = (contentArguments(): exprFromString("getKey(1 - dataIndex)<if (\map() := ts.ds) {>, getVal(1 - dataIndex)<}>")))))>;
-	'}";
+	'if (true) { throw new IllegalStateException(); }";
+	
+	//"if (this.payloadArity() == 2 && this.nodeArity() == 0) {
+	//'	/*
+	//'	 * Create new node with remaining pair. The new node
+	//'	 * will a) either become the new root returned, or b)
+	//'	 * unwrapped and inlined during returning.
+	//'	 */
+	//'	final <typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))> newDataMap = (shift == 0) ? (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<use(valmapMethod)> ^ bitpos)
+	//'					: <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.shift: constant(primitive("int"), "0"))))))>;
+	//'
+	//'	<toString(result(call(getDef(ts, trieNode(compactNode()), nodeFactory_Specialization(0, 1)),
+	//			argsOverride = (
+	//				ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)), 
+	//				ts.valmapField: exprFromString("newDataMap")),
+	//			labeledArgsOverride = (contentArguments(): exprFromString("getKey(1 - dataIndex)<if (\map() := ts.ds) {>, getVal(1 - dataIndex)<}>")))))>;
+	//'}";
 
 
 	

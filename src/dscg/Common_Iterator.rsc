@@ -36,11 +36,11 @@ when typeList := payloadTupleTypes(ts)
 
 JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:entryIterator(core(immutable())))
 	= javaClass("<toString(ts.ds)>EntryIterator", typeArguments = typeList, implementsList = [ jul_Iterator(jdtToType(jul_Map_Entry(typeList))) ])
-when typeList := payloadTupleTypes(ts);	
+when typeList := collTupleTypes(ts);	
 	
 JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:tupleIterator(core(immutable())), Type iteratorGenericType = generic("T"))
 	= javaClass("<toString(ts.ds)>TupleIterator", typeArguments = typeList + iteratorGenericType, implementsList = [ jul_Iterator(iteratorGenericType) ])
-when typeList := payloadTupleTypes(ts);
+when typeList := collTupleTypes(ts);
 
 
 
@@ -48,24 +48,27 @@ when typeList := payloadTupleTypes(ts);
 data PredefDataType = keyIterator(Artifact artifact);
 
 JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:keyIterator(core(transient())))
-	= javaClass("Transient<toString(ts.ds)>KeyIterator", typeArguments = payloadTupleTypes(ts), extends = getJdt(ts, keyIterator(core(immutable())))); 
+	= javaClass("Transient<toString(ts.ds)>KeyIterator", typeArguments = superJdt.typeArguments, extends = superJdt)
+when superJdt := getJdt(ts, keyIterator(core(immutable()))); 
 
 data PredefDataType = valueIterator(Artifact artifact);
 
 JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:valueIterator(core(transient())))
-	= javaClass("Transient<toString(ts.ds)>ValueIterator", typeArguments = payloadTupleTypes(ts), extends = getJdt(ts, valueIterator(core(immutable()))));
+	= javaClass("Transient<toString(ts.ds)>ValueIterator", typeArguments = superJdt.typeArguments, extends = superJdt)
+when superJdt := getJdt(ts, valueIterator(core(immutable())));
 
 data PredefDataType = entryIterator(Artifact artifact);
 	
 JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:entryIterator(core(transient())))	
-	= javaClass("Transient<toString(ts.ds)>EntryIterator", typeArguments = payloadTupleTypes(ts), extends = getJdt(ts, entryIterator(core(immutable()))));
+	= javaClass("Transient<toString(ts.ds)>EntryIterator", typeArguments = superJdt.typeArguments, extends = superJdt)
+when superJdt := getJdt(ts, entryIterator(core(immutable())));
 
 data PredefDataType = tupleIterator(Artifact artifact);
 
+// before: typeArguments = payloadTupleTypes(ts) + iteratorGenericType
 JavaDataType getJdt(TrieSpecifics ts, PredefDataType dt:tupleIterator(core(transient())))
-	= javaClass("Transient<toString(ts.ds)>TupleIterator", typeArguments = payloadTupleTypes(ts) + iteratorGenericType, extends = getJdt(ts, tupleIterator(core(immutable())), iteratorGenericType = iteratorGenericType))
-when iteratorGenericType := generic("T");
-
+	= javaClass("Transient<toString(ts.ds)>TupleIterator", typeArguments = superJdt.typeArguments, extends = superJdt)
+when iteratorGenericType := generic("T"), superJdt := getJdt(ts, tupleIterator(core(immutable())), iteratorGenericType = iteratorGenericType);
 
 
 
