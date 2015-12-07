@@ -514,7 +514,7 @@ str updatedOn_KeysEqual(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisi
 	
 		final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> thisNew = new <hashCollisionNode(ts).typeName><InferredGenerics(ts.ds, ts.tupleTypes)>(this.hash, this.keys, dst);
 	
-		details.updated(currentVal);
+		details.updated(<boxPayloadTupleArg1(ts, "currentVal", true)>);
 		return thisNew;
 	}"
 when \map(multi = false) := ts.ds;
@@ -568,7 +568,7 @@ when \map(multi = true) := ts.ds;
 		str (Argument, Argument) eq = op.customComparator ? equalityComparatorForArguments : equalityDefaultForArguments) = 
 	"for (int idx = 0; idx \< keys.length; idx++) {
 		if (<eq(key(ct2type(ts)[ctCollectionArg(0)], "keys[idx]"), key(ct2type(ts)[ctCollectionArg(0)]))>) {
-			<if (\map() := ts.ds) {><dec(val(ct2type(ts)[ctCollectionArg(1)], "currentVal"))> = vals[idx]; details.updated(currentVal);<}><if (\set() := ts.ds) {>details.modified();<}>
+			<if (\map() := ts.ds) {><dec(val(ct2type(ts)[ctCollectionArg(1)], "currentVal"))> = vals[idx]; details.updated(<boxPayloadTupleArg1(ts, "currentVal", true)>);<}><if (\set() := ts.ds) {>details.modified();<}>
 			
 			if (this.arity() == 1) {						
 				return <toString(call(getDef(ts, core(immutable()), emptyTrieNodeConstant())))>;
@@ -613,7 +613,7 @@ str removedOn_TupleFound(TrieSpecifics ts, Artifact artifact:trieNode(hashCollis
 	'
 	'if(<toString(call(collCur, getDef(tsSet, core(immutable()), containsKey()) 
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ct2type(ts)[ctCollectionArg(1)])))))>) {
-	'	details.updated(<use(val(ct2type(ts)[ctCollectionArg(1)]))>);
+	'	details.updated(<boxPayloadTupleArg1(ts, "currentVal", true)>);
 	'	
 	'	// remove tuple
 	'	<dec(collNew)> = <toString(call(collCur, getDef(tsSet, core(immutable()), removeTuple(customComparator = op.customComparator)), 

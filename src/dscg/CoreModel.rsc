@@ -449,6 +449,30 @@ Type __internal__dsAtFunction__range_type(TrieSpecifics ts)
 
 
 
+Expression box(Expression source, Type sourceType, Type destinationType) = 
+	exprFromString("<typeToString(destinationType)>.of<capitalize(typeToString(sourceType))>(<toString(source)>)")
+when destinationType is eitherTypeSequence;
+
+Expression box(Expression source, Type sourceType, sourceType) = source;
+
+default Expression box(Expression source, Type sourceType, Type destinationType) { throw "Ahhh"; }
+
+test bool test_boxToEither0() 
+	= box(exprFromString("abc"), primitive("int"), primitive("int")) == exprFromString("abc");
+
+test bool test_boxToEither1() 
+	= box(exprFromString("abc"), primitive("int"), eitherType) == exprFromString("EitherIntOrObject.ofInt(abc)")
+when eitherType := eitherTypeSequence({ object(), primitive("int") });
+	
+test bool test_boxToEither2() 
+	= box(exprFromString("abc"), object(), eitherType) == exprFromString("EitherIntOrObject.ofObject(abc)")
+when eitherType := eitherTypeSequence({ object(), primitive("int") });
+
+/* USAGE */
+
+str boxPayloadTupleArg1(TrieSpecifics ts, str expressionString, bool isRareCase)
+	= toString(box(exprFromString(expressionString), ct2type(ts)[ctVal(isRare = isRareCase)], __new__internalPayloadTupleTypes__(ts)[1]));	
+
 
 
 ////

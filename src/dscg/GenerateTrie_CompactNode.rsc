@@ -1557,13 +1557,13 @@ str updatedOn_KeysEqual(TrieSpecifics ts, Artifact artifact, PredefOp op, bool i
 when \set() := ts.ds;	
 	
 str updatedOn_KeysEqual(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) = 
-	"<dec(val(ts.valType, "currentVal"))> = getVal(dataIndex);
+	"<dec(content(ts, ctVal(isRare = isRareCase), "currentVal"))> = <contentAccessor(ctVal(isRare = isRareCase), "<bitmapPrefix(ctPayloadTuple(isRare = isRareCase))>Index")>;
 	'
 	'if (<selectEq(op)(val(ts.valType, "currentVal"), val(ts.valType))>) {
 	'	return this;
 	'} else {
 	'	// update mapping
-	'	details.updated(currentVal);
+	'	details.updated(<boxPayloadTupleArg1(ts, "currentVal", isRareCase)>);
 	'	return copyAndSet<if (isRareCase) {>Rare<}>Value(mutator, bitpos, val);
 	'}" 
 when \map(multi = false) := ts.ds && isOptionEnabled(ts, compareValueAtMapPut());
@@ -1572,7 +1572,7 @@ str updatedOn_KeysEqual(TrieSpecifics ts, Artifact artifact, PredefOp op, bool i
 	"<dec(content(ts, ctVal(isRare = isRareCase), "currentVal"))> = <contentAccessor(ctVal(isRare = isRareCase), "<bitmapPrefix(ctPayloadTuple(isRare = isRareCase))>Index")>;
 	'
 	'// update mapping
-	'details.updated(currentVal);
+	'details.updated(<boxPayloadTupleArg1(ts, "currentVal", isRareCase)>);
 	'return copyAndSet<if (isRareCase) {>Rare<}>Value(mutator, bitpos, val);" 
 when \map(multi = false) := ts.ds && !isOptionEnabled(ts, compareValueAtMapPut());
 
@@ -1748,7 +1748,7 @@ default str removedOn_TupleFound(TrieSpecifics ts, Artifact artifact, PredefOp o
 	
 str removedOn_TupleFound_modification(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) =
 	"<dec(content(ts, ctVal(isRare = isRareCase), "currentVal"))> = <contentAccessor(ctVal(isRare = isRareCase), "<bitmapPrefix(ctPayloadTuple(isRare = isRareCase))>Index")>;
-	'details.updated(currentVal);"
+	'details.updated(<boxPayloadTupleArg1(ts, "currentVal", isRareCase)>);"
 when \map() := ts.ds;
 	
 str removedOn_TupleFound_modification(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) =
@@ -1763,7 +1763,7 @@ str removedOn_TupleFound(TrieSpecifics ts, Artifact artifact, PredefOp op, bool 
 					argsOverride = (key(tsSet.keyType): useExpr(val(ts.valType)), tsSet.keyHash: call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ival("valHash")))), tsSet.shift: constant(tsSet.shift.\type, "0"))))>) {
 	' if(<toString(call(collTupleArg(ts, 1), getDef(tsSet, core(immutable()), containsKey()) 
 					labeledArgsOverride = (payloadTuple(): useExpr(val(ts.valType)))))>) {
-	'	details.updated(<use(val(ts.valType))>);
+	'	details.updated(<boxPayloadTupleArg1(ts, "currentVal", isRareCase)>);
 	'	
 	'	// remove mapping
 	'	// <dec(appendToName(nodeTupleArg(ts, 1), "New"))> = <toString(call(nodeTupleArg(ts, 1), getDef(tsSet, trieNode(abstractNode()), removeTuple()), 
