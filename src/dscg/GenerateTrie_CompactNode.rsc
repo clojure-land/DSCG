@@ -473,6 +473,24 @@ when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAs
 
 
 
+
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndRemoveValue(bool isRare), str m = "payloadArity()", str n = "nodeArity()")
+	= generate_copyAnd_dstClass_string("<m> - 1", n)
+when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && !isOptionEnabled(ts, useHeterogeneousEncoding());
+
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndRemoveValue(bool isRare:false), str m = "payloadArity()", str n = "untypedSlotArity()")
+	= generate_copyAnd_dstClass_string("<m> - 1", n)
+when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && isOptionEnabled(ts, useHeterogeneousEncoding());
+
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndRemoveValue(bool isRare:true), str m = "payloadArity()", str n = "untypedSlotArity()")
+	= generate_copyAnd_dstClass_string(m, "<n> - <use(tupleLengthConstant)>")
+when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && isOptionEnabled(ts, useHeterogeneousEncoding());
+
+
+
+
+
+
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromInlineToNode(_), str m = "payloadArity()", str n = "nodeArity()")
 	= generate_copyAnd_dstClass_string("<m> - 1", "<n> + 1")
 when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && !isOptionEnabled(ts, useHeterogeneousEncoding());
@@ -483,6 +501,23 @@ when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAs
 
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromInlineToNode(bool isRare:true), str m = "payloadArity()", str n = "untypedSlotArity()")
 	= generate_copyAnd_dstClass_string(m, "<n> - <use(tupleLengthConstant)> + 1")
+when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && isOptionEnabled(ts, useHeterogeneousEncoding());
+
+
+
+
+
+
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromNodeToInline(bool isRare), str m = "payloadArity()", str n = "nodeArity()")
+	= generate_copyAnd_dstClass_string("<m> + 1", "<n> - 1")
+when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && !isOptionEnabled(ts, useHeterogeneousEncoding());
+
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromNodeToInline(bool isRare:false), str m = "payloadArity()", str n = "untypedSlotArity()")
+	= generate_copyAnd_dstClass_string("<m> + 1", "<n> - <use(tupleLengthConstant)>")
+when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && isOptionEnabled(ts, useHeterogeneousEncoding());
+
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromNodeToInline(bool isRare:true), str m = "payloadArity()", str n = "untypedSlotArity()")
+	= generate_copyAnd_dstClass_string("<m>", "<n> + <use(tupleLengthConstant)> - 1")
 when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && isOptionEnabled(ts, useHeterogeneousEncoding());
 
 
@@ -516,14 +551,6 @@ when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAs
 
 
 
-str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndRemoveValue(bool isRare), str m = "payloadArity()", str n = "nodeArity()")
-	= generate_copyAnd_dstClass_string("<m> - 1", n)
-when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData());
-
-str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromNodeToInline(bool isRare), str m = "payloadArity()", str n = "nodeArity()")
-	= generate_copyAnd_dstClass_string("<m> + 1", "<n> - 1")
-when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData());
-
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op, str m = "m", str n = "n")
 	= generate_copyAnd_dstClass_string("???", "???")
 when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData());
@@ -550,6 +577,7 @@ when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAs
 //		srcOffset := val(primitive("long"), "src<capitalize(bitmapName)>Offset") &&
 //		dstOffset := val(primitive("long"), "dst<capitalize(bitmapName)>Offset") &&
 //		oldBitmapValueExpr := exprFromString("unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(src, <use(srcOffset)>)");
+
 
 str generate_copyAnd_copyAndUpdateBitmap(TrieSpecifics ts, Artifact artifact, PredefOp op, str bitmapName, Expression(Expression oldBitmapValueExpr) valueUpdater, Expression valueDefault) =
 	"
@@ -700,8 +728,8 @@ data PredefOp = copyAndRemoveValue(bool isRare);
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndRemoveValue(bool isRare)) 
 	= true when isOptionEnabled(ts, useSunMiscUnsafe());
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndRemoveValue(bool isRare)) =
-	"try {
-		final int valIdx = dataIndex(bitpos);
+	"try {		
+		<dec(valIdx)> = <bitmapIndex(ctPayloadTuple(isRare = isRare))>(bitpos);
 		
 		<generate_copyAnd_generalPrelude(ts, artifact, op)>
 						
@@ -969,14 +997,17 @@ data PredefOp = copyAndMigrateFromNodeToInline(bool isRare);
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromNodeToInline(bool isRare)) =
 	"try {
 		<dec(idxOld)> = nodeIndex(bitpos);
-		<dec(idxNew)> = dataIndex(bitpos);	
-	
+		<dec(idxNew)> = <bitmapIndex(ctPayloadTuple(isRare = isRare))>(bitpos);	
+		
 		<generate_copyAnd_generalPrelude(ts, artifact, op)>
-						
+				
+		// idempotent operation; in case of rare bit was already set before						
 		<generate_copyAnd_copyAndUpdateBitmap(ts, artifact, op, lowLevelBitmapName(ts, 0), 
 			Expression(Expression oldBitmapValueExpr) {
 				return cast(chunkSizeToPrimitive(ts.bitPartitionSize),
-						bitwiseXor(oldBitmapValueExpr, useExpr(ts.bitposField)));
+						isRare ?
+							bitwiseOr(oldBitmapValueExpr, useExpr(ts.bitposField)) :
+							bitwiseXor(oldBitmapValueExpr, useExpr(ts.bitposField)));
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>										
 						
@@ -987,8 +1018,11 @@ data PredefOp = copyAndMigrateFromNodeToInline(bool isRare);
 			},
 			useExpr(ts.bitposField))>									
 		
+		// copy payload range (isRare = <!isRare>)				
+		<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>										
+		
 		// copy payload range
-		<copyPayloadRange(ts, artifact, iconst(0), useExpr(idxNew), indexIdentity, indexIdentity)>
+		<copyPayloadRange(ts, artifact, iconst(0), useExpr(idxNew), indexIdentity, indexIdentity, isRare = isRare)>
 			
 		<copyPayloadRange(ts, artifact, 
 			useExpr(idxNew), 
@@ -996,10 +1030,11 @@ data PredefOp = copyAndMigrateFromNodeToInline(bool isRare);
 			indexIdentity, 
 			indexIdentity, 
 			argsOverride = (
-				ctKey(): exprFromString("node.getKey(0)"), 
-				ctVal(): exprFromString("node.getVal(0)")))>			
+				ctPayloadArg(0, isRare = isRare): exprFromString("node.<contentAccessor(ctPayloadArg(0, isRare = isRare), "0")>"), 
+				ctPayloadArg(1, isRare = isRare): exprFromString("node.<contentAccessor(ctPayloadArg(1, isRare = isRare), "0")>")),
+			isRare = isRare)>
 				
-		<copyPayloadRange(ts, artifact, useExpr(idxNew), call(getDef(ts, artifact, payloadArity(isRare = false))), indexIdentity, indexAdd1)>		
+		<copyPayloadRange(ts, artifact, useExpr(idxNew), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexAdd1, isRare = isRare)>		
 				
 		// copy node range
 		<copyNodeRange(ts, artifact, iconst(0), useExpr(idxOld), indexIdentity, indexIdentity)>
@@ -1788,10 +1823,6 @@ str removedOn_TupleFound(TrieSpecifics ts, Artifact artifact, PredefOp op, bool 
 	'}" 
 when \map(multi = true) := ts.ds;
 		
-/*
-	CURSOR ...	
-*/		
-		
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple()) = true;
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), op:removeTuple()) {
 	Argument subNode 	= \inode(ts.ds, ts.tupleTypes, "subNode");
@@ -1818,13 +1849,20 @@ when \map(multi = true) := ts.ds;
 		}
 		case 1: {
 			<if (isOptionEnabled(ts,useSpecialization())) {>// inline value (move to front)
-				return copyAndMigrateFromNodeToInline(mutator, bitpos, subNodeNew);<} else {>if (this.payloadArity() == 0 && this.nodeArity() == 1) {
-				// escalate (singleton or empty) result
-				return <use(subNodeNew)>;
-			} else {
-				// inline value (move to front)
-				return copyAndMigrateFromNodeToInline(mutator, bitpos, subNodeNew);
-			}<}>
+				if (payloadArity() == 1) {
+					return copyAndMigrateFromNodeToInline(mutator, bitpos, subNodeNew);
+				} else {
+					return copyAndMigrateFromNodeToRareInline(mutator, bitpos, subNodeNew);
+				}
+			<} else {>
+				if (this.payloadArity() == 0 && this.nodeArity() == 1) {
+					// escalate (singleton or empty) result
+					return <use(subNodeNew)>;
+				} else {
+					// inline value (move to front)
+					return copyAndMigrateFromNodeToInline(mutator, bitpos, subNodeNew);
+				}
+			<}>
 		}
 		default: {
 			// modify current node (set replacement node)
@@ -1857,25 +1895,57 @@ default str removed_value_block2(TrieSpecifics ts) =
 	'	return removeInplaceValueAndConvertToSpecializedNode(mutator, bitpos);
 	'}";
 	
-default str removed_value_block1(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) =
-	"// TODO: support dispatch for heterogeneous case
-	'if (true) { throw new IllegalStateException(); }";
+/*
+        // TODO: support dispatch for heterogeneous case
+          if (this.payloadArity() == 0 && this.rarePayloadArity() == 2 && this.nodeArity() == 0) {
+            final byte newRawMap =
+                (shift == 0) ? (byte) (rawMap2() ^ bitpos) : bitpos(mask(keyHash, 0));
+
+            return nodeOf2x0(mutator, newRawMap, newRawMap, getRareKey(1 - rareIndex),
+                getRareVal(1 - rareIndex));
+          } else if (this.payloadArity() == 1 && this.rarePayloadArity() == 1
+              && this.nodeArity() == 0) {
+            final byte newRawMap =
+                (shift == 0) ? (byte) (rawMap2() ^ bitpos) : bitpos(mask(keyHash, 0));
+
+            return nodeOf0x1(mutator, (byte) 0, newRawMap, getKey(0), getVal(0));
+          } else {
+            return copyAndRemoveRareValue(mutator, bitpos);
+          }
+
+*/	
 	
-	//"if (this.payloadArity() == 2 && this.nodeArity() == 0) {
-	//'	/*
-	//'	 * Create new node with remaining pair. The new node
-	//'	 * will a) either become the new root returned, or b)
-	//'	 * unwrapped and inlined during returning.
-	//'	 */
-	//'	final <typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))> newDataMap = (shift == 0) ? (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (<use(valmapMethod)> ^ bitpos)
-	//'					: <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.shift: constant(primitive("int"), "0"))))))>;
-	//'
-	//'	<toString(result(call(getDef(ts, trieNode(compactNode()), nodeFactory_Specialization(0, 1)),
-	//			argsOverride = (
-	//				ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)), 
-	//				ts.valmapField: exprFromString("newDataMap")),
-	//			labeledArgsOverride = (contentArguments(): exprFromString("getKey(1 - dataIndex)<if (\map() := ts.ds) {>, getVal(1 - dataIndex)<}>")))))>;
-	//'}";
+default str removed_value_block1(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) =
+	"
+	'/*
+	' * Case payload == 2:
+	' * 	Create new node with remaining pair. The new node
+	' * 	will a) either become the new root returned, or b)
+	' * 	unwrapped and inlined during returning.
+	' */
+	'if (this.payloadArity() == <isRareCase ? 0 : 2> && this.rarePayloadArity() == <isRareCase ? 2 : 0> && this.nodeArity() == 0) {
+	'	final <typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))> newRawMap = (shift == 0) ? (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (rawMap2() ^ bitpos)
+	'					: <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.shift: constant(primitive("int"), "0"))))))>;
+	'
+	'	<toString(result(call(getDef(ts, trieNode(compactNode()), nodeFactory_Specialization(isRareCase ? 2 : 0, isRareCase ? 0 : 1)),
+				argsOverride = (
+					ts.bitmapField: exprFromString("newRawMap"), 
+					ts.valmapField: exprFromString("newRawMap")),
+				labeledArgsOverride = (contentArguments(): exprFromString("<remainderKeyExprStr><if (\map() := ts.ds) {>, <remainderValExprStr><}>")))))>;
+	'} else if (this.payloadArity() == 1 && this.rarePayloadArity() == 1 && this.nodeArity() == 0) {
+	'	final <typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))> newRawMap = (shift == 0) ? (<typeToString(chunkSizeToPrimitive(ts.bitPartitionSize))>) (rawMap2() ^ bitpos)
+	'					: <toString(call(getDef(ts, trieNode(compactNode()), bitpos()), argsOverride = (ts.mask: call(getDef(ts, trieNode(compactNode()), mask()), argsOverride = (ts.shift: constant(primitive("int"), "0"))))))>;
+	'
+	'	<toString(result(call(getDef(ts, trieNode(compactNode()), nodeFactory_Specialization(isRareCase ? 0 : 2, isRareCase ? 1 : 0)),
+				argsOverride = (
+					ts.bitmapField: cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)), 
+					ts.valmapField: exprFromString("newRawMap")),
+				labeledArgsOverride = (contentArguments(): exprFromString("<theOtherRemainderKeyExprStr><if (\map() := ts.ds) {>, <theOtherRemainderValExprStr><}>")))))>;
+	'}"
+when remainderKeyExprStr := contentAccessor(ctPayloadArg(0, isRare = isRareCase), "1 - <bitmapIndex(ctPayloadTuple(isRare = isRareCase))>"),
+		remainderValExprStr := contentAccessor(ctPayloadArg(1, isRare = isRareCase), "1 - <bitmapIndex(ctPayloadTuple(isRare = isRareCase))>"),
+		theOtherRemainderKeyExprStr := contentAccessor(ctPayloadArg(0, isRare = !isRareCase), "0"),
+		theOtherRemainderValExprStr := contentAccessor(ctPayloadArg(1, isRare = !isRareCase), "0");
 
 
 	

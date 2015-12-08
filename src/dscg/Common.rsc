@@ -581,7 +581,7 @@ data TrieSpecifics
 		Argument stdObjectArg0 =  field(object(), "o0"),
 		Argument stdObjectArg1 =  field(object(), "o1"),				
 			
-		list[tuple[int,int]] legacyNodeFactoryMethodSpecializationsUnderUnsafe = [ <1, 0>, <0, 1>, <0, 2> ] + [ <4, 0>, <2, 1> ], /* last ones are necessary for heterogeneous encoding */
+		list[tuple[int,int]] legacyNodeFactoryMethodSpecializationsUnderUnsafe = [ <1, 0>, <0, 1>, <0, 2> ] + [ <4, 0>, <2, 0>, <2, 1> ], /* last ones are necessary for heterogeneous encoding */
 		
 		Argument contentType = val(specific("ContentType"), "type")				
 		)

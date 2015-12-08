@@ -291,7 +291,7 @@ data PredefOp = sizePredicate();
 
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(abstractNode()), sizePredicate()) = 
 	"if (this.nodeArity() == 0) {
-	'	switch (this.payloadArity()) {
+	'	switch (this.payloadArity() + this.rarePayloadArity()) {
 	'	case 0:
 	'		return sizeEmpty();
 	'	case 1:

@@ -195,11 +195,15 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 
 	if (<use(ts.details)>.isModified()) {
 		<if (\map(multi = false) := ts.ds) {>if (<use(ts.details)>.hasReplacedValue()) {
-			<dec(content(ts, ctPayloadArg(1, isRare = op.isRare), "old"))> = <toString(replacedValueExpr)>;
+			<dec(replacedValueHandle)> = <toString(replacedValueExpr)>;
 
-			<dec(valHashOld)> = <hashCode(content(ts, ctPayloadArg(1, isRare = op.isRare), "old"))>;
-			<dec(valHashNew)> = <hashCode(content(ts, ctPayloadArg(1, isRare = op.isRare)))>;
-
+			<dec(valHashOld)> = <toString(hashCodeExpr(
+					ts, 
+					replacedValueHandle))>;
+			<dec(valHashNew)> = <toString(hashCodeExpr(
+					ts, 
+					content(ts, ctPayloadArg(1, isRare = op.isRare))))>;
+						
 			rootNode = newRootNode;
 			<toString(expressionStatement(assign(ts.hashCodeProperty, updateProperty(ts, op, hashCodeProperty(), onReplacedValue(), tupleHashesOld = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(valHashOld) ]), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(valHashNew) ])))))>
 			<toString(expressionStatement(assign(ts.sizeProperty, updateProperty(ts, op, sizeProperty(), onReplacedValue()))))>
@@ -207,7 +211,7 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 			if (DEBUG) {
 				assert checkHashCodeAndSize(hashCode, cachedSize);
 			}
-			return <toString(resultOf(ts, artifact, op, onReplacedValue(), payloadTupleExprList = cutToTupleSize(ts, [ useExpr(content(ts, ctPayloadArg(0, isRare = op.isRare))), replacedValueExpr ])))>;
+			return <toString(resultOf(ts, artifact, op, onReplacedValue(), payloadTupleExprList = cutToTupleSize(ts, [ useExpr(content(ts, ctPayloadArg(0, isRare = op.isRare))), useExpr(replacedValueHandle) ])))>;
 		} else {<}>			
 			<if (\map() := ts.ds) {><dec(valHashNew)> = <hashCode(content(ts, ctPayloadArg(1, isRare = op.isRare)))>;<}>rootNode = newRootNode;
 			<toString(expressionStatement(assign(ts.hashCodeProperty, updateProperty(ts, op, hashCodeProperty(), onInsert(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(valHashNew) ])))))>
@@ -226,7 +230,11 @@ str generateCoreTransientClassString(TrieSpecifics ts) {
 	return <toString(resultOf(ts, artifact, op, onInsertAlreadyPresent()))>;"
 when valHashOld := val(primitive("int"), "valHashOld")
 		&& valHashNew := val(primitive("int"), "valHashNew")
-		&& replacedValueExpr := exprFromString("<use(ts.details)>.getReplacedValue()")
+		&& replacedValueExpr := eitherTypeAsSpecificTypeCast(
+									exprFromString("<use(ts.details)>.getReplacedValue()"), 					
+									__new__internalPayloadTupleTypes__(ts)[1],					 
+									content(ts, ctPayloadArg(1, isRare = op.isRare)).\type)
+		&& replacedValueHandle := content(ts, ctPayloadArg(1, isRare = op.isRare), "replacedValue")								
 		&& rootNode := jdtToVal(abstractNode(ts), "rootNode");
 
 Expression resultOf(TrieSpecifics ts, artifact:core(transient()), op:insertTuple(isRare:_, customComparator:_), onInsert(), list[Expression] payloadTupleExprList = []) 
@@ -271,7 +279,16 @@ when !(\map(multi = false) := ts.ds);
 					argsOverride = (ts.keyHash: call(getDef(ts, artifact, PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): useExpr(ts.keyHash))), ts.shift: constant(ts.shift.\type, "0"))))>;
 
 	if (<use(ts.details)>.isModified()) {
-		<if (\map() := ts.ds) {>assert <use(ts.details)>.hasReplacedValue(); <dec(ts.valHash)> = <hashCode(content(ts, ctPayloadArg(1, isRare = op.isRare), "<use(ts.details)>.getReplacedValue()"))>;\n\n<}>rootNode = newRootNode;
+		<if (\map() := ts.ds) {>assert <use(ts.details)>.hasReplacedValue(); 
+			<dec(ts.valHash)> = 
+				<toString(hashCodeExpr(
+					ts, 
+					eitherTypeAsSpecificTypeCast(
+						exprFromString("<use(ts.details)>.getReplacedValue()"), 					
+						__new__internalPayloadTupleTypes__(ts)[1],					 
+						content(ts, ctPayloadArg(1, isRare = op.isRare)).\type)))>;
+		<}>
+		rootNode = newRootNode;
 		<toString(expressionStatement(assign(ts.hashCodeProperty, updateProperty(ts, op, hashCodeProperty(), onRemove(), tupleHashesNew = cutToTupleSize(ts, [ useExpr(ts.keyHash), useExpr(ts.valHash) ])))))>
 		<toString(expressionStatement(assign(ts.sizeProperty, updateProperty(ts, op, sizeProperty(), onRemove()))))>
 	

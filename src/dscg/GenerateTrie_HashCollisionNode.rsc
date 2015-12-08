@@ -436,8 +436,8 @@ when jdt := hashCollisionNode(ts) &&
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:hashCollisionNode()), PredefOp::hashCollisionNodeConstructor())
 	= compoundStatement([
-		uncheckedStringStatement(initFieldsWithIdendity(fieldList)), // TODO: automatically infer which def.args need to be initialized
-		uncheckedStringStatement("assert payloadArity() \>= 2;")
+		uncheckedStringStatement(initFieldsWithIdendity(fieldList)) // TODO: automatically infer which def.args need to be initialized
+		//, uncheckedStringStatement("assert payloadArity() \>= 2;")
 	])
 when def := getDef(ts, artifact, hashCollisionNodeConstructor()) &&
 		fieldList := [ predefOpToArgument(ts, artifact, op) | op <- declares(ts, nodeType)<1>, op != hashCollisionNodeConstructor(), opDef := getDef(ts, artifact, op), opDef is property, opDef.isActive && opDef.isStateful && opDef.initializeAtConstruction ];
