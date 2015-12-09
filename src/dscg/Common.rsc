@@ -146,7 +146,8 @@ data Argument
 Argument __labeledArgument(PredefArgLabel label, Argument arg) = labeledArgumentList(label, [ arg ]);
 	
 data Statement
-	= uncheckedStringStatement(str statementStr)
+	= emptyStatement()
+	| uncheckedStringStatement(str statementStr)
 	| expressionStatement(Expression e) 
 	| compoundStatement(list[Statement] statementList) 
 	;
@@ -154,6 +155,7 @@ data Statement
 str toString(str s) = s;
 
 str toString(Statement:uncheckedStringStatement(statementStr)) = statementStr;
+str toString(Statement:emptyStatement()) = "";
 str toString(Statement:expressionStatement(emptyExpression())) = "";
 str toString(Statement:expressionStatement(e)) = "<toString(e)>;";
 str toString(Statement:compoundStatement(statementList)) = "<for (stmt <- statementList) {><toString(stmt)><}>";
@@ -273,6 +275,11 @@ data Expression = equals(Expression x, Expression y);
 */
 data Expression = notEquals(Expression x, Expression y);
 
+
+
+public Expression(Expression) indexIdentity = Expression(Expression e) { return e; };
+public Expression(Expression) indexAdd1 = Expression(Expression e) { return plus(e, iconst(1)); };
+public Expression(Expression) indexSubtract1 = Expression(Expression e) { return minus(e, iconst(1)); };
 
 
 

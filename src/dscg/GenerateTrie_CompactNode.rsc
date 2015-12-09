@@ -708,10 +708,6 @@ str compareNodeRange(TrieSpecifics ts, Artifact artifact, Expression from, Expre
 when fromPlusOne := plus(from, iconst(1)) &&
 		i := (fromPlusOne == to ? from : useExpr(var(primitive("int"), "i"))) &&
 		eq := equalityDefaultForArguments;				
-		
-private Expression(Expression) indexIdentity = Expression(Expression e) { return e; };
-private Expression(Expression) indexAdd1 = Expression(Expression e) { return plus(e, iconst(1)); };
-private Expression(Expression) indexSubtract1 = Expression(Expression e) { return minus(e, iconst(1)); };
 
 
 data PredefOp = copyAndInsertValue_nextClass();
