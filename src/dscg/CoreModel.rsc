@@ -573,7 +573,8 @@ set[&T] toSet(tuple[&T, &T, &T] xs:<x, y, z>) = { x, y, z };
 data PartitionCopy(list[Expression] valueList = [])
 	= rangeCopyWithShift(Partition p, Expression fromIndex, Expression untilIndex, Expression(Expression) srcIndexShift, Expression(Expression) dstIndexShift)
 	| insertIntoPartition(Partition p, Expression atIndex)
-	| setInPartition(Partition p, Expression atIndex);
+	| setInPartition(Partition p, Expression atIndex)
+	| removeFromPartition(Partition p, Expression atIndex);
 	
 
 PartitionCopy rangeCopyByIdentity(Partition p, Expression fromIndex, Expression untilIndex)
@@ -593,7 +594,8 @@ void sandbox(TrieSpecifics ts, str id = "payload", str indexExpr = identifier("v
 //	}
 
 	//println(generatePartitionCopy(ts, copyAndInsert(id, indexExpr, valueList)));
-	println(generatePartitionCopy(ts, copyAndSet(id, indexExpr, valueList)));
+	// println(generatePartitionCopy(ts, copyAndSet(id, indexExpr, valueList)));
+	println(generatePartitionCopy(ts, copyAndMigrateFromInlineToNode("payload", identifier("old"), "node", identifier("new"), [ identifier("node") ])));	
 }
 
 str generatePartitionCopy(TrieSpecifics ts, Manipulation m) {
@@ -605,6 +607,9 @@ str generatePartitionCopy(TrieSpecifics ts, Manipulation m) {
 		throw "???";
 	}
 }
+
+list[PartitionCopy] applyManipulation(CoreModel cm, Manipulation m)
+	= [ *applyManipulation(p, m) | p <- cm ];
 
 
 
@@ -626,9 +631,6 @@ str generatePartitionCopy(TrieSpecifics ts, Manipulation m) {
 */
 
 data Manipulation = copyAndInsert(str id, Expression indexExpr, list[Expression] valueList);
-
-list[PartitionCopy] applyManipulation(CoreModel cm, Manipulation m:copyAndInsert(_, _, _))
-	= [ *applyManipulation(p, m) | p <- cm ];	
 
 list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndInsert(_, _, _))
 	= [ rangeCopyByIdentity(p, iconst(0), exprFromString("<p.id>Arity()")) ]
@@ -664,9 +666,6 @@ when p.id == m.id, resultList := [
 
 data Manipulation = copyAndSet(str id, Expression indexExpr, list[Expression] valueList);
 
-list[PartitionCopy] applyManipulation(CoreModel cm, Manipulation m:copyAndSet(_, _, _))
-	= [ *applyManipulation(p, m) | p <- cm ];	
-
 list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndSet(_, _, _))
 	= [ rangeCopyByIdentity(p, iconst(0), exprFromString("<p.id>Arity()")) ]
 when p.id != m.id;
@@ -679,6 +678,57 @@ when p.id == m.id, middleIndex := resultList := [
 			rangeCopyByIdentity(p, iconst(0), indexAdd1(m.indexExpr)),
 			setInPartition(p, m.indexExpr, valueList = m.valueList),	
 			rangeCopyWithShift(p, indexAdd1(m.indexExpr), exprFromString("<p.id>Arity()"), indexIdentity, indexIdentity) ];
+
+
+
+
+
+/*
+	// copy payload range (isRare = <!isRare>)				
+	<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
+
+	// copy payload range (isRare = <isRare>)				
+	<copyPayloadRange(ts, artifact, iconst(0), useExpr(idxOld), indexIdentity, indexIdentity, isRare = isRare)>
+	
+	<copyPayloadRange(ts, artifact, plus(useExpr(idxOld), iconst(1)), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexSubtract1, isRare = isRare)>
+
+	// copy node range
+	<copyNodeRange(ts, artifact, iconst(0), useExpr(idxNew), indexIdentity, indexIdentity)>		
+	
+	<copyNodeRange(ts, artifact, 
+		useExpr(idxNew), 
+		plus(useExpr(idxNew), iconst(1)), 
+		indexIdentity, 
+		indexIdentity, 
+		argsOverride = (
+			ctNode(): useExpr(\inode(ts.ds, ts.tupleTypes))))>
+	
+	<copyNodeRange(ts, artifact, useExpr(idxNew), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexAdd1)>
+*/
+
+data Manipulation = copyAndMigrateFromInlineToNode(str idOld, Expression indexExprOld, str idNew, Expression indexExprNew, list[Expression] valueList);
+
+list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndMigrateFromInlineToNode(_, _, _, _, _))
+	= [ rangeCopyByIdentity(p, iconst(0), exprFromString("<p.id>Arity()")) ]
+when p.id != m.idOld && p.id != m.idNew;
+
+list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndMigrateFromInlineToNode(_, _, _, _, _)) =
+	p.direction == forward() ? 
+		resultList :
+		reverse(resultList)
+when p.id == m.idOld, middleIndex := resultList := [ 
+			rangeCopyByIdentity(p, iconst(0), m.indexExprOld),
+			removeFromPartition(p, m.indexExprOld),	
+			rangeCopyWithShift(p, indexAdd1(m.indexExprOld), exprFromString("<p.id>Arity()"), indexIdentity, indexIdentity) ];
+			
+list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndMigrateFromInlineToNode(_, _, _, _, _)) =
+	p.direction == forward() ? 
+		resultList :
+		reverse(resultList)
+when p.id == m.idNew, middleIndex := resultList := [ 
+			rangeCopyByIdentity(p, iconst(0), m.indexExprNew),
+			insertIntoPartition(p, m.indexExprNew, valueList = m.valueList),	
+			rangeCopyWithShift(p, m.indexExprNew, exprFromString("<p.id>Arity()"), indexIdentity, indexIdentity) ];
 
 
 
@@ -700,7 +750,13 @@ Statement partitionCopyAsForLoop(TrieSpecifics ts, PartitionCopy pc)
 	= partitionCopyAsForLoop_body(ts, pc, pcs = partitionCopyStruct(ts, srcAdvance = true, dstAdvance = true))
 when pc is setInPartition;
 
+Statement partitionCopyAsForLoop(TrieSpecifics ts, PartitionCopy pc) 
+	= partitionCopyAsForLoop_body(ts, pc, pcs = partitionCopyStruct(ts, doCopy = false, srcAdvance = true, dstAdvance = false))
+when pc is removeFromPartition;
+
+
 data PartitionCopyStruct = partitionCopyStruct(TrieSpecifics ts);
+data PartitionCopyStruct(bool doCopy = true);
 data PartitionCopyStruct(Expression src = identifier("src"));
 data PartitionCopyStruct(Expression srcOffset = identifier("srcOffset"));
 data PartitionCopyStruct(bool srcAdvance = true);
@@ -741,7 +797,11 @@ Expression getFromPartition(PartitionCopyStruct pcs, Type t) =
 	exprFromString("unsafe.<unsafeGetMethodNameFromType(t)>(<toString(pcs.src)>, <toString(pcs.srcOffset)>)");
 	
 Statement setInPartitionStatement(PartitionCopyStruct pcs, Type t, Expression valueExpression) {
-	list[Statement] stmts = [ uncheckedStringStatement("unsafe.<unsafePutMethodNameFromType(t)>(<toString(pcs.dst)>, <toString(pcs.dstOffset)>, <toString(valueExpression)>);") ];
+	list[Statement] stmts = [];
+
+	if (pcs.doCopy) {
+		stmts += uncheckedStringStatement("unsafe.<unsafePutMethodNameFromType(t)>(<toString(pcs.dst)>, <toString(pcs.dstOffset)>, <toString(valueExpression)>);");
+	}
 
 	if (pcs.srcAdvance) {
 		stmts += uncheckedStringStatement("<toString(pcs.srcOffset)> += <toString(sizeOfExpression(t))>;");
