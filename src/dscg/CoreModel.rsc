@@ -570,24 +570,10 @@ set[&T] toSet(tuple[&T, &T, &T] xs:<x, y, z>) = { x, y, z };
 // SANDBOX 
 ////////
 
-/*
-		// copy payload range (isRare = <!isRare>)				
-		<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
-						
-		// copy payload range (isRare = <isRare>)				
-		<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity, isRare = isRare)>
-
-		<copyPayloadRange(ts, artifact, useExpr(valIdx), plus(useExpr(valIdx), iconst(1)), indexIdentity, indexIdentity, isRare = isRare, argsOverride = (ctKey(isRare = isRare): useExpr(key(ts.keyType)), ctVal(isRare = isRare): useExpr(val(ts.valType))))>
-
-		<copyPayloadRange(ts, artifact, useExpr(valIdx), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexAdd1, isRare = isRare)>
-
-		// copy node range
-		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
-*/
-
 data PartitionCopy(list[Expression] valueList = [])
 	= rangeCopyWithShift(Partition p, Expression fromIndex, Expression untilIndex, Expression(Expression) srcIndexShift, Expression(Expression) dstIndexShift)
-	| insertIntoPartition(Partition p, Expression atIndex);
+	| insertIntoPartition(Partition p, Expression atIndex)
+	| setInPartition(Partition p, Expression atIndex);
 	
 
 PartitionCopy rangeCopyByIdentity(Partition p, Expression fromIndex, Expression untilIndex)
@@ -596,7 +582,7 @@ PartitionCopy rangeCopyByIdentity(Partition p, Expression fromIndex, Expression 
 
 
 
-void sandbox(TrieSpecifics ts, str id = "payload", str indexStr = "valIdx", list[Expression] valueList = [ identifier("key"), identifier("val") ]) {
+void sandbox(TrieSpecifics ts, str id = "payload", str indexExpr = identifier("valIdx"), list[Expression] valueList = [ identifier("key"), identifier("val") ]) {
 //	CoreModel cm = filterByPartitionTypeSlice(getCoreModel(ts));
 //
 //	for (PartitionCopy i <- applyManipulation(cm, copyAndInsert(id, indexStr, valueList))) {
@@ -606,7 +592,8 @@ void sandbox(TrieSpecifics ts, str id = "payload", str indexStr = "valIdx", list
 //		println();
 //	}
 
-	println(generatePartitionCopy(ts, copyAndInsert(id, indexStr, valueList)));
+	//println(generatePartitionCopy(ts, copyAndInsert(id, indexExpr, valueList)));
+	println(generatePartitionCopy(ts, copyAndSet(id, indexExpr, valueList)));
 }
 
 str generatePartitionCopy(TrieSpecifics ts, Manipulation m) {
@@ -618,6 +605,25 @@ str generatePartitionCopy(TrieSpecifics ts, Manipulation m) {
 		throw "???";
 	}
 }
+
+
+
+
+
+/*
+	// copy payload range (isRare = <!isRare>)				
+	<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
+					
+	// copy payload range (isRare = <isRare>)				
+	<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity, isRare = isRare)>
+
+	<copyPayloadRange(ts, artifact, useExpr(valIdx), plus(useExpr(valIdx), iconst(1)), indexIdentity, indexIdentity, isRare = isRare, argsOverride = (ctKey(isRare = isRare): useExpr(key(ts.keyType)), ctVal(isRare = isRare): useExpr(val(ts.valType))))>
+
+	<copyPayloadRange(ts, artifact, useExpr(valIdx), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexAdd1, isRare = isRare)>
+
+	// copy node range
+	<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
+*/
 
 data Manipulation = copyAndInsert(str id, Expression indexExpr, list[Expression] valueList);
 
@@ -637,9 +643,44 @@ when p.id == m.id, resultList := [
 			insertIntoPartition(p, m.indexExpr, valueList = m.valueList),	
 			rangeCopyWithShift(p, m.indexExpr, exprFromString("<p.id>Arity()"), indexIdentity, indexAdd1) ];
 
-//CoreModel applyManipulation(CoreModel cm, Manipulation m:copyAndInsert(_, _))
-//	= [ *front, middle , *back ]
-//when [ *front, middle , *back ] := cm, middle has id && middle.id == m.id;
+
+
+
+
+/*
+	// copy payload range (isRare = <!isRare>)				
+	<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>	
+		
+	// copy payload range (isRare = <isRare>)				
+	<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexIdentity, isRare = isRare)>
+	
+	// copy node range
+	<copyNodeRange(ts, artifact, iconst(0), useExpr(idx), indexIdentity, indexIdentity)>
+	
+	<copyNodeRange(ts, artifact, useExpr(idx), plus(useExpr(idx), iconst(1)), indexIdentity, indexIdentity, argsOverride = (ctNode(): useExpr(\inode(ts.ds, ts.tupleTypes))))>	
+	
+	<copyNodeRange(ts, artifact, plus(useExpr(idx), iconst(1)), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
+*/
+
+data Manipulation = copyAndSet(str id, Expression indexExpr, list[Expression] valueList);
+
+list[PartitionCopy] applyManipulation(CoreModel cm, Manipulation m:copyAndSet(_, _, _))
+	= [ *applyManipulation(p, m) | p <- cm ];	
+
+list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndSet(_, _, _))
+	= [ rangeCopyByIdentity(p, iconst(0), exprFromString("<p.id>Arity()")) ]
+when p.id != m.id;
+
+list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndSet(_, _, _)) =
+	p.direction == forward() ? 
+		resultList :
+		reverse(resultList)
+when p.id == m.id, middleIndex := resultList := [ 
+			rangeCopyByIdentity(p, iconst(0), indexAdd1(m.indexExpr)),
+			setInPartition(p, m.indexExpr, valueList = m.valueList),	
+			rangeCopyWithShift(p, indexAdd1(m.indexExpr), exprFromString("<p.id>Arity()"), indexIdentity, indexIdentity) ];
+
+
 
 
 
@@ -654,6 +695,10 @@ when pc is rangeCopyWithShift && pc.p.direction == backward();
 Statement partitionCopyAsForLoop(TrieSpecifics ts, PartitionCopy pc) 
 	= partitionCopyAsForLoop_body(ts, pc, pcs = partitionCopyStruct(ts, srcAdvance = false))
 when pc is insertIntoPartition;
+
+Statement partitionCopyAsForLoop(TrieSpecifics ts, PartitionCopy pc) 
+	= partitionCopyAsForLoop_body(ts, pc, pcs = partitionCopyStruct(ts, srcAdvance = true, dstAdvance = true))
+when pc is setInPartition;
 
 data PartitionCopyStruct = partitionCopyStruct(TrieSpecifics ts);
 data PartitionCopyStruct(Expression src = identifier("src"));

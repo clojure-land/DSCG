@@ -881,6 +881,10 @@ data PredefOp = copyAndSetNode(bool isRare);
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>
 		
+		// TODO: create node differently from ctNode()
+		<generatePartitionCopy(ts, copyAndSet("node", useExpr(idx), [ useExpr(\inode(ts.ds, ts.tupleTypes)) ]))>
+		
+		/*		
 		// copy payload range (isRare = <!isRare>)				
 		<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>	
 			
@@ -893,6 +897,7 @@ data PredefOp = copyAndSetNode(bool isRare);
 		<copyNodeRange(ts, artifact, useExpr(idx), plus(useExpr(idx), iconst(1)), indexIdentity, indexIdentity, argsOverride = (ctNode(): useExpr(\inode(ts.ds, ts.tupleTypes))))>	
 
 		<copyNodeRange(ts, artifact, plus(useExpr(idx), iconst(1)), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
+		*/
 								
 		return dst;
 	} catch (InstantiationException e) {
