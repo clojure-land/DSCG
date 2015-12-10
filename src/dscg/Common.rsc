@@ -118,6 +118,17 @@ test bool test_typeToString_eitherTypeSequence3() =
 	 
 //TODO: test ... typeToString(typeSequence([ primitive("int"), primitive("long") ]))
 
+
+
+str unsafeGetMethodNameFromType(Type \type) = unsafePrefixedMethodNameFromType("get", concretePrimitiveOrObject(\type));
+str unsafePutMethodNameFromType(Type \type) = unsafePrefixedMethodNameFromType("put", concretePrimitiveOrObject(\type));
+str unsafePrefixedMethodNameFromType(str prefix, Type \type) = "<prefix><capitalize(typeToString(\type))>"; 
+
+Type concretePrimitiveOrObject(Type \type:___primitive(str _)) = \type;
+default Type concretePrimitiveOrObject(Type _) = object();
+
+
+
 data Argument
 	= emptyArgument(Type \type = unknown())
 	| field (Type \type, str name)
@@ -154,11 +165,15 @@ data Statement
 
 str toString(str s) = s;
 
+
+
+
 str toString(Statement:uncheckedStringStatement(statementStr)) = statementStr;
 str toString(Statement:emptyStatement()) = "";
 str toString(Statement:expressionStatement(emptyExpression())) = "";
 str toString(Statement:expressionStatement(e)) = "<toString(e)>;";
-str toString(Statement:compoundStatement(statementList)) = "<for (stmt <- statementList) {><toString(stmt)><}>";
+str toString(Statement:compoundStatement([hd, *tl])) 
+	= ( toString(hd) | it + "\n" + toString(st) | st <- tl );
 
 Statement exprToStmt(compoundExpr(list[Expression] expressionList)) = compoundStatement(mapper(expressionList, exprToStmt));
 default Statement exprToStmt(Expression e) = expressionStatement(e);
@@ -188,7 +203,8 @@ str printNonEmptyCommentWithNewline(str commentText) {
 } 
 	
 data Expression(str commentText = "") // Type typeCheckedTo = unknown()
-	= cast(Type \type, Expression e)
+	= identifier(str name)
+	| cast(Type \type, Expression e)
 	| maskAndNarrowPrimitiveCast(Expression source, Type sourceType, Type targetType) // TODO: remove legacy 'useSafeUnsigned'
 	| maskAndWidenPrimitiveCast(Expression source, Type sourceType, Type targetType) 
 	| bitwiseOr (Expression x, Expression y)
@@ -292,6 +308,8 @@ str toString(Expression e:or(exprList)) = intercalate(" || ", [ toString(expr) |
 
 
 
+
+str toString(Expression:identifier(name)) = name;
 
 str toString(Expression e:constant(_, constantString)) = constantString; 
 

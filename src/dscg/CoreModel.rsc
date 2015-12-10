@@ -596,33 +596,27 @@ PartitionCopy rangeCopyByIdentity(Partition p, Expression fromIndex, Expression 
 
 
 
-void sandbox(TrieSpecifics ts) {
-	cm = filterByPartitionTypeSlice(getCoreModel(ts));
+void sandbox(TrieSpecifics ts, str id = "payload", str indexStr = "valIdx", list[Expression] valueList = [ identifier("key"), identifier("val") ]) {
+	CoreModel cm = filterByPartitionTypeSlice(getCoreModel(ts));
 
-	for (i <- applyManipulation(cm, copyAndInsert("payload", "valIdx"))) {
-		iprint(partitionCopyAsForLoop(ts, i));
+	for (PartitionCopy i <- applyManipulation(cm, copyAndInsert(id, indexStr, valueList))) {
+		//iprint(partitionCopyAsForLoop(ts, i));
+		//println();		
+		println(toString(partitionCopyAsForLoop(ts, i)));
 		println();
-		
-		println(toStringXXX(partitionCopyAsForLoop(ts, i)));
-		println();
-	}	
-	
-	//for (i <- mapper(cm, partitionCopyAsForLoop)) {
-	//	println(toStringXXX(i));
-	//	println();
-	//}		
+	}
 }
 
-data Manipulation = copyAndInsert(str id, str indexStr, list[Expression] valueList = []);
+data Manipulation = copyAndInsert(str id, str indexStr, list[Expression] valueList);
 
-list[PartitionCopy] applyManipulation(CoreModel cm, Manipulation m:copyAndInsert(_, _))
+list[PartitionCopy] applyManipulation(CoreModel cm, Manipulation m:copyAndInsert(_, _, _))
 	= [ *applyManipulation(p, m) | p <- cm ];	
 
-list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndInsert(_, _))
+list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndInsert(_, _, _))
 	= [ rangeCopyByIdentity(p, iconst(0), exprFromString("<p.id>Arity()")) ]
 when p.id != m.id;
 
-list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndInsert(_, _)) =
+list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndInsert(_, _, _)) =
 	p.direction == forward() ? 
 		resultList :
 		reverse(resultList)
@@ -637,71 +631,80 @@ when p.id == m.id, resultList := [
 
 
 
-Expression partitionCopyAsForLoop(TrieSpecifics ts, PartitionCopy pc)
-	= forLoop("int i = <toString(pc.fromIndex)>", "i \< <toString(pc.untilIndex)>", "i++", body = body)
-when pc is rangeCopyWithShift && pc.p.direction == forward(),
-		body := partitionCopyAsForLoop_forward(ts, pc);
+Statement partitionCopyAsForLoop(TrieSpecifics ts, PartitionCopy pc)
+	= forLoop("int i = <toString(pc.fromIndex)>", "i \< <toString(pc.untilIndex)>", "i++", body = partitionCopyAsForLoop_body(ts, pc))
+when pc is rangeCopyWithShift && pc.p.direction == forward();
 
-Expression partitionCopyAsForLoop(TrieSpecifics ts, PartitionCopy pc) 
-	= forLoop("int i = <toString(indexSubtract1(pc.untilIndex))>", "i \>= <toString(pc.fromIndex)>", "i--", body = body)
-when pc is rangeCopyWithShift && pc.p.direction == backward(),
-		body := partitionCopyAsForLoop_backward(ts, pc);
+Statement partitionCopyAsForLoop(TrieSpecifics ts, PartitionCopy pc) 
+	= forLoop("int i = <toString(indexSubtract1(pc.untilIndex))>", "i \>= <toString(pc.fromIndex)>", "i--", body = partitionCopyAsForLoop_body(ts, pc))
+when pc is rangeCopyWithShift && pc.p.direction == backward();
+ 
+Statement partitionCopyAsForLoop(TrieSpecifics ts, PartitionCopy pc) 
+	= partitionCopyAsForLoop_body(ts, pc, pcs = partitionCopyStruct(ts, srcAdvance = false, valueList = pc.valueList))
+when pc is insertIntoPartition;
 
-Expression partitionCopyAsForLoop(TrieSpecifics ts, PartitionCopy pc) 
-	= emptyExpression()
-when pc is insertIntoPartition && pc.p.direction == forward(),
-		body := partitionCopyAsForLoop_forward(ts, pc);
+data PartitionCopyStruct = partitionCopyStruct(TrieSpecifics ts);
+data PartitionCopyStruct(list[Expression] valueList = []);
+data PartitionCopyStruct(Expression src = identifier("src"));
+data PartitionCopyStruct(Expression srcOffset = identifier("srcOffset"));
+data PartitionCopyStruct(bool srcAdvance = true);
+data PartitionCopyStruct(Expression dst = identifier("dst"));
+data PartitionCopyStruct(Expression dstOffset = identifier("dstOffset"));
+data PartitionCopyStruct(bool dstAdvance = true);
 
-Expression partitionCopyAsForLoop(TrieSpecifics ts, PartitionCopy pc) 
-	= emptyExpression()
-when pc is insertIntoPartition && pc.p.direction == backward(),
-		body := partitionCopyAsForLoop_backward(ts, pc);
+//data PartitionCopyStructMode
+//	= srcToDst()
+//	| toDst();
 
-//insertIntoPartition(Partition p, Expression atIndex, list[Expression] valueList);
+Statement partitionCopyAsForLoop_body(TrieSpecifics ts, PartitionCopy pc, PartitionCopyStruct pcs = partitionCopyStruct(ts))
+	= compoundStatement([ createCopyStatement(pc, pcs, \type, \expr) | <\type, \expr> <- zip(sliceTypes(ts, pc.p.id), valueList) ]) 
+when pc.p.direction == forward(),
+	valueList := (pcs.valueList != [] ? pcs.valueList : [ getFromPartition(pcs, \type) | \type <- sliceTypes(ts, pc.p.id) ]);
 
-
-// mapper(payloadTupleTypes(ts, pc.p.id), createCopyStatement)
-
-Statement partitionCopyAsForLoop_forward(TrieSpecifics ts, PartitionCopy pc) {
-	return compoundStatement([ createCopyStatement(pc, t) | t <- sliceTypes(ts, pc.p.id) ]); 
-}
-
-Statement partitionCopyAsForLoop_backward(TrieSpecifics ts, PartitionCopy pc) {
-	return compoundStatement([ createCopyStatement(pc, t) | t <- reverse(sliceTypes(ts, pc.p.id)) ]); 
-}
-
-
-Statement createCopyStatement(PartitionCopy pc, Type::typeSequence(typeArgumentList))
-	= compoundStatement(mapper(statementList, createCopyStatement));
-
-/*
- * CURSOR
- * CURSOR
- * CURSOR
- */
-
-default Statement createCopyStatement(PartitionCopy pc, Type t) {
-	return uncheckedStringStatement("unsafeCopy ...\n");
-}
+Statement partitionCopyAsForLoop_body(TrieSpecifics ts, PartitionCopy pc, PartitionCopyStruct pcs = partitionCopyStruct(ts))
+	= compoundStatement([ createCopyStatement(pc, pcs, \type, \expr) | <\type, \expr> <- reverse(zip(sliceTypes(ts, pc.p.id), valueList)) ]) 
+when pc.p.direction == backward(),
+	valueList := (pcs.valueList != [] ? pcs.valueList : [ getFromPartition(pcs, \type) | \type <- sliceTypes(ts, pc.p.id) ]);
 
 
-Expression getFromPartition() = 
-	exprFromString("unsafe.<unsafeGetMethodNameFromType(ct2type(ts)[ctKey(isRare = isRare)])>(src, $srcOffset$)");
 
-Expression setInPartition() = 
-	exprFromString("unsafe.<unsafePutMethodNameFromType(ct2type(ts)[ctKey(isRare = isRare)])>(dst, $dstOffset$, $value$)");
+default Statement createCopyStatement(PartitionCopy pc, PartitionCopyStruct pcs, Type \type, Expression \expr) 
+	= setInPartitionStatement(pcs, \type, \expr);
+
+Expression getFromPartition(PartitionCopyStruct pcs, Type t) = 
+	exprFromString("unsafe.<unsafeGetMethodNameFromType(t)>(<toString(pcs.src)>, <toString(pcs.srcOffset)>)");
+	
+Statement setInPartitionStatement(PartitionCopyStruct pcs, Type t, Expression valueExpression) {
+	list[Statement] stmts = [ uncheckedStringStatement("unsafe.<unsafePutMethodNameFromType(t)>(<toString(pcs.dst)>, <toString(pcs.dstOffset)>, <toString(valueExpression)>);") ];
+
+	if (pcs.srcAdvance) {
+		stmts += uncheckedStringStatement("<toString(pcs.srcOffset)> += <toString(sizeOfExpression(t))>;");
+	}
+	
+	if (pcs.dstAdvance) {
+		stmts += uncheckedStringStatement("<toString(pcs.dstOffset)> += <toString(sizeOfExpression(t))>;");
+	}
+	
+	return compoundStatement(stmts);
+} 
+
+
+
+Expression sizeOfExpression(Type t)
+	= iconst(sizeOf(jvmMemoryLayoutNoop(), t))
+when ___primitive(_) := t;
+
+default Expression sizeOfExpression(Type t)
+	= exprFromString("addressSize");
 
 
 /* 
  * slice(str id, ContentType contentType, Type itemType, Range range = unbounded(), Direction direction = forward())
  */
-data Expression = forLoop(str initializationStr, str conditionStr, str incrementStr, Statement body = emptyStatement());
+data Statement = forLoop(str initializationStr, str conditionStr, str incrementStr, Statement body = emptyStatement());
 
-str toStringXXX(Expression e) = 
+str toString(Statement e) = 
 	"for (<e.initializationStr>; <e.conditionStr>; <e.incrementStr>) {
 	'	<toString(e.body)>
 	'}"
 when e is forLoop;
-
-default str toStringXXX(Expression e) = 
-	"???";

@@ -2077,13 +2077,6 @@ Statement generate_bodyOf_factoryMethod_bitmap(int n, int m, TrieSpecifics ts, M
 	return uncheckedStringStatement(resultStr);	
 }
 
-str unsafeGetMethodNameFromType(Type \type) = unsafePrefixedMethodNameFromType("get", concretePrimitiveOrObject(\type));
-str unsafePutMethodNameFromType(Type \type) = unsafePrefixedMethodNameFromType("put", concretePrimitiveOrObject(\type));
-str unsafePrefixedMethodNameFromType(str prefix, Type \type) = "<prefix><capitalize(typeToString(\type))>"; 
-
-Type concretePrimitiveOrObject(Type \type:___primitive(str _)) = \type;
-default Type concretePrimitiveOrObject(Type _) = object();
-
 @index=2 Expression generate_bodyOf_factoryMethod_bitmap(int n:0, int m:0, TrieSpecifics ts, Method decleration) 
 	= result(call(getDef(ts, core(unknownUpdateSemantic()), emptyTrieNodeConstant())));
 
