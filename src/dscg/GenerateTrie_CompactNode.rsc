@@ -435,9 +435,11 @@ str generate_copyAnd_generalPrelude(TrieSpecifics ts, Artifact artifact, PredefO
 	<dec(jdtToVal(compactNode(ts), "src"))> = this;
 	<dec(jdtToVal(compactNode(ts), "dst"))> = <toString(cast(jdtToType(compactNode(ts)), exprFromString("unsafe.allocateInstance(dstClass)")))>;				
 				
-	final long[] srcArrayOffsets = (long[]) unsafe.getObject(srcClass, globalArrayOffsetsOffset);
-	
+	final long[] srcArrayOffsets = (long[]) unsafe.getObject(srcClass, globalArrayOffsetsOffset);	
 	final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, globalArrayOffsetsOffset);
+		
+	long srcOffset = arrayBase;
+	long dstOffset = arrayBase;
 	";
 	
 str generate_equalsFunctionUnsafe_generalPrelude(TrieSpecifics ts, Artifact artifact, PredefOp op) =
@@ -636,7 +638,10 @@ data PredefOp = copyAndInsertValue(bool isRare);
 						bitwiseOr(oldBitmapValueExpr, useExpr(ts.bitposField)));
 			},
 			useExpr(ts.bitposField))>					
-
+		
+		<generatePartitionCopy(ts, copyAndInsert(isRare ? "rarePayload" : "payload", useExpr(valIdx), [ useExpr(x) | x <- payloadTupleArgs(ts, isRare = true) ]))>
+		
+		/*
 		// copy payload range (isRare = <!isRare>)				
 		<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
 						
@@ -649,6 +654,7 @@ data PredefOp = copyAndInsertValue(bool isRare);
 
 		// copy node range
 		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
+		*/
 
 		return dst;
 	} catch (InstantiationException e) {

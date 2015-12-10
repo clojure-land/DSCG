@@ -585,9 +585,9 @@ set[&T] toSet(tuple[&T, &T, &T] xs:<x, y, z>) = { x, y, z };
 		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
 */
 
-data PartitionCopy 
+data PartitionCopy(list[Expression] valueList = [])
 	= rangeCopyWithShift(Partition p, Expression fromIndex, Expression untilIndex, Expression(Expression) srcIndexShift, Expression(Expression) dstIndexShift)
-	| insertIntoPartition(Partition p, Expression atIndex, list[Expression] valueList);
+	| insertIntoPartition(Partition p, Expression atIndex);
 	
 
 PartitionCopy rangeCopyByIdentity(Partition p, Expression fromIndex, Expression untilIndex)
@@ -597,17 +597,29 @@ PartitionCopy rangeCopyByIdentity(Partition p, Expression fromIndex, Expression 
 
 
 void sandbox(TrieSpecifics ts, str id = "payload", str indexStr = "valIdx", list[Expression] valueList = [ identifier("key"), identifier("val") ]) {
+//	CoreModel cm = filterByPartitionTypeSlice(getCoreModel(ts));
+//
+//	for (PartitionCopy i <- applyManipulation(cm, copyAndInsert(id, indexStr, valueList))) {
+//		//iprint(partitionCopyAsForLoop(ts, i));
+//		//println();		
+//		println(toString(partitionCopyAsForLoop(ts, i)));
+//		println();
+//	}
+
+	println(generatePartitionCopy(ts, copyAndInsert(id, indexStr, valueList)));
+}
+
+str generatePartitionCopy(TrieSpecifics ts, Manipulation m) {
 	CoreModel cm = filterByPartitionTypeSlice(getCoreModel(ts));
 
-	for (PartitionCopy i <- applyManipulation(cm, copyAndInsert(id, indexStr, valueList))) {
-		//iprint(partitionCopyAsForLoop(ts, i));
-		//println();		
-		println(toString(partitionCopyAsForLoop(ts, i)));
-		println();
+	if ([ PartitionCopy hd, *tl ] := applyManipulation(cm, m)) {
+		return (toString(partitionCopyAsForLoop(ts, hd)) | it + "\n\n" + toString(partitionCopyAsForLoop(ts, next)) | next <- tl); 
+	} else {
+		throw "???";
 	}
 }
 
-data Manipulation = copyAndInsert(str id, str indexStr, list[Expression] valueList);
+data Manipulation = copyAndInsert(str id, Expression indexExpr, list[Expression] valueList);
 
 list[PartitionCopy] applyManipulation(CoreModel cm, Manipulation m:copyAndInsert(_, _, _))
 	= [ *applyManipulation(p, m) | p <- cm ];	
@@ -621,9 +633,9 @@ list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndInsert(
 		resultList :
 		reverse(resultList)
 when p.id == m.id, resultList := [ 
-			rangeCopyByIdentity(p, iconst(0), exprFromString(m.indexStr)),
-			insertIntoPartition(p, exprFromString(m.indexStr), m.valueList),	
-			rangeCopyWithShift(p, exprFromString(m.indexStr), exprFromString("<p.id>Arity()"), indexIdentity, indexAdd1) ];
+			rangeCopyByIdentity(p, iconst(0), m.indexExpr),
+			insertIntoPartition(p, m.indexExpr, valueList = m.valueList),	
+			rangeCopyWithShift(p, m.indexExpr, exprFromString("<p.id>Arity()"), indexIdentity, indexAdd1) ];
 
 //CoreModel applyManipulation(CoreModel cm, Manipulation m:copyAndInsert(_, _))
 //	= [ *front, middle , *back ]
@@ -640,11 +652,10 @@ Statement partitionCopyAsForLoop(TrieSpecifics ts, PartitionCopy pc)
 when pc is rangeCopyWithShift && pc.p.direction == backward();
  
 Statement partitionCopyAsForLoop(TrieSpecifics ts, PartitionCopy pc) 
-	= partitionCopyAsForLoop_body(ts, pc, pcs = partitionCopyStruct(ts, srcAdvance = false, valueList = pc.valueList))
+	= partitionCopyAsForLoop_body(ts, pc, pcs = partitionCopyStruct(ts, srcAdvance = false))
 when pc is insertIntoPartition;
 
 data PartitionCopyStruct = partitionCopyStruct(TrieSpecifics ts);
-data PartitionCopyStruct(list[Expression] valueList = []);
 data PartitionCopyStruct(Expression src = identifier("src"));
 data PartitionCopyStruct(Expression srcOffset = identifier("srcOffset"));
 data PartitionCopyStruct(bool srcAdvance = true);
@@ -656,15 +667,25 @@ data PartitionCopyStruct(bool dstAdvance = true);
 //	= srcToDst()
 //	| toDst();
 
-Statement partitionCopyAsForLoop_body(TrieSpecifics ts, PartitionCopy pc, PartitionCopyStruct pcs = partitionCopyStruct(ts))
-	= compoundStatement([ createCopyStatement(pc, pcs, \type, \expr) | <\type, \expr> <- zip(sliceTypes(ts, pc.p.id), valueList) ]) 
-when pc.p.direction == forward(),
-	valueList := (pcs.valueList != [] ? pcs.valueList : [ getFromPartition(pcs, \type) | \type <- sliceTypes(ts, pc.p.id) ]);
+Statement partitionCopyAsForLoop_body(TrieSpecifics ts, PartitionCopy pc, PartitionCopyStruct pcs = partitionCopyStruct(ts)) 
+	= __partitionCopyAsForLoop_body(ts, pc, pcs, __orderedAndTypedValueRelation(ts, pc, pcs));
 
-Statement partitionCopyAsForLoop_body(TrieSpecifics ts, PartitionCopy pc, PartitionCopyStruct pcs = partitionCopyStruct(ts))
-	= compoundStatement([ createCopyStatement(pc, pcs, \type, \expr) | <\type, \expr> <- reverse(zip(sliceTypes(ts, pc.p.id), valueList)) ]) 
-when pc.p.direction == backward(),
-	valueList := (pcs.valueList != [] ? pcs.valueList : [ getFromPartition(pcs, \type) | \type <- sliceTypes(ts, pc.p.id) ]);
+lrel[Type, Expression] __orderedAndTypedValueRelation(TrieSpecifics ts, PartitionCopy pc, PartitionCopyStruct pcs) {
+	list[Expression] valueList 
+		= (pc.valueList != [] ? pc.valueList : [ getFromPartition(pcs, \type) | \type <- sliceTypes(ts, pc.p.id) ]);
+
+	lrel[Type, Expression] orderedAndTypedValueRelation 
+		= zip(sliceTypes(ts, pc.p.id), valueList);
+		
+	switch (pc.p.direction) {
+		case forward(): return orderedAndTypedValueRelation;
+		case backward(): return reverse(orderedAndTypedValueRelation);
+		case _: throw "Unsupported ordering.";
+	}
+}
+
+Statement __partitionCopyAsForLoop_body(TrieSpecifics ts, PartitionCopy pc, PartitionCopyStruct pcs, lrel[Type, Expression] orderedAndTypedValueRelation)
+	= compoundStatement([ createCopyStatement(pc, pcs, \type, \expr) | <\type, \expr> <- orderedAndTypedValueRelation ]);
 
 
 
