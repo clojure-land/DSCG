@@ -90,7 +90,7 @@ list[PredefOp] declaredMethodsByAbstractNode = [
 	
 	PredefOp::equals(),
 	// PredefOp::hashCode(),
-	PredefOp::toString()
+	PredefOp::opToString()
 ];
 
 

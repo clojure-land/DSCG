@@ -601,15 +601,32 @@ void sandbox(TrieSpecifics ts, str id = "payload", str indexExpr = identifier("v
 str generatePartitionCopy(TrieSpecifics ts, Manipulation m) {
 	CoreModel cm = filterByPartitionTypeSlice(getCoreModel(ts));
 
-	if ([ PartitionCopy hd, *tl ] := applyManipulation(cm, m)) {
-		return (toString(partitionCopyAsForLoop(ts, hd)) | it + "\n\n" + toString(partitionCopyAsForLoop(ts, next)) | next <- tl); 
-	} else {
-		throw "???";
-	}
+	list[Statement] stmts = [ partitionCopyAsForLoop(ts, x) | x <- applyManipulation(cm, m) ]; 
+	return intercalate("\n", List::mapper(stmts, toString));
+	
+	// return intercalate("\n", [ toString(s) | s <- stmts ]);
+
+	//if ([ PartitionCopy hd, *tl ] := applyManipulation(cm, m)) {
+	//	return (toString(partitionCopyAsForLoop(ts, hd)) | it + "\n\n" + toString(partitionCopyAsForLoop(ts, next)) | next <- tl); 
+	//} else {
+	//	throw "???";
+	//}
 }
+
+str mstring(int _) = "i";
+str mstring(str _) = "s";
+str mstring(Expression e) = "expr";
+str mstring(Statement s) = "stmt";
+//default str mstring(value _) = "_";
+//list[str] mstring(Statement s) = "s";
+
+list[&T] mmap(list[&S] l, &T(&S <: &U) f) = [ f(x) | x <- l ] ; 
 
 list[PartitionCopy] applyManipulation(CoreModel cm, Manipulation m)
 	= [ *applyManipulation(p, m) | p <- cm ];
+	
+default list[PartitionCopy] applyManipulation(Partition p, Manipulation m)
+	= [ rangeCopyByIdentity(p, iconst(0), exprFromString("<p.id>Arity()")) ];
 
 
 
@@ -649,6 +666,22 @@ when p.id == m.id, resultList := [
 
 
 
+
+data Manipulation = copyAndRemove(str id, Expression indexExpr);
+
+list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndRemove(_, _)) =
+	p.direction == forward() ? 
+		resultList :
+		reverse(resultList)
+when p.id == m.id, middleIndex := resultList := [ 
+			rangeCopyByIdentity(p, iconst(0), m.indexExpr),
+			removeFromPartition(p, m.indexExpr),	
+			rangeCopyWithShift(p, indexAdd1(m.indexExpr), exprFromString("<p.id>Arity()"), indexIdentity, indexIdentity) ];
+			
+
+
+
+
 /*
 	// copy payload range (isRare = <!isRare>)				
 	<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>	
@@ -675,10 +708,28 @@ list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndSet(_, 
 		resultList :
 		reverse(resultList)
 when p.id == m.id, middleIndex := resultList := [ 
-			rangeCopyByIdentity(p, iconst(0), indexAdd1(m.indexExpr)),
-			setInPartition(p, m.indexExpr, valueList = m.valueList),	
+			rangeCopyByIdentity(p, iconst(0), m.indexExpr),
+			setInPartition(p, m.indexExpr, valueList = m.valueList),
 			rangeCopyWithShift(p, indexAdd1(m.indexExpr), exprFromString("<p.id>Arity()"), indexIdentity, indexIdentity) ];
 
+
+
+
+
+/*
+	// copy payload range (isRare = <!isRare>)				
+	<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
+					
+	// copy payload range (isRare = <isRare>)				
+	<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity, isRare = isRare)>								
+
+	<copyPayloadRange(ts, artifact, useExpr(valIdx), plus(useExpr(valIdx), iconst(1)), indexIdentity, indexIdentity, isRare = isRare, argsOverride = (ctVal(): useExpr(val(ts.valType))))>
+			
+	<copyPayloadRange(ts, artifact, plus(useExpr(valIdx), iconst(1)), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexIdentity, isRare = isRare)>					
+
+	// copy node range
+	<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
+*/
 
 
 
@@ -729,8 +780,32 @@ when p.id == m.idNew, middleIndex := resultList := [
 			rangeCopyByIdentity(p, iconst(0), m.indexExprNew),
 			insertIntoPartition(p, m.indexExprNew, valueList = m.valueList),	
 			rangeCopyWithShift(p, m.indexExprNew, exprFromString("<p.id>Arity()"), indexIdentity, indexIdentity) ];
+			
+			
+			
+			
 
+data Manipulation = copyAndMigrateFromNodeToInline(str idOld, Expression indexExprOld, str idNew, Expression indexExprNew, list[Expression] valueList);
 
+list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndMigrateFromNodeToInline(_, _, _, _, _)) =
+	p.direction == forward() ? 
+		resultList :
+		reverse(resultList)
+when p.id == m.idOld, middleIndex := resultList := [ 
+			rangeCopyByIdentity(p, iconst(0), m.indexExprOld),
+			removeFromPartition(p, m.indexExprOld),	
+			rangeCopyWithShift(p, indexAdd1(m.indexExprOld), exprFromString("<p.id>Arity()"), indexIdentity, indexIdentity) ];
+			
+list[PartitionCopy] applyManipulation(Partition p, Manipulation m:copyAndMigrateFromNodeToInline(_, _, _, _, _)) =
+	p.direction == forward() ? 
+		resultList :
+		reverse(resultList)
+when p.id == m.idNew, middleIndex := resultList := [ 
+			rangeCopyByIdentity(p, iconst(0), m.indexExprNew),
+			insertIntoPartition(p, m.indexExprNew, valueList = m.valueList),
+			rangeCopyWithShift(p, m.indexExprNew, exprFromString("<p.id>Arity()"), indexIdentity, indexIdentity) ];
+			
+			
 
 
 
@@ -772,12 +847,19 @@ Statement partitionCopyAsForLoop_body(TrieSpecifics ts, PartitionCopy pc, Partit
 	= __partitionCopyAsForLoop_body(ts, pc, pcs, __orderedAndTypedValueRelation(ts, pc, pcs));
 
 lrel[Type, Expression] __orderedAndTypedValueRelation(TrieSpecifics ts, PartitionCopy pc, PartitionCopyStruct pcs) {
-	list[Expression] valueList 
-		= (pc.valueList != [] ? pc.valueList : [ getFromPartition(pcs, \type) | \type <- sliceTypes(ts, pc.p.id) ]);
-
+	list[Expression] valueList = pc.valueList;
+	
+	if (valueList == []) {
+		valueList = [ magicIdentityExpression() | _ <- sliceTypes(ts, pc.p.id) ];
+	}
+		
 	lrel[Type, Expression] orderedAndTypedValueRelation 
 		= zip(sliceTypes(ts, pc.p.id), valueList);
 		
+	orderedAndTypedValueRelation = visit (orderedAndTypedValueRelation) {
+		case <\type, magicIdentityExpression()> => <\type, getFromPartition(pcs, \type)>
+	}
+			
 	switch (pc.p.direction) {
 		case forward(): return orderedAndTypedValueRelation;
 		case backward(): return reverse(orderedAndTypedValueRelation);

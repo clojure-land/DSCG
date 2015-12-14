@@ -446,7 +446,7 @@ str generateSpecializedNodeWithBitmapPositionsClassString(int n, int m, TrieSpec
 
 	<impl(ts, thisArtifact, hashCode())>
 	<impl(ts, thisArtifact, equals())>
-	<impl(ts, thisArtifact, toString())>
+	<impl(ts, thisArtifact, opToString())>
 	'}
 	"
 	;	
@@ -1385,16 +1385,16 @@ data PredefOp = equals();
 when specializedClassNameStr := "<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>";
 
 
-data PredefOp = toString();
+data PredefOp = opToString();
 
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::toString()) 
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::opToString()) 
 	= true when isOptionEnabled(ts, toStringOnTrieNodes());
 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::toString()) 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::opToString()) 
 	= "<if (n == 0 && m == 0) {>return \"[]\";<} else {>return String.format(\"[<intercalate(", ", [ "@%d: %s<if (\map() := ts.ds) {>=%s<}>" | i <- [1..m+1] ] + [ "@%d: %s" | i <- [1..n+1] ])>]\", <use([ field("recoverMask(<use(valmapMethod)>, (byte) <i>)"), *__payloadTuple(ts.ds, ts.tupleTypes, i) | i <- [1..m+1]] + [ field("recoverMask(<use(bitmapMethod)>, (byte) <i>)"), \node(ts.ds, ts.tupleTypes, i)	| i <- [1..n+1]])>);<}>"
 when !isOptionEnabled(ts, useHeterogeneousEncoding()) && !isOptionEnabled(ts, useUntypedVariables());	
 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::toString()) 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::opToString()) 
 	= "return \"\";";
 
 

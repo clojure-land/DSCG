@@ -293,6 +293,10 @@ data Expression = notEquals(Expression x, Expression y);
 
 
 
+data Expression = magicIdentityExpression();
+str toString(magicIdentityExpression()) = "__magicIdentityExpression__";
+
+
 public Expression(Expression) indexIdentity = Expression(Expression e) { return e; };
 public Expression(Expression) indexAdd1 = Expression(Expression e) { return plus(e, iconst(1)); };
 public Expression(Expression) indexSubtract1 = Expression(Expression e) { return minus(e, iconst(1)); };
@@ -2479,9 +2483,9 @@ when core(_) := artifact;
 
 
 
-data PredefOp = toString();
+data PredefOp = opToString();
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::toString())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact, PredefOp::opToString())
 	= method(\return(specific("String")), "toString", visibility = "public");
 
 

@@ -219,7 +219,7 @@ data PredefOp = getKeyValueEntry();
 //		}
 //		<}>
 //					
-//		/* DONE */ <implOrOverride(getDef(ts, trieNode(compactNode()), toString()), 
+//		/* DONE */ <implOrOverride(getDef(ts, trieNode(compactNode()), opToString()), 
 //			NOT_YET_IMPLEMENTED_EXCEPTION)>					
 //					
 //		<impl(ts, trieNode(hashCollisionNode()), isTrieStructureValid())>
@@ -351,9 +351,9 @@ Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashColli
 	ILLEGAL_STATE_EXCEPTION("Is leaf node.");
 	
 	
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), toString()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), opToString()) = true;
 
-Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), toString()) = 
+Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), opToString()) = 
 	NOT_YET_IMPLEMENTED_EXCEPTION;
 
 		

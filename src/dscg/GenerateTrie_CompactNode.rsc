@@ -329,16 +329,16 @@ data PredefOp = recoverMask();
 	'throw new RuntimeException(\"Called with invalid arguments.\");";	
 		
 
-data PredefOp = toString();
+data PredefOp = opToString();
 
 /* 
  * visibility is enforced through Object.toString 
  */
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::toString())
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::opToString())
 	= method(\return(specific("java.lang.String")), "toString", visibility = "public");
 
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::toString()) = true;
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::toString()) =
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::opToString()) = true;
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::opToString()) =
 	"final StringBuilder bldr = new StringBuilder();
 	'bldr.append(\'[\');
 	'for (byte i = 0; i \< payloadArity(); i++) {
@@ -428,9 +428,9 @@ str generate_copyAnd_generalPrelude(TrieSpecifics ts, Artifact artifact, PredefO
 	final Class srcClass = this.getClass();
 	final Class dstClass = <generate_copyAnd_dstClass(ts, artifact, op)>;
 	
-	if (dstClass == null) {
-		throw new RuntimeException(String.format(\"[%s] No new specialization [payloadArity=%d, nodeArity=%d].\", srcClass.getName(), payloadArity(), nodeArity()));
-	}
+	//if (dstClass == null) {
+	//	throw new RuntimeException(String.format(\"[%s] No new specialization [payloadArity=%d, nodeArity=%d].\", srcClass.getName(), payloadArity(), nodeArity()));
+	//}
 	
 	<dec(jdtToVal(compactNode(ts), "src"))> = this;
 	<dec(jdtToVal(compactNode(ts), "dst"))> = <toString(cast(jdtToType(compactNode(ts)), exprFromString("unsafe.allocateInstance(dstClass)")))>;				
@@ -639,22 +639,22 @@ data PredefOp = copyAndInsertValue(bool isRare);
 			},
 			useExpr(ts.bitposField))>					
 		
-		<generatePartitionCopy(ts, copyAndInsert(isRare ? "rarePayload" : "payload", useExpr(valIdx), [ useExpr(x) | x <- payloadTupleArgs(ts, isRare = true) ]))>
-		
-		/*
-		// copy payload range (isRare = <!isRare>)				
-		<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
-						
-		// copy payload range (isRare = <isRare>)				
-		<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity, isRare = isRare)>
-
-		<copyPayloadRange(ts, artifact, useExpr(valIdx), plus(useExpr(valIdx), iconst(1)), indexIdentity, indexIdentity, isRare = isRare, argsOverride = (ctKey(isRare = isRare): useExpr(key(ts.keyType)), ctVal(isRare = isRare): useExpr(val(ts.valType))))>
-
-		<copyPayloadRange(ts, artifact, useExpr(valIdx), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexAdd1, isRare = isRare)>
-
-		// copy node range
-		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
-		*/
+		if (true) {
+			<generatePartitionCopy(ts, copyAndInsert(isRare ? "rarePayload" : "payload", useExpr(valIdx), [ useExpr(x) | x <- payloadTupleArgs(ts, isRare = true) ]))>
+		} else {
+			// copy payload range (isRare = <!isRare>)				
+			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
+							
+			// copy payload range (isRare = <isRare>)				
+			<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity, isRare = isRare)>
+	
+			<copyPayloadRange(ts, artifact, useExpr(valIdx), plus(useExpr(valIdx), iconst(1)), indexIdentity, indexIdentity, isRare = isRare, argsOverride = (ctKey(isRare = isRare): useExpr(key(ts.keyType)), ctVal(isRare = isRare): useExpr(val(ts.valType))))>
+	
+			<copyPayloadRange(ts, artifact, useExpr(valIdx), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexAdd1, isRare = isRare)>
+	
+			// copy node range
+			<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
+		}
 
 		return dst;
 	} catch (InstantiationException e) {
@@ -747,13 +747,17 @@ data PredefOp = copyAndRemoveValue(bool isRare);
 						bitwiseXor(oldBitmapValueExpr, useExpr(ts.bitposField)));
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>					
-				
-		// copy payload range				
-		<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity)>
-		<copyPayloadRange(ts, artifact, plus(useExpr(valIdx), iconst(1)), call(getDef(ts, artifact, payloadArity(isRare = false))), indexIdentity, indexSubtract1)>
 		
-		// copy node range				
-		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
+		if (true) {			
+			<generatePartitionCopy(ts, copyAndRemove(isRare ? "rarePayload" : "payload", useExpr(valIdx)))>				
+		} else {		
+			// copy payload range				
+			<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity)>
+			<copyPayloadRange(ts, artifact, plus(useExpr(valIdx), iconst(1)), call(getDef(ts, artifact, payloadArity(isRare = false))), indexIdentity, indexSubtract1)>
+			
+			// copy node range				
+			<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
+		}
 		
 		return dst;	
 	} catch (InstantiationException e) {
@@ -828,19 +832,23 @@ data PredefOp = copyAndSetValue(bool isRare);
 				return oldBitmapValueExpr; // idendity
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>		
-				
-		// copy payload range (isRare = <!isRare>)				
-		<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
-						
-		// copy payload range (isRare = <isRare>)				
-		<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity, isRare = isRare)>								
-
-		<copyPayloadRange(ts, artifact, useExpr(valIdx), plus(useExpr(valIdx), iconst(1)), indexIdentity, indexIdentity, isRare = isRare, argsOverride = (ctVal(): useExpr(val(ts.valType))))>
-				
-		<copyPayloadRange(ts, artifact, plus(useExpr(valIdx), iconst(1)), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexIdentity, isRare = isRare)>					
-
-		// copy node range
-		<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
+			
+		if (true) {
+			<generatePartitionCopy(ts, copyAndSet(isRare ? "rarePayload" : "payload", useExpr(valIdx), [ magicIdentityExpression(), useExpr(payloadTupleArgs(ts, isRare = isRare)[1]) ]))>		
+		} else {
+			// copy payload range (isRare = <!isRare>)				
+			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
+							
+			// copy payload range (isRare = <isRare>)				
+			<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity, isRare = isRare)>								
+	
+			<copyPayloadRange(ts, artifact, useExpr(valIdx), plus(useExpr(valIdx), iconst(1)), indexIdentity, indexIdentity, isRare = isRare, argsOverride = (ctVal(): useExpr(val(ts.valType))))>
+					
+			<copyPayloadRange(ts, artifact, plus(useExpr(valIdx), iconst(1)), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexIdentity, isRare = isRare)>					
+	
+			// copy node range
+			<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
+		}
 
 		return dst;
 	} catch (InstantiationException e) {
@@ -881,23 +889,23 @@ data PredefOp = copyAndSetNode(bool isRare);
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>
 		
-		// TODO: create node differently from ctNode()
-		<generatePartitionCopy(ts, copyAndSet("node", useExpr(idx), [ useExpr(\inode(ts.ds, ts.tupleTypes)) ]))>
-		
-		/*		
-		// copy payload range (isRare = <!isRare>)				
-		<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>	
+		if (true) {
+			// TODO: create node differently from ctNode()
+			<generatePartitionCopy(ts, copyAndSet("node", useExpr(idx), [ useExpr(\inode(ts.ds, ts.tupleTypes)) ]))>
+		} else {		
+			// copy payload range (isRare = <!isRare>)				
+			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>	
+				
+			// copy payload range (isRare = <isRare>)				
+			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexIdentity, isRare = isRare)>
+	
+			// copy node range
+			<copyNodeRange(ts, artifact, iconst(0), useExpr(idx), indexIdentity, indexIdentity)>
 			
-		// copy payload range (isRare = <isRare>)				
-		<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexIdentity, isRare = isRare)>
-
-		// copy node range
-		<copyNodeRange(ts, artifact, iconst(0), useExpr(idx), indexIdentity, indexIdentity)>
-		
-		<copyNodeRange(ts, artifact, useExpr(idx), plus(useExpr(idx), iconst(1)), indexIdentity, indexIdentity, argsOverride = (ctNode(): useExpr(\inode(ts.ds, ts.tupleTypes))))>	
-
-		<copyNodeRange(ts, artifact, plus(useExpr(idx), iconst(1)), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
-		*/
+			<copyNodeRange(ts, artifact, useExpr(idx), plus(useExpr(idx), iconst(1)), indexIdentity, indexIdentity, argsOverride = (ctNode(): useExpr(\inode(ts.ds, ts.tupleTypes))))>	
+	
+			<copyNodeRange(ts, artifact, plus(useExpr(idx), iconst(1)), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
+		}
 								
 		return dst;
 	} catch (InstantiationException e) {
@@ -959,31 +967,31 @@ data PredefOp = copyAndMigrateFromInlineToNode(bool isRare);
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>
 
-		// TODO: create node differently from ctNode()
-		<generatePartitionCopy(ts, copyAndMigrateFromInlineToNode(isRare ? "rarePayload" : "payload", useExpr(idxOld), "node", useExpr(idxNew), [ useExpr(\inode(ts.ds, ts.tupleTypes)) ]))>
-
-		/*
-		// copy payload range (isRare = <!isRare>)				
-		<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
-
-		// copy payload range (isRare = <isRare>)				
-		<copyPayloadRange(ts, artifact, iconst(0), useExpr(idxOld), indexIdentity, indexIdentity, isRare = isRare)>
-		
-		<copyPayloadRange(ts, artifact, plus(useExpr(idxOld), iconst(1)), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexSubtract1, isRare = isRare)>
-
-		// copy node range
-		<copyNodeRange(ts, artifact, iconst(0), useExpr(idxNew), indexIdentity, indexIdentity)>		
-		
-		<copyNodeRange(ts, artifact, 
-			useExpr(idxNew), 
-			plus(useExpr(idxNew), iconst(1)), 
-			indexIdentity, 
-			indexIdentity, 
-			argsOverride = (
-				ctNode(): useExpr(\inode(ts.ds, ts.tupleTypes))))>
-		
-		<copyNodeRange(ts, artifact, useExpr(idxNew), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexAdd1)>
-		*/
+		if (true) {
+			// TODO: create node differently from ctNode()
+			<generatePartitionCopy(ts, copyAndMigrateFromInlineToNode(isRare ? "rarePayload" : "payload", useExpr(idxOld), "node", useExpr(idxNew), [ useExpr(\inode(ts.ds, ts.tupleTypes)) ]))>
+		} else {
+			// copy payload range (isRare = <!isRare>)				
+			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
+	
+			// copy payload range (isRare = <isRare>)				
+			<copyPayloadRange(ts, artifact, iconst(0), useExpr(idxOld), indexIdentity, indexIdentity, isRare = isRare)>
+			
+			<copyPayloadRange(ts, artifact, plus(useExpr(idxOld), iconst(1)), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexSubtract1, isRare = isRare)>
+	
+			// copy node range
+			<copyNodeRange(ts, artifact, iconst(0), useExpr(idxNew), indexIdentity, indexIdentity)>		
+			
+			<copyNodeRange(ts, artifact, 
+				useExpr(idxNew), 
+				plus(useExpr(idxNew), iconst(1)), 
+				indexIdentity, 
+				indexIdentity, 
+				argsOverride = (
+					ctNode(): useExpr(\inode(ts.ds, ts.tupleTypes))))>
+			
+			<copyNodeRange(ts, artifact, useExpr(idxNew), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexAdd1)>
+		}
 
 		return dst;
 	} catch (InstantiationException e) {
@@ -1028,29 +1036,34 @@ data PredefOp = copyAndMigrateFromNodeToInline(bool isRare);
 				return cast(chunkSizeToPrimitive(ts.bitPartitionSize),
 						bitwiseOr(oldBitmapValueExpr, useExpr(ts.bitposField)));
 			},
-			useExpr(ts.bitposField))>									
+			useExpr(ts.bitposField))>											
 		
-		// copy payload range (isRare = <!isRare>)				
-		<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>										
-		
-		// copy payload range
-		<copyPayloadRange(ts, artifact, iconst(0), useExpr(idxNew), indexIdentity, indexIdentity, isRare = isRare)>
+		if (true) {
+			<generatePartitionCopy(ts, copyAndMigrateFromNodeToInline("node", useExpr(idxOld), isRare ? "rarePayload" : "payload", useExpr(idxNew), 
+				[ exprFromString("node.<contentAccessor(ctPayloadArg(i, isRare = isRare), "0")>") | i <- [ 0 .. size(payloadTupleArgs(ts, isRare = isRare)) ] ]))>				
+		} else {
+			// copy payload range (isRare = <!isRare>)				
+			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>										
 			
-		<copyPayloadRange(ts, artifact, 
-			useExpr(idxNew), 
-			plus(useExpr(idxNew), iconst(1)), 
-			indexIdentity, 
-			indexIdentity, 
-			argsOverride = (
-				ctPayloadArg(0, isRare = isRare): exprFromString("node.<contentAccessor(ctPayloadArg(0, isRare = isRare), "0")>"), 
-				ctPayloadArg(1, isRare = isRare): exprFromString("node.<contentAccessor(ctPayloadArg(1, isRare = isRare), "0")>")),
-			isRare = isRare)>
+			// copy payload range
+			<copyPayloadRange(ts, artifact, iconst(0), useExpr(idxNew), indexIdentity, indexIdentity, isRare = isRare)>
 				
-		<copyPayloadRange(ts, artifact, useExpr(idxNew), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexAdd1, isRare = isRare)>		
-				
-		// copy node range
-		<copyNodeRange(ts, artifact, iconst(0), useExpr(idxOld), indexIdentity, indexIdentity)>
-		<copyNodeRange(ts, artifact, plus(useExpr(idxOld), iconst(1)), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexSubtract1)>
+			<copyPayloadRange(ts, artifact, 
+				useExpr(idxNew), 
+				plus(useExpr(idxNew), iconst(1)), 
+				indexIdentity, 
+				indexIdentity, 
+				argsOverride = (
+					ctPayloadArg(0, isRare = isRare): exprFromString("node.<contentAccessor(ctPayloadArg(0, isRare = isRare), "0")>"), 
+					ctPayloadArg(1, isRare = isRare): exprFromString("node.<contentAccessor(ctPayloadArg(1, isRare = isRare), "0")>")),
+				isRare = isRare)>
+					
+			<copyPayloadRange(ts, artifact, useExpr(idxNew), call(getDef(ts, artifact, payloadArity(isRare = isRare))), indexIdentity, indexAdd1, isRare = isRare)>		
+					
+			// copy node range
+			<copyNodeRange(ts, artifact, iconst(0), useExpr(idxOld), indexIdentity, indexIdentity)>
+			<copyNodeRange(ts, artifact, plus(useExpr(idxOld), iconst(1)), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexSubtract1)>
+		}
 				
 		return dst;
 	} catch (InstantiationException e) {
@@ -1223,7 +1236,7 @@ list[PredefOp] declaredMethodsByCompactNode(TrieSpecifics ts) = [
 	equalsFunctionUnsafe(),
 		
 	recoverMask(),
-	toString()
+	opToString()
 	
 ];
 
@@ -1373,7 +1386,7 @@ str emptyTrieNodeConstantName = "EMPTY_NODE";
 //	<impl(ts, trieNode(compactNode()), removeTuple(customComparator = true))>
 //
 //	<impl(ts, trieNode(compactNode()), recoverMask())>
-//	<impl(ts, trieNode(compactNode()), toString())>
+//	<impl(ts, trieNode(compactNode()), opToString())>
 //
 //	<impl(ts, trieNode(compactNode()), isTrieStructureValid())>
 //		
