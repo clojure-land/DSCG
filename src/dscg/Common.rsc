@@ -590,6 +590,8 @@ data TrieSpecifics
 		Argument details = field(generic("<ResultStr><GenericsStr>"), "details"),
 		Argument comparator = field(specific("Comparator", typeArguments = [ object() ]), "cmp"),
 		Argument index = field(primitive("int"), "index"),
+		Argument indexOld = field(primitive("int"), "indexOld"),
+		Argument indexNew = field(primitive("int"), "indexNew"),
 
 		Argument BitmapIndexedNode_contentArray = field(object(isArray = true), "nodes"),
 		Argument BitmapIndexedNode_payloadArity = field(primitive("byte"), "payloadArity"),

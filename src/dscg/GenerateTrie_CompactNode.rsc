@@ -425,7 +425,7 @@ data PredefOp = nodeFactory_Singleton();
 
 str generate_copyAnd_generalPrelude(TrieSpecifics ts, Artifact artifact, PredefOp op) =
 	"
-	final Class srcClass = this.getClass();
+	//final Class srcClass = this.getClass();
 	final Class dstClass = <generate_copyAnd_dstClass(ts, artifact, op)>;
 	
 	//if (dstClass == null) {
@@ -435,8 +435,8 @@ str generate_copyAnd_generalPrelude(TrieSpecifics ts, Artifact artifact, PredefO
 	<dec(jdtToVal(compactNode(ts), "src"))> = this;
 	<dec(jdtToVal(compactNode(ts), "dst"))> = <toString(cast(jdtToType(compactNode(ts)), exprFromString("unsafe.allocateInstance(dstClass)")))>;				
 				
-	final long[] srcArrayOffsets = (long[]) unsafe.getObject(srcClass, globalArrayOffsetsOffset);	
-	final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, globalArrayOffsetsOffset);
+	//final long[] srcArrayOffsets = (long[]) unsafe.getObject(srcClass, globalArrayOffsetsOffset);	
+	//final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, globalArrayOffsetsOffset);
 		
 	long srcOffset = arrayBase;
 	long dstOffset = arrayBase;
@@ -527,26 +527,34 @@ when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAs
 
 
 
-str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndSetNode(_), str m = "payloadArity()", str n = "nodeArity()")
-	= generate_copyAnd_dstClass_string(m, n)
-when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && !isOptionEnabled(ts, useHeterogeneousEncoding());
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndSetNode(_))
+	= "this.getClass()"
+when isOptionEnabled(ts, useSunMiscUnsafe());
 
-str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndSetNode(_), str m = "payloadArity()", str n = "untypedSlotArity()")
-	= generate_copyAnd_dstClass_string(m, n)
-when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && isOptionEnabled(ts, useHeterogeneousEncoding());
+//str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndSetNode(_), str m = "payloadArity()", str n = "nodeArity()")
+//	= generate_copyAnd_dstClass_string(m, n)
+//when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && !isOptionEnabled(ts, useHeterogeneousEncoding());
+//
+//str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndSetNode(_), str m = "payloadArity()", str n = "untypedSlotArity()")
+//	= generate_copyAnd_dstClass_string(m, n)
+//when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && isOptionEnabled(ts, useHeterogeneousEncoding());
 
 
 
 
 
 
-str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndSetValue(bool isRare), str m = "payloadArity()", str n = "nodeArity()")
-	= generate_copyAnd_dstClass_string(m, n)
-when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && !isOptionEnabled(ts, useHeterogeneousEncoding());
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndSetValue(_))
+	= "this.getClass()"
+when isOptionEnabled(ts, useSunMiscUnsafe());
 
-str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndSetValue(bool isRare), str m = "payloadArity()", str n = "untypedSlotArity()")
-	= generate_copyAnd_dstClass_string(m, n)
-when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && isOptionEnabled(ts, useHeterogeneousEncoding());
+//str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndSetValue(bool isRare), str m = "payloadArity()", str n = "nodeArity()")
+//	= generate_copyAnd_dstClass_string(m, n)
+//when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && !isOptionEnabled(ts, useHeterogeneousEncoding());
+//
+//str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndSetValue(bool isRare), str m = "payloadArity()", str n = "untypedSlotArity()")
+//	= generate_copyAnd_dstClass_string(m, n)
+//when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && isOptionEnabled(ts, useHeterogeneousEncoding());
 
 
 
@@ -606,14 +614,14 @@ when offset := val(primitive("long"), "global<capitalize(bitmapName)>Offset") &&
 data PredefOp = copyAndInsertValue(bool isRare);
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp op:copyAndInsertValue(bool isRare))
-	= method(\return(jdtToType(compactNode(ts))), "copyAndInsert<if (isRare) {>Rare<}>Value", args = [ts.mutator, ts.bitposField, *nodeTupleArgs(ts, isRare = isRare)]);
+	= method(\return(jdtToType(compactNode(ts))), "copyAndInsert<if (isRare) {>Rare<}>Value", args = [ts.mutator, ts.bitposField, ts.index, *nodeTupleArgs(ts, isRare = isRare)]);
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndInsertValue(bool isRare)) 
 	= true when isOptionEnabled(ts, useSunMiscUnsafe());
 
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndInsertValue(bool isRare)) =
 	"try {
-		<dec(valIdx)> = <bitmapIndex(ctPayloadTuple(isRare = isRare))>(bitpos);
+		<dec(valIdx)> = <use(ts.index)>;
 		
 		<generate_copyAnd_generalPrelude(ts, artifact, op)>
 						
@@ -639,9 +647,9 @@ data PredefOp = copyAndInsertValue(bool isRare);
 			},
 			useExpr(ts.bitposField))>					
 		
-		if (true) {
+		<if (true) {>
 			<generatePartitionCopy(ts, copyAndInsert(isRare ? "rarePayload" : "payload", useExpr(valIdx), [ useExpr(x) | x <- payloadTupleArgs(ts, isRare = true) ]))>
-		} else {
+		<} else {>
 			// copy payload range (isRare = <!isRare>)				
 			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
 							
@@ -654,7 +662,7 @@ data PredefOp = copyAndInsertValue(bool isRare);
 	
 			// copy node range
 			<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
-		}
+		<}>
 
 		return dst;
 	} catch (InstantiationException e) {
@@ -748,16 +756,16 @@ data PredefOp = copyAndRemoveValue(bool isRare);
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>					
 		
-		if (true) {			
+		<if (true) {>			
 			<generatePartitionCopy(ts, copyAndRemove(isRare ? "rarePayload" : "payload", useExpr(valIdx)))>				
-		} else {		
+		<} else {>		
 			// copy payload range				
 			<copyPayloadRange(ts, artifact, iconst(0), useExpr(valIdx), indexIdentity, indexIdentity)>
 			<copyPayloadRange(ts, artifact, plus(useExpr(valIdx), iconst(1)), call(getDef(ts, artifact, payloadArity(isRare = false))), indexIdentity, indexSubtract1)>
 			
 			// copy node range				
 			<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
-		}
+		<}>
 		
 		return dst;	
 	} catch (InstantiationException e) {
@@ -833,9 +841,9 @@ data PredefOp = copyAndSetValue(bool isRare);
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>		
 			
-		if (true) {
+		<if (true) {>
 			<generatePartitionCopy(ts, copyAndSet(isRare ? "rarePayload" : "payload", useExpr(valIdx), [ magicIdentityExpression(), useExpr(payloadTupleArgs(ts, isRare = isRare)[1]) ]))>		
-		} else {
+		<} else {>
 			// copy payload range (isRare = <!isRare>)				
 			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
 							
@@ -848,7 +856,7 @@ data PredefOp = copyAndSetValue(bool isRare);
 	
 			// copy node range
 			<copyNodeRange(ts, artifact, iconst(0), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
-		}
+		<}>
 
 		return dst;
 	} catch (InstantiationException e) {
@@ -866,14 +874,14 @@ data PredefOp = copyAndSetValue_nextClass();
 data PredefOp = copyAndSetNode(bool isRare);
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndSetNode(_))
-	= method(\return(jdtToType(compactNode(ts))), "copyAndSetNode", args = [ts.mutator, ts.bitposField, \inode(ts.ds, ts.tupleTypes)]);
+	= method(\return(jdtToType(compactNode(ts))), "copyAndSetNode", args = [ts.mutator, ts.index, \inode(ts.ds, ts.tupleTypes)]);
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndSetNode(_)) 
 	= true when isOptionEnabled(ts, useSunMiscUnsafe());
 	
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndSetNode(bool isRare)) =
 	"try {
-		<dec(idx)> = nodeIndex(bitpos);
+		<dec(idx)> = <use(ts.index)>;
 		
 		<generate_copyAnd_generalPrelude(ts, artifact, op)>
 						
@@ -889,10 +897,10 @@ data PredefOp = copyAndSetNode(bool isRare);
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>
 		
-		if (true) {
+		<if (true) {>
 			// TODO: create node differently from ctNode()
 			<generatePartitionCopy(ts, copyAndSet("node", useExpr(idx), [ useExpr(\inode(ts.ds, ts.tupleTypes)) ]))>
-		} else {		
+		<} else {>		
 			// copy payload range (isRare = <!isRare>)				
 			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>	
 				
@@ -905,7 +913,7 @@ data PredefOp = copyAndSetNode(bool isRare);
 			<copyNodeRange(ts, artifact, useExpr(idx), plus(useExpr(idx), iconst(1)), indexIdentity, indexIdentity, argsOverride = (ctNode(): useExpr(\inode(ts.ds, ts.tupleTypes))))>	
 	
 			<copyNodeRange(ts, artifact, plus(useExpr(idx), iconst(1)), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexIdentity)>
-		}
+		<}>
 								
 		return dst;
 	} catch (InstantiationException e) {
@@ -941,14 +949,14 @@ data PredefOp = copyAndInsertNode_nextClass();
 data PredefOp = copyAndMigrateFromInlineToNode(bool isRare);
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromInlineToNode(bool isRare))
-	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFrom<if (isRare) {>Rare<}>InlineToNode", args = [ts.mutator, ts.bitposField, \inode(ts.ds, ts.tupleTypes)]);
+	= method(\return(jdtToType(compactNode(ts))), "copyAndMigrateFrom<if (isRare) {>Rare<}>InlineToNode", args = [ts.mutator, ts.bitposField, ts.indexOld, ts.indexNew, \inode(ts.ds, ts.tupleTypes)]);
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromInlineToNode(bool isRare)) 
 	= true when isOptionEnabled(ts, useSunMiscUnsafe());
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:copyAndMigrateFromInlineToNode(bool isRare)) =
 	"try {
-		<dec(idxOld)> = <bitmapIndex(ctPayloadTuple(isRare = isRare))>(bitpos);
-		<dec(idxNew)> = nodeIndex(bitpos);
+		<dec(idxOld)> = <use(ts.indexOld)>;
+		<dec(idxNew)> = <use(ts.indexNew)>;
 		
 		<generate_copyAnd_generalPrelude(ts, artifact, op)>
 		
@@ -967,10 +975,10 @@ data PredefOp = copyAndMigrateFromInlineToNode(bool isRare);
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>
 
-		if (true) {
+		<if (true) {>
 			// TODO: create node differently from ctNode()
 			<generatePartitionCopy(ts, copyAndMigrateFromInlineToNode(isRare ? "rarePayload" : "payload", useExpr(idxOld), "node", useExpr(idxNew), [ useExpr(\inode(ts.ds, ts.tupleTypes)) ]))>
-		} else {
+		<} else {>
 			// copy payload range (isRare = <!isRare>)				
 			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
 	
@@ -991,7 +999,7 @@ data PredefOp = copyAndMigrateFromInlineToNode(bool isRare);
 					ctNode(): useExpr(\inode(ts.ds, ts.tupleTypes))))>
 			
 			<copyNodeRange(ts, artifact, useExpr(idxNew), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexAdd1)>
-		}
+		<}>
 
 		return dst;
 	} catch (InstantiationException e) {
@@ -1038,10 +1046,10 @@ data PredefOp = copyAndMigrateFromNodeToInline(bool isRare);
 			},
 			useExpr(ts.bitposField))>											
 		
-		if (true) {
+		<if (true) {>
 			<generatePartitionCopy(ts, copyAndMigrateFromNodeToInline("node", useExpr(idxOld), isRare ? "rarePayload" : "payload", useExpr(idxNew), 
 				[ exprFromString("node.<contentAccessor(ctPayloadArg(i, isRare = isRare), "0")>") | i <- [ 0 .. size(payloadTupleArgs(ts, isRare = isRare)) ] ]))>				
-		} else {
+		<} else {>
 			// copy payload range (isRare = <!isRare>)				
 			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>										
 			
@@ -1063,7 +1071,7 @@ data PredefOp = copyAndMigrateFromNodeToInline(bool isRare);
 			// copy node range
 			<copyNodeRange(ts, artifact, iconst(0), useExpr(idxOld), indexIdentity, indexIdentity)>
 			<copyNodeRange(ts, artifact, plus(useExpr(idxOld), iconst(1)), call(getDef(ts, artifact, nodeArity())), indexIdentity, indexSubtract1)>
-		}
+		<}>
 				
 		return dst;
 	} catch (InstantiationException e) {
@@ -1162,6 +1170,8 @@ list[PredefOp] declaredMethodsByCompactNode(TrieSpecifics ts) = [
 	// OLD: getKeyFunction(),
 	getContentFunction(ctPayloadArg(0, isRare = false)),
 	getContentFunction(ctPayloadArg(0, isRare = true)),
+	getContentFunction(ctPayloadArg(1, isRare = false)),
+	getContentFunction(ctPayloadArg(1, isRare = true)),	
 	getNodeFunction(),
 	
 	contentTypeEnum(),
@@ -1671,12 +1681,14 @@ when \map(multi = true) := ts.ds;
 
 
 default str updatedOn_KeysDifferent(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) = 
-	"<if (\map() := ts.ds) {><dec(content(ts, ctVal(isRare = isRareCase), "currentVal"))> = <contentAccessor(ctVal(isRare = isRareCase), "<bitmapPrefix(ctPayloadTuple(isRare = isRareCase))>Index")>;<}> 
+	"<if (\map() := ts.ds) {><dec(content(ts, ctVal(isRare = isRareCase), "currentVal"))> = <contentAccessor(ctVal(isRare = isRareCase), payloadIndexName)>;<}> 
 	
 	final <AbstractNode(ts.ds)><GenericsStr(ts.tupleTypes)> subNodeNew = mergeTwoKeyValPairs(currentKey, <if (\map() := ts.ds) {> currentVal,<}><toString(call(getDef(ts, core(unknownUpdateSemantic()), PredefOp::transformHashCode()), labeledArgsOverride = (PredefArgLabel::hashCode(): hashCodeExpr(ts, content(ts, ctKey(isRare = isRareCase), "currentKey")))))>, key, <if (\map() := ts.ds) {> val,<}> keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>);
 	'
 	'details.modified();
-	'return copyAndMigrateFrom<if (isRareCase) {>Rare<}>InlineToNode(mutator, bitpos, subNodeNew);";	
+	'return copyAndMigrateFrom<if (isRareCase) {>Rare<}>InlineToNode(mutator, bitpos, <payloadIndexName>, <nodeIndexExpr>, subNodeNew);"
+when payloadIndexName := "<bitmapPrefix(ctPayloadTuple(isRare = isRareCase))>Index",
+		nodeIndexExpr := "index(nodeMap(), mask, bitpos) /* TODO: remove call to nodeMap() */ "; // <dec(field(primitive("int"), "nodeIndex"))> = index(nodeMap, mask, bitpos);			
 		
 str updatedOn_KeysDifferent(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"final int valHash = <hashCode(val(ts.valType))>;
@@ -1702,7 +1714,9 @@ when \map(multi = true) := ts.ds;
 
 default str updatedOn_NoTuple(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase) = 
 	"<use(ts.details)>.modified();
-	'return copyAndInsert<if (isRareCase) {>Rare<}>Value(mutator, bitpos, key<if (\map() := ts.ds) {>, val<}>);";
+	<dec(index)> = index(<bitmapName(ctPayloadTuple(isRare = isRareCase))>, mask, bitpos);
+	'return copyAndInsert<if (isRareCase) {>Rare<}>Value(mutator, <use(ts.bitposField)>, <use(index)>, key<if (\map() := ts.ds) {>, val<}>);"
+when index := var(primitive("int"), "<bitmapPrefix(ctPayloadTuple(isRare = isRareCase))>Index");
 		
 str updatedOn_NoTuple(TrieSpecifics ts, Artifact artifact, PredefOp op, bool isRareCase, TrieSpecifics tsSet = setTrieSpecificsFromRangeOfMap(ts)) = 
 	"final int valHash = <hashCode(val(ts.valType))>;
@@ -1736,9 +1750,9 @@ str (Argument, Argument) selectEq(PredefOp op) = op has customComparator && op.c
 	"<dec(ts.mask)> = <toString(call(getDef(ts, trieNode(compactNode()), mask())))>;
 	'<dec(ts.bitposField)> = <toString(call(getDef(ts, trieNode(compactNode()), bitpos())))>;
 	'
-	'<insertTuple_checkForInplace(ts, artifact, op, false)>
-	'
 	'<insertTuple_checkForInplace(ts, artifact, op, true)>
+	'
+	'<insertTuple_checkForInplace(ts, artifact, op, false)>
 	'
 	'// check for node (not value)
 	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = <use(bitmapMethod)>;
@@ -1748,7 +1762,7 @@ str (Argument, Argument) selectEq(PredefOp op) = op has customComparator && op.c
 	'	<dec(subNodeNew)> = <use(subNode)>.updated(mutator, <use(ts.payloadTuple)>, keyHash, shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>, <use(ts.details)><if (!(selectEq(op) == equalityDefaultForArguments)) {>, <cmpName><}>);
 	'
 	'	if (<use(ts.details)>.isModified()) {
-	'		return copyAndSetNode(mutator, bitpos, <use(subNodeNew)>);
+	'		return copyAndSetNode(mutator, nodeIndex, <use(subNodeNew)>);
 	'	} else {
 	'		return this;
 	'	}
@@ -1860,8 +1874,10 @@ when \map(multi = true) := ts.ds;
 	'<removeTuple_checkForInplace(ts, artifact, op, op.isRare)>
 	
 	// check for node (not value)
-	if ((<use(bitmapMethod)> & bitpos) != 0) { // node (not value)
-		<dec(subNode)> = nodeAt(bitpos);
+	'<dec(val(chunkSizeToPrimitive(ts.bitPartitionSize), "nodeMap"))> = <use(bitmapMethod)>;
+	'if (<isBitInBitmap("nodeMap", "bitpos")>) {
+		<dec(field(primitive("int"), "nodeIndex"))> = index(nodeMap, mask, bitpos);		
+		<dec(subNode)> = <contentAccessor(ctNode(), "nodeIndex")>;		
 		<dec(subNodeNew)> = <toString(call(subNode, getDef(ts, trieNode(abstractNode()), op), argsOverride = (ts.shift: exprFromString("shift + <toString(call(getDef(ts, trieNode(compactNode()), bitPartitionSize())))>"))))>;
 
 		if (!<use(ts.details)>.isModified()) {
@@ -1891,7 +1907,7 @@ when \map(multi = true) := ts.ds;
 		}
 		default: {
 			// modify current node (set replacement node)
-			return copyAndSetNode(mutator, bitpos, subNodeNew);
+			return copyAndSetNode(mutator, nodeIndex, subNodeNew);
 		}
 		}		
 	}
@@ -2369,17 +2385,17 @@ when isOptionEnabled(ts, useSunMiscUnsafe());
 
 data PredefOp = getContentFunction(ContentType ct);
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp op:getContentFunction(ct:ctPayloadArg(0)))
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp op:getContentFunction(ct:ctPayloadArg(int index)))
 	= function(\return(ct2type(ts)[ct]), "<contentAccessorMethodName(ct)>", generics = ts.tupleTypes, args = [classArgumentWithUpperBoundCompactNode(ts, "clazz"), jdtToVal(compactNode(ts), "instance"), ts.index], isActive = isOptionEnabled(ts, useSunMiscUnsafe()));
 
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:getContentFunction(ct:ctPayloadArg(0)))
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:getContentFunction(ct:ctPayloadArg(int index)))
 	= true when isOptionEnabled(ts, useSunMiscUnsafe());
 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:getContentFunction(ct:ctPayloadArg(0))) = 
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:getContentFunction(ct:ctPayloadArg(int index))) = 
 	"// TODO: remove try / catch and throw SecurityException instead
 	// TODO: generate global offset for begin of rare payload
 	'try {
-	'	long keyOffset = arrayBase <if (ct.isRare) {>+ (TUPLE_LENGTH * 4 * instance.payloadArity()) <}>+ (TUPLE_LENGTH * addressSize) * index;
+	'	long keyOffset = arrayBase <if (ct.isRare) {>+ (TUPLE_LENGTH * 4 * instance.payloadArity()) <}>+ (TUPLE_LENGTH * addressSize) * index + <index> * addressSize;
 	'	return (<typeToString(ct2type(ts)[ct])>) unsafe.<unsafeGetMethodNameFromType(ct2type(ts)[ct])>(instance, keyOffset);
 	'} catch (SecurityException e) {
 	'	throw new RuntimeException(e);
@@ -2394,7 +2410,8 @@ when isOptionEnabled(ts, useSunMiscUnsafe());
 	= true when isOptionEnabled(ts, useSunMiscUnsafe());
 
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), op:getContent(ContentType ct)) 
-	= generate_bodyOf_getXXX(ts, artifact, typeToString(ct2type(ts)[ct]), "ContentType.<prettyPrintContentType(ct)>", unsafeGetMethodNameFromType(ct2type(ts)[ct]))
+	//= generate_bodyOf_getXXX(ts, artifact, typeToString(ct2type(ts)[ct]), "ContentType.<prettyPrintContentType(ct)>", unsafeGetMethodNameFromType(ct2type(ts)[ct]))
+	= "return <contentAccessorMethodName(ct)>(this.getClass(), this, <use(ts.index)>);"
 when isOptionEnabled(ts, useSunMiscUnsafe());
 
 
