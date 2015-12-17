@@ -147,13 +147,13 @@ data PredefOp = getKeyValueEntry();
 //		}
 //		
 //		/* DONE */ <implOrOverride(getDef(ts, trieNode(abstractNode()), getSlot()),
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //
 //		/* DONE */ <implOrOverride(getDef(ts, trieNode(abstractNode()), hasSlots()),
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //
 //		/* DONE */ <implOrOverride(getDef(ts, trieNode(abstractNode()), slotArity()),
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //
 //		<if (isOptionEnabled(ts, useStructuralEquality())) {>
 //		/* DONE */ @Override
@@ -220,16 +220,16 @@ data PredefOp = getKeyValueEntry();
 //		<}>
 //					
 //		/* DONE */ <implOrOverride(getDef(ts, trieNode(compactNode()), opToString()), 
-//			NOT_YET_IMPLEMENTED_EXCEPTION)>					
+//			NOT_YET_IMPLEMENTED_EXCEPTION())>					
 //					
 //		<impl(ts, trieNode(hashCollisionNode()), isTrieStructureValid())>
 //		
 //		<if (isOptionEnabled(ts, useHeterogeneousEncoding())) {>
 //		/* DONE */ <implOrOverride(getDef(ts, trieNode(compactNode()), getContent(ctPayloadArg(0, isRare = true))), 
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //			
 //		/* DONE */ <implOrOverride(getDef(ts, trieNode(compactNode()), getContent(ctPayloadArg(1, isRare = true))),
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //		<}>						
 //	}"
 //	;
@@ -308,32 +308,32 @@ data PredefOp = hashCollisionHashCode();
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasSlots()) = true;
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hasSlots()) =
-	UNSUPPORTED_OPERATION_EXCEPTION;
+	UNSUPPORTED_OPERATION_EXCEPTION();
 
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), slotArity()) = true;
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), slotArity()) =
-	UNSUPPORTED_OPERATION_EXCEPTION;
+	UNSUPPORTED_OPERATION_EXCEPTION();
 	
 	
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), untypedSlotArity()) = true;
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), untypedSlotArity()) =
-	UNSUPPORTED_OPERATION_EXCEPTION;	
+	UNSUPPORTED_OPERATION_EXCEPTION();	
 
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getSlot()) = true;
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getSlot()) =
-	UNSUPPORTED_OPERATION_EXCEPTION;
+	UNSUPPORTED_OPERATION_EXCEPTION();
 	
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx, isRare = true))) = true;
 
 // TODO: isOptionEnabled(ts, useHeterogeneousEncoding())
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx, isRare = true))) = 
-	UNSUPPORTED_OPERATION_EXCEPTION;
+	UNSUPPORTED_OPERATION_EXCEPTION();
 
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), getContent(ctPayloadArg(idx, isRare = _))) = true;
@@ -354,7 +354,7 @@ Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashColli
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), opToString()) = true;
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), opToString()) = 
-	NOT_YET_IMPLEMENTED_EXCEPTION;
+	NOT_YET_IMPLEMENTED_EXCEPTION();
 
 		
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(hashCollisionNode()), hashCode()) = true;

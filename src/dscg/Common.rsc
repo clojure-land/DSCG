@@ -25,12 +25,12 @@ import analysis::graphs::Graph;
 
 import dscg::ArrayUtils;
 
-extend dscg::Common_ContentType;
 extend dscg::CoreModel;
+extend dscg::Common_ContentType;
 
 /* PUBLIC CONSTANTS */
-public Statement UNSUPPORTED_OPERATION_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException();");
-public Statement NOT_YET_IMPLEMENTED_EXCEPTION = uncheckedStringStatement("throw new UnsupportedOperationException(\"Not yet implemented.\");");
+public Statement UNSUPPORTED_OPERATION_EXCEPTION() = uncheckedStringStatement("throw new UnsupportedOperationException();");
+public Statement NOT_YET_IMPLEMENTED_EXCEPTION() = uncheckedStringStatement("throw new UnsupportedOperationException(\"Not yet implemented.\");");
 public Statement ILLEGAL_STATE_EXCEPTION(str message) = uncheckedStringStatement("throw new IllegalStateException(\"<message>\");");	 
 
 public Expression NULL() = constant(specific("Void"), "null");
@@ -767,6 +767,9 @@ default str lowLevelBitmapName(TrieSpecifics ts, int i:0) = "nodeMap";
 
 str lowLevelBitmapName(TrieSpecifics ts, int i:1) = "rawMap<i + 1>" when isOptionEnabled(ts, useHeterogeneousEncoding());
 default str lowLevelBitmapName(TrieSpecifics ts, int i:1) = "dataMap"; 
+
+Argument lowLevelBitmapVal(TrieSpecifics ts, int i) = var(chunkSizeToPrimitive(ts.bitPartitionSize), lowLevelBitmapName(ts, i));
+Expression lowLevelBitmapAccessor(TrieSpecifics ts, int i) = exprFromString("<lowLevelBitmapName(ts, i)>()");
 
 public Argument bitmapField = field("nodeMap");
 public Argument valmapField = field("dataMap");
@@ -2324,7 +2327,7 @@ when core(_) := artifact || ju_Map() := artifact;
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, put()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, put()) 
-	= UNSUPPORTED_OPERATION_EXCEPTION
+	= UNSUPPORTED_OPERATION_EXCEPTION()
 when core(_) := artifact || ju_Map() := artifact;
 
 
@@ -2337,7 +2340,7 @@ when core(_) := artifact || ju_Map() := artifact;
 	
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, putAll()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, putAll()) 
-	= UNSUPPORTED_OPERATION_EXCEPTION
+	= UNSUPPORTED_OPERATION_EXCEPTION()
 when core(_) := artifact || ju_Map() := artifact;
 
 
@@ -2351,7 +2354,7 @@ when core(_) := artifact || ju_Set() := artifact;
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, add()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, add()) 
-	= UNSUPPORTED_OPERATION_EXCEPTION
+	= UNSUPPORTED_OPERATION_EXCEPTION()
 when core(_) := artifact || ju_Set() := artifact;
 
 
@@ -2364,7 +2367,7 @@ when core(_) := artifact || ju_Set() := artifact;
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, addAll()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, addAll()) 
-	= UNSUPPORTED_OPERATION_EXCEPTION
+	= UNSUPPORTED_OPERATION_EXCEPTION()
 when core(_) := artifact || ju_Set() := artifact;
 
 
@@ -2385,7 +2388,7 @@ when core(_) := artifact && \set() := ts.ds;
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp::remove()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, PredefOp::remove()) 
-	= UNSUPPORTED_OPERATION_EXCEPTION
+	= UNSUPPORTED_OPERATION_EXCEPTION()
 when core(_) := artifact;
 
 
@@ -2398,7 +2401,7 @@ when core(_) := artifact;
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, removeAll()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, removeAll()) 
-	= UNSUPPORTED_OPERATION_EXCEPTION
+	= UNSUPPORTED_OPERATION_EXCEPTION()
 when core(_) := artifact;
 
 
@@ -2411,7 +2414,7 @@ when core(_) := artifact;
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, retainAll()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, retainAll()) 
-	= UNSUPPORTED_OPERATION_EXCEPTION
+	= UNSUPPORTED_OPERATION_EXCEPTION()
 when core(_) := artifact;
 
 
@@ -2428,7 +2431,7 @@ when core(_) := artifact && \set() := ts.ds;
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact, clear()) = true;
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact, clear()) 
-	= UNSUPPORTED_OPERATION_EXCEPTION
+	= UNSUPPORTED_OPERATION_EXCEPTION()
 when core(_) := artifact;
 
 
@@ -3303,3 +3306,5 @@ bool isPredefOpActive(TrieSpecifics ts, PredefOp op:nodeFactory_Singleton()) = f
 
 // default bool isPredefOpActive(TrieSpecifics ts, PredefOp op) { throw "<op>"; }
 default bool isPredefOpActive(TrieSpecifics ts, PredefOp op) = true;
+
+

@@ -283,13 +283,13 @@ str generateLeafNodeClassString(TrieSpecifics ts) {
 //		}
 //		
 //		<implOrOverride(getDef(ts, trieNode(abstractNode()), getSlot()),
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //
 //		<implOrOverride(getDef(ts, trieNode(abstractNode()), hasSlots()),
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //
 //		<implOrOverride(getDef(ts, trieNode(abstractNode()), slotArity()),
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //
 //		<if (isOptionEnabled(ts, useStructuralEquality())) {>
 //		@Override
@@ -356,31 +356,31 @@ str generateLeafNodeClassString(TrieSpecifics ts) {
 //		<}>
 //
 //		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetValue(bool isRare)), 
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //
 //		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndInsertValue()), 
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //
 //		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndRemoveValue()), 
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //
 //		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndSetNode()), 
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //
 //		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromInlineToNode()), 
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //		
 //		<implOrOverride(getDef(ts, trieNode(compactNode()), copyAndMigrateFromNodeToInline()), 
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //		
 //		<implOrOverride(getDef(ts, trieNode(compactNode()), removeInplaceValueAndConvertToSpecializedNode()), 
-//			UNSUPPORTED_OPERATION_EXCEPTION)>	
+//			UNSUPPORTED_OPERATION_EXCEPTION())>	
 //			
 //		<implOrOverride(getDef(ts, trieNode(compactNode()), nodeMap()), 
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //			
 //		<implOrOverride(getDef(ts, trieNode(compactNode()), dataMap()),
-//			UNSUPPORTED_OPERATION_EXCEPTION)>
+//			UNSUPPORTED_OPERATION_EXCEPTION())>
 //					
 //		<impl(ts, trieNode(leafNode()), isTrieStructureValid())>					
 //						

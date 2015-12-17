@@ -287,7 +287,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 
 	@Override
 	public Transient<toString(ts.ds)><CollectionGenericsExpandedStr(ts)> asTransient() {
-		<if (isOptionEnabled(ts, useStagedMutability())) {> return new Transient<ts.coreClassName><GenericsStr(ts.tupleTypes)>(this); <} else {> <toString(UNSUPPORTED_OPERATION_EXCEPTION)> <}>		
+		<if (isOptionEnabled(ts, useStagedMutability())) {> return new Transient<ts.coreClassName><GenericsStr(ts.tupleTypes)>(this); <} else {> <toString(UNSUPPORTED_OPERATION_EXCEPTION())> <}>		
 	}
 
 	<if (false) {>
