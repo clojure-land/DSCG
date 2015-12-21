@@ -970,7 +970,7 @@ data PredefOp = copyAndMigrateFromInlineToNode(bool isRare);
 				return cast(chunkSizeToPrimitive(ts.bitPartitionSize),
 						bitwiseXor(oldBitmapValueExpr, useExpr(ts.bitposField)));
 			},
-			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)), oldBitmapValueExpr = useExpr(lowLevelBitmapVal(ts, 0)))>
+			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)), oldBitmapValueExpr = useExpr(lowLevelBitmapVal(ts, 1)))>
 
 		<if (true) {>
 			// TODO: create node differently from ctNode()
@@ -2602,8 +2602,11 @@ data PredefOp = contentTypeEnum();
 	
 data PredefOp = globalFieldOffset(str fieldName);
 
+/*
+ * Changed 'isModifiable = false' to 'isModifiable = true' due to C2 compiler inlining bug.
+ */
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalFieldOffset(str fieldName))
-	= property(\return(primitive("long")), "global<capitalize(fieldName)>Offset", isStateful = true, isConstant = true, hasGetter = false);
+	= property(\return(primitive("long")), "global<capitalize(fieldName)>Offset", isStateful = true, isConstant = true, isModifiable = true, hasGetter = false);
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalFieldOffset(str fieldName)) = true;
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::globalFieldOffset(str fieldName))
