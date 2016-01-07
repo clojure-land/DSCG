@@ -2627,27 +2627,34 @@ str generateSpecializedNodeWithBytePositionsClassString(int n, int m, TrieSpecif
 }
 
 
-data PredefOp = copyAndInsertValue_nextClass();
+data PredefOp = copyAndInsertValue_nextClass(bool isRare);
 
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndInsertValue_nextClass()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndInsertValue_nextClass(bool isRare)) = true;
 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndInsertValue_nextClass(), int nNew = n, int mNew = m+1)
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndInsertValue_nextClass(bool isRare:false), int nNew = n, int mNew = m+1)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndInsertValue_nextClass(), int nNew = n, int mNew = m+1)
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndInsertValue_nextClass(bool isRare:true), int nNew = n+tupleLength(ts.ds), int mNew = m)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
+
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndInsertValue_nextClass(bool isRare:false), int nNew = n, int mNew = m+1)
+	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
+
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndInsertValue_nextClass(bool isRare:true), int nNew = n+tupleLength(ts.ds), int mNew = m)
 	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
 
 
-data PredefOp = copyAndRemoveValue_nextClass();
+data PredefOp = copyAndRemoveValue_nextClass(bool isRare);
 
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndRemoveValue_nextClass()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndRemoveValue_nextClass(_)) = true;
 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndRemoveValue_nextClass(), int nNew = n, int mNew = m-1)
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndRemoveValue_nextClass(_), int nNew = n, int mNew = m-1)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndRemoveValue_nextClass(), int nNew = n, int mNew = m-1)
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndRemoveValue_nextClass(_), int nNew = n, int mNew = m-1)
 	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
 
 
@@ -2687,27 +2694,34 @@ when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nN
 	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
 
 
-data PredefOp = copyAndMigrateFromInlineToNode_nextClass();
+data PredefOp = copyAndMigrateFromInlineToNode_nextClass(bool isRare);
 
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromInlineToNode_nextClass()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromInlineToNode_nextClass(bool isRare)) = true;
 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromInlineToNode_nextClass(), int nNew = n+1, int mNew = m-1)
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromInlineToNode_nextClass(bool isRare:false), int nNew = n+1, int mNew = m-1)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromInlineToNode_nextClass(), int nNew = n+1, int mNew = m-1)
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromInlineToNode_nextClass(bool isRare:true), int nNew = n-tupleLength(ts.ds)+1, int mNew = m)
+	= "throw new IllegalStateException(\"Index out of range.\");"
+when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
+
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromInlineToNode_nextClass(bool isRare:false), int nNew = n+1, int mNew = m-1)
 	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
+	
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromInlineToNode_nextClass(bool isRare:true), int nNew = n-tupleLength(ts.ds)+1, int mNew = m)
+	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";	
 
 
-data PredefOp = copyAndMigrateFromNodeToInline_nextClass();
+data PredefOp = copyAndMigrateFromNodeToInline_nextClass(bool isRare);
 
-@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromNodeToInline_nextClass()) = true;
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromNodeToInline_nextClass(_)) = true;
 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromNodeToInline_nextClass(), int nNew = n-1, int mNew = m+1)
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromNodeToInline_nextClass(_), int nNew = n-1, int mNew = m+1)
 	= "throw new IllegalStateException(\"Index out of range.\");"
 when (nNew + mNew) == 0 || (nNew + mNew) > ts.nMax || nNew < 0 || mNew < 0 || nNew > ts.nMax || mNew > ts.nMax;
 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromNodeToInline_nextClass(), int nNew = n-1, int mNew = m+1)
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndMigrateFromNodeToInline_nextClass(_), int nNew = n-1, int mNew = m+1)
 	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
 
 		

@@ -450,15 +450,19 @@ str generate_equalsFunctionUnsafe_generalPrelude(TrieSpecifics ts, Artifact arti
 	'final Class clazz = o1.getClass();
 	'final long[] arrayOffsets = (long[]) unsafe.getObject(clazz, globalArrayOffsetsOffset);";	
 
+//default str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op) = "null";
+
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op)
-	= "<if (/^<constructorName:.*>\(\)$/ := "<op>") {><"<constructorName>_nextClass()"><}>"
-when isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData()); 
+	= "<constructorName>_nextClass()"
+when isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData()) && /^<constructorName:.*>\(\)$/ := "<op>"; 
 
 str generate_copyAnd_dstClass_string(str mNext, str nNext) = "specializationsByContentAndNodes[<mNext>][<nNext>]";
 
 
 
-
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndInsertValue(bool isRare:_))
+	= toString(call(getDef(ts, artifact, copyAndInsertValue_nextClass(isRare))))
+when isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData());
 
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndInsertValue(_), str m = "payloadArity()", str n = "nodeArity()")
 	= generate_copyAnd_dstClass_string("<m> + 1", n)
@@ -476,6 +480,9 @@ when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAs
 
 
 
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndRemoveValue(bool isRare:_))
+	= toString(call(getDef(ts, artifact, copyAndRemoveValue_nextClass(isRare))))
+when isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData());
 
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndRemoveValue(bool isRare), str m = "payloadArity()", str n = "nodeArity()")
 	= generate_copyAnd_dstClass_string("<m> - 1", n)
@@ -494,6 +501,10 @@ when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAs
 
 
 
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromInlineToNode(bool isRare:_))
+	= toString(call(getDef(ts, artifact, copyAndMigrateFromInlineToNode_nextClass(isRare))))
+when isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData());
+
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromInlineToNode(_), str m = "payloadArity()", str n = "nodeArity()")
 	= generate_copyAnd_dstClass_string("<m> - 1", "<n> + 1")
 when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAsData()) && !isOptionEnabled(ts, useHeterogeneousEncoding());
@@ -510,6 +521,10 @@ when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAs
 
 
 
+
+str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromNodeToInline(bool isRare:_))
+	= toString(call(getDef(ts, artifact, copyAndMigrateFromNodeToInline_nextClass(isRare))))
+when isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData());
 
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromNodeToInline(bool isRare), str m = "payloadArity()", str n = "nodeArity()")
 	= generate_copyAnd_dstClass_string("<m> + 1", "<n> - 1")
@@ -724,10 +739,10 @@ when fromPlusOne := plus(from, iconst(1)) &&
 		eq := equalityDefaultForArguments;				
 
 
-data PredefOp = copyAndInsertValue_nextClass();
+data PredefOp = copyAndInsertValue_nextClass(bool isRare);
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertValue_nextClass())
-	= method(\return(specific("java.lang.Class")), "copyAndInsertValue_nextClass", isActive = isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData()));
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndInsertValue_nextClass(bool isRare))
+	= method(\return(specific("java.lang.Class")), "copyAndInsert<if (isRare) {>Rare<}>Value_nextClass", isActive = isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData()));
 
 
 data PredefOp = copyAndRemoveValue(bool isRare);
@@ -773,10 +788,10 @@ data PredefOp = copyAndRemoveValue(bool isRare);
 	}"
 when valIdx := val(primitive("int"), "valIdx");
 
-data PredefOp = copyAndRemoveValue_nextClass();
+data PredefOp = copyAndRemoveValue_nextClass(bool isRare);
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveValue_nextClass())
-	= method(\return(specific("java.lang.Class")), "copyAndRemoveValue_nextClass", isActive = isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData()));
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndRemoveValue_nextClass(bool isRare))
+	= method(\return(specific("java.lang.Class")), "copyAndRemove<if (isRare) {>Rare<}>Value_nextClass", isActive = isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData()));
 
 
 data PredefOp = copyAndSetValue(bool isRare);
@@ -1006,10 +1021,10 @@ when idxOld := val(primitive("int"), "idxOld") &&
 		idxNew := val(primitive("int"), "idxNew");
 
 
-data PredefOp = copyAndMigrateFromInlineToNode_nextClass();
+data PredefOp = copyAndMigrateFromInlineToNode_nextClass(bool isRare);
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromInlineToNode_nextClass())
-	= method(\return(specific("java.lang.Class")), "copyAndMigrateFromInlineToNode_nextClass", isActive = isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData()));
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromInlineToNode_nextClass(bool isRare))
+	= method(\return(specific("java.lang.Class")), "copyAndMigrateFrom<if (isRare) {>Rare<}>InlineToNode_nextClass", isActive = isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData()));
 
 
 data PredefOp = copyAndMigrateFromNodeToInline(bool isRare);
@@ -1078,10 +1093,10 @@ when idxOld := val(primitive("int"), "idxOld") &&
 		idxNew := val(primitive("int"), "idxNew");
 
 
-data PredefOp = copyAndMigrateFromNodeToInline_nextClass();
+data PredefOp = copyAndMigrateFromNodeToInline_nextClass(bool isRare);
 
-@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass())
-	= method(\return(specific("java.lang.Class")), "copyAndMigrateFromNodeToInline_nextClass", isActive = isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData()));
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), copyAndMigrateFromNodeToInline_nextClass(bool isRare))
+	= method(\return(specific("java.lang.Class")), "copyAndMigrateFromNodeTo<if (isRare) {>Rare<}>Inline_nextClass", isActive = isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData()));
 
 		
 data PredefOp = copyAndRemoveNode(bool customComparator = false);
@@ -1192,11 +1207,13 @@ list[PredefOp] declaredMethodsByCompactNode(TrieSpecifics ts) = [
 	
 	copyAndInsertValue(false),
 	copyAndInsertValue(true),
-	copyAndInsertValue_nextClass(),
+	copyAndInsertValue_nextClass(false),
+	copyAndInsertValue_nextClass(true),
 	
 	copyAndRemoveValue(false),
 	copyAndRemoveValue(true),
-	copyAndRemoveValue_nextClass(),
+	copyAndRemoveValue_nextClass(false),
+	copyAndRemoveValue_nextClass(true),
 	
 	copyAndSetNode(false),
 	//copyAndSetNode(true), // does the same as above
@@ -1204,11 +1221,13 @@ list[PredefOp] declaredMethodsByCompactNode(TrieSpecifics ts) = [
 	
 	copyAndMigrateFromInlineToNode(false),
 	copyAndMigrateFromInlineToNode(true),
-	copyAndMigrateFromInlineToNode_nextClass(),
+	copyAndMigrateFromInlineToNode_nextClass(false),
+	copyAndMigrateFromInlineToNode_nextClass(true),
 	
 	copyAndMigrateFromNodeToInline(false),
 	copyAndMigrateFromNodeToInline(true),
-	copyAndMigrateFromNodeToInline_nextClass(),
+	copyAndMigrateFromNodeToInline_nextClass(false),
+	copyAndMigrateFromNodeToInline_nextClass(true),
 	
 	removeInplaceValueAndConvertToSpecializedNode(),	
 
@@ -2398,12 +2417,30 @@ data PredefOp = getContentFunction(ContentType ct);
 	"// TODO: remove try / catch and throw SecurityException instead
 	// TODO: generate global offset for begin of rare payload
 	'try {
-	'	long keyOffset = arrayBase <if (ct.isRare) {>+ (TUPLE_LENGTH * 4 * instance.payloadArity()) <}>+ (TUPLE_LENGTH * addressSize) * index + <index> * addressSize;
+	'	// TODO: remove hard-coded sizeOf(int)
+	'	long keyOffset = arrayBase 
+		<if (ct.isRare) {>
+			+ (TUPLE_LENGTH * 4 * instance.payloadArity()) + (TUPLE_LENGTH * addressSize) * index + <index> * addressSize
+		<} else {>
+			+ (TUPLE_LENGTH * 4) * index + <index> * 4
+		<}>;
 	'	return (<typeToString(ct2type(ts)[ct])>) unsafe.<unsafeGetMethodNameFromType(ct2type(ts)[ct])>(instance, keyOffset);
 	'} catch (SecurityException e) {
 	'	throw new RuntimeException(e);
 	'}"
 when isOptionEnabled(ts, useSunMiscUnsafe());
+
+//@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:getContentFunction(ct:ctPayloadArg(int index))) = 
+//	"// TODO: remove try / catch and throw SecurityException instead
+//	// TODO: generate global offset for begin of rare payload
+//	'try {
+//	'	long keyOffset = arrayBase <if (ct.isRare) {>+ (TUPLE_LENGTH * 4 * instance.payloadArity()) <}>+ (TUPLE_LENGTH * addressSize) * index + <index> * addressSize;
+//	'	return (<typeToString(ct2type(ts)[ct])>) unsafe.<unsafeGetMethodNameFromType(ct2type(ts)[ct])>(instance, keyOffset);
+//	'} catch (SecurityException e) {
+//	'	throw new RuntimeException(e);
+//	'}"
+//when isOptionEnabled(ts, useSunMiscUnsafe());
+
 
 
 
