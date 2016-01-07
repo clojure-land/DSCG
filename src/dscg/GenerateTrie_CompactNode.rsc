@@ -2703,8 +2703,7 @@ data PredefOp = addressSize();
 	'
 	'return next;"
 when partitionList := pscene_typedPayload_typedRarePayload_typedNodes_bounded_simplifyWith_psStripIfReferenceType()
-		&& [ int dim1, int dim2 ] := mapper(partitionList, int(Partition p) { return uniqueStates(p); })
-	; 
+		&& [ int dim1, int dim2 ] := mapper(partitionList, uniqueStates); 
 
 	
 data PredefOp = specializationsByContentAndNodes();

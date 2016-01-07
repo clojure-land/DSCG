@@ -175,6 +175,14 @@ int logicalSize(Partition p)
 	= size(( emptyRange() | widenLowerAndUpper(it, np.range) | np <- p.sliceList ))
 when p is strip;
 	
+int logicalSizeLowerBound(Partition p) 
+	= size(p.range)
+when p is slice;
+
+int logicalSizeLowerBound(Partition p) 
+	= size(( scaleLowerAndUpper(hd.range, arity(hd.itemType), inverse = true) | narrowLowerAndUpper(it, scaleLowerAndUpper(np.range, arity(np.itemType), inverse = true)) | np <- tl ))
+when p is strip, [hd, tl*] := p.sliceList;
+	
 int physicalSize(Partition p) 
 	= size(scaleLowerAndUpper(p.range, arity(p.itemType)))
 when p is slice;
@@ -183,8 +191,11 @@ int physicalSize(Partition p)
 	= size(( emptyRange() | widenLowerAndUpper(it, scaleLowerAndUpper(np.range, arity(np.itemType))) | np <- p.sliceList ))
 when p is strip;
 
-Range scaleLowerAndUpper(Range r:range(lower, upper, isUpperIncluded, stride), int factor) 
-	= range(lower * factor, upper * factor, isUpperIncluded, stride);
+Range scaleLowerAndUpper(Range r:range(lower, upper, isUpperIncluded, stride), int factor, bool inverse = false) 
+	= inverse ?
+			range(lower / factor, upper / factor, isUpperIncluded, stride): 
+			range(lower * factor, upper * factor, isUpperIncluded, stride);
+
 	
 Range widenLowerAndUpper(Range r1:range(lower1, upper1, bool isUpperIncluded, int stride), Range r2:range(lower2, upper2, isUpperIncluded, stride)) 
 	= range(min(lower1, lower2), max(upper1, upper2), isUpperIncluded, stride);	
@@ -192,6 +203,15 @@ Range widenLowerAndUpper(Range r1:range(lower1, upper1, bool isUpperIncluded, in
 Range widenLowerAndUpper(Range::unbounded(), Range::unbounded()) = Range::unbounded();
 
 default Range widenLowerAndUpper(Range r1, Range r2) { throw "Cannot merge ranges if `isUpperIncluded` or `stride` differ.\n\n<r1>\n\n<r2>"; }
+
+
+Range narrowLowerAndUpper(Range r1:range(lower1, upper1, bool isUpperIncluded, int stride), Range r2:range(lower2, upper2, isUpperIncluded, stride)) 
+	= range(max(lower1, lower2), min(upper1, upper2), isUpperIncluded, stride);	
+
+Range narrowLowerAndUpper(Range::unbounded(), Range::unbounded()) = Range::unbounded();
+
+default Range narrowLowerAndUpper(Range r1, Range r2) { throw "Cannot merge ranges if `isUpperIncluded` or `stride` differ.\n\n<r1>\n\n<r2>"; }
+
 
 int arity(Type::typeSequence(list[Type] typeArguments)) = size(typeArguments);
 default int arity(Type _) = 1;
