@@ -52,7 +52,9 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nod
 		slotArityStatic(),
 		untypedSlotArityStatic(),
 		
+		rareBaseStatic(),		
 		arrayOffsetLastStatic(),
+		nodeBaseStatic(),
 
 		//fieldOffset(lowLevelBitmapName(ts, 0)), // previously: offset for nodeMap
 		//fieldOffset(lowLevelBitmapName(ts, 1)), // previously: offset for dataMap
@@ -139,7 +141,7 @@ data PredefOp = arrayOffsets();
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::arrayOffsets())
 	= property(\return(primitive("long", isArray = true)), "arrayOffsets", isStateful = true, isConstant = true, hasGetter = false, 
-		isActive = isOptionEnabled(ts, useSunMiscUnsafe()));
+		isActive = false); // isOptionEnabled(ts, useSunMiscUnsafe())
 
 // Default Value for Property
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::arrayOffsets()) = true;
@@ -206,6 +208,32 @@ data PredefOp = untypedSlotArityStatic();
 @index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::untypedSlotArityStatic(), int mn = n)
 	= result(iconst(mn))
 when !isOptionEnabled(ts, useUntypedVariables());	
+
+
+data PredefOp = rareBaseStatic();
+
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), rareBaseStatic())
+	= property(\return(primitive("long")), "rareBase", isStateful = true, isConstant = true, hasGetter = false, 
+		isActive = isOptionEnabled(ts, useSunMiscUnsafe()));
+
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::rareBaseStatic()) = true;
+
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::rareBaseStatic(), int mn = tupleLength(ts.ds)*m+n)
+	= "return arrayBase + <tupleLength(ts.ds)*m> * 4 /* TODO: sizeOf(ts.ds) */;" // TODO: support non-reference types
+when !isOptionEnabled(ts, useUntypedVariables());	
+
+
+data PredefOp = nodeBaseStatic();
+
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), nodeBaseStatic())
+	= property(\return(primitive("long")), "nodeBase", isStateful = true, isConstant = true, hasGetter = false, 
+		isActive = isOptionEnabled(ts, useSunMiscUnsafe()));
+
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeBaseStatic()) = true;
+
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeBaseStatic(), int mn = tupleLength(ts.ds)*m+n)
+	= "return arrayBase + <mn> * addressSize;" // TODO: support non-reference types
+when !isOptionEnabled(ts, useUntypedVariables());
 
 
 data PredefOp = arrayOffsetLastStatic();

@@ -1150,7 +1150,9 @@ list[PredefOp] declaredMethodsByCompactNode(TrieSpecifics ts) = [
 	globalFieldOffset("slotArity"),
 	globalFieldOffset("untypedSlotArity"),
 	
+	globalFieldOffset("rareBase"),
 	globalFieldOffset("arrayOffsetLast"),
+	globalFieldOffset("nodeBase"),
 	
 	// TODO: this is implementation specific ...
 	// TODO: nodeOf() factory methods; also option to enable disable the use of factory methods.
