@@ -3161,12 +3161,12 @@ str generateJdtString(TrieSpecifics ts, JavaDataType jdt, TrieNodeType nodeType)
 				item += "/**<documentation>*/\n";
 			}
 			
-			if (isRealization(ts.model, nodeType, op)) { 
+			Method def = getDef(ts, trieNode(nodeType), op);
+
+			if (isRealization(ts.model, nodeType, op) && !(def is property && def.hasGetter == false)) { 
 				item += "@Override ";
 			}
-			
-			Method def = getDef(ts, trieNode(nodeType), op);
-			
+						
 			if (op in (ts.model.implementsMultimap[nodeType]?{})) {
 				item += impl(ts, trieNode(nodeType), op);
 			} else {

@@ -43,6 +43,7 @@ return
 package <targetBasePackage>;
 
 import static <targetBasePackage>.AbstractSpecialisedImmutableMap.entryOf;
+import static <targetBasePackage>.RangecopyUtils.*;
 
 import java.lang.reflect.Field;
 import java.text.DecimalFormat;
@@ -70,7 +71,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 
-@SuppressWarnings(\"rawtypes\")
+@SuppressWarnings({\"rawtypes\", \"restriction\"})
 public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable<toString(ts.ds)><CollectionGenericsExpandedStr(ts)> {
 
 	<impl(ts, core(immutable()), emptyTrieNodeConstant())>

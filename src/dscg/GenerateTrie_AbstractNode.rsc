@@ -15,7 +15,7 @@ import dscg::Common;
 
 default str generateAbstractNodeClassString(TrieSpecifics ts) 
 	= generateJdtString(ts, jdt, abstractNode())
-when jdt := abstractNode(ts, modifierList = [ "private", "abstract", "static" ]);
+when jdt := abstractNode(ts, modifierList = [ "protected", "abstract", "static" ]);
 
 lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nodeType:abstractNode()) 
 	= [ <nodeType,method> | method <- declaredMethodsByAbstractNode];

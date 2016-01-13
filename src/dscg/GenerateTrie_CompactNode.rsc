@@ -23,11 +23,11 @@ str generateCompactNodeClassString(TrieSpecifics ts, bool isLegacy:false) {
 
 	for(nt <- carrier(ts.model.refines), nt is compactNode) {
 		if (nt has bitmapSpecialization) {
-			JavaDataType jdt = compactNode(ts, nt, modifierList = [ "private", "abstract", "static" ]);
+			JavaDataType jdt = compactNode(ts, nt, modifierList = [ "protected", "abstract", "static" ]);
 			result += generateJdtString(ts, jdt, nt);
 			result += "\n\n";
 		} else {	
-			JavaDataType jdt = compactNode(ts, modifierList = [ "private", "abstract", "static" ]);
+			JavaDataType jdt = compactNode(ts, modifierList = [ "protected", "abstract", "static" ]);
 			result += generateJdtString(ts, jdt, nt);
 			result += "\n\n";
 		}
@@ -164,12 +164,17 @@ data PredefOp = rawMap1();
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::rawMap1())
 	= method(ts.valmapField, "rawMap1", isActive = true);
 
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::rawMap1()) = true;
+
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::rawMap1())
+	= result(exprFromString("unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(this, globalRawMap1Offset)"));
+
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::rawMap1())
-	= property(ts.valmapField, "rawMap1", isStateful = true, isConstant = false, hasGetter = true, initializeAtConstruction = true, isActive = isOptionEnabled(ts, useHeterogeneousEncoding()))
+	= property(ts.valmapField, "rawMap1", isStateful = true, isConstant = false, hasGetter = false, initializeAtConstruction = true, isActive = isOptionEnabled(ts, useHeterogeneousEncoding()))
 when bs.supportsValues || bs.supportsNodes;
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::rawMap1())
-	= property(ts.valmapField, "rawMap1", isStateful = false, isConstant = false, hasGetter = true, initializeAtConstruction = true, isActive = isOptionEnabled(ts, useHeterogeneousEncoding()))
+	= property(ts.valmapField, "rawMap1", isStateful = false, isConstant = false, hasGetter = false, initializeAtConstruction = true, isActive = isOptionEnabled(ts, useHeterogeneousEncoding()))
 when !(bs.supportsValues || bs.supportsNodes);
 
 // Default Value for Property
@@ -182,14 +187,19 @@ when !(bs.supportsValues || bs.supportsNodes);
 data PredefOp = rawMap2();
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::rawMap2())
-	= property(ts.valmapField, "rawMap2", isStateful = true, isConstant = false, hasGetter = true);
+	= method(ts.valmapField, "rawMap2", isActive = true);
+
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::rawMap2()) = true;
+
+@index=2 Expression generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), PredefOp::rawMap2())
+	= result(exprFromString("unsafe.get<capitalize(chunkSizeToPrimitive(ts.bitPartitionSize).\type)>(this, globalRawMap2Offset)"));
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::rawMap2())
-	= property(ts.valmapField, "rawMap2", isStateful = true, isConstant = false, hasGetter = true, initializeAtConstruction = true, isActive = isOptionEnabled(ts, useHeterogeneousEncoding()))
+	= property(ts.valmapField, "rawMap2", isStateful = true, isConstant = false, hasGetter = false, initializeAtConstruction = true, isActive = isOptionEnabled(ts, useHeterogeneousEncoding()))
 when bs.supportsValues;
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(compactNode(BitmapSpecialization bs)), PredefOp::rawMap2())
-	= property(ts.valmapField, "rawMap2", isStateful = false, isConstant = false, hasGetter = true, initializeAtConstruction = true, isActive = isOptionEnabled(ts, useHeterogeneousEncoding()))
+	= property(ts.valmapField, "rawMap2", isStateful = false, isConstant = false, hasGetter = false, initializeAtConstruction = true, isActive = isOptionEnabled(ts, useHeterogeneousEncoding()))
 when !bs.supportsValues;
 
 // Default Value for Property
@@ -426,22 +436,33 @@ data PredefOp = nodeFactory_Singleton();
 
 str generate_copyAnd_generalPrelude(TrieSpecifics ts, Artifact artifact, PredefOp op) =
 	"
-	//final Class srcClass = this.getClass();
+	final Class srcClass = this.getClass();
 	final Class dstClass = <generate_copyAnd_dstClass(ts, artifact, op)>;
-	
-	//if (dstClass == null) {
-	//	throw new RuntimeException(String.format(\"[%s] No new specialization [payloadArity=%d, nodeArity=%d].\", srcClass.getName(), payloadArity(), nodeArity()));
-	//}
 	
 	<dec(jdtToVal(compactNode(ts), "src"))> = this;
 	<dec(jdtToVal(compactNode(ts), "dst"))> = <toString(cast(jdtToType(compactNode(ts)), exprFromString("unsafe.allocateInstance(dstClass)")))>;				
 				
-	//final long[] srcArrayOffsets = (long[]) unsafe.getObject(srcClass, globalArrayOffsetsOffset);	
-	//final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, globalArrayOffsetsOffset);
-		
 	long srcOffset = arrayBase;
 	long dstOffset = arrayBase;
 	";
+	//"
+	////final Class srcClass = this.getClass();
+	//final Class dstClass = <generate_copyAnd_dstClass(ts, artifact, op)>;
+	//
+	////if (dstClass == null) {
+	////	throw new RuntimeException(String.format(\"[%s] No new specialization [payloadArity=%d, nodeArity=%d].\", srcClass.getName(), payloadArity(), nodeArity()));
+	////}
+	//
+	//<dec(jdtToVal(compactNode(ts), "src"))> = this;
+	//<dec(jdtToVal(compactNode(ts), "dst"))> = <toString(cast(jdtToType(compactNode(ts)), exprFromString("unsafe.allocateInstance(dstClass)")))>;				
+	//			
+	////final long[] srcArrayOffsets = (long[]) unsafe.getObject(srcClass, globalArrayOffsetsOffset);	
+	////final long[] dstArrayOffsets = (long[]) unsafe.getObject(dstClass, globalArrayOffsetsOffset);
+	//	
+	//long srcOffset = arrayBase;
+	//long dstOffset = arrayBase;
+	//";
+	
 	
 str generate_equalsFunctionUnsafe_generalPrelude(TrieSpecifics ts, Artifact artifact, PredefOp op) =
 	"<dec(jdtToVal(compactNode(ts), "src"))> = (<typeToString(jdtToType(compactNode(ts)))>) o1;
@@ -662,9 +683,23 @@ data PredefOp = copyAndInsertValue(bool isRare);
 			},
 			useExpr(ts.bitposField), oldBitmapValueExpr = useExpr(lowLevelBitmapVal(ts, 1)))>					
 		
-		<if (true) {>
+		<if (isRare) {>
+			final int pIndex = TUPLE_LENGTH * index;
+	
+	        final long rareBase = unsafe.getLong(srcClass, globalRareBaseOffset);
+	        final int untypedSlotArity = unsafe.getInt(srcClass, globalUntypedSlotArityOffset);
+	
+	        rangecopyPrimitiveRegion(src, arrayBase, dst, arrayBase, rareBase - arrayBase);
+	
+	        rangecopyObjectRegion(src, rareBase, 0, dst, rareBase, 0, pIndex);
+	        setInObjectRegion(dst, rareBase, pIndex + 0, key);
+	        setInObjectRegion(dst, rareBase, pIndex + 1, val);
+	        rangecopyObjectRegion(src, rareBase, pIndex, dst, rareBase, pIndex + 2, untypedSlotArity - pIndex);
+		<} else {>	
 			<generatePartitionCopy(ts, copyAndInsert(isRare ? "rarePayload" : "payload", useExpr(valIdx), [ useExpr(x) | x <- payloadTupleArgs(ts, isRare = true) ]))>
-		<} else {>
+		<}>
+		
+		<if (false) {>
 			// copy payload range (isRare = <!isRare>)				
 			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
 							
@@ -856,9 +891,21 @@ data PredefOp = copyAndSetValue(bool isRare);
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)))>		
 			
-		<if (true) {>
-			<generatePartitionCopy(ts, copyAndSet(isRare ? "rarePayload" : "payload", useExpr(valIdx), [ magicIdentityExpression(), useExpr(payloadTupleArgs(ts, isRare = isRare)[1]) ]))>		
+		<if (isRare) {>
+	        final int pIndex = TUPLE_LENGTH * valIdx + 1;
+	
+	        final long rareBase = unsafe.getLong(srcClass, globalRareBaseOffset);
+	        final int untypedSlotArity = unsafe.getInt(srcClass, globalUntypedSlotArityOffset);
+	
+	        rangecopyPrimitiveRegion(src, arrayBase, dst, arrayBase, rareBase - arrayBase);
+	
+	        rangecopyObjectRegion(src, rareBase, 0, dst, rareBase, 0, untypedSlotArity);
+	        setInObjectRegion(dst, rareBase, pIndex, val);		
 		<} else {>
+			<generatePartitionCopy(ts, copyAndSet(isRare ? "rarePayload" : "payload", useExpr(valIdx), [ magicIdentityExpression(), useExpr(payloadTupleArgs(ts, isRare = isRare)[1]) ]))>		
+		<}>
+		
+		<if (false) {>
 			// copy payload range (isRare = <!isRare>)				
 			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
 							
@@ -911,9 +958,19 @@ data PredefOp = copyAndSetNode(bool isRare);
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)), oldBitmapValueExpr = useExpr(lowLevelBitmapVal(ts, 1)))>
 		
 		<if (true) {>
+			final long rareBase = unsafe.getLong(srcClass, globalRareBaseOffset);
+	        final int untypedSlotArity = unsafe.getInt(srcClass, globalUntypedSlotArityOffset);
+			
+			rangecopyPrimitiveRegion(src, arrayBase, dst, arrayBase, rareBase - arrayBase);
+	
+	        rangecopyObjectRegion(src, rareBase, 0, dst, rareBase, 0, untypedSlotArity);
+	        setInObjectRegion(dst, rareBase, untypedSlotArity - 1 - index, node);		
+		<}>
+		<if (false) {>
 			// TODO: create node differently from ctNode()
 			<generatePartitionCopy(ts, copyAndSet("node", useExpr(ts.index), [ useExpr(\inode(ts.ds, ts.tupleTypes)) ]))>
-		<} else {>		
+		<}>
+		<if (false) {>
 			// copy payload range (isRare = <!isRare>)				
 			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>	
 				
@@ -987,10 +1044,30 @@ data PredefOp = copyAndMigrateFromInlineToNode(bool isRare);
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)), oldBitmapValueExpr = useExpr(lowLevelBitmapVal(ts, 1)))>
 
-		<if (true) {>
+		<if (isRare) {>
+			final long rareBase = unsafe.getLong(srcClass, globalRareBaseOffset);
+	        final int untypedSlotArity = unsafe.getInt(srcClass, globalUntypedSlotArityOffset);
+	
+	        // final int idxOld = TUPLE_LENGTH * dataIndex(bitpos);
+	        // final int idxNew = this.nodes.length - TUPLE_LENGTH - nodeIndex(bitpos);
+	
+	        final int pIndexOld = TUPLE_LENGTH * indexOld;
+	        final int pIndexNew = untypedSlotArity - TUPLE_LENGTH - indexNew;
+	
+	        rangecopyPrimitiveRegion(src, arrayBase, dst, arrayBase, rareBase - arrayBase);
+	
+	        rangecopyObjectRegion(src, rareBase, 0, dst, rareBase, 0, pIndexOld);
+	        rangecopyObjectRegion(src, rareBase, pIndexOld + 2, dst, rareBase, pIndexOld,
+	            pIndexNew - pIndexOld);
+	        setInObjectRegion(dst, rareBase, pIndexNew, node);
+	        rangecopyObjectRegion(src, rareBase, pIndexNew + 2, dst, rareBase, pIndexNew + 1,
+	            untypedSlotArity - pIndexNew - 2);		
+		<} else {>
 			// TODO: create node differently from ctNode()
 			<generatePartitionCopy(ts, copyAndMigrateFromInlineToNode(isRare ? "rarePayload" : "payload", useExpr(idxOld), "node", useExpr(idxNew), [ useExpr(\inode(ts.ds, ts.tupleTypes)) ]))>
-		<} else {>
+		<}>
+
+		<if (false) {>
 			// copy payload range (isRare = <!isRare>)				
 			<copyPayloadRange(ts, artifact, iconst(0), call(getDef(ts, artifact, payloadArity(isRare = !isRare))), indexIdentity, indexIdentity, isRare = !isRare)>								
 	
@@ -2416,20 +2493,16 @@ data PredefOp = getContentFunction(ContentType ct);
 	= true when isOptionEnabled(ts, useSunMiscUnsafe());
 
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:getContentFunction(ct:ctPayloadArg(int index))) = 
-	"// TODO: remove try / catch and throw SecurityException instead
-	// TODO: generate global offset for begin of rare payload
-	'try {
-	'	// TODO: remove hard-coded sizeOf(int)
-	'	long keyOffset = arrayBase 
-		<if (ct.isRare) {>
-			+ (TUPLE_LENGTH * 4 * instance.payloadArity()) + (TUPLE_LENGTH * addressSize) * index + <index> * addressSize
-		<} else {>
-			+ (TUPLE_LENGTH * 4) * index + <index> * 4
-		<}>;
-	'	return (<typeToString(ct2type(ts)[ct])>) unsafe.<unsafeGetMethodNameFromType(ct2type(ts)[ct])>(instance, keyOffset);
-	'} catch (SecurityException e) {
-	'	throw new RuntimeException(e);
-	'}"
+	"// TODO: generate global offset for begin of rare payload
+	'// TODO: remove hard-coded sizeOf(int)	  
+	<if (ct.isRare) {>
+		long rareBase = unsafe.getLong(clazz, globalRareBaseOffset);
+		long keyOffset = rareBase  + (TUPLE_LENGTH * index + <index>) * addressSize;
+	<} else {>
+		long keyOffset = arrayBase + (TUPLE_LENGTH * index + <index>) * 4;
+	<}>
+	return (<typeToString(ct2type(ts)[ct])>) unsafe.<unsafeGetMethodNameFromType(ct2type(ts)[ct])>(instance, keyOffset);
+	"
 when isOptionEnabled(ts, useSunMiscUnsafe());
 
 //@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp op:getContentFunction(ct:ctPayloadArg(int index))) = 
