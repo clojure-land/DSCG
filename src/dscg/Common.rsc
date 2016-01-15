@@ -3308,3 +3308,4 @@ bool isPredefOpActive(TrieSpecifics ts, PredefOp op:nodeFactory_Singleton()) = f
 default bool isPredefOpActive(TrieSpecifics ts, PredefOp op) = true;
 
 
+str devNull(value _) = "";
