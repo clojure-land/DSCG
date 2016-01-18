@@ -437,10 +437,7 @@ data PredefOp = nodeFactory_Singleton();
 str generate_copyAnd_generalPrelude(TrieSpecifics ts, Artifact artifact, PredefOp op, bool declareOffsets = true) =
 	"final Class srcClass = this.getClass();
 	
-  	final long rareBase = unsafe.getLong(srcClass, globalRareBaseOffset);
-    final long primitiveRegionSize = rareBase - arrayBase;
-    
-    final int payloadArity = (int) primitiveRegionSize / 8;
+    final int payloadArity = unsafe.getInt(srcClass, globalPayloadArityOffset);
     final int untypedSlotArity = unsafe.getInt(srcClass, globalUntypedSlotArityOffset);
 	
 	<dec(jdtToVal(compactNode(ts), "src"))> = this;
@@ -690,15 +687,15 @@ data PredefOp = copyAndInsertValue(bool isRare);
 			},
 			useExpr(ts.bitposField), oldBitmapValueExpr = useExpr(lowLevelBitmapVal(ts, 1)))>					
 		
-		<if (isRare) {>
-			final int pIndex = TUPLE_LENGTH * index;
-			
+		final int pIndex = TUPLE_LENGTH * index;
+		
+		<if (isRare) {>			
 			long offset = arrayBase;
 			long delta = 0;
 			 
-			offset += rangecopyPrimitiveRegion(src, offset, dst, offset, primitiveRegionSize);
+			offset += rangecopyIntRegion(src, offset, dst, offset, 2 * payloadArity);
 			offset += rangecopyObjectRegion(src, offset, dst, offset, pIndex);
-			delta += setInObjectRegion(dst, offset, key, val);
+			delta += setInObjectRegionVarArgs(dst, offset, key, val);
 			offset += rangecopyObjectRegion(src, offset, dst, offset + delta, untypedSlotArity - pIndex);
 		<} else {>
 			int typedSlotArity = payloadArity * 2;
@@ -707,7 +704,7 @@ data PredefOp = copyAndInsertValue(bool isRare);
 			long delta = 0;
 			  
 			offset += rangecopyIntRegion(src, offset, dst, offset, pIndex);
-			delta += setInIntRegion(dst, offset, key, val);
+			delta += setInIntRegionVarArgs(dst, offset, key, val);
 			offset += rangecopyIntRegion(src, offset, dst, offset + delta, typedSlotArity - pIndex);      
 			offset += rangecopyObjectRegion(src, offset, dst, offset + delta, untypedSlotArity);
 
@@ -895,21 +892,37 @@ data PredefOp = copyAndSetValue(bool isRare);
 			},
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)), oldBitmapValueExpr = useExpr(lowLevelBitmapVal(ts, 1)))>		
 			
+		  int pIndex = TUPLE_LENGTH * index + 1;
+		             
+		  long offset = arrayBase;
+		  offset += rangecopyIntRegion(src, offset, dst, offset, 2 * payloadArity);
+					  
+		  <if (!isRare) {>setInIntRegion(dst, arrayBase, pIndex, val);<}>
+		  
+		  long rareBase = offset;
+		  offset += rangecopyObjectRegion(src, offset, dst, offset, untypedSlotArity);
+		
+		  <if (isRare) {>setInObjectRegion(dst, rareBase, pIndex, val);<}>
+			
+			
 		<if (isRare) {>
+	        /*
 	        final int pIndex = TUPLE_LENGTH * index + 1;
 	
 	        rangecopyPrimitiveRegion(src, arrayBase, dst, arrayBase, primitiveRegionSize);
 	
 	        rangecopyObjectRegion(src, rareBase, 0, dst, rareBase, 0, untypedSlotArity);
-	        setInObjectRegion(dst, rareBase, pIndex, val);		
+	        setInObjectRegion(dst, rareBase, pIndex, val);
+	        */		
 		<} else {>
+			/*
 			final int pIndex = TUPLE_LENGTH * index + 1;
 	
 	        rangecopyPrimitiveRegion(src, arrayBase, dst, arrayBase, primitiveRegionSize);
 	        setInIntRegion(dst, arrayBase, pIndex, val);
 	
 	        rangecopyObjectRegion(src, rareBase, 0, dst, rareBase, 0, untypedSlotArity);
-
+			*/
 			<devNull(generatePartitionCopy(ts, copyAndSet(isRare ? "rarePayload" : "payload", useExpr(ts.index), [ magicIdentityExpression(), useExpr(payloadTupleArgs(ts, isRare = isRare)[1]) ])))>		
 		<}>
 		
@@ -962,27 +975,22 @@ data PredefOp = copyAndSetNode(bool isRare);
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)), oldBitmapValueExpr = useExpr(lowLevelBitmapVal(ts, 1)))>
 		
 		<if (true) {>
+			/*
 			rangecopyPrimitiveRegion(src, arrayBase, dst, arrayBase, primitiveRegionSize);
 	
 	        rangecopyObjectRegion(src, rareBase, 0, dst, rareBase, 0, untypedSlotArity);
 	        setInObjectRegion(dst, rareBase, untypedSlotArity - 1 - index, node);	
+			*/
 
-/*
-	TODO:
-
-      final int payloadArity = unsafe.getInt(srcClass, globalPayloadArityOffset);
-      
-      int pIndex = untypedSlotArity - 1 - index;
-                 
-      long offset = arrayBase;
-      offset += rangecopyIntRegion(src, offset, dst, offset, 2 * payloadArity);
-      
-      long rareBase = offset;
-      offset += rangecopyObjectRegion(src, offset, dst, offset, untypedSlotArity);
-
-      setInObjectRegion(dst, rareBase + pIndex * addressSize, node);
-*/
-
+			  int pIndex = untypedSlotArity - 1 - index;
+			             
+			  long offset = arrayBase;
+			  offset += rangecopyIntRegion(src, offset, dst, offset, 2 * payloadArity);
+			  
+			  long rareBase = offset;
+			  offset += rangecopyObjectRegion(src, offset, dst, offset, untypedSlotArity);
+			
+			  setInObjectRegion(dst, rareBase, pIndex, node);
 		<}>
 		<if (false) {>
 			// TODO: create node differently from ctNode()
@@ -1056,25 +1064,33 @@ data PredefOp = copyAndMigrateFromInlineToNode(bool isRare);
 			cast(chunkSizeToPrimitive(ts.bitPartitionSize), iconst(0)), oldBitmapValueExpr = useExpr(lowLevelBitmapVal(ts, 1)))>
 
 		<if (isRare) {>
-	        final int pIndexOld = TUPLE_LENGTH * indexOld;
-	        final int pIndexNew = (untypedSlotArity - TUPLE_LENGTH + 1) - 1 - indexNew;
+	          final int pIndexOld = TUPLE_LENGTH * indexOld;
+	          final int pIndexNew = (untypedSlotArity - TUPLE_LENGTH + 1) - 1 - indexNew;
 	
-	        rangecopyPrimitiveRegion(src, arrayBase, dst, arrayBase, primitiveRegionSize);
-	
-	        rangecopyObjectRegion(src, rareBase, 0, dst, rareBase, 0, pIndexOld);
-	        rangecopyObjectRegion(src, rareBase, pIndexOld + 2, dst, rareBase, pIndexOld, pIndexNew - pIndexOld);
-	        setInObjectRegion(dst, rareBase, pIndexNew, node);
-	        rangecopyObjectRegion(src, rareBase, pIndexNew + 2, dst, rareBase, pIndexNew + 1, untypedSlotArity - pIndexNew - 2);
+		      long offset = arrayBase;
+		      offset += rangecopyIntRegion(src, arrayBase, dst, arrayBase, 2 * payloadArity);
+		
+		      offset += rangecopyObjectRegion(src, offset, dst, offset, pIndexOld);
+		      long delta = 2 * sizeOfObject();
+		      offset += rangecopyObjectRegion(src, offset + delta, dst, offset, pIndexNew - pIndexOld);
+		      long delta2 = setInObjectRegionVarArgs(dst, offset, node);
+			  delta -= delta2;
+      		  offset += delta2;
+		      offset += rangecopyObjectRegion(src, offset + delta, dst, offset, untypedSlotArity - pIndexNew - 2);
 		<} else {>
 	        final int pIndexOld = TUPLE_LENGTH * indexOld;
 	        final int pIndexNew = (untypedSlotArity + 1) - 1 - indexNew;
 	
-	        rangecopyIntRegion(src, arrayBase, 0, dst, arrayBase, 0, pIndexOld);
-	        rangecopyIntRegion(src, arrayBase, pIndexOld + 2, dst, arrayBase, pIndexOld, (TUPLE_LENGTH * (payloadArity - 1) - pIndexOld));
+			long offset = arrayBase;
+	        offset += rangecopyIntRegion(src, offset, dst, offset, pIndexOld);
+	        long delta = 2 * 4 /* sizeOfInt() */;
+	        offset += rangecopyIntRegion(src, offset + delta, dst, offset, (TUPLE_LENGTH * (payloadArity - 1) - pIndexOld));
 	
-	        rangecopyObjectRegion(src, rareBase, 0, dst, rareBase - 8, 0, pIndexNew);	    
-	        setInObjectRegion(dst, rareBase - 8, pIndexNew, node);
-	        rangecopyObjectRegion(src, rareBase, pIndexNew, dst, rareBase - 8, pIndexNew + 1, untypedSlotArity - pIndexNew);
+	        offset += rangecopyObjectRegion(src, offset + delta, dst, offset, pIndexNew);	    
+	        long delta2 = setInObjectRegionVarArgs(dst, offset, node);
+		    delta -= delta2;
+      		offset += delta2;
+	        offset += rangecopyObjectRegion(src, offset + delta, dst, offset, untypedSlotArity - pIndexNew);
 		
 			<devNull("// TODO: create node differently from ctNode()")>
 			<devNull(generatePartitionCopy(ts, copyAndMigrateFromInlineToNode(isRare ? "rarePayload" : "payload", useExpr(idxOld), "node", useExpr(idxNew), [ useExpr(\inode(ts.ds, ts.tupleTypes)) ])))>
