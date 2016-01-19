@@ -62,6 +62,8 @@ lrel[TrieNodeType from, PredefOp to] declares(TrieSpecifics ts, TrieNodeType nod
 		//fieldOffset("payloadArity"),
 		//fieldOffset("slotArity"),
 
+		getCompanion(),
+
 		*createContentArgumentList(ts, nodeType),
 		specializedBitmapIndexedNodeConstructor()
 	];
@@ -2780,3 +2782,17 @@ when outOfBounds(ts, nNew, mNew);
 
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), copyAndRemoveNode_nextClass(), int nNew = n-1, int mNew = m)
 	= "return <specializedBitmapIndexedNode(ts, specializedBitmapIndexedNode(nNew, mNew)).typeName>.class;";
+	
+	
+	
+data PredefOp = getCompanion();
+
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), getCompanion())
+	= property(\return(specific("Companion")), "getCompanion", isStateful = false, isConstant = false, hasGetter = true, 
+		isActive = false); // isOptionEnabled(ts, useSunMiscUnsafe())
+
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getCompanion()) = true;
+
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::getCompanion())
+	= "return new Companion(nodeArity, payloadArity, slotArity, untypedSlotArity, rareBase, arrayOffsetLast, nodeBase);"
+when !isOptionEnabled(ts, useUntypedVariables());

@@ -489,7 +489,7 @@ str generate_copyAnd_dstClass_string(str mNext, str nNext, bool instanceInsteadO
 
 
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndInsertValue(bool isRare:_), bool instanceInsteadOfClass)
-	= toString(call(getDef(ts, artifact, copyAndInsertValue_nextClass(isRare))))
+	= "allocateHeapRegion(<toString(call(getDef(ts, artifact, copyAndInsertValue_nextClass(isRare))))>)"
 when isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData());
 
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndInsertValue(_), bool instanceInsteadOfClass, str m = "payloadArity", str n = "nodeArity()")
@@ -509,7 +509,7 @@ when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAs
 
 
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndRemoveValue(bool isRare:_), bool instanceInsteadOfClass)
-	= toString(call(getDef(ts, artifact, copyAndRemoveValue_nextClass(isRare))))
+	= "allocateHeapRegion(<toString(call(getDef(ts, artifact, copyAndRemoveValue_nextClass(isRare))))>)"
 when isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData());
 
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndRemoveValue(bool isRare), bool instanceInsteadOfClass, str m = "payloadArity", str n = "nodeArity()")
@@ -530,7 +530,7 @@ when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAs
 
 
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromInlineToNode(bool isRare:_), bool instanceInsteadOfClass)
-	= toString(call(getDef(ts, artifact, copyAndMigrateFromInlineToNode_nextClass(isRare))))
+	= "allocateHeapRegion(<toString(call(getDef(ts, artifact, copyAndMigrateFromInlineToNode_nextClass(isRare))))>)"
 when isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData());
 
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromInlineToNode(_), bool instanceInsteadOfClass, str m = "payloadArity", str n = "nodeArity()")
@@ -551,7 +551,7 @@ when isOptionEnabled(ts, useSunMiscUnsafe()) && isOptionEnabled(ts, unsafeCodeAs
 
 
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromNodeToInline(bool isRare:_), bool instanceInsteadOfClass)
-	= toString(call(getDef(ts, artifact, copyAndMigrateFromNodeToInline_nextClass(isRare))))
+	= "allocateHeapRegion(<toString(call(getDef(ts, artifact, copyAndMigrateFromNodeToInline_nextClass(isRare))))>)"
 when isOptionEnabled(ts, useSunMiscUnsafe()) && !isOptionEnabled(ts, unsafeCodeAsData());
 
 str generate_copyAnd_dstClass(TrieSpecifics ts, Artifact artifact, PredefOp op:copyAndMigrateFromNodeToInline(bool isRare), bool instanceInsteadOfClass, str m = "payloadArity", str n = "nodeArity()")
@@ -1252,6 +1252,8 @@ list[PredefOp] declaredMethodsByCompactNode(TrieSpecifics ts) = [
 	globalFieldOffset("rareBase"),
 	globalFieldOffset("arrayOffsetLast"),
 	globalFieldOffset("nodeBase"),
+	
+	getCompanion(),
 	
 	// TODO: this is implementation specific ...
 	// TODO: nodeOf() factory methods; also option to enable disable the use of factory methods.
@@ -3077,3 +3079,27 @@ data PredefOp = allocateHeapRegionByDimensions();
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::allocateHeapRegionByDimensions()) = 
 	"final Class clazz = specializationsByContentAndNodes[dim1][dim2];
     'return allocateHeapRegion(clazz);";
+    
+    
+@index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), getCompanion())
+	= method(\return(specific("Companion")), "getCompanion", isActive = isOptionEnabled(ts, useSunMiscUnsafe()));    
+	
+@index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getCompanion()) = true;
+
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:compactNode()), PredefOp::getCompanion())
+	= "
+	  Class clazz = this.getClass();
+      
+      int nodeArity = unsafe.getInt(clazz, globalNodeArityOffset);
+      int payloadArity = unsafe.getInt(clazz, globalPayloadArityOffset);
+      int slotArity = unsafe.getInt(clazz, globalSlotArityOffset);
+      int untypedSlotArity = unsafe.getInt(clazz, globalUntypedSlotArityOffset);
+      long rareBase = unsafe.getLong(clazz, globalRareBaseOffset);
+      long arrayOffsetLast = unsafe.getLong(clazz, globalArrayOffsetLastOffset);
+      long nodeBase = unsafe.getLong(clazz, globalNodeBaseOffset);
+      
+      return new Companion(nodeArity, payloadArity, slotArity, untypedSlotArity, rareBase,
+          arrayOffsetLast, nodeBase);	
+	"
+when !isOptionEnabled(ts, useUntypedVariables());
+	
