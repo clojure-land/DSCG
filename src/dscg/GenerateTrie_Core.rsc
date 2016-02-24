@@ -44,6 +44,7 @@ package <targetBasePackage>;
 
 import static <targetBasePackage>.AbstractSpecialisedImmutableMap.entryOf;
 import static <targetBasePackage>.RangecopyUtils.*;
+import <targetBasePackage>.<ts.coreClassName>_Specializations.*;
 
 import java.lang.reflect.Field;
 import java.text.DecimalFormat;
@@ -472,7 +473,7 @@ public class <ts.coreClassName><GenericsStr(ts.tupleTypes)> implements Immutable
 	<innerClassesString>
 		
 	<if (isOptionEnabled(ts, useSunMiscUnsafe())) {>
-	private abstract static class DataLayoutHelper<GenericsStr(ts.tupleTypes)> <extendsStr(compactNode(ts, compactNode(specializeByBitmap(true, true))))> {
+	private abstract static class DataLayoutHelper<GenericsStr(ts.tupleTypes)> <extendsStr(compactNode(ts))> { <devNull("compactNode(specializeByBitmap(true, true))")>
 
 		private static final long[] arrayOffsets = arrayOffsets(DataLayoutHelper.class,
 						new String[] { \"slot0\", \"slot1\" });

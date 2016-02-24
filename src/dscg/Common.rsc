@@ -416,7 +416,7 @@ when m.isActive;
 
 //default str call(Method m, map[Argument, Expression] argsOverride = ()) { throw "You forgot <m>!"; }
 
-// default str toString(Expression e) { throw "Ahhh, <e> is not supported."; }	
+default str toString(Expression e) { throw "Ahhh, <e> is not supported."; }	
 		
 data Expression
 	= decExpr(Argument arg, Expression initExpr = emptyExpression()) 
@@ -482,8 +482,9 @@ data TrieNodeType
 TrieNodeType compactNode(bool isHeterogeneous:false) = compactNode();
 TrieNodeType compactNode(bool isHeterogeneous:true) = compactHeterogeneousNode();
 
-TrieNodeType compactNode(bool isHeterogeneous:false, BitmapSpecialization bitmapSpecialization) = compactNode(bitmapSpecialization);
-TrieNodeType compactNode(bool isHeterogeneous:true, BitmapSpecialization bitmapSpecialization) = compactHeterogeneousNode(bitmapSpecialization);
+// NOTE: temporarily removing bitmapSpecialization 
+TrieNodeType compactNode(bool isHeterogeneous:false, BitmapSpecialization bitmapSpecialization) = compactNode();
+TrieNodeType compactNode(bool isHeterogeneous:true, BitmapSpecialization bitmapSpecialization) = compactHeterogeneousNode();
 
 data BitmapSpecialization 
 	= deferBitmapSpecialization()
@@ -769,7 +770,7 @@ str lowLevelBitmapName(TrieSpecifics ts, int i:1) = "rawMap<i + 1>" when isOptio
 default str lowLevelBitmapName(TrieSpecifics ts, int i:1) = "dataMap"; 
 
 Argument lowLevelBitmapVal(TrieSpecifics ts, int i) = var(chunkSizeToPrimitive(ts.bitPartitionSize), lowLevelBitmapName(ts, i));
-Expression lowLevelBitmapAccessor(TrieSpecifics ts, int i) = exprFromString("<lowLevelBitmapName(ts, i)>()");
+Expression lowLevelBitmapAccessor(TrieSpecifics ts, int i) = exprFromString("this.<lowLevelBitmapName(ts, i)>"); // field access instead of method call
 
 public Argument bitmapField = field("nodeMap");
 public Argument valmapField = field("dataMap");
@@ -812,7 +813,7 @@ str integerOrLongObject(int _:6) = "java.lang.Long";
 str integerOrLongObject(int _:n) = "java.lang.Integer" when n > 0 && n < 6;
 
 // convert either to int or to long and take care of unsigned conversion 
-str useSafeUnsigned(Argument a) = "(int)(<use(a)> & 0xFF)"   when a has \type && a.\type == primitive("byte");
+str useSafeUnsigned(Argument a) = "Byte.toUnsignedInt(<use(a)>)"   when a has \type && a.\type == primitive("byte");
 str useSafeUnsigned(Argument a) = "(int)(<use(a)> & 0xFFFF)" when a has \type && a.\type == primitive("short");
 str useSafeUnsigned(Argument a) = "<use(a)>"                 when a has \type && a.\type == primitive("int");
 str useSafeUnsigned(Argument a) = "<use(a)>" when a has \type && a.\type == primitive("long");
@@ -820,7 +821,8 @@ default str useSafeUnsigned(Argument a) { throw "ahhh"; }
 
 
 Expression sourceToTargetMask(Expression source, Type sourceType, Type targetType) 
-	= bitwiseAnd(source, hexiconst("0xFF"))
+	// = bitwiseAnd(source, hexiconst("0xFF"))
+	= exprFromString("Byte.toUnsignedInt(<toString(source)>)")
 when targetType == primitive("byte");	
 	
 Expression sourceToTargetMask(Expression source, Type sourceType, Type targetType) 
@@ -835,16 +837,19 @@ default Expression sourceToTargetMask(Expression source, Type sourceType, Type t
 //}
 
 str eval(Expression e) =
-	"(<typeToString(e.targetType)>) (<eval(sourceToTargetMask(e.source, e.sourceType, e.targetType))>)"
+	// "(<typeToString(e.targetType)>) (<eval(sourceToTargetMask(e.source, e.sourceType, e.targetType))>)"
+	"(<typeToString(e.targetType)>) (<eval(e.source)>)"
 when e is maskAndNarrowPrimitiveCast;
 
 str toString(Expression e) =
-	"(<typeToString(e.targetType)>) (<toString(sourceToTargetMask(e.source, e.sourceType, e.targetType))>)"
+	// "(<typeToString(e.targetType)>) (<toString(sourceToTargetMask(e.source, e.sourceType, e.targetType))>)"
+	"(<typeToString(e.targetType)>) (<eval(e.source)>)"	
 when e is maskAndNarrowPrimitiveCast;
 
 
 Expression wideningMask(Expression source, Type sourceType, Type targetType) 
-	= bitwiseAnd(source, hexiconst("0xFF"))
+	// = bitwiseAnd(source, hexiconst("0xFF"))
+	= exprFromString("Byte.toUnsignedInt(<toString(source)>)")
 when sourceType == primitive("byte");	
 	
 Expression wideningMask(Expression source, Type sourceType, Type targetType) 
@@ -978,6 +983,10 @@ str eval(Expression e) =
 when e is bitwiseOr;
 
 str eval(Expression e) = 
+	"<eval(e.x)> ^ <eval(e.y)>"
+when e is bitwiseXor;
+
+str toString(Expression e) = 
 	"<eval(e.x)> ^ <eval(e.y)>"
 when e is bitwiseXor;
 
@@ -1202,12 +1211,12 @@ str implOrOverride(m:property(_,_), str bodyStr, OverwriteType doOverride = over
 	'
 	'<if (doInitialize) {>
 	'	<if (/^return <expression:.*>;$/ := bodyStr) {>
-	'		private final <typeToString(m.returnArg.\type)> <m.name> = <expression>;
+	'		private <if (!m.isModifiable) {>final<}> <typeToString(m.returnArg.\type)> <m.name> = <expression>;
 	'	<} else {>
-	'		private final <typeToString(m.returnArg.\type)> <m.name> = ???;	
+	'		private <if (!m.isModifiable) {>final<}> <typeToString(m.returnArg.\type)> <m.name> = ???;	
 	'	<}>
 	'<} else {>
-	'	private final <typeToString(m.returnArg.\type)> <m.name>;
+	'	private <if (!m.isModifiable) {>final<}> <typeToString(m.returnArg.\type)> <m.name>;
 	'<}>"
 when m.isActive && m.isStateful && !m.isConstant && hasBody := bodyStr != "" && doInitialize := !m.initializeAtConstruction && hasBody
 	;
@@ -2613,7 +2622,7 @@ data PredefOp = index3();
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), index3())  = true;
 @index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(compactNode()), index3()) = 
-	"return (<useSafeUnsigned(___anybitmapField(ts.bitPartitionSize))> == -1) 
+	"return (<use(___anybitmapField(ts.bitPartitionSize))> == -1) 
 	'	? mask 
 	'	: <toString(call(getDef(ts, trieNode(compactNode()), index2())))>;";
 
@@ -2812,6 +2821,7 @@ str className(TrieSpecifics ts, TrieNodeType nodetype:compactNode(specializeByBi
 str className(TrieSpecifics ts, TrieNodeType nodetype:compactNode(specializeByBitmap(false, true))) = "CompactValuesOnly<toString(ts.ds)>Node";
 str className(TrieSpecifics ts, TrieNodeType nodetype:compactNode(specializeByBitmap(false, false))) = "CompactEmpty<toString(ts.ds)>Node";
 str className(TrieSpecifics ts, TrieNodeType nodetype:compactNode(deferBitmapSpecialization())) = "Compact<toString(ts.ds)>Node";
+str className(TrieSpecifics ts, TrieNodeType nodetype:compactNode()) = "Compact<toString(ts.ds)>Node";
 
 str className(TrieSpecifics ts, TrieNodeType nodetype:compactHeterogeneousNode(specializeByBitmap(true, true))) = "CompactMixedHeterogeneous<toString(ts.ds)>Node";
 str className(TrieSpecifics ts, TrieNodeType nodetype:compactHeterogeneousNode(specializeByBitmap(true, false))) = "CompactNodesOnlyHeterogeneous<toString(ts.ds)>Node";
@@ -2848,7 +2858,11 @@ data Expression
 
 str toString(Expression c:call(Argument arg, Method method)) = 
 	"<printNonEmptyCommentWithNewline(c.commentText)><use(arg)>.<method.name>(<eval(substitute(method.lazyArgs() - method.argsFilter, c.argsOverride, c.labeledArgsOverride))>)"
-when method.isActive;
+when method.isActive && !(method is property);
+
+str toString(Expression c:call(Argument arg, Method method)) = 
+	"<printNonEmptyCommentWithNewline(c.commentText)><use(arg)>.<method.name>()"
+when method.isActive && (method is property);
 
 data Expression 
 	= call(Expression expression, Method method, map[Argument, Expression] argsOverride = (), map[PredefArgLabel, Expression] labeledArgsOverride = ());
@@ -2958,13 +2972,14 @@ Model buildLanguageAgnosticModel(TrieSpecifics ts) {
 	rel[TrieNodeType from, TrieNodeType to] refines = staticRefines();
 
 	if (isOptionEnabled(ts, useHeterogeneousEncoding())) {
-		refines += {
-			<specializedBitmapIndexedNode(mn, m), compactNode(specializeByBitmap(true, true))> 
-				| m <- [0..ts.nMax+1]
-				, mn <- [0..tupleLength(ts.ds) * (ts.nMax - m)  + 1]
-				, (m + ceil(mn/2.0)) <= ts.nBound 
-				//, is8ByteAligned(("payload": m, "node": mn))
-		};
+		//refines += {
+		//	<specializedBitmapIndexedNode(mn, m), compactNode()> // previously: compactNode(specializeByBitmap(true, true)) 
+		//		| m <- [0..ts.nMax+1]
+		//		, mn <- [0..tupleLength(ts.ds) * (ts.nMax - m)  + 1]
+		//		, (m + ceil(mn/2.0)) <= ts.nBound 
+		//		//, is8ByteAligned(("payload": m, "node": mn))
+		//}
+		;
 	} else if (isOptionEnabled(ts, useSpecialization()) && !isOptionEnabled(ts, useUntypedVariables())) {
 		refines += { <specializedBitmapIndexedNode(n, m), compactNode()> | m <- [0..ts.nMax+1], n <- [0..ts.nMax+1], (n + m) <= ts.nBound };
 	} else if (isOptionEnabled(ts, useSpecialization()) && isOptionEnabled(ts, useUntypedVariables())) {

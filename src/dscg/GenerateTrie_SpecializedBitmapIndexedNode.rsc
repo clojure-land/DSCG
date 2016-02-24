@@ -34,9 +34,11 @@ str generateSpecializedBitmapIndexedNodeClassString(TrieSpecifics ts) {
 
 JavaDataType specializedBitmapIndexedNode(TrieSpecifics ts, TrieNodeType nodeType:specializedBitmapIndexedNode(n, m), list[str] modifierList = []) {
 
-	JavaDataType extendsNode = false && isOptionEnabled(ts, useHeterogeneousEncoding()) ? 
-						JavaDataType::compactHeterogeneousNode(ts, compactHeterogeneousNode(specializeByBitmap(true, true))) :
-						JavaDataType::compactNode(ts, compactNode(specializeByBitmap(true, true)));
+	//JavaDataType extendsNode = false && isOptionEnabled(ts, useHeterogeneousEncoding()) ? 
+	//					JavaDataType::compactHeterogeneousNode(ts, compactHeterogeneousNode(specializeByBitmap(true, true))) :
+	//					JavaDataType::compactNode(ts, compactNode(specializeByBitmap(true, true)));
+
+	JavaDataType extendsNode = JavaDataType::compactNode(ts);
 
 	return javaClass("<toString(ts.ds)><m>To<n>Node<ts.classNamePostfix>", typeArguments = typesKeepGeneric(payloadTupleTypes(ts)), extends = extendsNode, modifierList = modifierList);
 }
@@ -177,7 +179,7 @@ data PredefOp = nodeArityStatic();
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), nodeArityStatic())
 	= property(\return(primitive("int")), "nodeArity", isStateful = true, isConstant = true, hasGetter = false, 
-		isActive = isOptionEnabled(ts, useSunMiscUnsafe()));
+		isActive = false && isOptionEnabled(ts, useSunMiscUnsafe()));
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeArityStatic()) = true;
 
@@ -190,7 +192,7 @@ data PredefOp = slotArityStatic();
 
 @index=2 Method getDef(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), slotArityStatic())
 	= property(\return(primitive("int")), "slotArity", isStateful = true, isConstant = true, hasGetter = false, 
-		isActive = isOptionEnabled(ts, useSunMiscUnsafe()));
+		isActive = false && isOptionEnabled(ts, useSunMiscUnsafe()));
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::slotArityStatic()) = true;
 
@@ -233,9 +235,15 @@ data PredefOp = nodeBaseStatic();
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeBaseStatic()) = true;
 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeBaseStatic(), int mn = tupleLength(ts.ds)*m+n)
-	= "return arrayBase + <mn> * addressSize;" // TODO: support non-reference types
-when !isOptionEnabled(ts, useUntypedVariables());
+//@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::nodeBaseStatic(), int mn = tupleLength(ts.ds)*m+n)
+//	= "return arrayBase + <mn> * addressSize;" // TODO: support non-reference types
+//when !isOptionEnabled(ts, useUntypedVariables());
+
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n:0, int m)), PredefOp::nodeBaseStatic(), int mn = n)
+	= "return rareBase;";
+
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n:_, int m)), PredefOp::nodeBaseStatic(), int mn = n)
+	= "return rareBase + <mn> * addressSize;";
 
 
 data PredefOp = arrayOffsetLastStatic();
@@ -246,9 +254,18 @@ data PredefOp = arrayOffsetLastStatic();
 
 @index=2 bool exists_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::arrayOffsetLastStatic()) = true;
 
-@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::arrayOffsetLastStatic(), int mn = tupleLength(ts.ds)*m+n)
-	= "return arrayBase + <mn - 1> * addressSize;" // TODO: support non-reference types
-when !isOptionEnabled(ts, useUntypedVariables());	
+//@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::arrayOffsetLastStatic(), int mn = tupleLength(ts.ds)*m+n)
+//	= "return arrayBase + <mn - 1> * addressSize;" // TODO: support non-reference types
+//when !isOptionEnabled(ts, useUntypedVariables());	
+
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n:0, int m)), PredefOp::arrayOffsetLastStatic(), int mn = n)
+	= "return rareBase;";
+	
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n:1, int m)), PredefOp::arrayOffsetLastStatic(), int mn = n)
+	= "return rareBase;";	
+
+@index=2 str generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n:_, int m)), PredefOp::arrayOffsetLastStatic(), int mn = n)
+	= "return rareBase + <mn - 1> * addressSize;";
 
 
 // TODO: obsolete 'contentArguments'
@@ -315,7 +332,7 @@ when // (!isOptionEnabled(ts, useSunMiscUnsafe()) || (isOptionEnabled(ts, useSun
 
 Statement generate_bodyOf(TrieSpecifics ts, Artifact artifact:trieNode(nodeType:specializedBitmapIndexedNode(int n, int m)), PredefOp::specializedBitmapIndexedNodeConstructor())
 	= compoundStatement([
-		expressionStatement(super(exprFromString("<if (isOptionEnabled(ts, useStagedMutability())) {>mutator<} else {>null<}>, <use(ts.bitmapField)>, <use(ts.valmapField)>"))),
+		expressionStatement(super(exprFromString("<if (isOptionEnabled(ts, useStagedMutability())) {>mutator<} else {>null<}>, <use(ts.bitmapField)>, <use(ts.valmapField)>"))), // , payloadArity, untypedSlotArity
 		uncheckedStringStatement(initFieldsWithIdendity(contentArguments(n, m, ts))) // TODO: automatically infer which def.args need to be initialized
 	])
 when // (!isOptionEnabled(ts, useSunMiscUnsafe()) || (isOptionEnabled(ts, useSunMiscUnsafe()) && (<n, m> in ts.legacyNodeFactoryMethodSpecializationsUnderUnsafe))) &&  
