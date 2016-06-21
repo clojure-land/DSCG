@@ -5,12 +5,12 @@ import Parse;
 import Load;
 import Resolver;
 import Checker;
-import Proposer;
+//import Proposer;
 import Visuals;
 
 import util::IDE;
 import util::Prompt;
-import util::ContentCompletion;
+//import util::ContentCompletion;
 import vis::Figure;
 import vis::Render;
 import IO;
@@ -42,11 +42,11 @@ public void main() {
       		return fd[@messages=msgs][@hyperlinks=resolvedRefs];
     	}),
     	
-    	proposer(list[CompletionProposal] (Tree fd, str prefix, int requestOffset) {
-    		<ast, diagrams, defs, _, _, resolvedRefs> = gatherInfo(fd);
-    		
-    		return propose(ast, diagrams, resolvedRefs, defs, prefix, requestOffset);    		
-    	}, alphaNumeric + "."),
+    	//proposer(list[CompletionProposal] (Tree fd, str prefix, int requestOffset) {
+    	//	<ast, diagrams, defs, _, _, resolvedRefs> = gatherInfo(fd);
+    	//	
+    	//	return propose(ast, diagrams, resolvedRefs, defs, prefix, requestOffset);    		
+    	//}, alphaNumeric + "."),
  
     	popup(
 	      menu("Feature Diagram", [
