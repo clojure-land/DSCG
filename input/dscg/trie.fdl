@@ -1,11 +1,16 @@
 diagram trie
 
 features
-	PrefixEncodingType			: one-of(data, hashOfData)
-	PrefixLength				: one-of(bounded, unbounded)
-	PrefixEncodingDirection		: one-of(leastToMostSignificantBit, mostToLeastSignificantBit)
+	Trie					: all(	PrefixEncodingType, 
+									PrefixLength, 
+									PrefixEncodingDirection, 
+									PrefixPathCompression?)
+
+	PrefixEncodingType		: one-of(data, hashOfData)
+	PrefixLength			: one-of(bounded, unbounded)
+	PrefixEncodingDirection	: one-of(leastToMostSignificantBit, mostToLeastSignificantBit)
 	
 	////
 	// Optimizations
 	//////
-	PrefixPathCompression
+	PrefixPathCompression	: prefixPathCompression

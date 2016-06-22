@@ -10,9 +10,11 @@ features
 								collectionOperations.CollectionOperations, 
 								hamtNodeOperations.HamtNodeOperations)
 								
-	CollectionType		: one-of(map, multiMap, set, multiSet, vector)
-	Ordering			: one-of(ordered, unordered)
+	CollectionType		: one-of(BaseCollection, CompositeCollection)
+	BaseCollection		: one-of(bag, set, vector)
+	CompositeCollection : one-of(map, multiMap[BaseCollection])
 	
+	Ordering			: one-of(ordered, unordered)	
 	Mutability			: one-of(mutable, stagedMutable, immutable)
 	Processing			: one-of(sequential, concurrent, parallel)
 	
