@@ -6,7 +6,7 @@ include
 	collectionOperations
 
 features
-	HamtCollection		: all(CollectionType, Mutability, Processing, bitPartitionSize, Specialization?, Iteration, ElementHashing, HamtStyle, OtherFeatures?, HamtArraryEncoding, canonicalization?, 
+	HamtCollection		: all(CollectionType, Ordering, Mutability, Processing, bitPartitionSize, Specialization?, Iteration, ElementHashing, HamtStyle, OtherFeatures?, HamtArraryEncoding, canonicalization?, 
 								collectionOperations.CollectionOperations, 
 								hamtNodeOperations.HamtNodeOperations)
 								
@@ -15,7 +15,7 @@ features
 	CompositeCollection : one-of(map, multiMap[BaseCollection])
 	
 	Ordering			: one-of(ordered, unordered)	
-	Mutability			: one-of(mutable, stagedMutable, immutable)
+	Mutability			: one-of(mutable, transient, immutable)
 	Processing			: one-of(sequential, concurrent, parallel)
 	
 	// BitPartitionSize	: one-of(one, two, three, four, five, six)
@@ -35,15 +35,18 @@ features
 	CollisionResolutionStrategy	: one-of(chaining, prefixExtension)
 
 	HamtStyle					: one-of(MixedContentNodes, separateLeafFromTrieNodes)
-	MixedContentNodes			: one-of(hamt, chartWithOffsetIndexing, chartWithSandwichIndexing)
+	MixedContentNodes			: one-of(hamt, Champ, hhamt)
+	Champ						: one-of(champWithOffsetIndexing, champWithSandwichIndexing)
+	
 	HamtArraryEncoding			: one-of(nonCompressedArray, bitmapCompressedArray)
 
 	OtherFeatures				: more-of(useFixedStackIterator, useSupplierIterator, useStructuralEquality, methodsWithComparator, usePrefixInsteadOfPostfixEncoding, usePathCompression, useIncrementalHashCodes)
 
+
+	PropertyUpdateStrategy		: one-of(alwaysCalculated, incrementallyUpdated, lazilyComputedAndThenCached)
+
 	Property_Size				: all(PropertyUpdateStrategy)
-	Property_HashCode			: all(PropertyUpdateStrategy)
-		
-	PropertyUpdateStrategy		: one-of(alwaysCalculated, incrementallyUpdated, lazilyComputedAndThenCached) 
+	Property_HashCode			: all(PropertyUpdateStrategy) 
 
 constraints
 	////
@@ -102,4 +105,4 @@ constraints
 	////
 	// Other (unspecified)
 	//////
-	breadthFirst excludes separateLeafFromTrieNodes // breadthFirst makes only sense with Clojure / CHART; TODO: for sake of completeness implement breadth first search in generator
+	breadthFirst excludes separateLeafFromTrieNodes // breadthFirst makes only sense with Clojure / CHAMP; TODO: for sake of completeness implement breadth first search in generator

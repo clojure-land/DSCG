@@ -8,6 +8,8 @@ features
 
 	PrefixEncodingType		: one-of(data, hashOfData)
 	PrefixLength			: one-of(bounded, unbounded)
+	PrefixChunkUnit			: one-of(bit, char)
+	PrefixChunkLength		: int
 	PrefixEncodingDirection	: one-of(leastToMostSignificantBit, mostToLeastSignificantBit)
 	
 	////
