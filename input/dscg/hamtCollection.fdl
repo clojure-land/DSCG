@@ -21,9 +21,9 @@ features
 	// BitPartitionSize	: one-of(one, two, three, four, five, six)
 	
 	Specialization		: one-of(SpecializationType, SpecializationComplexity, SpecializationArityRange)
-	SpecializationType	: one-of(HomogeniousSpecialization, heterogeniousSpecialization)
+	SpecializationType	: one-of(HomogeneousSpecialization, heterogeneousSpecialization)
 	SpecializationArityRange	: one-of(all, zeroToN)
-	HomogeniousSpecialization	: more-of(byGenerics, byClasses, byPrimitives) // more-of depends on the number of unbound payload tuple arguments
+	HomogeneousSpecialization	: more-of(byGenerics, byClasses, byPrimitives) // more-of depends on the number of unbound payload tuple arguments
 	SpecializationComplexity	: one-of(linear, quadratic, exponential)
 	
 	Iteration					: all(ElementTraversal, ElementTraveralComplexity)
@@ -97,9 +97,9 @@ constraints
 
 
 	////
-	// HomogeniousSpecialization
+	// HomogeneousSpecialization
 	//////
-	// HomogeniousSpecialization.byPrimitives excludes SpecializationComplexity.linear
+	// HomogeneousSpecialization.byPrimitives excludes SpecializationComplexity.linear
 
 
 	////
