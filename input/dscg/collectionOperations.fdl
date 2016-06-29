@@ -2,12 +2,7 @@ diagram collectionOperations
 
 features
 	CollectionOperations		: all(CollectionUpdateOperations, CollectionQueryOperations, Equality)
-	CollectionUpdateOperations	: all(updatePayload,
-										insertPayload,
-										removePayload)									
-	CollectionQueryOperations	: all(queryByKey,
-										projectionOfKey)
-										
+	CollectionUpdateOperations	: all(insertPayload, updatePayload, removePayload)									
+	CollectionQueryOperations	: all(queryByKey, projectionOfKey)										
 	Equality					: all(equivalenceRelation, structural?)
-
-constraints
+	

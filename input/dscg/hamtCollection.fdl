@@ -6,103 +6,97 @@ include
 	collectionOperations
 
 features
-	HamtCollection		: all(CollectionType, Ordering, Mutability, Processing, bitPartitionSize, Specialization?, Iteration, ElementHashing, HamtStyle, OtherFeatures?, HamtArraryEncoding, canonicalization?, 
-								collectionOperations.CollectionOperations, 
-								hamtNodeOperations.HamtNodeOperations)
-								
-	CollectionType		: one-of(BaseCollection, CompositeCollection)
-	BaseCollection		: one-of(bag, set, vector)
-	CompositeCollection : one-of(map, multiMap[BaseCollection])
+	HamtCollection : all(CollectionType, Ordering, Mutability, Processing, BitPartitionSegmentSize, 
+							BitPartitionSegmentCount, Specialization?, Iteration, IterationImplementation, 
+							ElementHashing, HamtStyle, HamtArraryEncoding, canonicalization?, 
+							collectionOperations.CollectionOperations, hamtNodeOperations.HamtNodeOperations)
 	
+	// Common data types for collection data structures. A {UnaryCollection} describes a collection 
+	// with tuples of arity = 1, whereas a {BinaryCollection} has tuples of arity = 2.							
+	CollectionType		: one-of(UnaryCollection, BinaryCollection)
+	UnaryCollection		: one-of(singleton, set, list)
+	BinaryCollection 	: one-of(map, setMultiMap, listMultiMap)
+	
+	// Data structures can be ordered either due to data type semantics or temporal properties such
+	// as insertion order. Otherwise, data structures can be unordered by nature (e.g., sets), 
+	// or due to hashing of the keys.	
 	Ordering			: one-of(ordered, unordered)	
+	
+	// Data structures can allow mutation of their content over time, or remain immutable after 
+	// initialization. Transient data structures represent the middle ground by allowing efficient 
+	// initialization and batch updates on otherwise immutable data structures.
 	Mutability			: one-of(mutable, transient, immutable)
 	Processing			: one-of(sequential, concurrent, parallel)
 	
-	// BitPartitionSize	: one-of(one, two, three, four, five, six)
-	
+	// Primitive JVM data types allow for partition sizes up to 6 (when using long) bitmaps.
+	// When a single bitmap is not enough, multiple bitmap segment together can form a larger bitmap.
+	BitPartitionSegmentSize  : one-of(one, two, three, four, five, six)
+	BitPartitionSegmentCount : int
+		
 	Specialization		: one-of(SpecializationType, SpecializationComplexity, SpecializationArityRange)
 	SpecializationType	: one-of(HomogeneousSpecialization, heterogeneousSpecialization)
 	SpecializationArityRange	: one-of(all, zeroToN)
 	HomogeneousSpecialization	: more-of(byGenerics, byClasses, byPrimitives) // more-of depends on the number of unbound payload tuple arguments
 	SpecializationComplexity	: one-of(linear, quadratic, exponential)
-	
-	Iteration					: all(ElementTraversal, ElementTraveralComplexity)
-	ElementTraveralComplexity	: one-of(bigO_n, bigO_n_times_log_n) 
-	ElementTraversal			: more-of(depthFirst, breadthFirst)
 
-	ElementHashing				: all(ElementHashFunction, CollisionResolutionStrategy, hashLength) // hash length influences CollisionResolutionStrategy
+	// Iteration is usually implemented as {depthFirst} in-order traversal, however for flat-map or 
+	// stream processing operations {breadthFirst} is of relevance as well. Depending on the 
+	// internal encoding, the number of node switches (iteration complexity) may differ (cf. CHAMP paper).   
+	Iteration					: all(ElementTraversal, ElementTraveralComplexity)
+	ElementTraversal			: more-of(depthFirst, breadthFirst)
+	ElementTraveralComplexity	: one-of(bigO_n, bigO_n_times_log_n) 
+	IterationImplementation 	: more-of(fixedStackIterator, functionalIterator)
+
+	// Hash data structures require one or more hash functions and require collision resolution 
+	// strategies. With multiple hash functions the collision resolution will further grow the 
+	// prefix tree with another hash. A single hash function requires chaining / storing collision
+	// elements unorderdly.
+	ElementHashing				: all(ElementHashFunction, CollisionResolutionStrategy, hashLength)
 	ElementHashFunction			: one-of(singleHashFunction, multipleHashFunctions)
 	CollisionResolutionStrategy	: one-of(chaining, prefixExtension)
 
-	HamtStyle					: one-of(MixedContentNodes, separateLeafFromTrieNodes)
-	MixedContentNodes			: one-of(hamt, Champ, hhamt)
-	Champ						: one-of(champWithOffsetIndexing, champWithSandwichIndexing)
-	
+	// Various forms of hash-trie encodings. Refer to papers about HAMT and CHAMP for further details.
 	HamtArraryEncoding			: one-of(nonCompressedArray, bitmapCompressedArray)
+	HamtStyle					: one-of(MixedContentNodes, separateLeafFromTrieNodes)
+	MixedContentNodes			: one-of(Champ, hamt, hhamt)
+	Champ						: one-of(offsetIndexing, heapAndStackLikeIndexing)
 
-	OtherFeatures				: more-of(useFixedStackIterator, useSupplierIterator, useStructuralEquality, methodsWithComparator, usePrefixInsteadOfPostfixEncoding, usePathCompression, useIncrementalHashCodes)
-
-
-	PropertyUpdateStrategy		: one-of(alwaysCalculated, incrementallyUpdated, lazilyComputedAndThenCached)
-
+	// Properties on collection level can either be {calculated} everytime when requested, 
+	// incrementally updated on every insert / delete / etc. or calculated and cached on first
+	// request. After lazy initialization, the property either becomes incremental, or gets invalided
+	// after subsequent changes. 
+	PropertyUpdateStrategy		: one-of(calculated, incremental, lazyAndCached)
 	Property_Size				: all(PropertyUpdateStrategy)
 	Property_HashCode			: all(PropertyUpdateStrategy) 
 
 constraints
-	////
-	// HamtCollection
-	//////
-	// HamtCollection requires PrefixEncodingType.hashOfData
+	// hashing removes orderdness from the elements, however the trie encodes the hash codes 
+	// themselves in a total ordering
 	hashOfData requires unordered 
-	// CollectionType.vector excludes PrefixEncodingType.hashOfData
 		
-		
-	////
-	// HamtCollection
-	//////
-	map requires unorderd
-	multiMap requires unorderd
-	set requires unorderd
-	multiSet requires unorderd
+	// The {#migrateFromNodeToInline} operation takes care of inlining singleton sub-trees in the 
+	// current node and is used to canonicalize a trie.
+	canonicalization requires migrateFromNodeToInline 
 
-	vector requires ordered
-		
-			 
-	////
-	// HamtNodeUpdateOperations
-	//////
-	insertNode requires separateLeafFromTrieNodes
-	removeNode requires separateLeafFromTrieNodes
-	
+	// Tries with separate leaf nodes (such as in Scala) not need data category conversion 
+	// functionality.
 	separateLeafFromTrieNodes excludes migrateFromInlineToNode
 	separateLeafFromTrieNodes excludes migrateFromNodeToInline
 
-	migrateFromNodeToInline requires canonicalization
+	// Tries with separate leaf nodes (such as in Scala) can directly insert / remove nodes.  
+	// {MixedContentNodes} with {canonicalization} instead migrate data categories and insert / remove
+	// online inline tuple, but not whole sub-trees.
+	separateLeafFromTrieNodes requires insertNode 
+	separateLeafFromTrieNodes requires removeNode
 
+	// Depending on {SpecializationArityRange}, the trie needs also an generic array-based node
+	// ({zeroToN}) and accompanying conversion operations, or not when the data structure becomes
+	// arrayless (({zeroToN}).   
+	all excludes insertPayloadAndConvertToGenericNode
+	all excludes removePayloadAndConvertToSpecializedNode
+	zeroToN requires insertPayloadAndConvertToGenericNode
+	zeroToN requires removePayloadAndConvertToSpecializedNode
 
-	////
-	// HamtNodeUpdateOperations
-	//////
-	// collectionOperations.Equality.structural requires hamtNodeOperations.Equality.structural
-	
-
-	////
-	// SpecializationArityRange
-	//////
-	all requires insertPayloadAndConvertToGenericNode
-	all requires removePayloadAndConvertToSpecializedNode
-
-	zeroToN excludes insertPayloadAndConvertToGenericNode
-	zeroToN excludes removePayloadAndConvertToSpecializedNode
-
-
-	////
-	// HomogeneousSpecialization
-	//////
-	// HomogeneousSpecialization.byPrimitives excludes SpecializationComplexity.linear
-
-
-	////
-	// Other (unspecified)
-	//////
-	breadthFirst excludes separateLeafFromTrieNodes // breadthFirst makes only sense with Clojure / CHAMP; TODO: for sake of completeness implement breadth first search in generator
+	// {breadthFirst} iteration makes only sense with HAMT as implemented in Clojure or CHAMP. 
+	// Because in Scala's encoding only leaf elements contain data, {depthFirst} is more reasonable.
+	breadthFirst excludes separateLeafFromTrieNodes

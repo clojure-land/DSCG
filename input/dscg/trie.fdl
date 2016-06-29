@@ -1,18 +1,23 @@
 diagram trie
 
 features
-	Trie					: all(	PrefixEncodingType, 
-									PrefixLength, 
-									PrefixEncodingDirection, 
-									PrefixPathCompression?)
+	Trie				: all(EncodingType, EncodingLength, EncodingDirection, Optimization?)
 
-	PrefixEncodingType		: one-of(data, hashOfData)
-	PrefixLength			: one-of(bounded, unbounded)
-	PrefixChunkUnit			: one-of(bit, char)
-	PrefixChunkLength		: int
-	PrefixEncodingDirection	: one-of(leastToMostSignificantBit, mostToLeastSignificantBit)
+	// A trie encodes in paths either {#data} values themselves, or a {#hashOfData} and then  
+	// additionally stores the payload in the nodes to cater for collisons.
+	EncodingType		: one-of(data, hashOfData)
+
+	// Encoding direction prefix starts at the least-significant bit, whereas postfix starts at 
+	// the most significant bit. When selecting {PrefixEncodingType#hashOfData}, the direction is 
+	// irrelevant if and only if hash codes are assumed to be uniformly distributed.
+	EncodingDirection	: one-of(prefix, postfix)
+
+	// The features {EncodingLength}, {ChunkUnit} and {ChunkLength} determine  
+	// the granularity of information encoded by the edges. 
+	EncodingLength		: one-of(bounded, unbounded)
+	ChunkUnit			: one-of(bit, char)
+	ChunkLength			: int
 	
-	////
-	// Optimizations
-	//////
-	PrefixPathCompression	: prefixPathCompression
+	// For trie-based collections on the most important standard optimizations is 
+	// {#prefixPathCompression} that compresses a path where each node has a only 1 outgoing branch.
+	Optimization		: more-of(prefixPathCompression)

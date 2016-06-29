@@ -12,9 +12,6 @@ features
 										removeNode?,
 										migrateFromInlineToNode?,
 										migrateFromNodeToInline?)
-	HamtNodeQueryOperations		: all(queryByKey,
-										projectionOfKey)
+	HamtNodeQueryOperations		: all(queryByKey, projectionOfKey)
 										
 	Equality					: one-of(structural)
-																				
-constraints	
