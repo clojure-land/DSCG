@@ -3,13 +3,13 @@ diagram hamtCollection
 include
 	trie,
 	hamtNodeOperations,
-	collectionOperations
+	hamtCollectionOperations
 
 features
 	HamtCollection : all(CollectionType, Ordering, Mutability, Processing, BitPartitionSegmentSize, 
 							BitPartitionSegmentCount, Specialization?, Iteration, IterationImplementation, 
 							ElementHashing, HamtStyle, HamtArraryEncoding, canonicalization?, 
-							collectionOperations.CollectionOperations, hamtNodeOperations.HamtNodeOperations)
+							hamtCollectionOperations.CollectionOperations, hamtNodeOperations.HamtNodeOperations)
 	
 	// Common data types for collection data structures. A {UnaryCollection} describes a collection 
 	// with tuples of arity = 1, whereas a {BinaryCollection} has tuples of arity = 2.							

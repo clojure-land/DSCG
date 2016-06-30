@@ -1,8 +1,0 @@
-diagram collectionOperations
-
-features
-	CollectionOperations		: all(CollectionUpdateOperations, CollectionQueryOperations, Equality)
-	CollectionUpdateOperations	: all(insertPayload, updatePayload, removePayload)									
-	CollectionQueryOperations	: all(queryByKey, projectionOfKey)										
-	Equality					: all(equivalenceRelation, structural?)
-	

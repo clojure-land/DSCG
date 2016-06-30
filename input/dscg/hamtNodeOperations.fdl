@@ -1,17 +1,31 @@
 diagram hamtNodeOperations
 
 features
-	HamtNodeOperations			: all(HamtNodeUpdateOperations, HamtNodeQueryOperations, Equality?)
-	HamtNodeUpdateOperations	: all(updatePayload,
+	// Trie nodes can support update, query, traversal, and equality operations. Equivalent 
+	// operations on the collection container may directly map to a single trie node operation
+	// or be algorithmically depcomposed to call several trie node operations.  	
+	HamtNodeOperations			: all(HamtNodeUpdateOperations, HamtNodeQueryOperations, 
+										HamtNodeTraversalOperations?, HamtNodeEqualityOperations?)
+	
+	// Primitives for manipulating data stored a sequence of content partition inside of a node. 	
+	HamtNodeUpdateOperations	: all(mergeTuplesByKeyPrefix,
+										updatePayload,
 										updateNode,
-										insertPayload,
-										insertPayloadAndConvertToGenericNode?,
+										insertIntoPayloadCategory,
+										insertIntoPayloadCategoryAndConvertToGenericNode?,
+										removePayloadFromDataCategory,
+										removePayloadFromDataCategoryAndConvertToSpecializedNode?,										
+										migrateBetweenPayloadCategories,
+										migrateFromPayloadCategoryToNode?,
+										migrateFromNodeToPayloadCategory?,
 										insertNode?,
-										removePayload,
-										removePayloadAndConvertToSpecializedNode?,
-										removeNode?,
-										migrateFromInlineToNode?,
-										migrateFromNodeToInline?)
-	HamtNodeQueryOperations		: all(queryByKey, projectionOfKey)
+										removeNode?)
+	
+	HamtNodeQueryOperations		: more-of(queryByKey, projectionOfKey)
+	
+	HamtNodeTraversalOperations	: more-of(inOrderTraversal, preOrderTraversal)
 										
-	Equality					: one-of(structural)
+	// The only form of {Equality} trie nodes can support is {#structural} equality, comparing 
+	// field by field, if and only if {canonicalization} is supported. Otherwise, equality has 
+	// to iterate over one trie and perform a lookup for each payload tuple on the other. 
+	HamtNodeEqualityOperations	: more-of(structural)

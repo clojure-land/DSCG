@@ -1,0 +1,20 @@
+diagram hamtCollectionOperations
+
+features
+	// When implementing collections, the following four categories of operations need to be balanced to 
+	// achieve good performance across a wide spectrum of use-cases. Theoretical results on data structures 
+	// are predominantly concered with properties of update and query operations, however the latter two 
+	// have a high importance in practice as well.   
+	CollectionOperations			: all(CollectionUpdateOperations, CollectionQueryOperations, 
+											CollectionIterationOperations, CollectionEqualityOperations)
+
+	CollectionUpdateOperations		: all(insertPayload, updatePayload, removePayload)									
+	CollectionQueryOperations		: all(queryByKey, projectionOfKey)											
+
+	// Collections typically offer multiple iterators, either supported natively or through views.
+	CollectionIterationOperations	: more-of(tupleIteration, keyIteration, projectionIteration)
+	
+	// Collections acoording to the Java JDK Collections API are required to implement an 
+	// equivalence relation. 
+	CollectionEqualityOperations	: all(equivalenceRelation)
+	
