@@ -3,7 +3,7 @@ diagram hamtNodeOperations
 features
 	// Trie nodes can support update, query, traversal, and equality operations. Equivalent 
 	// operations on the collection container may directly map to a single trie node operation
-	// or be algorithmically depcomposed to call several trie node operations.  	
+	// or be algorithmically decomposed to call several trie node operations.  	
 	HamtNodeOperations			: all(HamtNodeUpdateOperations, HamtNodeQueryOperations, 
 										HamtNodeTraversalOperations?, HamtNodeEqualityOperations?)
 	

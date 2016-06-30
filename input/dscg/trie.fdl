@@ -4,7 +4,7 @@ features
 	Trie				: all(EncodingType, EncodingLength, EncodingDirection, Optimization?)
 
 	// A trie encodes in paths either {#data} values themselves, or a {#hashOfData} and then  
-	// additionally stores the payload in the nodes to cater for collisons.
+	// additionally stores the payload in the nodes to cater for collisions.
 	EncodingType		: one-of(data, hashOfData)
 
 	// Encoding direction prefix starts at the least-significant bit, whereas postfix starts at 
